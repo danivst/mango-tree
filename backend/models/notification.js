@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-const { default: NotificationType } = require('../enums/notification-type.js');
+import mongoose from 'mongoose';
+import NotificationType from '../enums/notification-type.js';
+
 const { Schema } = mongoose;
 
 const notificationSchema = new Schema({
@@ -9,7 +10,8 @@ const notificationSchema = new Schema({
     ref: 'User'
   },
   type: {
-    type: NotificationType,
+    type: String,
+    enum: Object.values(NotificationType),
     required: true
   },
   message: {
@@ -30,4 +32,4 @@ const notificationSchema = new Schema({
   },
 });
 
-module.exports = mongoose.model('Notification', notificationSchema);
+export default mongoose.model('Notification', notificationSchema);

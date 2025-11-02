@@ -1,6 +1,7 @@
-const mongoose = require('mongoose');
-const { default: ReportStatusType } = require('../enums/report-status-type.js');
-const { default: ReportTargetType } = require('../enums/report-target-type.js');
+import mongoose from 'mongoose';
+import ReportStatusType from '../enums/report-status-type.js';
+import ReportTargetType from '../enums/report-target-type.js';
+
 const { Schema } = mongoose;
 
 const reportSchema = new Schema({
@@ -10,7 +11,8 @@ const reportSchema = new Schema({
     ref: 'User',
   },
   targetType: {
-    type: ReportTargetType,
+    type: String,
+    enum: Object.values(ReportTargetType),
     required: true,
   },
   targetId: {
@@ -23,7 +25,8 @@ const reportSchema = new Schema({
     trim: true,
   },
   status: {
-    type: ReportStatusType,
+    type: String,
+    enum: Object.values(ReportStatusType),
     default: ReportStatusType.PENDING,
   },
   createdAt: {
@@ -32,4 +35,4 @@ const reportSchema = new Schema({
   },
 });
 
-module.exports = mongoose.model('Report', reportSchema);
+export default mongoose.model('Report', reportSchema);

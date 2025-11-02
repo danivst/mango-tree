@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-const { default: RoleType } = require('../enums/role-type.js');
+import mongoose from 'mongoose';
+import RoleType from '../enums/role-type.js';
+
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
@@ -22,7 +23,8 @@ const userSchema = new Schema({
     required: true
   },
   role: {
-    type: RoleType,
+    type: String,
+    enum: Object.values(RoleType),
     default: RoleType.USER
   },
   avatar: {
@@ -48,4 +50,4 @@ const userSchema = new Schema({
   }]
 });
 
-module.exports = mongoose.model('User', userSchema);
+export default mongoose.model('User', userSchema);

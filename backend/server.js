@@ -21,11 +21,13 @@ connectDB();
 
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
-app.use('api/users', userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT);
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});

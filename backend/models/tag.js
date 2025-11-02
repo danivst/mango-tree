@@ -1,13 +1,15 @@
-const mongoose = require('mongoose');
-const { default: TagType } = require('../enums/tag-type.js');
+import mongoose from 'mongoose';
+import TagType from '../enums/tag-type.js';
+
 const { Schema } = mongoose;
 
 const tagSchema = new Schema({
   name: {
-    type: TagType,
+    type: String,
+    enum: Object.values(TagType),
     required: true,
     trim: true
   }
 });
 
-module.exports = mongoose.model('Tag', tagSchema);
+export default mongoose.model('Tag', tagSchema);
