@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { default: TagType } = require('../enums/tag-type');
+const { default: TagType } = require('../enums/tag-type.js');
 const { Schema } = mongoose;
 
 const tagSchema = new Schema({

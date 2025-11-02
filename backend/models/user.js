@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { default: RoleType } = require('../enums/role-type');
+const { default: RoleType } = require('../enums/role-type.js');
 const { Schema } = mongoose;
 
 const userSchema = new Schema({

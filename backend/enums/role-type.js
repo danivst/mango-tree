@@ -1,6 +1,6 @@
 const RoleType = {
-  USER: "user",
-  ADMIN: "admin"
+  USER: 'user',
+  ADMIN: 'admin'
 };
 
 export default RoleType;

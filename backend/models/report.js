@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const { default: ReportStatusType } = require('../enums/report-status-type');
-const { default: ReportTargetType } = require('../enums/report-target-type');
+const { default: ReportStatusType } = require('../enums/report-status-type.js');
+const { default: ReportTargetType } = require('../enums/report-target-type.js');
 const { Schema } = mongoose;
 
 const reportSchema = new Schema({

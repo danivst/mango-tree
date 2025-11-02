@@ -1,6 +1,6 @@
 const ReportTargetType = {
-  POST: "post",
-  COMMENT: "comment"
+  POST: 'post',
+  COMMENT: 'comment'
 };
 
 export default ReportTargetType;

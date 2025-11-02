@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { default: NotificationType } = require('../enums/notification-type');
+const { default: NotificationType } = require('../enums/notification-type.js');
 const { Schema } = mongoose;
 
 const notificationSchema = new Schema({
