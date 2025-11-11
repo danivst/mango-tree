@@ -73,4 +73,4 @@ The ultimate goal is a functioning website that promotes the cultural value of c
 
 1. Clone the repository:
    ```bash
-   git clone <https://github.com/danivst/mango-tree>
+   git clone https://github.com/danivst/mango-tree
