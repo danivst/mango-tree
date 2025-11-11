@@ -6,9 +6,12 @@ const { Schema } = mongoose;
 const tagSchema = new Schema({
   name: {
     type: String,
-    enum: Object.values(TagType),
     required: true,
     trim: true
+  },
+  type: {
+    type: String,
+    enum: Object.values(TagType)
   }
 });
 
