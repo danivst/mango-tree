@@ -1,10 +1,8 @@
 import Post from '../models/post.js';
-import { OpenAI } from 'openai';
 import dotenv from 'dotenv';
+import moderateText  from '../utils/ai.js';
 import RoleType from '../enums/role-type.js';
 dotenv.config();
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export const createPost = async (req, res) => {
   try {
@@ -15,14 +13,17 @@ export const createPost = async (req, res) => {
       return res.status(400).json({ message: 'Title and content are required.' });
     }
 
-    const moderation = await openai.moderations.create({
-      model: 'omni-moderation-latest',
-      input: `${title}\n${content}`,
-    });
-
-    if (moderation.results[0].flagged) {
-      return res.status(400).json({
+    const flagged = await moderateText(title, content);
+    if (flagged) {
+      await Notification.create({
+        userId: authorId,
+        type: NotificationType.REPORT_FEEDBACK,
         message: 'Your post was flagged as inappropriate. Please adjust the content.',
+        link: null
+      });
+
+      return res.status(400).json({
+        message: 'Your post was flagged as inappropriate. A notification has been sent.',
       });
     }
 
@@ -38,6 +39,37 @@ export const createPost = async (req, res) => {
     });
 
     res.status(201).json(post);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const toggleLikePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+
+    const hasLiked = post.likes.includes(userId);
+    hasLiked ? post.likes.pull(userId) : post.likes.push(userId);
+
+    await post.save();
+
+    if (!hasLiked && post.authorId.toString() !== userId) {
+      await Notification.create({
+        userId: post.authorId,
+        type: NotificationType.LIKE,
+        message: `${req.user.username} liked your post "${post.title}"`,
+        link: `/posts/${post._id}`
+      });
+    }
+
+    res.json({
+      message: hasLiked ? 'Unliked' : 'Liked',
+      totalLikes: post.likes.length,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -108,27 +140,6 @@ export const deletePost = async (req, res) => {
 
     await Post.findByIdAndDelete(id);
     res.json({ message: 'Post deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-export const toggleLikePost = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.userId;
-
-    const post = await Post.findById(id);
-    if (!post) return res.status(404).json({ message: 'Post not found' });
-
-    const hasLiked = post.likes.includes(userId);
-    hasLiked ? post.likes.pull(userId) : post.likes.push(userId);
-
-    await post.save();
-    res.json({
-      message: hasLiked ? 'Unliked' : 'Liked',
-      totalLikes: post.likes.length,
-    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

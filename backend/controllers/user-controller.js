@@ -84,7 +84,6 @@ export const toggleFollow = async (req, res) => {
 
     const user = await User.findById(userId);
     const target = await User.findById(targetId);
-
     if (!target) return res.status(404).json({ message: 'User not found' });
 
     const isFollowing = user.following.includes(targetId);
@@ -92,9 +91,23 @@ export const toggleFollow = async (req, res) => {
     if (isFollowing) {
       user.following.pull(targetId);
       target.followers.pull(userId);
+
+      await Notification.create({
+        userId: targetId,
+        type: NotificationType.UNFOLLOW,
+        message: `${user.username} unfollowed you`,
+        link: `/users/${userId}`
+      });
     } else {
       user.following.push(targetId);
       target.followers.push(userId);
+
+      await Notification.create({
+        userId: targetId,
+        type: NotificationType.FOLLOW,
+        message: `${user.username} started following you`,
+        link: `/users/${userId}`
+      });
     }
 
     await user.save();
