@@ -54,9 +54,9 @@ The system supports two main types of user access:
 
 ## Technologies Used
 
-- **Frontend**: HTML, CSS, JavaScript
-- **Backend**: Node.js, Express (assumed from previous code)
-- **Database**: MongoDB (assumed from previous code)
+- **Frontend**: React with Vite and TypeScript, CSS
+- **Backend**: Node.js, Express, TypeScript
+- **Database**: MongoDB
 - **Notifications & Moderation**: Custom logic for alerts and content analysis
 
 ---
