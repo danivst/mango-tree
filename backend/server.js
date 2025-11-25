@@ -8,16 +8,22 @@ import reportRoutes from './routes/report-routes.js';
 import userRoutes from './routes/user-routes.js';
 import tagRoutes from './routes/tag-routes.js';
 import notificationRoutes from './routes/notification-routes.js';
+import authRoutes from './routes/auth-routes.js';
 import { connectDB } from './config/db.js';
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5500', 'http://127.0.0.1:5500'], // allow both origins
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization']
+}));
 app.use(express.json());
 
 connectDB();
 
+app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/users', userRoutes);

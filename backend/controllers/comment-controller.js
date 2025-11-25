@@ -2,7 +2,7 @@ import Comment from '../models/comment.js';
 import Post from '../models/post.js';
 import Notification from '../models/notification.js';
 import NotificationType from '../enums/notification-type.js';
-import { moderateText } from '../utils/ai.js';
+import moderateText from '../utils/ai.js';
 
 export const createComment = async (req, res) => {
   try {

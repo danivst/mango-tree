@@ -1,7 +1,5 @@
 import express from 'express';
 import {
-  registerUser,
-  loginUser,
   getUserProfile,
   updateProfile,
   toggleFollow,
@@ -11,9 +9,6 @@ import {
 import { auth } from '../utils/auth.js';
 
 const router = express.Router();
-
-router.post('/register', registerUser);
-router.post('/login', loginUser);
 
 router.get('/:id', auth, getUserProfile);
 router.put('/:id', auth, updateProfile);

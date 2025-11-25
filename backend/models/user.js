@@ -27,6 +27,8 @@ const userSchema = new Schema({
     enum: Object.values(RoleType),
     default: RoleType.USER
   },
+  resetToken: String,
+  resetTokenExpiry: Date,
   avatar: {
     type: String,
     default: ''
