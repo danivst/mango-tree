@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import Report from '../models/report';
 import Post from '../models/post';
-import Comment from '../models/comment.ts';
+import Comment from '../models/comment';
 
 import ReportTargetTypeValue, { ReportTargetType } from '../enums/report-target-type';
 import ReportStatusTypeValue, { ReportStatusType } from '../enums/report-status-type';

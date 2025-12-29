@@ -2,21 +2,11 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import dotenv from 'dotenv';
 
 import User from '../models/user';
 import { sendEmail } from '../utils/email';
 
-/* ---------- ENV SAFETY ---------- */
-const {
-  JWT_SECRET,
-  JWT_REFRESH_SECRET,
-  CLIENT_URL,
-} = process.env;
-
-if (!JWT_SECRET || !JWT_REFRESH_SECRET || !CLIENT_URL) {
-  throw new Error('Missing required environment variables');
-}
+import { JWT_SECRET, JWT_REFRESH_SECRET, CLIENT_URL } from '../config/env';
 
 /* ---------- REGISTER ---------- */
 export const registerUser = async (req: Request, res: Response): Promise<Response> => {

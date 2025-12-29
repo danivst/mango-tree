@@ -1,5 +1,9 @@
 {
-  "type": "module",
+  "scripts": {
+    "dev": "nodemon --watch src --exec ts-node src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
   "dependencies": {
     "@google/genai": "^1.30.0",
     "axios": "^1.13.2",
@@ -14,10 +18,13 @@
     "openai": "^6.7.0"
   },
   "devDependencies": {
-    "@types/axios": "^0.9.36",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/nodemailer": "^7.0.4"
+    "@types/node": "^25.0.3",
+    "@types/nodemailer": "^7.0.4",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }
