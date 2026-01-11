@@ -1,14 +1,14 @@
 import mongoose, { Document, Schema, Model, Types } from 'mongoose';
-import RoleType from '../enums/role-type';
+import RoleTypeValue from '../enums/role-type';
 
 export interface IUser extends Document {
   username: string;
   email: string;
   passwordHash: string;
-  role: typeof RoleType[keyof typeof RoleType]; 
+  role: typeof RoleTypeValue[keyof typeof RoleTypeValue]; 
   resetToken?: string;
   resetTokenExpiry?: Date;
-  avatar?: string;
+  profileImage?: string;
   bio?: string;
   createdAt: Date;
   followers: Types.ObjectId[];
@@ -36,12 +36,12 @@ const userSchema: Schema<IUser> = new Schema({
   },
   role: {
     type: String,
-    enum: Object.values(RoleType),
-    default: RoleType.USER
+    enum: Object.values(RoleTypeValue),
+    default: RoleTypeValue.USER
   },
   resetToken: String,
   resetTokenExpiry: Date,
-  avatar: {
+  profileImage: {
     type: String,
     default: ''
   },

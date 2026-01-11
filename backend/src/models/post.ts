@@ -47,14 +47,6 @@ const postSchema: Schema<IPost> = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   }],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  },
   isApproved: {
     type: Boolean,
     default: false
@@ -65,12 +57,6 @@ const postSchema: Schema<IPost> = new Schema({
   }
 }, {
   timestamps: true
-});
-
-// update `updatedAt` on save
-postSchema.pre('save', function (next) {
-  this.updatedAt = new Date();
-  next();
 });
 
 const Post: Model<IPost> = mongoose.model<IPost>('Post', postSchema);

@@ -6,12 +6,14 @@ import {
   updatePost,
   deletePost,
   toggleLikePost,
+  getHomeFeed,
 } from '../controllers/post-controller';
 import { auth } from '../utils/auth';
 
 const router: Router = express.Router();
 
 router.post('/', auth, createPost);
+router.get('/home', auth, getHomeFeed);
 router.get('/', getAllPosts);
 router.get('/:id', getPostById);
 router.put('/:id', auth, updatePost);

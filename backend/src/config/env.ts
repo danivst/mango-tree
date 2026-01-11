@@ -32,7 +32,17 @@ export const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? '';
 /* ---------- ENV MODE ---------- */
 export const NODE_ENV = process.env.NODE_ENV || 'development';
 
+/* ---------- EMAIL ---------- */
+export const RESEND_API_KEY = process.env.RESEND_API_KEY ?? '';
+export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
 /* ---------- LOG (DEV ONLY) ---------- */
 if (NODE_ENV === 'development') {
   console.log('✅ Environment variables loaded');
+  if (RESEND_API_KEY) {
+    console.log(`✅ Resend API key configured: ${RESEND_API_KEY.substring(0, 10)}...`);
+    console.log(`📧 Resend from email: ${RESEND_FROM_EMAIL}`);
+  } else {
+    console.log('⚠️ Resend API key not configured. Will use SMTP if available.');
+  }
 }

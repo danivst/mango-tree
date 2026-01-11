@@ -34,7 +34,7 @@ const seedData = async () => {
         email: `user${i}@example.com`,
         passwordHash,
         role: i === 1 ? 'admin' : 'user',
-        avatar: `https://i.pravatar.cc/150?img=${i}`,
+        profileImage: `https://i.pravatar.cc/150?img=${i}`,
         bio: `I love cooking! User ${i}`,
         followers: [],
         following: [],

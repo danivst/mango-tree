@@ -1,70 +1,55 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './auth/AuthContext';
-import { ProtectedRoute } from './auth/ProtectedRoute';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import Login from './pages/Login'
+import ResetPassword from './pages/ResetPassword'
+import ProtectedRoute from './components/ProtectedRoute'
+import PublicRoute from './components/PublicRoute'
 
-import AuthLayout from './layouts/AuthLayout';
-import MainLayout from './layouts/MainLayout';
-import AdminLayout from './layouts/AdminLayout';
-
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
-
-import Home from './pages/user/Home';
-import Upload from './pages/user/Upload';
-import Profile from './pages/user/Profile';
-import Settings from './pages/user/Settings';
-import Notifications from './pages/user/Notifications';
-
-import AdminDashboard from './pages/admin/Dashboard';
-import Reports from './pages/admin/Reports';
-import Users from './pages/admin/Users';
+// Placeholder Home component - will be replaced later
+const Home = () => {
+  return (
+    <div style={{ padding: '20px', textAlign: 'center' }}>
+      <h1>Welcome to MangoTree!</h1>
+      <p>Home page - to be implemented</p>
+    </div>
+  )
+}
 
 function App() {
   return (
-    <AuthProvider>
-        <Routes>
-
-          {/* ---------- AUTH ---------- */}
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-          </Route>
-
-          {/* ---------- USER ---------- */}
-          <Route
-            element={
-              <ProtectedRoute>
-                <MainLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/" element={<Home />} />
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/notifications" element={<Notifications />} />
-          </Route>
-
-          {/* ---------- ADMIN ---------- */}
-          <Route
-            element={
-              <ProtectedRoute role="admin">
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/reports" element={<Reports />} />
-            <Route path="/admin/users" element={<Users />} />
-          </Route>
-
-        </Routes>
-    </AuthProvider>
-  );
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route 
+          path="/login" 
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/signin" 
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/reset-password" 
+          element={<ResetPassword />} 
+        />
+        <Route 
+          path="/home" 
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          } 
+        />
+      </Routes>
+    </Router>
+  )
 }
 
-export default App;
+export default App
