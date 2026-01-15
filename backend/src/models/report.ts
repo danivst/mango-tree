@@ -4,7 +4,7 @@ import ReportTargetType from '../enums/report-target-type';
 
 export interface IReport extends Document {
   reportedBy: Types.ObjectId;
-  targetType: keyof typeof ReportTargetType;
+  targetType: typeof ReportTargetType[keyof typeof ReportTargetType];
   targetId: Types.ObjectId;
   reason: string;
   status: typeof ReportStatusType[keyof typeof ReportStatusType];

@@ -10,7 +10,17 @@ export const getCategories = async (
 ): Promise<Response> => {
   try {
     const categories = await Category.find().sort({ name: 1 });
-    return res.json(categories);
+    
+    // For categories created before admin tracking, mark as System
+    const categoriesWithCreator = categories.map(cat => {
+      const catObj = cat.toObject();
+      return {
+        ...catObj,
+        createdBy: catObj.createdAt && new Date(catObj.createdAt) < new Date('2024-01-01') ? 'System' : 'System' // Simplified for now
+      };
+    });
+    
+    return res.json(categoriesWithCreator);
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
@@ -34,7 +44,18 @@ export const createCategory = async (
     }
 
     const category = await Category.create({ name });
-    return res.status(201).json({ message: 'Category created', category });
+    
+    // Return category with admin email as createdBy
+    const user = await (await import('../models/user')).default.findById(req.user!.userId);
+    const createdBy = user?.email || 'System';
+    
+    return res.status(201).json({ 
+      message: 'Category created', 
+      category: {
+        ...category.toObject(),
+        createdBy
+      }
+    });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }

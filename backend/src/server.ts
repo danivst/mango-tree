@@ -10,6 +10,7 @@ import userRoutes from './routes/user-routes';
 import tagRoutes from './routes/tag-routes';
 import notificationRoutes from './routes/notification-routes';
 import authRoutes from './routes/auth-routes';
+import adminRoutes from './routes/admin-routes';
 import { connectDB } from './config/db';
 import './config/env';
 
@@ -35,6 +36,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin', adminRoutes);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 

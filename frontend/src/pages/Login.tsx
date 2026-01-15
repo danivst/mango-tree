@@ -13,7 +13,7 @@ const Login = () => {
     return 'login'
   })
   
-  // Check for session expiry message
+  // Check for session expiry message and account suspension
   useEffect(() => {
     const sessionExpired = sessionStorage.getItem('sessionExpired')
     if (sessionExpired === 'true') {
@@ -24,7 +24,27 @@ const Login = () => {
       })
       sessionStorage.removeItem('sessionExpired')
     }
+
+    const accountSuspended = sessionStorage.getItem('accountSuspended')
+    const suspensionReason = sessionStorage.getItem('suspensionReason')
+    if (accountSuspended === 'true' && suspensionReason) {
+      // Show suspension modal
+      setShowSuspensionModal(true)
+      setSuspensionReason(suspensionReason)
+      sessionStorage.removeItem('accountSuspended')
+      sessionStorage.removeItem('suspensionReason')
+    }
   }, [])
+  
+  const [showSuspensionModal, setShowSuspensionModal] = useState(false)
+  const [suspensionReason, setSuspensionReason] = useState('')
+  
+  const handleSuspensionOK = () => {
+    setShowSuspensionModal(false)
+    setSuspensionReason('')
+    // Auth will be cleared by the interceptor
+    window.location.href = '/login'
+  }
   const [loginUsername, setLoginUsername] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
@@ -99,9 +119,10 @@ const Login = () => {
         localStorage.setItem('token', response.token)
         localStorage.setItem('refreshToken', response.refreshToken)
       }
-      // Redirect to home after a short delay to show success message
+      // Redirect based on role
+      const redirectTo = response.redirectTo || '/home'
       setTimeout(() => {
-        navigate('/home')
+        navigate(redirectTo)
       }, 1000)
     } catch (error: any) {
       const errorData = error.response?.data
@@ -561,6 +582,29 @@ const Login = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Account Suspension Modal */}
+      {showSuspensionModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2 className="modal-title">Account Suspended</h2>
+            <p className="modal-subtitle" style={{ marginBottom: '24px', textAlign: 'left' }}>
+              Your account has been permanently suspended due to this reason: <strong>{suspensionReason}</strong>
+            </p>
+            <p className="modal-subtitle" style={{ marginBottom: '24px', textAlign: 'left' }}>
+              If you think this was a mistake, <strong>immediately reach out to mangotree@support.com</strong>, with subject: <strong>your username termination</strong> and include a screenshot of this message.
+            </p>
+            <div className="form-actions" style={{ justifyContent: 'center' }}>
+              <button
+                className="btn-solid"
+                onClick={handleSuspensionOK}
+              >
+                OK
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -23,11 +23,24 @@ api.interceptors.request.use(
   }
 )
 
-// Response interceptor - handle token expiry
+// Response interceptor - handle token expiry and account suspension
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
+      // Check if it's an account suspension (user not found)
+      if (error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
+        const message = (error.response.data as any).message
+        if (message && message.includes('suspended') || message.includes('terminated')) {
+          // Account was deleted/suspended
+          clearAuth()
+          sessionStorage.setItem('accountSuspended', 'true')
+          sessionStorage.setItem('suspensionReason', message)
+          window.location.href = '/login'
+          return Promise.reject(error)
+        }
+      }
+      
       // Token expired or invalid
       clearAuth()
       // Store expiry message in sessionStorage to show on redirect
@@ -47,6 +60,7 @@ export interface LoginResponse {
     username: string
     role: string
   }
+  redirectTo?: string
 }
 
 export interface ErrorResponse {

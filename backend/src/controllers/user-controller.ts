@@ -115,6 +115,22 @@ export const toggleFollow = async (
   }
 };
 
+/* ---------- GET CURRENT USER ---------- */
+export const getCurrentUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<Response> => {
+  try {
+    const user = await User.findById(req.user!.userId).select('-passwordHash');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    return res.json(user);
+  } catch (err: any) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 /* ---------- GET ALL USERS (ADMIN ONLY) ---------- */
 export const getAllUsers = async (
   req: AuthRequest,
@@ -127,8 +143,10 @@ export const getAllUsers = async (
         .json({ message: 'Access denied. Admins only.' });
     }
 
-    const users = await User.find().select('-passwordHash');
-    return res.json(users);
+    const users = await User.find().select('-passwordHash').sort({ createdAt: -1 });
+    // Exclude current user
+    const filteredUsers = users.filter(u => u._id.toString() !== req.user!.userId);
+    return res.json(filteredUsers);
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
@@ -141,6 +159,7 @@ export const deleteUser = async (
 ): Promise<Response> => {
   try {
     const { id } = req.params;
+    const { reason } = req.body;
 
     if (
       req.user!.userId !== id &&
@@ -148,6 +167,28 @@ export const deleteUser = async (
     ) {
       return res.status(403).json({ message: 'Not authorized' });
     }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // If admin is deleting and reason is provided, send notification
+    if (req.user!.role === RoleTypeValue.ADMIN && reason) {
+      await Notification.create({
+        userId: id,
+        type: NotificationType.REPORT_FEEDBACK,
+        message: `Your account has been permanently suspended due to this reason: ${reason}. If you think this was a mistake, immediately reach out to mangotree@support.com, with subject: ${user.username} termination and include a screenshot of this message.`,
+        link: null,
+      });
+    }
+
+    // Delete user's posts and comments
+    const Post = (await import('../models/post')).default;
+    const Comment = (await import('../models/comment')).default;
+    
+    await Post.deleteMany({ authorId: id });
+    await Comment.deleteMany({ userId: id });
 
     await User.findByIdAndDelete(id);
     return res.json({ message: 'Account deleted' });

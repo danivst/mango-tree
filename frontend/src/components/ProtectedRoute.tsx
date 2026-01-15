@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { isTokenValid, clearAuth } from '../utils/auth'
+import { isTokenValid, clearAuth, getUserRole } from '../utils/auth'
 import { useEffect } from 'react'
 
 interface ProtectedRouteProps {
@@ -21,6 +21,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (!isTokenValid()) {
     return <Navigate to="/login" replace />
+  }
+
+  // Block admins from accessing user-only routes
+  const role = getUserRole()
+  if (role === 'admin' && location.pathname === '/home') {
+    return <Navigate to="/dashboard" replace />
   }
 
   return <>{children}</>

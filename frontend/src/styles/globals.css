@@ -1,7 +1,19 @@
+:root {
+  --theme-bg: #F1F0CC;
+  --theme-accent: #FCFBE4;
+  --theme-text: #250B24;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+body {
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {

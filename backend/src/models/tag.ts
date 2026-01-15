@@ -4,6 +4,8 @@ import TagType from '../enums/tag-type';
 export interface ITag extends Document {
   name: string;
   type?: keyof typeof TagType;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const tagSchema: Schema<ITag> = new Schema({

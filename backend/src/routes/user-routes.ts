@@ -5,6 +5,7 @@ import {
   toggleFollow,
   getAllUsers,
   deleteUser,
+  getCurrentUser,
 } from '../controllers/user-controller';
 import { auth } from '../utils/auth';
 
@@ -14,6 +15,7 @@ router.get('/:id', auth, getUserProfile);
 router.put('/:id', auth, updateProfile);
 router.post('/follow', auth, toggleFollow);
 
+router.get('/me', auth, getCurrentUser);
 router.get('/', auth, getAllUsers);
 router.delete('/:id', auth, deleteUser);
 

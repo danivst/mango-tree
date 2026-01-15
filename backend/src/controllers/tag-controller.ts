@@ -10,7 +10,17 @@ export const getTags = async (
 ): Promise<Response> => {
   try {
     const tags = await Tag.find().sort({ name: 1 });
-    return res.json(tags);
+    
+    // For tags created before admin tracking, mark as System
+    const tagsWithCreator = tags.map(tag => {
+      const tagObj = tag.toObject();
+      return {
+        ...tagObj,
+        createdBy: tagObj.createdAt && new Date(tagObj.createdAt) < new Date('2024-01-01') ? 'System' : 'System' // Simplified for now
+      };
+    });
+    
+    return res.json(tagsWithCreator);
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
@@ -31,7 +41,18 @@ export const createTag = async (
     if (exists) return res.status(400).json({ message: 'Tag already exists.' });
 
     const tag = await Tag.create({ name });
-    return res.status(201).json({ message: 'Tag created', tag });
+    
+    // Return tag with admin email as createdBy
+    const user = await (await import('../models/user')).default.findById(req.user!.userId);
+    const createdBy = user?.email || 'System';
+    
+    return res.status(201).json({ 
+      message: 'Tag created', 
+      tag: {
+        ...tag.toObject(),
+        createdBy
+      }
+    });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
