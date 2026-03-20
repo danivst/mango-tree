@@ -117,7 +117,8 @@ const Upload = () => {
     if (validFiles.length !== selectedFiles.length) {
       setSnackbar({
         open: true,
-        message: t("filesSkippedError") ||
+        message:
+          t("filesSkippedError") ||
           "Some files were skipped. Only JPEG, PNG, and WebP formats are supported.",
         type: "error",
       });
@@ -142,16 +143,17 @@ const Upload = () => {
     const newErrors: Record<string, string> = {};
 
     const isQuestion =
-      categories
-        .find((c) => c._id === selectedCategory)
-        ?.name.toLowerCase() === "question";
+      categories.find((c) => c._id === selectedCategory)?.name.toLowerCase() ===
+      "question";
 
     if (!isQuestion && files.length === 0) {
-      newErrors.files = t("selectFileError") || "Please select at least one file.";
+      newErrors.files =
+        t("selectFileError") || "Please select at least one file.";
     }
 
     if (!selectedCategory) {
-      newErrors.category = t("selectCategoryError") || "Please select a category.";
+      newErrors.category =
+        t("selectCategoryError") || "Please select a category.";
     }
 
     if (!title.trim()) {
@@ -159,7 +161,8 @@ const Upload = () => {
     }
 
     if (!description.trim()) {
-      newErrors.description = t("enterDescriptionError") || "Please enter a description.";
+      newErrors.description =
+        t("enterDescriptionError") || "Please enter a description.";
     }
 
     setErrors(newErrors);
@@ -200,7 +203,8 @@ const Upload = () => {
 
       setSnackbar({
         open: true,
-        message: t("uploadSuccess") ||
+        message:
+          t("uploadSuccess") ||
           "Success! Your post is pending for verification. You will be notified once it has been approved/disapproved.",
         type: "success",
       });
@@ -218,7 +222,10 @@ const Upload = () => {
       }, 2000);
     } catch (error: any) {
       console.error("Upload failed:", error);
-      const errorMessage = error.response?.data?.message || t("somethingWentWrong") || "Something went wrong.";
+      const errorMessage =
+        error.response?.data?.message ||
+        t("somethingWentWrong") ||
+        "Something went wrong.";
       setSnackbar({
         open: true,
         message: errorMessage,
@@ -233,7 +240,9 @@ const Upload = () => {
     <div style={{ display: "flex" }}>
       <UserSidebar />
       <div className="admin-page" style={{ flex: 1 }}>
-        <h1 className="admin-page-title" style={{marginBottom: '16px'}}>{t("uploadPost") || "Upload a post"}</h1>
+        <h1 className="admin-page-title" style={{ marginBottom: "16px" }}>
+          {t("uploadPost") || "Upload a post"}
+        </h1>
 
         <form onSubmit={handleSubmit}>
           {/* File Upload */}
@@ -366,7 +375,9 @@ const Upload = () => {
                 MozAppearance: "none",
               }}
             >
-              <option value="">{t("selectCategory") || "Select a category"}</option>
+              <option value="">
+                {t("selectCategory") || "Select a category"}
+              </option>
               {categories.map((category) => (
                 <option key={category._id} value={category._id}>
                   {getCategoryDisplayName(category)}
@@ -438,7 +449,7 @@ const Upload = () => {
                   </span>
                 ) : null;
               })}
-              
+
               {/* Add Tag Plus Icon/Dropdown */}
               <div style={{ position: "relative" }} ref={dropdownRef}>
                 <button
@@ -486,7 +497,7 @@ const Upload = () => {
                     )}
                   </svg>
                 </button>
-                
+
                 {showTagDropdown && (
                   <div
                     style={{
@@ -503,8 +514,16 @@ const Upload = () => {
                       overflowY: "auto",
                     }}
                   >
-                    {tags.filter(tag => !selectedTags.includes(tag._id)).length === 0 ? (
-                      <div style={{ padding: "10px", fontSize: "14px", color: "var(--theme-text)", opacity: 0.7 }}>
+                    {tags.filter((tag) => !selectedTags.includes(tag._id))
+                      .length === 0 ? (
+                      <div
+                        style={{
+                          padding: "10px",
+                          fontSize: "14px",
+                          color: "var(--theme-text)",
+                          opacity: 0.7,
+                        }}
+                      >
                         No more tags
                       </div>
                     ) : (
@@ -522,8 +541,13 @@ const Upload = () => {
                               borderBottom: "1px solid rgba(0,0,0,0.05)",
                               transition: "background 0.2s ease",
                             }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.05)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background =
+                                "rgba(0,0,0,0.05)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "transparent")
+                            }
                           >
                             {t(tag.name.toLowerCase()) || tag.name}
                           </div>
@@ -546,7 +570,9 @@ const Upload = () => {
                 setErrors({ ...errors, title: "" });
               }}
               className="admin-form-input"
-              placeholder={t("briefDescription") || "Brief description of your upload"}
+              placeholder={
+                t("briefDescription") || "Brief description of your upload"
+              }
               maxLength={100}
               style={{
                 borderColor: errors.title ? "#d32f2f" : undefined,
@@ -576,7 +602,10 @@ const Upload = () => {
                 setErrors({ ...errors, description: "" });
               }}
               className="admin-form-textarea"
-              placeholder={t("detailedDescription") || "Detailed description of what you've uploaded"}
+              placeholder={
+                t("detailedDescription") ||
+                "Detailed description of what you've uploaded"
+              }
               rows={6}
               style={{
                 borderColor: errors.description ? "#d32f2f" : undefined,
@@ -597,7 +626,10 @@ const Upload = () => {
           </div>
 
           {/* Submit Button */}
-          <div className="admin-form-group" style={{ marginTop: "32px", textAlign: "center" }}>
+          <div
+            className="admin-form-group"
+            style={{ marginTop: "32px", textAlign: "center" }}
+          >
             <button
               type="submit"
               className="admin-button-primary"

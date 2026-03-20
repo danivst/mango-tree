@@ -12,8 +12,11 @@ import { getDualTranslation } from "../utils/translation";
 import { AuthRequest } from "../utils/auth";
 
 // Helper to get translation based on user language
-const getLocalizedText = (userLang: string, translations: { bg: string; en: string }): string => {
-  return userLang === 'bg' ? translations.bg : translations.en;
+const getLocalizedText = (
+  userLang: string,
+  translations: { bg: string; en: string },
+): string => {
+  return userLang === "bg" ? translations.bg : translations.en;
 };
 
 /* ---------- REGISTER ---------- */
@@ -103,23 +106,30 @@ export const registerUser = async (
     },
   });
 
-  const token = jwt.sign({ userId: user._id, username: user.username, role: user.role }, JWT_SECRET, {
-    expiresIn: "24h",
-  });
+  const token = jwt.sign(
+    { userId: user._id, username: user.username, role: user.role },
+    JWT_SECRET,
+    {
+      expiresIn: "24h",
+    },
+  );
 
   const refreshToken = jwt.sign({ userId: user._id }, JWT_REFRESH_SECRET, {
     expiresIn: "7d",
   });
 
   // Send welcome/account creation email based on user's language preference
-  const userLang = user.language || 'en';
+  const userLang = user.language || "en";
 
-  const [titleTrans, greetingTrans, bodyTrans, signatureTrans] = await Promise.all([
-    getDualTranslation("Welcome to MangoTree!"),
-    getDualTranslation(`Hello ${username}!`),
-    getDualTranslation("Your account has been successfully created. You can now log in and start sharing your content with the community. Welcome aboard!"),
-    getDualTranslation("Sincerely, the MangoTree team"),
-  ]);
+  const [titleTrans, greetingTrans, bodyTrans, signatureTrans] =
+    await Promise.all([
+      getDualTranslation("Welcome to MangoTree!"),
+      getDualTranslation(`Hello ${username}!`),
+      getDualTranslation(
+        "Your account has been successfully created. You can now log in and start sharing your content with the community. Welcome aboard!",
+      ),
+      getDualTranslation("Sincerely, the MangoTree team"),
+    ]);
 
   const title = getLocalizedText(userLang, titleTrans);
   const greeting = getLocalizedText(userLang, greetingTrans);
@@ -192,9 +202,13 @@ export const loginUser = async (
       .json({ message: "Incorrect password", field: "password" });
   }
 
-  const token = jwt.sign({ userId: user._id, username: user.username, role: user.role }, JWT_SECRET, {
-    expiresIn: "24h",
-  });
+  const token = jwt.sign(
+    { userId: user._id, username: user.username, role: user.role },
+    JWT_SECRET,
+    {
+      expiresIn: "24h",
+    },
+  );
 
   const refreshToken = jwt.sign({ userId: user._id }, JWT_REFRESH_SECRET, {
     expiresIn: "7d",
@@ -211,7 +225,8 @@ export const loginUser = async (
       bio: user.bio,
       translations: user.translations,
     },
-    redirectTo: user.role === RoleTypeValue.ADMIN ? "/admin/dashboard" : "/home",
+    redirectTo:
+      user.role === RoleTypeValue.ADMIN ? "/admin/dashboard" : "/home",
   });
 };
 
@@ -263,17 +278,32 @@ export const registerAdmin = async (
   });
 
   // Determine user's language (default to English)
-  const userLang = user.language || 'en';
+  const userLang = user.language || "en";
 
   // Get translations for email
-  const [titleTrans, greetingTrans, credentialsTrans, usernameLabelTrans, passwordLabelTrans, instructionTrans, footerTrans, signatureTrans] = await Promise.all([
+  const [
+    titleTrans,
+    greetingTrans,
+    credentialsTrans,
+    usernameLabelTrans,
+    passwordLabelTrans,
+    instructionTrans,
+    footerTrans,
+    signatureTrans,
+  ] = await Promise.all([
     getDualTranslation("MangoTree Admin Account Created"),
-    getDualTranslation("An admin account has been created for you on MangoTree."),
+    getDualTranslation(
+      "An admin account has been created for you on MangoTree.",
+    ),
     getDualTranslation("Your login credentials are:"),
     getDualTranslation("Username:"),
     getDualTranslation("Temporary Password:"),
-    getDualTranslation("Please log in immediately and change your password for security reasons."),
-    getDualTranslation("If you did not request this account, please contact support immediately."),
+    getDualTranslation(
+      "Please log in immediately and change your password for security reasons.",
+    ),
+    getDualTranslation(
+      "If you did not request this account, please contact support immediately.",
+    ),
     getDualTranslation("Sincerely, the MangoTree team"),
   ]);
 
@@ -316,7 +346,8 @@ export const registerAdmin = async (
   }
 
   return res.status(201).json({
-    message: "Admin account created successfully. Login credentials sent to email.",
+    message:
+      "Admin account created successfully. Login credentials sent to email.",
     user: {
       id: user._id,
       username: user.username,
@@ -392,15 +423,28 @@ export const requestPasswordReset = async (
   const resetLink = `${CLIENT_URL}/reset-password?token=${resetToken}`;
 
   // Determine user's language preference (default to English)
-  const userLang = user.language || 'en';
+  const userLang = user.language || "en";
 
   // Get translations for all email content
-  const [titleTrans, introTrans, buttonTrans, ignoreTrans, automatedTrans, signatureTrans] = await Promise.all([
+  const [
+    titleTrans,
+    introTrans,
+    buttonTrans,
+    ignoreTrans,
+    automatedTrans,
+    signatureTrans,
+  ] = await Promise.all([
     getDualTranslation("MangoTree Password Reset"),
-    getDualTranslation("You have requested a password change, please click on the link below and follow the instructions. This link will expire in 15 minutes, after that you will have to submit a new request."),
+    getDualTranslation(
+      "You have requested a password change, please click on the link below and follow the instructions. This link will expire in 15 minutes, after that you will have to submit a new request.",
+    ),
     getDualTranslation("Reset Password"),
-    getDualTranslation("If you have not submitted this request, you can ignore this message."),
-    getDualTranslation("This message is automated therefore any response to it will be in vain. If you have any questions, email mangotree@support.com."),
+    getDualTranslation(
+      "If you have not submitted this request, you can ignore this message.",
+    ),
+    getDualTranslation(
+      "This message is automated therefore any response to it will be in vain. If you have any questions, email mangotree@support.com.",
+    ),
     getDualTranslation("Sincerely, the MangoTree team"),
   ]);
 
@@ -520,9 +564,14 @@ export const changePassword = async (
     }
 
     // Verify current password
-    const passwordMatches = await bcrypt.compare(currentPassword, user.passwordHash);
+    const passwordMatches = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash,
+    );
     if (!passwordMatches) {
-      return res.status(400).json({ message: "Current password is incorrect." });
+      return res
+        .status(400)
+        .json({ message: "Current password is incorrect." });
     }
 
     // Update password

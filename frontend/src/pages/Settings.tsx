@@ -346,8 +346,8 @@ const Settings = () => {
                 >
                   {t("deleteAccount")}
                 </button>
-                </div>
-              )}
+              </div>
+            )}
           </div>
         </div>
         {/* App Theme Section */}
@@ -598,7 +598,9 @@ const Settings = () => {
                 <>
                   <h2 className="admin-modal-title">{t("confirmDeletion")}</h2>
                   <p className="admin-modal-text">
-                    {isAdmin ? t("confirmDeletionText") : t("deleteAccountWarning")}
+                    {isAdmin
+                      ? t("confirmDeletionText")
+                      : t("deleteAccountWarning")}
                   </p>
                   <div className="admin-modal-actions">
                     <button

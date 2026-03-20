@@ -27,7 +27,8 @@ export const translations: Record<Language, Record<string, string>> = {
     password: "Password",
     forgotPassword: "Forgotten password",
     forgotPasswordTitle: "Password Reset",
-    forgotPasswordSubtitle: "Enter your email address and we'll send you a link to reset your password.",
+    forgotPasswordSubtitle:
+      "Enter your email address and we'll send you a link to reset your password.",
     loggingIn: "Logging in...",
     creatingAccount: "Creating account...",
     send: "Send",
@@ -50,7 +51,8 @@ export const translations: Record<Language, Record<string, string>> = {
       "Your account is banned. Reason: {reason}. Please check your email inbox for more information about your account status and possible next steps.",
 
     // Validation
-    passwordMinLength: "Password must be at least 8 characters long, and must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+    passwordMinLength:
+      "Password must be at least 8 characters long, and must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     usernameExists: "Username already exists",
     usernameMinLength: "Username must be at least 3 characters long",
     emailMustContain: "Email must contain @ symbol",
@@ -123,7 +125,8 @@ export const translations: Record<Language, Record<string, string>> = {
     createAdmin: "Create Admin",
     enterAdminEmail: "Enter admin email",
     adminEmailInfo: "A password setup email will be sent to this address",
-    adminAccountCreatedSuccess: "Admin account created successfully! Password setup email sent.",
+    adminAccountCreatedSuccess:
+      "Admin account created successfully! Password setup email sent.",
     failedToCreateAdmin: "Failed to create admin",
     allUsers: "All Users",
     userNotFound: "User not found",
@@ -171,7 +174,8 @@ export const translations: Record<Language, Record<string, string>> = {
     reportComment: "Report Comment",
     reportUser: "Report User",
     enterReportReason: "Please describe why you are reporting this post",
-    enterReportReasonComment: "Please describe why you are reporting this comment",
+    enterReportReasonComment:
+      "Please describe why you are reporting this comment",
     enterReportReasonUser: "Please describe why you are reporting this user",
     cannotReportOwnPost: "You cannot report your own post",
     cannotReportOwnComment: "You cannot report your own comment",
@@ -271,14 +275,16 @@ export const translations: Record<Language, Record<string, string>> = {
     adminDeleteAccountWarning:
       "Are you sure you want to terminate this user's account? This action is permanent and cannot be undone. All of the user's posts and comments will be permanently deleted.",
     adminReasonForDeletion: "Reason for account termination",
-    adminReasonForDeletionPlaceholder: "Enter the reason for terminating this user's account",
+    adminReasonForDeletionPlaceholder:
+      "Enter the reason for terminating this user's account",
     adminConfirmDeletion: "Confirm Account Termination",
     adminConfirmDeletionText:
       "Are you sure you want to permanently delete {username}'s account? All their content will be lost.",
     accountDeletedSuccess: "Account deleted successfully",
     accountDeletedSuccessfully: "Account deleted successfully",
     accountDeletedTitle: "Account Deleted",
-    accountDeletedBody: "Your account has been permanently deleted from MangoTree. This action was taken by an administrator.",
+    accountDeletedBody:
+      "Your account has been permanently deleted from MangoTree. This action was taken by an administrator.",
     removeFollower: "Remove Follower",
     confirmRemoveFollower: "Remove Follower",
     confirmRemoveFollowerMessage:
@@ -289,7 +295,8 @@ export const translations: Record<Language, Record<string, string>> = {
     uploadPost: "Upload a post",
     files: "Files",
     browseFiles: "Browse Files",
-    supportedFormats: "Supported formats: JPEG, PNG, WebP (verified by AI model)",
+    supportedFormats:
+      "Supported formats: JPEG, PNG, WebP (verified by AI model)",
     title: "Title",
     briefDescription: "Brief description of your upload",
     description: "Description",
@@ -299,8 +306,10 @@ export const translations: Record<Language, Record<string, string>> = {
     selectCategoryError: "Please select a category",
     enterTitleError: "Please enter a title",
     enterDescriptionError: "Please enter a description",
-    filesSkippedError: "Some files were skipped Only JPEG, PNG, and WebP formats are supported",
-    uploadSuccess: "Success Your post is pending for verification You will be notified once it has been approved/disapproved",
+    filesSkippedError:
+      "Some files were skipped Only JPEG, PNG, and WebP formats are supported",
+    uploadSuccess:
+      "Success Your post is pending for verification You will be notified once it has been approved/disapproved",
     somethingWentWrong: "Something went wrong",
 
     // Account Settings
@@ -314,7 +323,8 @@ export const translations: Record<Language, Record<string, string>> = {
     fillAllPasswordFields: "Please fill in all password fields",
     passwordChangedSuccess: "Password changed successfully",
     settingsSavedSuccess: "Settings saved successfully",
-    emailUpdatedSuccess: "Email updated successfully Please re-verify if required",
+    emailUpdatedSuccess:
+      "Email updated successfully Please re-verify if required",
     invalidOrMissingToken: "Invalid or missing token",
     passwordSetSuccess: "Password set successfully Redirecting to login",
     passwordResetEmailSent: "Password reset email sent",
@@ -367,9 +377,11 @@ export const translations: Record<Language, Record<string, string>> = {
     postsFromFollowed: "Posts from people you follow",
     suggestedForYou: "Suggested for you",
     noSuggestedPosts: "No suggested posts available",
-    noFollowedPosts: "You're not following anyone yet Follow users to see their posts here",
+    noFollowedPosts:
+      "You're not following anyone yet Follow users to see their posts here",
     welcome: "Welcome",
-    welcomeMessage: "Follow users to see their posts here or browse suggested content below",
+    welcomeMessage:
+      "Follow users to see their posts here or browse suggested content below",
 
     // System
     close: "Close",
@@ -389,14 +401,18 @@ export const translations: Record<Language, Record<string, string>> = {
     // Landing Page
     landingWelcome: "Welcome to MangoTree",
     landingTagline: "Connect, share, and grow with a community that matters.",
-    landingDescription: "MangoTree is a social platform where you can share your thoughts, discover new content, and connect with like-minded people. Join our community today and start your journey.",
+    landingDescription:
+      "MangoTree is a social platform where you can share your thoughts, discover new content, and connect with like-minded people. Join our community today and start your journey.",
     getStarted: "Get Started",
     feature1Title: "Share Your Voice",
-    feature1Desc: "Create posts, express your ideas, and let your creativity shine.",
+    feature1Desc:
+      "Create posts, express your ideas, and let your creativity shine.",
     feature2Title: "Discover Content",
-    feature2Desc: "Browse through personalized feeds and explore content curated just for you.",
+    feature2Desc:
+      "Browse through personalized feeds and explore content curated just for you.",
     feature3Title: "Connect & Engage",
-    feature3Desc: "Follow users, comment on posts, and build meaningful connections.",
+    feature3Desc:
+      "Follow users, comment on posts, and build meaningful connections.",
     landingFooter: "Already have an account? Log in to continue.",
   },
 
@@ -441,7 +457,8 @@ export const translations: Record<Language, Record<string, string>> = {
     password: "Парола",
     forgotPassword: "Забравена парола",
     forgotPasswordTitle: "Нулиране на парола",
-    forgotPasswordSubtitle: "Въведете имейл адреса си и ще ви изпратим линк за нулиране на паролата.",
+    forgotPasswordSubtitle:
+      "Въведете имейл адреса си и ще ви изпратим линк за нулиране на паролата.",
     loggingIn: "Влизане...",
     creatingAccount: "Създаване на профил...",
     send: "Изпращане",
@@ -470,7 +487,8 @@ export const translations: Record<Language, Record<string, string>> = {
     emailNotFound: "Не съществува акаунт с този имейл",
     incorrectPassword: "Грешна парола",
     invalidPassword: "Паролата трябва да отговаря на изискванията",
-    passwordMinLength: "Паролата трябва да е поне 8 символа и да съдържа поне една главна буква, една малка буква, едно число и един специален символ",
+    passwordMinLength:
+      "Паролата трябва да е поне 8 символа и да съдържа поне една главна буква, една малка буква, едно число и един специален символ",
     passwordsDoNotMatch: "Паролите не съвпадат",
     emailCannotBeEdited: "Имейлът не може да бъде редактиран",
 
@@ -512,7 +530,8 @@ export const translations: Record<Language, Record<string, string>> = {
     enterTagName: "Въведете име на таг (1-20 символа)",
     characters: "символа",
     categoryNameEmpty: "Името на категорията не може да е празно",
-    categoryNameTooLong: "Името на категорията не може да е по-дълго от 50 символа",
+    categoryNameTooLong:
+      "Името на категорията не може да е по-дълго от 50 символа",
     categoryCreated: "Категорията е създадена успешно",
     categoryDeleted: "Категорията е изтрита успешно",
     categoryUpdated: "Категорията е обновена успешно",
@@ -536,8 +555,10 @@ export const translations: Record<Language, Record<string, string>> = {
     addAdmin: "Добави администратор",
     createAdmin: "Създай администратор",
     enterAdminEmail: "Въведете имейл на администратор",
-    adminEmailInfo: "Имейл за създаване на парола ще бъде изпратен на този адрес",
-    adminAccountCreatedSuccess: "Администраторски акаунт създаден успешно! Имейл за настройка на парола изпратен.",
+    adminEmailInfo:
+      "Имейл за създаване на парола ще бъде изпратен на този адрес",
+    adminAccountCreatedSuccess:
+      "Администраторски акаунт създаден успешно! Имейл за настройка на парола изпратен.",
     failedToCreateAdmin: "Неуспешно създаване на администратор",
     allUsers: "Всички потребители",
     userNotFound: "Потребителът не е намерен",
@@ -616,7 +637,8 @@ export const translations: Record<Language, Record<string, string>> = {
     postComment: "Публикувай коментар",
     commentAdded: "Коментарът беше добавен успешно",
     commentCannotBeEmpty: "Коментарът не може да бъде празен",
-    mustBeLoggedInToComment: "Моля, влезте в системата, за да оставите коментар",
+    mustBeLoggedInToComment:
+      "Моля, влезте в системата, за да оставите коментар",
     confirmDeleteComment: "Сигурни ли сте, че искате да изтриете този коментар",
 
     // Content Approval
@@ -686,26 +708,30 @@ export const translations: Record<Language, Record<string, string>> = {
     terminateAccount: "Прекрати акаунт",
     deleteAccountWarning:
       "Сигурни ли сте, че искате да продължите? Изтриването на акаунта е перманентно. Вашите публикации и коментари също ще бъдат изтрити?",
-    reasonForDeletionPlaceholder: "Въведете причината за прекратяване на акаунта",
+    reasonForDeletionPlaceholder:
+      "Въведете причината за прекратяване на акаунта",
     confirmDeletionText:
       "Желаете ли да продължите и да изтриете акаунта на {username} завинаги",
     // Admin-specific deletion (more severe warning)
     adminDeleteAccountWarning:
       "Сигурни ли сте, че искате да прекратите акаунта на този потребител? Това действие е перманентно и не може да бъде отменено. Всички публикации и коментари на потребителя ще бъдат изтрити завинаги.",
     adminReasonForDeletion: "Причина за прекратяване на акаунта",
-    adminReasonForDeletionPlaceholder: "Въведете причината за прекратяването на акаунта на потребителя",
+    adminReasonForDeletionPlaceholder:
+      "Въведете причината за прекратяването на акаунта на потребителя",
     adminConfirmDeletion: "Потвърди прекратяване на акаунт",
     adminConfirmDeletionText:
       "Сигурни ли сте, че искате да изтриете завинаги акаунта на {username}? Цялото им съдържание ще бъде загубено.",
     accountDeletedTitle: "Акаунтът е изтрит",
-    accountDeletedBody: "Вашият акаунт беше перманентно изтрит от MangoTree. Това действие беше направено от администратор.",
+    accountDeletedBody:
+      "Вашият акаунт беше перманентно изтрит от MangoTree. Това действие беше направено от администратор.",
     accountDeletedSuccessfully: "Акаунтът е изтрит успешно",
 
     // Post Upload
     uploadPost: "Качване на публикация",
     files: "Файлове",
     browseFiles: "Преглед на файлове",
-    supportedFormats: "Поддържани формати: JPEG, PNG, WebP (проверено от AI модел)",
+    supportedFormats:
+      "Поддържани формати: JPEG, PNG, WebP (проверено от AI модел)",
     title: "Заглавие",
     briefDescription: "Кратко описание на качвания файл",
     description: "Описание",
@@ -715,8 +741,10 @@ export const translations: Record<Language, Record<string, string>> = {
     selectCategoryError: "Моля, изберете категория",
     enterTitleError: "Моля, въведете заглавие",
     enterDescriptionError: "Моля, въведете описание",
-    filesSkippedError: "Някои файлове бяха пропуснати Поддържат се само JPEG, PNG и WebP формати",
-    uploadSuccess: "Успех Вашата публикация изчаква проверка Ще бъдете уведомени, когато бъде одобрена/отхвърлена",
+    filesSkippedError:
+      "Някои файлове бяха пропуснати Поддържат се само JPEG, PNG и WebP формати",
+    uploadSuccess:
+      "Успех Вашата публикация изчаква проверка Ще бъдете уведомени, когато бъде одобрена/отхвърлена",
     somethingWentWrong: "Нещо се обърка",
 
     // Account Settings
@@ -725,12 +753,14 @@ export const translations: Record<Language, Record<string, string>> = {
     language: "Език",
     rememberMe: "ЗАПОМНИ МЕ",
     onlyJPGE: "Поддържат се само JPEG, PNG и WebP формати",
-    invalidResetLink: "Невалиден линк за нулиране Моля, изпращете нов заявка за нулиране на парола",
+    invalidResetLink:
+      "Невалиден линк за нулиране Моля, изпращете нов заявка за нулиране на парола",
     passwordResetSuccess: "Паролата е нулирана успешно",
     fillAllPasswordFields: "Моля, попълнете всички полета за парола",
     passwordChangedSuccess: "Паролата е променена успешно",
     settingsSavedSuccess: "Настройките са запазени успешно",
-    emailUpdatedSuccess: "Имейлът е обновен успешно Моля, проверете отново ако е необходимо",
+    emailUpdatedSuccess:
+      "Имейлът е обновен успешно Моля, проверете отново ако е необходимо",
     invalidOrMissingToken: "Невалиден или липсващ токен",
     passwordSetSuccess: "Паролата е зададена успешно Пренасочване към входа",
     passwordResetEmailSent: "Имейлът за нулиране на парола е изпратен",
@@ -782,9 +812,11 @@ export const translations: Record<Language, Record<string, string>> = {
     postsFromFollowed: "Публикации от хора, които следвате",
     suggestedForYou: "Препоръчани за теб",
     noSuggestedPosts: "Няма препоръчани публикации",
-    noFollowedPosts: "Все още не следвате никого Следвайте потребители, за да видите техните публикации тук",
+    noFollowedPosts:
+      "Все още не следвате никого Следвайте потребители, за да видите техните публикации тук",
     welcome: "Добре дошли",
-    welcomeMessage: "Следвайте потребители, за да видите техните публикации тук или разгледайте препоръчаното съдържание по-долу",
+    welcomeMessage:
+      "Следвайте потребители, за да видите техните публикации тук или разгледайте препоръчаното съдържание по-долу",
 
     // Generic errors
     failedLoadTags: "Неуспешно зареждане на тагове",
@@ -798,15 +830,20 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Landing Page
     landingWelcome: "Добре дошли в MangoTree",
-    landingTagline: "Свързвай се, споделяй и растей с общност, която има значение.",
-    landingDescription: "MangoTree е социална платформа, където можеш да споделяш мислите си, да откриваш ново съдържание и да се свързваш с хора с подобни интереси. Присъединете се към общността ни днес и започнете пътя си.",
+    landingTagline:
+      "Свързвай се, споделяй и растей с общност, която има значение.",
+    landingDescription:
+      "MangoTree е социална платформа, където можеш да споделяш мислите си, да откриваш ново съдържание и да се свързваш с хора с подобни интереси. Присъединете се към общността ни днес и започнете пътя си.",
     getStarted: "Започни",
     feature1Title: "Сподели гласа си",
-    feature1Desc: "Създавайте публикации, изразявайте идеите си и нека креативността ви блесне.",
+    feature1Desc:
+      "Създавайте публикации, изразявайте идеите си и нека креативността ви блесне.",
     feature2Title: "Открий съдържание",
-    feature2Desc: "Разглеждайте персонализирани ленти и изследвайте съдържание, създадено специално за вас.",
+    feature2Desc:
+      "Разглеждайте персонализирани ленти и изследвайте съдържание, създадено специално за вас.",
     feature3Title: "Свързвай се и ангажирай",
-    feature3Desc: "Следвайте потребители, коментирайте публикации и изграждайте значими връзки.",
+    feature3Desc:
+      "Следвайте потребители, коментирайте публикации и изграждайте значими връзки.",
     landingFooter: "Вече имате акаунт? Влезте в системата, за да продължите.",
   },
 };
