@@ -1,7 +1,7 @@
 :root {
-  --theme-bg: #F1F0CC;
-  --theme-accent: #FCFBE4;
-  --theme-text: #250B24;
+  --theme-bg: #f1f0cc;
+  --theme-accent: #fcfbe4;
+  --theme-text: #250b24;
 }
 
 * {
@@ -10,21 +10,25 @@
   box-sizing: border-box;
 }
 
-body {
+html {
   background-color: var(--theme-bg);
   color: var(--theme-text);
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f5f5f5;
-  color: #333;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
 }

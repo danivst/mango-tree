@@ -1,9 +1,39 @@
+/* Gradient for users section */
+.users-section {
+  background: linear-gradient(180deg, var(--theme-bg), var(--theme-accent));
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 32px;
+}
+/* Gradient for settings sections */
+.settings-section {
+  background: linear-gradient(180deg, var(--theme-bg), var(--theme-accent));
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 32px;
+}
 .admin-page {
-  background: white;
+  background: var(--theme-accent);
   border-radius: 16px;
   padding: 32px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  min-height: calc(100vh - 80px);
+  position: absolute;
+  top: 20px;
+  bottom: 20px;
+  left: 320px;
+  right: 20px;
+  height: calc(100vh - 40px);
+  overflow-y: scroll;
+  scrollbar-width: none;
+  color: var(--theme-text);
+}
+
+.admin-page::-webkit-scrollbar {
+  display: none;
 }
 
 .admin-page-header {
@@ -16,10 +46,10 @@
 }
 
 .admin-page-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 32px;
   font-weight: 600;
-  color: #E77728;
+  color: var(--theme-text);
   margin: 0;
 }
 
@@ -31,18 +61,19 @@
 
 .admin-search-input {
   padding: 10px 16px;
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--theme-text);
   border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
-  color: #333;
+  color: var(--theme-text);
+  background: transparent;
   min-width: 250px;
   transition: border-color 0.2s ease;
 }
 
 .admin-search-input:focus {
   outline: none;
-  border-color: #E77728;
+  border-color: var(--theme-text);
 }
 
 .admin-add-button {
@@ -50,11 +81,11 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #E77728;
-  color: #FFBC40;
+  background: var(--theme-accent);
+  color: var(--theme-text);
   border: none;
   border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -62,67 +93,71 @@
 }
 
 .admin-add-button:hover {
-  background: #d6681f;
+  background: var(--theme-accent);
+  opacity: 0.8;
 }
 
 .admin-loading {
   text-align: center;
   padding: 40px;
-  font-family: 'Poppins', sans-serif;
-  color: #666;
+  font-family: "Poppins", sans-serif;
+  color: var(--theme-text);
 }
 
 .admin-table-container {
   overflow-x: auto;
+  position: relative;
 }
 
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .admin-table thead {
-  background: rgba(231, 119, 40, 0.1);
+  background: transparent;
 }
 
 .admin-table th {
   padding: 16px;
   text-align: left;
   font-weight: 600;
-  color: #E77728;
-  border-bottom: 2px solid rgba(231, 119, 40, 0.2);
+  color: var(--theme-text);
+  border-bottom: 2px solid var(--theme-text);
 }
 
 .admin-table td {
   padding: 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  color: #333;
+  border-bottom: 1px solid var(--theme-text);
+  opacity: 0.6;
+  color: var(--theme-text);
 }
 
 .admin-table tr:hover {
-  background: rgba(231, 119, 40, 0.05);
+  background: transparent;
 }
 
 .admin-link {
-  color: #E77728;
+  color: var(--theme-text);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
 .admin-link:hover {
-  color: #d6681f;
+  color: var(--theme-text);
+  opacity: 0.8;
   text-decoration: underline;
 }
 
 .admin-delete-button {
   padding: 8px 16px;
-  background: #A50104;
-  color: white;
+  background: #a50104;
+  color: var(--theme-text);
   border: none;
   border-radius: 6px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -133,6 +168,25 @@
   background: #8a0103;
 }
 
+.admin-button-ban,
+.admin-button-edit {
+  padding: 8px 16px; /* Same size as delete button */
+  background: #e77728; /* Admin role background color */
+  color: var(--theme-text);
+  border: none;
+  border-radius: 6px;
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.admin-button-ban:hover,
+.admin-button-edit:hover {
+  background: #d6681f; /* Slightly darker for hover */
+}
+
 /* Modal Styles */
 .admin-modal-overlay {
   position: fixed;
@@ -140,7 +194,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5); /* semi-transparent black */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -149,26 +203,82 @@
 }
 
 .admin-modal {
-  background: linear-gradient(to bottom, #FFD151, #FFBC40);
+  background: var(--theme-accent);
   border-radius: 16px;
   padding: 32px;
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
+}
+
+.admin-modal.admin-modal-danger {
+  background: var(--theme-accent);
+}
+
+.admin-modal.admin-modal-danger .admin-modal-title {
+  color: var(--theme-text);
+}
+
+.admin-modal.admin-modal-danger .admin-modal-text {
+  color: var(--theme-text);
+}
+
+.admin-modal.admin-modal-danger .admin-modal-actions button:last-child {
+  background: #a50104;
+  color: var(--theme-text);
+}
+
+.admin-modal.admin-modal-warning {
+  background: var(--theme-accent);
+}
+
+.admin-modal.admin-modal-warning .admin-modal-title {
+  color: var(--theme-text);
+}
+
+.admin-modal.admin-modal-warning .admin-modal-text {
+  color: var(--theme-text);
+}
+
+.admin-modal.admin-modal-warning .admin-modal-actions button:last-child {
+  background: #ff9800;
+  color: var(--theme-text);
+}
+
+.admin-modal.admin-modal-warning .admin-modal-actions button:last-child:hover {
+  background: #f57c00;
+}
+
+.admin-modal.admin-modal-danger .admin-modal-actions button:last-child:hover {
+  background: #8a0103;
+}
+
+.admin-modal.admin-modal-add {
+  background: var(--theme-accent);
+}
+
+.admin-modal.admin-modal-add .admin-button-primary {
+  background: #e77728;
+  color: #ffbc40;
+}
+
+.admin-modal.admin-modal-add .admin-button-primary:hover {
+  background: #d6681f;
+  opacity: 1;
 }
 
 .admin-modal-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 24px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
   margin: 0 0 16px 0;
 }
 
 .admin-modal-text {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
-  color: #333;
+  color: var(--theme-text);
   margin: 0 0 24px 0;
   line-height: 1.6;
 }
@@ -179,10 +289,10 @@
 
 .admin-form-label {
   display: block;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: var(--theme-text);
   margin-bottom: 8px;
 }
 
@@ -190,12 +300,12 @@
 .admin-form-textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--theme-text);
   border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
-  color: #333;
-  background: rgba(255, 255, 255, 0.9);
+  color: var(--theme-text);
+  background: transparent;
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
@@ -203,13 +313,56 @@
 .admin-form-input:focus,
 .admin-form-textarea:focus {
   outline: none;
-  border-color: #E77728;
-  background: #fff;
+  border-color: var(--theme-text);
+  background: transparent;
 }
 
 .admin-form-textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+.admin-form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  color: var(--theme-text);
+}
+
+.admin-form-checkbox input[type="checkbox"] {
+  /* Style for the actual checkbox */
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--theme-text);
+  border-radius: 4px;
+  background-color: transparent;
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.admin-form-checkbox input[type="checkbox"]:checked {
+  background-color: #e77728; /* Admin accent color when checked */
+  border-color: #e77728;
+}
+
+.admin-form-checkbox input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--theme-bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .admin-modal-actions {
@@ -225,7 +378,7 @@
   padding: 10px 24px;
   border: none;
   border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -233,26 +386,28 @@
 }
 
 .admin-button-primary {
-  background: #E77728;
-  color: #FFBC40;
+  background: var(--theme-accent);
+  color: var(--theme-text);
 }
 
 .admin-button-primary:hover {
-  background: #d6681f;
+  background: var(--theme-accent);
+  opacity: 0.8;
 }
 
 .admin-button-secondary {
-  background: rgba(255, 255, 255, 0.9);
-  color: #333;
+  background: transparent;
+  color: var(--theme-text);
+  border: 2px solid var(--theme-text);
 }
 
 .admin-button-secondary:hover {
-  background: #fff;
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .admin-button-danger {
-  background: #A50104;
-  color: white;
+  background: #a50104;
+  color: var(--theme-text);
 }
 
 .admin-button-danger:hover {
@@ -268,32 +423,33 @@
 }
 
 .admin-card {
-  background: linear-gradient(to bottom, #FFD151, #FFBC40);
+  background: linear-gradient(180deg, var(--theme-bg), var(--theme-accent));
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .admin-card-category {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 24px;
   font-weight: 600;
-  color: #E77728;
+  color: var(--theme-text);
   margin-bottom: 12px;
 }
 
 .admin-card-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
   margin: 0 0 8px 0;
 }
 
 .admin-card-description {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
-  color: #666;
+  color: var(--theme-text);
   margin: 8px 0;
   line-height: 1.5;
 }
@@ -303,10 +459,11 @@
 }
 
 .admin-content-card {
-  background: linear-gradient(to bottom, #FFD151, #FFBC40);
+  background: var(--theme-accent);
   border-radius: 12px;
   padding: 32px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Responsive */
@@ -341,6 +498,18 @@
   .admin-cards-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Responsive table action buttons */
+  .admin-table .admin-delete-button,
+  .admin-table .admin-button-edit,
+  .admin-table .admin-button-ban {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .admin-table .admin-button-edit {
+    margin-left: 4px !important;
+  }
 }
 
 /* Sortable Headers */
@@ -349,7 +518,7 @@
 }
 
 .sortable-header:hover {
-  background: rgba(231, 119, 40, 0.15) !important;
+  background: transparent !important;
 }
 
 /* Pagination */
@@ -364,11 +533,11 @@
 
 .admin-pagination-button {
   padding: 8px 16px;
-  background: #E77728;
-  color: #FFBC40;
+  background: var(--theme-accent);
+  color: var(--theme-text);
   border: none;
   border-radius: 6px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -376,19 +545,21 @@
 }
 
 .admin-pagination-button:hover:not(:disabled) {
-  background: #d6681f;
+  background: var(--theme-accent);
+  opacity: 0.8;
 }
 
 .admin-pagination-button:disabled {
-  background: #ccc;
-  color: #999;
+  background: var(--theme-accent);
+  color: var(--theme-text);
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .admin-pagination-info {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
-  color: #666;
+  color: var(--theme-text);
 }
 
 /* Filter Controls */
@@ -396,7 +567,7 @@
   padding: 10px 16px;
   border: 2px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
   color: #333;
   background: rgba(255, 255, 255, 0.9);
@@ -406,14 +577,14 @@
 
 .admin-filter-select:focus {
   outline: none;
-  border-color: #E77728;
+  border-color: #e77728;
 }
 
 .admin-filter-date {
   padding: 10px 16px;
   border: 2px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
   color: #333;
   background: rgba(255, 255, 255, 0.9);
@@ -422,7 +593,7 @@
 
 .admin-filter-date:focus {
   outline: none;
-  border-color: #E77728;
+  border-color: #e77728;
 }
 
 @media (max-width: 768px) {
@@ -439,18 +610,18 @@
 
 /* Settings Page */
 .settings-section {
-  background: linear-gradient(to bottom, #FFD151, #FFBC40);
+  background: var(--theme-accent);
   border-radius: 12px;
   padding: 32px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 24px;
 }
 
 .settings-section-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 24px;
   font-weight: 600;
-  color: #E77728;
+  color: var(--theme-text);
   margin: 0 0 24px 0;
 }
 
@@ -473,7 +644,7 @@
   align-items: center;
   gap: 12px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -482,13 +653,13 @@
 }
 
 .theme-option:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
 }
 
 .theme-option.active {
-  border-color: #E77728;
-  background: rgba(255, 255, 255, 0.6);
+  border-color: var(--theme-text);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .theme-preview {
@@ -503,18 +674,18 @@
 }
 
 .theme-option span {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 16px;
   font-weight: 500;
-  color: #333;
+  color: var(--theme-text);
 }
 
 .theme-check {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #E77728;
-  color: #FFF;
+  background: var(--theme-text);
+  color: var(--theme-accent);
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -523,4 +694,73 @@
   justify-content: center;
   font-size: 14px;
   font-weight: bold;
+}
+
+.user-info-section {
+  margin-bottom: 24px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.info-label {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text);
+  min-width: 100px;
+  margin-right: 16px;
+}
+
+.info-value {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  color: var(--theme-text);
+  opacity: 0.8;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.theme-options,
+.language-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.theme-option,
+.language-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.theme-option input[type="radio"],
+.language-option input[type="radio"] {
+  margin: 0;
+}
+
+.theme-label,
+.language-label {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  color: var(--theme-text);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }

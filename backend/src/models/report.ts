@@ -1,49 +1,63 @@
-import mongoose, { Document, Schema, Model, Types } from 'mongoose';
-import ReportStatusType from '../enums/report-status-type';
-import ReportTargetType from '../enums/report-target-type';
+import mongoose, { Document, Schema, Model, Types } from "mongoose";
+import ReportStatusType from "../enums/report-status-type";
+import ReportTargetType from "../enums/report-target-type";
 
 export interface IReport extends Document {
   reportedBy: Types.ObjectId;
-  targetType: typeof ReportTargetType[keyof typeof ReportTargetType];
+  targetType: (typeof ReportTargetType)[keyof typeof ReportTargetType];
   targetId: Types.ObjectId;
   reason: string;
-  status: typeof ReportStatusType[keyof typeof ReportStatusType];
+  // Key name is the language code, value is translated reason
+  translations: {
+    reason: {
+      bg: string;
+      en: string;
+    };
+  };
+  status: (typeof ReportStatusType)[keyof typeof ReportStatusType];
   createdAt: Date;
 }
 
-const reportSchema: Schema<IReport> = new Schema({
-  reportedBy: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'User',
+const reportSchema: Schema<IReport> = new Schema(
+  {
+    reportedBy: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    targetType: {
+      type: String,
+      enum: Object.values(ReportTargetType),
+      required: true,
+    },
+    targetId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
+    reason: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    translations: {
+      bg: { type: String, default: "" },
+      en: { type: String, default: "" },
+    },
+    status: {
+      type: String,
+      enum: Object.values(ReportStatusType),
+      default: ReportStatusType.PENDING,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  targetType: {
-    type: String,
-    enum: Object.values(ReportTargetType),
-    required: true,
+  {
+    timestamps: true,
   },
-  targetId: {
-    type: Schema.Types.ObjectId,
-    required: true,
-  },
-  reason: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  status: {
-    type: String,
-    enum: Object.values(ReportStatusType),
-    default: ReportStatusType.PENDING,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-}, {
-  timestamps: true,
-});
+);
 
-const Report: Model<IReport> = mongoose.model<IReport>('Report', reportSchema);
+const Report: Model<IReport> = mongoose.model<IReport>("Report", reportSchema);
 
 export default Report;

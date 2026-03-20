@@ -1,25 +1,26 @@
-import { Request, Response } from 'express';
-import RoleTypeValue, { RoleType } from '../enums/role-type';
-import Category from '../models/category';
-import { AuthRequest } from '../utils/auth';
+import { Request, Response } from "express";
+import RoleTypeValue from "../enums/role-type";
+import Category from "../models/category";
+import { AuthRequest } from "../utils/auth";
+import { getDualTranslation } from "../utils/translation";
 
 /* ---------- GET CATEGORIES ---------- */
 export const getCategories = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<Response> => {
   try {
-    const categories = await Category.find().sort({ name: 1 });
-    
-    // For categories created before admin tracking, mark as System
-    const categoriesWithCreator = categories.map(cat => {
+    // Sorting by English name for consistency
+    const categories = await Category.find().sort({ "translations.en": 1 });
+
+    const categoriesWithCreator = categories.map((cat) => {
       const catObj = cat.toObject();
       return {
         ...catObj,
-        createdBy: catObj.createdAt && new Date(catObj.createdAt) < new Date('2024-01-01') ? 'System' : 'System' // Simplified for now
+        createdBy: "System",
       };
     });
-    
+
     return res.json(categoriesWithCreator);
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -29,32 +30,49 @@ export const getCategories = async (
 /* ---------- CREATE CATEGORY ---------- */
 export const createCategory = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<Response> => {
   try {
     if (req.user?.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: 'Access denied.' });
+      return res.status(403).json({ message: "Access denied." });
     }
 
     const { name } = req.body as { name: string };
 
-    const exists = await Category.findOne({ name });
-    if (exists) {
-      return res.status(400).json({ message: 'Category already exists.' });
+    if (!name) {
+      return res.status(400).json({ message: "Category name is required." });
     }
 
-    const category = await Category.create({ name });
-    
-    // Return category with admin email as createdBy
-    const user = await (await import('../models/user')).default.findById(req.user!.userId);
-    const createdBy = user?.email || 'System';
-    
-    return res.status(201).json({ 
-      message: 'Category created', 
+    // Automatically generate translations for the new category
+    const translations = await getDualTranslation(name);
+
+    // Check if category already exists in either language
+    const exists = await Category.findOne({
+      $or: [
+        { "translations.en": translations.en },
+        { "translations.bg": translations.bg },
+      ],
+    });
+
+    if (exists) {
+      return res.status(400).json({ message: "Category already exists." });
+    }
+
+    const category = await Category.create({
+      name: translations.en, // Standardizing primary name to English
+      translations,
+    });
+
+    const userModel = (await import("../models/user")).default;
+    const user = await userModel.findById(req.user!.userId);
+    const createdBy = user?.email || "System";
+
+    return res.status(201).json({
+      message: "Category created",
       category: {
         ...category.toObject(),
-        createdBy
-      }
+        createdBy,
+      },
     });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -64,27 +82,37 @@ export const createCategory = async (
 /* ---------- UPDATE CATEGORY ---------- */
 export const updateCategory = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<Response> => {
   try {
     if (req.user?.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: 'Access denied.' });
+      return res.status(403).json({ message: "Access denied." });
     }
 
     const { id } = req.params;
     const { name } = req.body as { name: string };
 
+    if (!name) {
+      return res.status(400).json({ message: "Category name is required." });
+    }
+
+    // Re-generate translations for the updated name
+    const translations = await getDualTranslation(name);
+
     const category = await Category.findByIdAndUpdate(
       id,
-      { name },
-      { new: true }
+      {
+        name: translations.en,
+        translations,
+      },
+      { new: true },
     );
 
     if (!category) {
-      return res.status(404).json({ message: 'Category not found.' });
+      return res.status(404).json({ message: "Category not found." });
     }
 
-    return res.json({ message: 'Category updated', category });
+    return res.json({ message: "Category updated", category });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
@@ -93,21 +121,21 @@ export const updateCategory = async (
 /* ---------- DELETE CATEGORY ---------- */
 export const deleteCategory = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<Response> => {
   try {
     if (req.user?.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: 'Access denied.' });
+      return res.status(403).json({ message: "Access denied." });
     }
 
     const { id } = req.params;
 
     const category = await Category.findByIdAndDelete(id);
     if (!category) {
-      return res.status(404).json({ message: 'Category not found.' });
+      return res.status(404).json({ message: "Category not found." });
     }
 
-    return res.json({ message: 'Category deleted' });
+    return res.json({ message: "Category deleted" });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }

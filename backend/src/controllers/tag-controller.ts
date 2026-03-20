@@ -1,25 +1,31 @@
-import { Request, Response } from 'express';
-import RoleTypeValue, { RoleType } from '../enums/role-type';
-import Tag from '../models/tag';
-import { AuthRequest } from '../utils/auth';
+import { Request, Response } from "express";
+import RoleTypeValue from "../enums/role-type";
+import Tag from "../models/tag";
+import { AuthRequest } from "../utils/auth";
+import { getDualTranslation } from "../utils/translation";
 
 /* ---------- GET ALL TAGS ---------- */
 export const getTags = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<Response> => {
   try {
-    const tags = await Tag.find().sort({ name: 1 });
-    
-    // For tags created before admin tracking, mark as System
-    const tagsWithCreator = tags.map(tag => {
+    // Sort by English name by default
+    const tags = await Tag.find().sort({ "name.en": 1 });
+
+    const tagsWithCreator = tags.map((tag) => {
       const tagObj = tag.toObject();
       return {
         ...tagObj,
-        createdBy: tagObj.createdAt && new Date(tagObj.createdAt) < new Date('2024-01-01') ? 'System' : 'System' // Simplified for now
+        // Using the logic you provided
+        createdBy:
+          tagObj.createdAt &&
+          new Date(tagObj.createdAt) < new Date("2024-01-01")
+            ? "System"
+            : "System",
       };
     });
-    
+
     return res.json(tagsWithCreator);
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -29,29 +35,37 @@ export const getTags = async (
 /* ---------- CREATE TAG ---------- */
 export const createTag = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<Response> => {
   try {
     if (req.user!.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: 'Access denied.' });
+      return res.status(403).json({ message: "Access denied." });
     }
 
     const { name } = req.body as { name: string };
-    const exists = await Tag.findOne({ name });
-    if (exists) return res.status(400).json({ message: 'Tag already exists.' });
 
-    const tag = await Tag.create({ name });
-    
-    // Return tag with admin email as createdBy
-    const user = await (await import('../models/user')).default.findById(req.user!.userId);
-    const createdBy = user?.email || 'System';
-    
-    return res.status(201).json({ 
-      message: 'Tag created', 
+    // Translate the tag name before checking existence/creating
+    const dualNames = await getDualTranslation(name);
+
+    // Check if tag exists (checking both languages to be safe)
+    const exists = await Tag.findOne({
+      $or: [{ "name.en": dualNames.en }, { "name.bg": dualNames.bg }],
+    });
+
+    if (exists) return res.status(400).json({ message: "Tag already exists." });
+
+    const tag = await Tag.create({ name: dualNames });
+
+    const userModel = await (await import("../models/user")).default;
+    const user = await userModel.findById(req.user!.userId);
+    const createdBy = user?.email || "System";
+
+    return res.status(201).json({
+      message: "Tag created",
       tag: {
         ...tag.toObject(),
-        createdBy
-      }
+        createdBy,
+      },
     });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -61,20 +75,28 @@ export const createTag = async (
 /* ---------- UPDATE TAG ---------- */
 export const updateTag = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<Response> => {
   try {
     if (req.user!.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: 'Access denied.' });
+      return res.status(403).json({ message: "Access denied." });
     }
 
     const { id } = req.params;
     const { name } = req.body as { name: string };
 
-    const tag = await Tag.findByIdAndUpdate(id, { name }, { new: true });
-    if (!tag) return res.status(404).json({ message: 'Tag not found.' });
+    // Get new translations for the updated name
+    const dualNames = await getDualTranslation(name);
 
-    return res.json({ message: 'Tag updated', tag });
+    const tag = await Tag.findByIdAndUpdate(
+      id,
+      { name: dualNames },
+      { new: true },
+    );
+
+    if (!tag) return res.status(404).json({ message: "Tag not found." });
+
+    return res.json({ message: "Tag updated", tag });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
@@ -83,18 +105,18 @@ export const updateTag = async (
 /* ---------- DELETE TAG ---------- */
 export const deleteTag = async (
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<Response> => {
   try {
     if (req.user!.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: 'Access denied.' });
+      return res.status(403).json({ message: "Access denied." });
     }
 
     const { id } = req.params;
     const tag = await Tag.findByIdAndDelete(id);
-    if (!tag) return res.status(404).json({ message: 'Tag not found.' });
+    if (!tag) return res.status(404).json({ message: "Tag not found." });
 
-    return res.json({ message: 'Tag deleted' });
+    return res.json({ message: "Tag deleted" });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }

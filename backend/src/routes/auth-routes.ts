@@ -7,6 +7,7 @@ import {
   resetPassword,
   getResetTokenInfo,
   setupPassword,
+  changePassword,
 } from '../controllers/auth-controller';
 import { auth } from '../utils/auth';
 import RoleTypeValue from '../enums/role-type';
@@ -17,6 +18,7 @@ const router: Router = express.Router();
 router.post('/register', registerUser);
 router.post('/register-admin', auth, requireRole(RoleTypeValue.ADMIN), registerAdmin);
 router.post('/login', loginUser);
+router.post('/change-password', auth, changePassword);
 router.post('/forgot-password', requestPasswordReset);
 router.get('/reset-token/:token', getResetTokenInfo);
 router.post('/reset-password', resetPassword);

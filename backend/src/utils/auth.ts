@@ -21,9 +21,17 @@ export const auth = (
   res: Response,
   next: NextFunction
 ) => {
+  console.log("[auth] Middleware called for:", req.method, req.path);
+
+  // Allow OPTIONS requests (CORS preflight) to pass through without auth
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log("[auth] No token provided");
     return res
       .status(401)
       .json({ message: 'No token, authorization denied' });
@@ -37,9 +45,11 @@ export const auth = (
       process.env.JWT_SECRET as string
     ) as JwtPayload;
 
+    console.log("[auth] Token valid, user:", decoded.userId);
     req.user = decoded;
     next();
-  } catch {
+  } catch (err: any) {
+    console.log("[auth] Token invalid:", err.message);
     return res.status(403).json({ message: 'Invalid or expired token' });
   }
 };

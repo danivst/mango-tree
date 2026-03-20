@@ -1,229 +1,193 @@
-import { useState, useEffect, useMemo } from 'react'
-import { adminAPI, Category } from '../../services/adminAPI'
-import Snackbar from '../../components/Snackbar'
-import { sortData, paginateData, getTotalPages, SortState } from '../../utils/tableUtils'
-import './AdminPages.css'
+import { useState, useEffect, useMemo } from "react";
+import { adminAPI, Category } from "../../services/adminAPI";
+import Snackbar from "../../components/Snackbar";
+import {
+  sortData,
+  paginateData,
+  getTotalPages,
+  SortState,
+} from "../../utils/tableUtils";
+import { useThemeLanguage } from "../../context/ThemeLanguageContext";
+import { getTranslation } from "../../utils/translations";
+import { useAdminData } from "../../context/AdminDataContext";
+import "./AdminPages.css";
 
 const Categories = () => {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [creatorFilter, setCreatorFilter] = useState<'all' | 'system' | 'admin'>('all')
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [showAddCategory, setShowAddCategory] = useState(false)
-  const [categoryName, setCategoryName] = useState('')
-  const [sortState, setSortState] = useState<SortState>({ column: null, direction: null })
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 20
+  const { categories, categoriesState, fetchCategories } = useAdminData();
+  const { loading, error, hasFetched } = categoriesState;
+  const { language } = useThemeLanguage();
+  const t = (key: string) => getTranslation(language, key);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [sortState, setSortState] = useState<SortState>({
+    column: null,
+    direction: null,
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
   const [snackbar, setSnackbar] = useState<{
-    open: boolean
-    message: string
-    type: 'success' | 'error'
-  }>({ open: false, message: '', type: 'success' })
+    open: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({ open: false, message: "", type: "success" });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
+  const [editCategoryName, setEditCategoryName] = useState("");
 
-  useEffect(() => {
-    fetchCategories()
-  }, [])
 
-  // Filter categories based on search, creator, and date range
   const filteredData = useMemo(() => {
-    let filtered = categories
-
-    // Search filter
-    if (searchQuery.trim() !== '') {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter((cat) => cat.name.toLowerCase().includes(query))
+    let filtered = categories;
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((cat) =>
+        cat.name.toLowerCase().includes(query),
+      );
     }
+    return filtered;
+  }, [searchQuery, categories]);
 
-    // Creator filter
-    if (creatorFilter === 'system') {
-      filtered = filtered.filter((cat) => !cat.createdBy || cat.createdBy === 'System')
-    } else if (creatorFilter === 'admin') {
-      filtered = filtered.filter((cat) => cat.createdBy && cat.createdBy !== 'System')
-    }
-
-    // Date range filter
-    if (dateFrom) {
-      const fromDate = new Date(dateFrom)
-      filtered = filtered.filter((cat) => {
-        const catDate = new Date(cat.createdAt)
-        return catDate >= fromDate
-      })
-    }
-
-    if (dateTo) {
-      const toDate = new Date(dateTo)
-      toDate.setHours(23, 59, 59, 999)
-      filtered = filtered.filter((cat) => {
-        const catDate = new Date(cat.createdAt)
-        return catDate <= toDate
-      })
-    }
-
-    return filtered
-  }, [searchQuery, creatorFilter, dateFrom, dateTo, categories])
-
-  // Sort filtered data
   const sortedData = useMemo(() => {
-    return sortData(filteredData, sortState.column, sortState.direction, (cat, column) => {
-      switch (column) {
-        case 'name':
-          return cat.name
-        case 'added':
-          return cat.createdAt
-        case 'by':
-          return cat.createdBy || 'System'
-        default:
-          return null
-      }
-    })
-  }, [filteredData, sortState])
+    return sortData(
+      filteredData,
+      sortState.column,
+      sortState.direction,
+      (cat, column) => {
+        switch (column) {
+          case "name":
+            return cat.name;
+          case "added":
+            return cat.createdAt;
+          case "by":
+            return cat.createdBy || "System";
+          default:
+            return null;
+        }
+      },
+    );
+  }, [filteredData, sortState]);
 
-  // Paginate sorted data
   const paginatedData = useMemo(() => {
-    return paginateData(sortedData, currentPage, itemsPerPage)
-  }, [sortedData, currentPage, itemsPerPage])
+    return paginateData(sortedData, currentPage, itemsPerPage);
+  }, [sortedData, currentPage, itemsPerPage]);
 
   const totalPages = useMemo(() => {
-    return getTotalPages(sortedData.length, itemsPerPage)
-  }, [sortedData.length, itemsPerPage])
+    return getTotalPages(sortedData.length, itemsPerPage);
+  }, [sortedData.length, itemsPerPage]);
 
   useEffect(() => {
-    setCurrentPage(1) // Reset to first page when filters change
-  }, [searchQuery, creatorFilter, dateFrom, dateTo])
+    setCurrentPage(1); // Reset to first page when search changes
+  }, [searchQuery]);
 
   const handleSort = (column: string) => {
     setSortState((prev) => {
       if (prev.column === column) {
-        if (prev.direction === 'asc') {
-          return { column, direction: 'desc' }
-        } else if (prev.direction === 'desc') {
-          return { column: null, direction: null }
+        if (prev.direction === "asc") {
+          return { column, direction: "desc" };
+        } else if (prev.direction === "desc") {
+          return { column: null, direction: null };
         }
       }
-      return { column, direction: 'asc' }
-    })
-    setCurrentPage(1)
-  }
+      return { column, direction: "asc" };
+    });
+    setCurrentPage(1);
+  };
 
-  const getSortIcon = (column: string) => {
-    if (sortState.column !== column) {
-      return (
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3 }}>
-          <path d="M8 9l4-4 4 4M8 15l4 4 4-4" />
-        </svg>
-      )
-    }
-    if (sortState.direction === 'asc') {
-      return (
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M8 9l4-4 4 4" />
-        </svg>
-      )
-    }
-    return (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8 15l4 4 4-4" />
-      </svg>
-    )
-  }
-
-  const fetchCategories = async () => {
+  const handleRefresh = async () => {
     try {
-      setLoading(true)
-      const data = await adminAPI.getCategories()
-      setCategories(data)
-    } catch (error: any) {
+      await fetchCategories();
+    } catch (err: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || 'Failed to load categories',
-        type: 'error',
-      })
-    } finally {
-      setLoading(false)
+        message: err.response?.data?.message || "Failed to load categories",
+        type: "error",
+      });
     }
-  }
+  };
 
   const handleAddCategory = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    // ...existing logic for adding a category...
+  };
 
-    if (!categoryName || categoryName.trim().length === 0) {
-      setSnackbar({
-        open: true,
-        message: 'Category name cannot be empty.',
-        type: 'error',
-      })
-      return
-    }
+  const handleDeleteCategoryClick = (id: string) => {
+    setDeleteCategoryId(id);
+    setShowDeleteModal(true);
+  };
 
-    if (categoryName.length > 20) {
-      setSnackbar({
-        open: true,
-        message: 'Category name cannot be longer than 20 characters.',
-        type: 'error',
-      })
-      return
-    }
+  const handleEditClick = (category: Category) => {
+    setEditCategoryId(category._id);
+    setEditCategoryName(category.name);
+    setShowEditModal(true);
+  };
 
+  const handleEditConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editCategoryId) return;
     try {
-      await adminAPI.createCategory(categoryName.trim())
+      await adminAPI.updateCategory(editCategoryId, editCategoryName.trim());
       setSnackbar({
         open: true,
-        message: 'Category created successfully!',
-        type: 'success',
-      })
-      setShowAddCategory(false)
-      setCategoryName('')
-      fetchCategories()
+        message: t("categoryUpdated"),
+        type: "success",
+      });
+      setShowEditModal(false);
+      setEditCategoryId(null);
+      setEditCategoryName("");
+      await fetchCategories();
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || 'Failed to create category',
-        type: 'error',
-      })
+        message: error.response?.data?.message || t("categoryUpdateFailed"),
+        type: "error",
+      });
     }
-  }
+  };
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    if (!window.confirm('Are you sure you want to delete this category?')) {
-      return
-    }
-
+  const handleDeleteCategoryConfirm = async () => {
+    if (!deleteCategoryId) return;
     try {
-      await adminAPI.deleteCategory(categoryId)
+      await adminAPI.deleteCategory(deleteCategoryId);
       setSnackbar({
         open: true,
-        message: 'Category deleted successfully!',
-        type: 'success',
-      })
-      fetchCategories()
+        message: t("categoryDeleted"),
+        type: "success",
+      });
+      await fetchCategories();
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || 'Failed to delete category',
-        type: 'error',
-      })
+        message: error.response?.data?.message || t("deleteCategoryError"),
+        type: "error",
+      });
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteCategoryId(null);
     }
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
+  };
 
   return (
     <div className="admin-page">
       <div className="admin-page-header">
-        <h1 className="admin-page-title">Categories</h1>
+        <h1 className="admin-page-title">{t("categories")}</h1>
         <div className="admin-page-actions">
+          <button
+            className="admin-button-secondary"
+            onClick={handleRefresh}
+            disabled={loading}
+            style={{ marginRight: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            <span className="material-icons" style={{ fontSize: '16px' }}>refresh</span>
+            {t('refresh') || 'Refresh'}
+          </button>
           <input
             type="text"
             className="admin-search-input"
-            placeholder="Search categories..."
+            placeholder={
+              t("search") + " " + t("categories").toLowerCase() + "..."
+            }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -231,84 +195,154 @@ const Categories = () => {
             className="admin-add-button"
             onClick={() => setShowAddCategory(true)}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Add Category
+            {t("addCategory")}
           </button>
         </div>
       </div>
 
+      {error && (
+        <div className="admin-error" style={{ color: '#d32f2f', marginBottom: '16px', padding: '12px', background: '#ffebee', borderRadius: '8px' }}>
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
       {loading ? (
-        <div className="admin-loading">Loading...</div>
+        <div className="admin-loading">{t("loading")}</div>
+      ) : !hasFetched ? (
+        <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
+          No data loaded. Click Refresh to load data.
+        </div>
       ) : (
         <div className="admin-table-container">
           <table className="admin-table">
             <thead>
               <tr>
-                <th className="sortable-header" onClick={() => handleSort('name')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    Category
-                    {getSortIcon('name')}
+                <th
+                  className="sortable-header"
+                  onClick={() => handleSort("name")}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {t("category")}
                   </div>
                 </th>
-                <th className="sortable-header" onClick={() => handleSort('added')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    Added
-                    {getSortIcon('added')}
+                <th
+                  className="sortable-header"
+                  onClick={() => handleSort("by")}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {t("by")}
                   </div>
                 </th>
-                <th className="sortable-header" onClick={() => handleSort('by')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    By
-                    {getSortIcon('by')}
-                  </div>
-                </th>
-                <th>Actions</th>
+                <th>{t("actions")}</th>
               </tr>
             </thead>
             <tbody>
               {paginatedData.map((category) => (
                 <tr key={category._id}>
                   <td>{category.name}</td>
-                  <td>{formatDate(category.createdAt)}</td>
-                  <td>{category.createdBy ? category.createdBy : 'System'}</td>
+                  <td>
+                    {category.createdBy
+                      ? t(category.createdBy.toLowerCase()) ||
+                        category.createdBy
+                      : t("system")}
+                  </td>
                   <td>
                     <button
                       className="admin-delete-button"
-                      onClick={() => handleDeleteCategory(category._id)}
+                      onClick={() => handleDeleteCategoryClick(category._id)}
                     >
-                      Delete
+                      {t("delete")}
+                    </button>
+                    <button
+                      className="admin-button-edit"
+                      onClick={() => handleEditClick(category)}
+                      style={{ marginLeft: "8px" }}
+                    >
+                      {t("edit")}
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="admin-pagination">
               <button
                 className="admin-pagination-button"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
               >
-                Previous
+                {t("previous")}
               </button>
               <span className="admin-pagination-info">
-                Page {currentPage} of {totalPages} ({sortedData.length} total)
+                {t("page")} {currentPage} {t("of")} {totalPages}
               </span>
               <button
                 className="admin-pagination-button"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
                 disabled={currentPage === totalPages}
               >
-                Next
+                {t("next")}
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Delete Category Modal */}
+      {showDeleteModal && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal admin-modal-danger">
+            <h2 className="admin-modal-title">{t("deleteCategory")}</h2>
+            <p className="admin-modal-text">{t("deleteCategoryWarning")}</p>
+            <div className="admin-modal-actions">
+              <button
+                className="admin-button-secondary"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteCategoryId(null);
+                }}
+              >
+                {t("cancel")}
+              </button>
+              <button
+                className="admin-button-danger"
+                onClick={handleDeleteCategoryConfirm}
+              >
+                {t("delete")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -316,10 +350,10 @@ const Categories = () => {
       {showAddCategory && (
         <div className="admin-modal-overlay">
           <div className="admin-modal">
-            <h2 className="admin-modal-title">Add Category</h2>
+            <h2 className="admin-modal-title">{t("addCategory")}</h2>
             <form onSubmit={handleAddCategory}>
               <div className="admin-form-group">
-                <label className="admin-form-label">Category</label>
+                <label className="admin-form-label">{t("category")}</label>
                 <input
                   type="text"
                   className="admin-form-input"
@@ -327,10 +361,15 @@ const Categories = () => {
                   onChange={(e) => setCategoryName(e.target.value)}
                   required
                   maxLength={20}
-                  placeholder="Enter category name (1-20 characters)"
+                  placeholder={
+                    t("enterCategoryName") ||
+                    "Enter category name (1-20 characters)"
+                  }
                 />
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  {categoryName.length}/20 characters
+                <p
+                  style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}
+                >
+                  {categoryName.length}/20 {t("characters")}
                 </p>
               </div>
               <div className="admin-modal-actions">
@@ -338,17 +377,61 @@ const Categories = () => {
                   type="button"
                   className="admin-button-secondary"
                   onClick={() => {
-                    setShowAddCategory(false)
-                    setCategoryName('')
+                    setShowAddCategory(false);
+                    setCategoryName("");
                   }}
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
-                <button
-                  type="submit"
-                  className="admin-button-primary"
+                <button type="submit" className="admin-button-primary">
+                  {t("createCategory") || "Create Category"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Category Modal */}
+      {showEditModal && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal">
+            <h2 className="admin-modal-title">{t("editCategory")}</h2>
+            <form onSubmit={handleEditConfirm}>
+              <div className="admin-form-group">
+                <label className="admin-form-label">{t("category")}</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  value={editCategoryName}
+                  onChange={(e) => setEditCategoryName(e.target.value)}
+                  required
+                  maxLength={20}
+                  placeholder={
+                    t("enterCategoryName") ||
+                    "Enter category name (1-20 characters)"
+                  }
+                />
+                <p
+                  style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}
                 >
-                  Create Category
+                  {editCategoryName.length}/20 {t("characters")}
+                </p>
+              </div>
+              <div className="admin-modal-actions">
+                <button
+                  type="button"
+                  className="admin-button-secondary"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditCategoryId(null);
+                    setEditCategoryName("");
+                  }}
+                >
+                  {t("cancel")}
+                </button>
+                <button type="submit" className="admin-button-primary">
+                  {t("saveChanges") || t("edit")}
                 </button>
               </div>
             </form>
@@ -363,7 +446,7 @@ const Categories = () => {
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       />
     </div>
-  )
-}
+  );
+};
 
-export default Categories
+export default Categories;

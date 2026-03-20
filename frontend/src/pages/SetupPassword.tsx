@@ -2,11 +2,16 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import Snackbar from '../components/Snackbar'
+import { useThemeLanguage } from '../context/ThemeLanguageContext'
+import { getTranslation } from '../utils/translations'
 import './Login.css'
+import logo from '../assets/mangotree-logo.png'
 
 const SetupPassword = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { language } = useThemeLanguage();
+  const t = (key: string) => getTranslation(language, key);
   const token = searchParams.get('token')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -24,7 +29,7 @@ const SetupPassword = () => {
     if (!token) {
       setSnackbar({
         open: true,
-        message: 'Invalid or missing token',
+        message: t('invalidOrMissingToken'),
         type: 'error',
       })
       setTimeout(() => {
@@ -66,7 +71,7 @@ const SetupPassword = () => {
       await api.post('/auth/setup-password', { token, password })
       setSnackbar({
         open: true,
-        message: 'Password set successfully! Redirecting to login...',
+        message: t('passwordSetSuccess'),
         type: 'success',
       })
       setTimeout(() => {
@@ -74,7 +79,7 @@ const SetupPassword = () => {
       }, 2000)
     } catch (error: any) {
       const errorData = error.response?.data
-      const errorMessage = errorData?.message || 'Failed to set password'
+      const errorMessage = errorData?.message || t('actionFailed')
       const errorField = errorData?.field
 
       if (errorField === 'password') {
@@ -95,7 +100,7 @@ const SetupPassword = () => {
     <div className="login-container">
       <div className="login-box">
         <div className="login-header">
-          <div className="logo-placeholder"></div>
+          <img src={logo} alt="MangoTree" className="logo-placeholder" />
           <h1 className="login-title">MangoTree</h1>
         </div>
 

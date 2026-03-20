@@ -10,6 +10,10 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        secure: false,
+        logLevel: 'debug',
+        // Ensure the proxy rewrites the URL correctly
+        rewrite: (path) => path,
       },
     },
   },

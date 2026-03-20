@@ -60,3 +60,40 @@ export const markAllAsRead = async (
     return res.status(500).json({ message: err.message });
   }
 };
+
+/* ---------- DELETE SINGLE NOTIFICATION ---------- */
+export const deleteNotification = async (
+  req: AuthRequest,
+  res: Response
+): Promise<Response> => {
+  try {
+    const userId = req.user!.userId;
+    const { id } = req.params;
+
+    const notification = await Notification.findOneAndDelete({ _id: id, userId });
+
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found.' });
+    }
+
+    return res.json({ message: 'Notification deleted', notification });
+  } catch (err: any) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+/* ---------- DELETE ALL NOTIFICATIONS ---------- */
+export const deleteAllNotifications = async (
+  req: AuthRequest,
+  res: Response
+): Promise<Response> => {
+  try {
+    const userId = req.user!.userId;
+
+    await Notification.deleteMany({ userId });
+
+    return res.json({ message: 'All notifications deleted' });
+  } catch (err: any) {
+    return res.status(500).json({ message: err.message });
+  }
+};
