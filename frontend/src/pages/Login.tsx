@@ -21,6 +21,12 @@ const Login = () => {
     return "login";
   });
 
+  // 2FA state
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [twoFAUserId, setTwoFAUserId] = useState<string | null>(null);
+  const [twoFACode, setTwoFACode] = useState("");
+  const [verifying2FA, setVerifying2FA] = useState(false);
+
   // Check for account deletion, session expiry, and account suspension
   useEffect(() => {
     const accountDeleted = sessionStorage.getItem("accountDeleted");
@@ -105,6 +111,7 @@ const Login = () => {
     signinEmail?: string;
     signinPassword?: string;
     forgotEmail?: string;
+    twofaCode?: string;
   }>({});
 
   // Sync path with active tab
@@ -145,13 +152,28 @@ const Login = () => {
 
     try {
       const response = await authAPI.login(trimmedUsername, password);
+
+      // Check if 2FA is required
+      if (response.twoFactorRequired) {
+        setTwoFAUserId(response.userId ?? null);
+        setShow2FAModal(true);
+        setSnackbar({
+          open: true,
+          message: t("twoFACodeSent"),
+          type: "success",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Normal login flow (no 2FA)
       setSnackbar({
         open: true,
         message: t("successfullyLoggedIn"),
         type: "success",
       });
       // Store tokens if needed
-      if (response.token) {
+      if (response.token && response.refreshToken) {
         localStorage.setItem("token", response.token);
         localStorage.setItem("refreshToken", response.refreshToken);
 
@@ -263,6 +285,64 @@ const Login = () => {
     }
   };
 
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!twoFAUserId) return;
+
+    if (!twoFACode || twoFACode.length !== 6 || !/^\d+$/.test(twoFACode)) {
+      setSnackbar({
+        open: true,
+        message: t("invalid2FACode"),
+        type: "error",
+      });
+      return;
+    }
+
+    setVerifying2FA(true);
+    try {
+      const response = await authAPI.verify2FA(twoFAUserId, twoFACode);
+
+      setSnackbar({
+        open: true,
+        message: t("twoFACodeVerified"),
+        type: "success",
+      });
+
+      // Store tokens
+      if (response.token && response.refreshToken) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("refreshToken", response.refreshToken);
+      }
+
+      // Load user preferences
+      await loadUserPreferences();
+      await refreshUnreadCount();
+
+      // Close modal and reset state
+      setShow2FAModal(false);
+      setTwoFAUserId(null);
+      setTwoFACode("");
+
+      // Redirect
+      const redirectTo = response.redirectTo || "/home";
+      setTimeout(() => {
+        navigate(redirectTo);
+      }, 1000);
+    } catch (error: any) {
+      const errorData = error.response?.data;
+      let errorMessage = errorData?.message || t("serverError");
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        type: "error",
+      });
+      // Clear the code input on error
+      setTwoFACode("");
+    } finally {
+      setVerifying2FA(false);
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setSigningIn(true);
@@ -303,7 +383,7 @@ const Login = () => {
       });
 
       // Store tokens and auto-login
-      if (response.token) {
+      if (response.token && response.refreshToken) {
         localStorage.setItem("token", response.token);
         localStorage.setItem("refreshToken", response.refreshToken);
       }
@@ -780,6 +860,72 @@ const Login = () => {
                   disabled={sendingEmail}
                 >
                   {sendingEmail ? t("sending") : t("send")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2FA Verification Modal */}
+      {show2FAModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-title">{t("twoFactorAuth")}</h2>
+            <p className="modal-subtitle">
+              {t("twoFactorDescription")}
+            </p>
+            <form onSubmit={handleVerify2FA} className="modal-form">
+              <div className="form-group">
+                <label
+                  htmlFor="twofa-code"
+                  className={`form-label ${
+                    errors.twofaCode ? "label-error" : ""
+                  }`}
+                >
+                  {t("twoFACodeLabel")}
+                </label>
+                <input
+                  id="twofa-code"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className={`form-input twofa-code-input ${
+                    errors.twofaCode ? "input-error" : ""
+                  }`}
+                  value={twoFACode}
+                  onChange={(e) => {
+                    // Only allow numeric input, max 6 digits
+                    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                    setTwoFACode(value);
+                    if (errors.twofaCode) {
+                      setErrors({ ...errors, twofaCode: undefined });
+                    }
+                  }}
+                  placeholder={t("twoFACodePlaceholder")}
+                  autoFocus
+                  disabled={verifying2FA}
+                />
+              </div>
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn-text"
+                  onClick={() => {
+                    setShow2FAModal(false);
+                    setTwoFAUserId(null);
+                    setTwoFACode("");
+                  }}
+                  disabled={verifying2FA}
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-solid"
+                  disabled={verifying2FA || twoFACode.length !== 6}
+                >
+                  {verifying2FA ? t("verifying2FA") : t("verify")}
                 </button>
               </div>
             </form>

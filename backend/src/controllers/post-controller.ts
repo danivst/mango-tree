@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 import Post, { IPost } from "../models/post";
 import Comment from "../models/comment";
 import User from "../models/user";
+import Tag from "../models/tag";
 import Notification from "../models/notification";
 import NotificationType from "../enums/notification-type";
 import RoleTypeValue from "../enums/role-type";
@@ -32,24 +33,61 @@ export const createPost = async (
     }
 
     // Ensure tags is an array
-    const tagsArray = Array.isArray(tags) ? tags : [];
+    let tagsArray = Array.isArray(tags) ? tags : [];
+
+    // Convert tag IDs to tag names
+    if (tagsArray.length > 0) {
+      const validTagIds = tagsArray.filter(tag => Types.ObjectId.isValid(tag));
+      if (validTagIds.length > 0) {
+        const tagDocs = await Tag.find({ _id: { $in: validTagIds } }).lean();
+        const idToNameMap = new Map(tagDocs.map((t: any) => [t._id.toString(), t.name]));
+        tagsArray = tagsArray.map(tag =>
+          Types.ObjectId.isValid(tag) && idToNameMap.has(tag)
+            ? idToNameMap.get(tag)!
+            : tag
+        );
+      }
+    }
 
     // AI Moderation for Text and Images
-    let flagged: boolean | null = null;
+    let moderationResult: any = null;
     let moderationError = false;
 
     try {
-      flagged = await moderateContent(title, content, image);
+      moderationResult = await moderateContent(title, content, image);
     } catch (moderationErr: any) {
       console.error("[createPost] Moderation service error:", moderationErr.message);
       moderationError = true;
-      flagged = false; // We'll still create the post but flag for admin review
+      moderationResult = { flagged: false }; // We'll still create the post but flag for admin review
     }
 
-    if (flagged) {
-      const messageEn = "Your post was flagged as inappropriate. Please adjust the content.";
-      const messageBg = "Публикацията ви беше маркирана като неподходяща. Моля, коригирайте съдържанието.";
-      
+    if (moderationResult?.flagged) {
+      // Determine specific error code based on moderation flags
+      let reasonKey: string;
+      let reasonDetail: string = moderationResult.reason || "";
+
+      if (moderationResult.isCookingRelated === false) {
+        reasonKey = "postNotCooking";
+      } else if (moderationResult.isAppropriate === false) {
+        reasonKey = "postInappropriate";
+      } else {
+        // Generic rejection (should not happen with current logic, but fallback)
+        reasonKey = "postRejected";
+      }
+
+      // Send notification to user with "Post rejected. Reason:" prefix
+      const prefixEn = "Post rejected. Reason: ";
+      const prefixBg = "Публикацията е отхвърлена. Причина: ";
+      const reasonEn = moderationResult.reason || "Content is inappropriate.";
+      const reasonBg =
+        moderationResult.isCookingRelated === false
+          ? "Публикацията не е свързана с готвене."
+          : moderationResult.isAppropriate === false
+          ? "Съдържанието е неуместно."
+          : "Съдържанието е неподходящо.";
+      const messageEn = prefixEn + reasonEn;
+      const messageBg = prefixBg + reasonBg;
+
       await Notification.create({
         userId: authorId,
         type: NotificationType.REPORT_FEEDBACK,
@@ -64,7 +102,8 @@ export const createPost = async (
       });
 
       return res.status(400).json({
-        message: "Your post was flagged as inappropriate.",
+        error: reasonKey,
+        reason: reasonDetail,
       });
     }
 
@@ -81,6 +120,21 @@ export const createPost = async (
       contentTrans = { en: content, bg: content };
     }
 
+    // Translate tags with fallback
+    let tagsTranslations: { bg: string[]; en: string[] } = { bg: [], en: [] };
+    if (tagsArray.length > 0) {
+      try {
+        const tagTranslationPromises = tagsArray.map(tag => getDualTranslation(tag));
+        const tagTranslations = await Promise.all(tagTranslationPromises);
+        tagsTranslations.en = tagTranslations.map(t => t.en);
+        tagsTranslations.bg = tagTranslations.map(t => t.bg);
+      } catch (err) {
+        // If translation fails, use original tags for both languages
+        tagsTranslations.en = tagsArray;
+        tagsTranslations.bg = tagsArray;
+      }
+    }
+
     const imagesArray = Array.isArray(image) ? image : [];
 
     // Determine approval status:
@@ -91,15 +145,18 @@ export const createPost = async (
 
     // If moderation failed, optionally notify user that post needs review
     if (moderationError) {
+      const messageEn = "Your post has been submitted and is pending admin review due to AI service limitations.";
+      const messageBg = "Публикацията ви беше изпратена и чака одобрение от администратор поради ограничения в AI услугата.";
+
       try {
         await Notification.create({
           userId: authorId,
-          type: NotificationType.SYSTEM, // or a new type like MODERATION_PENDING
-          message: "Your post has been submitted and is pending admin review due to service limitations.",
+          type: NotificationType.REPORT_FEEDBACK,
+          message: messageEn,
           translations: {
             message: {
-              en: "Your post has been submitted and is pending admin review due to service limitations.",
-              bg: "Публикацията ви беше изпратена и чака одобрение от администратор поради ограничения в услугата.",
+              en: messageEn,
+              bg: messageBg,
             },
           },
           link: null,
@@ -115,6 +172,7 @@ export const createPost = async (
       translations: {
         title: titleTrans,
         content: contentTrans,
+        tags: tagsTranslations,
       },
       image: imagesArray,
       authorId,
@@ -125,18 +183,40 @@ export const createPost = async (
       likes: [],
     });
 
+    // Send success notification for successfully published posts (not pending review)
+    if (isApproved) {
+      try {
+        await Notification.create({
+          userId: authorId,
+          type: NotificationType.REPORT_FEEDBACK,
+          message: "Your post has been published successfully!",
+          translations: {
+            message: {
+              en: "Your post has been published successfully!",
+              bg: "Публикацията ви беше публикувана успешно!",
+            },
+          },
+          link: `/posts/${post._id}`,
+        });
+      } catch (notifErr) {
+        console.error("[createPost] Failed to send success notification:", notifErr);
+        // Don't fail the request if notification fails
+      }
+    }
+
     // Send success message based on status
     if (moderationError) {
       // Post created but needs admin review
       return res.status(202).json({
-        message: "Post created successfully but requires admin review due to moderation service limitations.",
+        messageKey: "postPendingAdminReview",
         post,
       });
     } else {
-      return res.status(201).json(post);
+      return res.status(201).json({
+        messageKey: "postPublishedSuccess",
+        post,
+      });
     }
-
-    return res.status(201).json(post);
   } catch (err: any) {
     console.error("Create Post Error:", err);
     return res.status(500).json({ message: err.message });
@@ -228,32 +308,82 @@ export const updatePost = async (
     }
 
     if (title || content) {
-      const flagged = await moderateContent(
+      const { flagged } = await moderateContent(
         title || post.title,
         content || post.content,
         otherUpdates.image || post.image,
       );
-      if (flagged) return res.status(400).json({ message: "Content flagged" });
+      if (flagged) {
+        return res.status(400).json({
+          error: "contentFlaggedDuringUpdate",
+        });
+      }
     }
 
     const updateData: any = { ...otherUpdates };
+
+    // Convert tag IDs to tag names if tags are being updated
+    if (updateData.tags && Array.isArray(updateData.tags)) {
+      const tagIds = updateData.tags.filter((tag: string) => Types.ObjectId.isValid(tag));
+      if (tagIds.length > 0) {
+        const tagDocs = await Tag.find({ _id: { $in: tagIds } }).lean();
+        const idToNameMap = new Map(tagDocs.map((t: any) => [t._id.toString(), t.name]));
+        updateData.tags = updateData.tags.map((tag: string) =>
+          Types.ObjectId.isValid(tag) && idToNameMap.has(tag)
+            ? idToNameMap.get(tag)!
+            : tag
+        );
+      }
+    }
 
     if (title || content) {
       const [newTitleTrans, newContentTrans] = await Promise.all([
         title
           ? getDualTranslation(title)
-          : Promise.resolve(post.translations.title),
+          : Promise.resolve(post.translations?.title || { en: post.title, bg: post.title }),
         content
           ? getDualTranslation(content)
-          : Promise.resolve(post.translations.content),
+          : Promise.resolve(post.translations?.content || { en: post.content, bg: post.content }),
       ]);
 
       updateData.title = newTitleTrans.en;
       updateData.content = newContentTrans.en;
+      // Preserve existing tags translations if they exist
       updateData.translations = {
         title: newTitleTrans,
         content: newContentTrans,
       };
+      if (post.translations?.tags) {
+        updateData.translations.tags = post.translations.tags;
+      }
+    }
+
+    // If tags are being updated, translate them and merge into translations
+    if (updateData.tags && Array.isArray(updateData.tags)) {
+      const tagsToTranslate = updateData.tags;
+      let tagsTrans: { bg: string[]; en: string[] };
+      try {
+        const tagTranslations = await Promise.all(
+          tagsToTranslate.map((tag: string) => getDualTranslation(tag))
+        );
+        tagsTrans = {
+          en: tagTranslations.map(t => t.en),
+          bg: tagTranslations.map(t => t.bg),
+        };
+      } catch (err) {
+        tagsTrans = { en: tagsToTranslate, bg: tagsToTranslate };
+      }
+
+      // Ensure updateData.translations exists
+      if (!updateData.translations) {
+        // Preserve existing title/content translations if not already being updated
+        updateData.translations = {
+          title: post.translations?.title || { en: post.title, bg: post.title },
+          content: post.translations?.content || { en: post.content, bg: post.content },
+        };
+      }
+      // Set/override tags translations
+      updateData.translations.tags = tagsTrans;
     }
 
     const updatedPost = await Post.findByIdAndUpdate(id, updateData, {
@@ -355,6 +485,16 @@ export const translatePost = async (
       getDualTranslation(contentToTranslate),
     ]);
 
+    // Translate tags
+    let translatedTags: string[] = [];
+    if (post.tags && post.tags.length > 0) {
+      const tagsTranslations = await Promise.all(
+        post.tags.map(tag => getDualTranslation(tag))
+      );
+      const isBg = targetLang === 'bg';
+      translatedTags = tagsTranslations.map(t => (isBg ? t.bg : t.en));
+    }
+
     // Return the requested language
     const isBg = targetLang === 'bg';
     const translatedTitle = isBg ? titleTrans.bg : titleTrans.en;
@@ -363,6 +503,7 @@ export const translatePost = async (
     return res.json({
       title: translatedTitle,
       content: translatedContent,
+      tags: translatedTags,
       sourceLang: isBg ? 'en' : 'bg',
       targetLang: targetLang,
     });
@@ -385,7 +526,59 @@ export const deletePost = async (
     ) {
       return res.status(403).json({ message: "Not authorized" });
     }
+
+    const authorId = post.authorId;
+    const postTitle = post.title;
+
     await Post.findByIdAndDelete(req.params.id);
+
+    // Determine if this is self-deletion or admin deletion
+    const isSelfDeletion = authorId.toString() === req.user!.userId;
+
+    if (isSelfDeletion) {
+      // Notify the user that they deleted their own post
+      const messageEn = `You deleted your post.`;
+      const messageBg = `Вие изтрихте вашата публикация.`;
+
+      try {
+        await Notification.create({
+          userId: authorId,
+          type: NotificationType.POST_DELETED,
+          message: messageEn,
+          translations: {
+            message: {
+              en: messageEn,
+              bg: messageBg,
+            },
+          },
+          link: "/account",
+        });
+      } catch (notifErr) {
+        console.error("[deletePost] Failed to send self-deletion notification:", notifErr);
+      }
+    } else if (req.user!.role === RoleTypeValue.ADMIN) {
+      // Admin deleted someone else's post: notify the author
+      const messageEn = `Your post was removed by an administrator.`;
+      const messageBg = `Вашата публикация беше премахната от администратор.`;
+
+      try {
+        await Notification.create({
+          userId: authorId,
+          type: NotificationType.POST_DELETED,
+          message: messageEn,
+          translations: {
+            message: {
+              en: messageEn,
+              bg: messageBg,
+            },
+          },
+          link: "/account",
+        });
+      } catch (notifErr) {
+        console.error("[deletePost] Failed to send admin-deletion notification:", notifErr);
+      }
+    }
+
     return res.json({ message: "Post deleted successfully" });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });

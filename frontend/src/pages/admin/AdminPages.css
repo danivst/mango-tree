@@ -322,6 +322,20 @@
   min-height: 100px;
 }
 
+/* 2FA code input - large code, normal placeholder */
+.twofa-code-input {
+  font-size: 24px !important;
+  letter-spacing: 8px !important;
+  text-align: center !important;
+}
+
+.twofa-code-input::placeholder {
+  font-size: 14px !important;
+  letter-spacing: normal !important;
+  opacity: 0.5;
+  text-align: center !important;
+}
+
 .admin-form-checkbox {
   display: flex;
   align-items: center;
@@ -455,11 +469,11 @@
 }
 
 .admin-content-view {
-  max-width: 800px;
+  width: 100%;
 }
 
 .admin-content-card {
-  background: var(--theme-accent);
+  background: linear-gradient(180deg, var(--theme-bg), var(--theme-accent));
   border-radius: 12px;
   padding: 32px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -610,7 +624,7 @@
 
 /* Settings Page */
 .settings-section {
-  background: var(--theme-accent);
+  background: linear-gradient(180deg, var(--theme-bg), var(--theme-accent));
   border-radius: 12px;
   padding: 32px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -644,7 +658,7 @@
   align-items: center;
   gap: 12px;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.08);  
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -659,7 +673,8 @@
 
 .theme-option.active {
   border-color: var(--theme-text);
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.15);  
+  opacity: 1;
 }
 
 .theme-preview {

@@ -29,7 +29,7 @@ export const JWT_REFRESH_SECRET = requireEnv("JWT_REFRESH_SECRET");
 export const CLIENT_URL = requireEnv("CLIENT_URL");
 
 /* ---------- AI / EXTERNAL SERVICES ---------- */
-// Fail fast if missing GEMINI_API_KEY
+// Gemini API for content moderation
 export const GEMINI_API_KEY = requireEnv("GEMINI_API_KEY");
 export const DEEPL_API_KEY = requireEnv("DEEPL_API_KEY");
 

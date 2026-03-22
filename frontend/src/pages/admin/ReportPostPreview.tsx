@@ -2,8 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { adminAPI, Report } from "../../services/adminAPI";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
-import { getTranslation } from "../../utils/translations";
-import { getToken } from "../../utils/auth";
+import { getTranslation, Language } from "../../utils/translations";
 import { postsAPI, usersAPI, UserProfile, Comment, Post as PostType } from "../../services/api";
 import api from "../../services/api";
 import { Category } from "../../services/adminAPI";
@@ -29,7 +28,7 @@ const ReportPostPreview = () => {
 
   // Translation states (for post preview)
   const [showTranslation, setShowTranslation] = useState(false);
-  const [translationCache, setTranslationCache] = useState<{ title: string; content: string } | null>(null);
+  const [translationCache, setTranslationCache] = useState<{ title: string; content: string; tags?: string[] } | null>(null);
   const [translating, setTranslating] = useState(false);
 
   // Translation states for comment
@@ -43,34 +42,23 @@ const ReportPostPreview = () => {
   const [userCategories, setUserCategories] = useState<Category[]>([]);
   const [selectedUserCategoryId, setSelectedUserCategoryId] = useState<string | null>(null);
 
-  const currentUserId = useMemo(() => {
-    const token = getToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId || null;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  // Compute special categories (recipe, flex, question) for tabs
+  // Compute special categories (recipe, question, flex) for tabs in correct order
   const specialCategories = useMemo(() => {
     if (!userCategories.length) return [];
-    const lowerNames = ["recipe", "flex", "question"];
-    return userCategories.filter((cat) => lowerNames.includes(cat.name.toLowerCase()));
+    const lowerNames = ["recipe", "question", "flex"];
+    const filtered = userCategories.filter((cat) => lowerNames.includes(cat.name.toLowerCase()));
+    // Sort according to desired order: recipe -> question -> flex
+    const order = ["recipe", "question", "flex"];
+    return filtered.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      return order.indexOf(aName) - order.indexOf(bName);
+    });
   }, [userCategories]);
-
-  // Set default selected category when specialCategories load
-  useEffect(() => {
-    if (report?.targetType === "user" && specialCategories.length > 0 && !selectedUserCategoryId) {
-      setSelectedUserCategoryId(specialCategories[0]._id);
-    }
-  }, [report?.targetType, specialCategories, selectedUserCategoryId]);
 
   // Filter posts by selected category
   const filteredPosts = useMemo(() => {
-    if (!selectedUserCategoryId) return [];
+    if (!selectedUserCategoryId) return userPosts; // Show all posts when "All" selected
     return userPosts.filter((post) => post.category && post.category._id === selectedUserCategoryId);
   }, [userPosts, selectedUserCategoryId]);
 
@@ -122,14 +110,9 @@ const ReportPostPreview = () => {
           const userData = await usersAPI.getUser(currentReport.targetId);
           setUser(userData);
 
-          // Fetch user's posts
+          // Fetch user's posts (include all for admin moderation)
           const postsResponse = await api.get<PostType[]>(`/posts/author/${currentReport.targetId}`);
-          let posts = postsResponse.data;
-          // If viewing another user's profile (i.e., the admin is not the user), hide unapproved posts (as regular users see)
-          if (currentUserId && currentUserId !== userData._id) {
-            posts = posts.filter(post => post.isApproved !== false);
-          }
-          setUserPosts(posts);
+          setUserPosts(postsResponse.data);
 
           // Fetch categories for post category names (and tabs if needed)
           const categoriesResponse = await api.get<Category[]>("/categories");
@@ -152,8 +135,12 @@ const ReportPostPreview = () => {
     }
   };
 
-  const getCategoryDisplayName = (categoryName: string) => {
-    const translated = t(categoryName.toLowerCase());
+  // Determine which language to use for category names
+  // For user profile previews, use the user's language if set to bg, otherwise use admin's UI language
+  const categoryDisplayLanguage: Language = report?.targetType === "user" && user?.language === "bg" ? "bg" : language;
+
+  const getCategoryDisplayName = (categoryName: string, lang: Language = categoryDisplayLanguage) => {
+    const translated = getTranslation(lang, categoryName.toLowerCase());
     if (translated && translated !== categoryName.toLowerCase()) {
       return translated;
     }
@@ -245,11 +232,17 @@ const ReportPostPreview = () => {
       return;
     }
 
-    // If stored translation exists for UI language, use it directly without fetching
-    if (post.translations?.title?.[language] && post.translations?.content?.[language]) {
+    // If stored translation exists for UI language (including tags), use it directly without fetching
+    if (
+      post.translations?.title?.[language] &&
+      post.translations?.content?.[language] &&
+      post.translations?.tags?.[language] &&
+      post.translations.tags[language].length > 0
+    ) {
       setTranslationCache({
         title: post.translations.title[language],
         content: post.translations.content[language],
+        tags: post.translations.tags[language],
       });
       setShowTranslation(true);
       return;
@@ -259,7 +252,7 @@ const ReportPostPreview = () => {
     setTranslating(true);
     try {
       const response = await postsAPI.translatePost(post._id, language);
-      setTranslationCache({ title: response.title, content: response.content });
+      setTranslationCache({ title: response.title, content: response.content, tags: response.tags });
       setShowTranslation(true);
     } catch (error: any) {
       setSnackbar({
@@ -395,6 +388,9 @@ const ReportPostPreview = () => {
     const displayContent = showTranslation
       ? (translationCache?.content || post.translations?.content?.[language] || post.content)
       : post.content;
+    const displayTags = showTranslation
+      ? (translationCache?.tags || post.translations?.tags?.[language] || post.tags)
+      : post.tags;
 
     return (
       <div className="admin-page">
@@ -530,7 +526,7 @@ const ReportPostPreview = () => {
               }),
             }}
           >
-            {getCategoryDisplayName(post.category?.name || "")}
+            {getCategoryDisplayName(post.category.name)}
           </span>
         )}
 
@@ -632,9 +628,9 @@ const ReportPostPreview = () => {
         )}
 
         {/* Tags */}
-        {post.tags && post.tags.length > 0 && (
+        {displayTags && displayTags.length > 0 && (
           <div style={{ marginBottom: "16px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {post.tags.map((tag, index) => (
+            {displayTags.map((tag, index) => (
               <span
                 key={index}
                 style={{
@@ -715,15 +711,7 @@ const ReportPostPreview = () => {
         </div>
 
         {/* Comment Content */}
-        <div
-          style={{
-            background: "var(--theme-bg)",
-            borderRadius: "12px",
-            padding: "24px",
-            marginBottom: "24px",
-            border: "1px solid rgba(0,0,0,0.05)",
-          }}
-        >
+        <div style={{ marginBottom: "24px" }}>
           <div style={{ marginBottom: "16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <p style={{ fontSize: "16px", opacity: 0.8, margin: "0 0 8px 0" }}>
@@ -939,8 +927,27 @@ const ReportPostPreview = () => {
         <hr style={{ border: 0, borderTop: "1px solid var(--theme-text)", opacity: 0.2, margin: "32px 0" }} />
 
         {/* Category Tabs */}
-        {specialCategories.length > 0 && (
+        {userCategories.length > 0 && (
           <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+            {/* All Button */}
+            <button
+              onClick={() => setSelectedUserCategoryId(null)}
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                border: selectedUserCategoryId === null ? "2px solid var(--theme-text)" : "none",
+                borderRadius: "8px",
+                background: "transparent",
+                color: "var(--theme-text)",
+                fontSize: "16px",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s",
+                opacity: selectedUserCategoryId === null ? 1 : 0.6,
+              }}
+            >
+              {t("all") || "All"}
+            </button>
             {specialCategories
               .filter((category) => category._id)
               .map((category) => (
@@ -950,14 +957,15 @@ const ReportPostPreview = () => {
                   style={{
                     flex: 1,
                     padding: "12px 16px",
-                    border: selectedUserCategoryId === category._id ? "2px solid var(--theme-accent)" : "2px solid var(--theme-text)",
-                    background: selectedUserCategoryId === category._id ? "var(--theme-accent)" : "transparent",
+                    border: selectedUserCategoryId === category._id ? "2px solid var(--theme-text)" : "none",
+                    borderRadius: "8px",
+                    background: "transparent",
                     color: "var(--theme-text)",
                     fontSize: "16px",
                     fontWeight: 600,
                     cursor: "pointer",
                     transition: "all 0.2s",
-                    borderRadius: "8px",
+                    opacity: selectedUserCategoryId === category._id ? 1 : 0.6,
                   }}
                 >
                   {getCategoryDisplayName(category.name)}

@@ -57,7 +57,10 @@ const Notifications = () => {
           lowerMessage.includes("removed") ||
           lowerMessage.includes("inappropriate") ||
           lowerMessage.includes("violated") ||
-          lowerMessage.includes("deleted")
+          lowerMessage.includes("deleted") ||
+          lowerMessage.includes("service limitations") ||
+          lowerMessage.includes("ai service") ||
+          lowerMessage.includes("not cooking-related")
         ) {
           return "close";
         } else {
@@ -88,7 +91,10 @@ const Notifications = () => {
         lowerMessage.includes("removed") ||
         lowerMessage.includes("inappropriate") ||
         lowerMessage.includes("violated") ||
-        lowerMessage.includes("deleted")
+        lowerMessage.includes("deleted") ||
+        lowerMessage.includes("service limitations") ||
+        lowerMessage.includes("ai service") ||
+        lowerMessage.includes("not cooking-related")
       ) {
         return "#F44336";
       } else {

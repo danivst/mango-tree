@@ -130,28 +130,40 @@ const Search = () => {
     navigate(`/users/${userId}`);
   };
 
-  // Filter users: search by username only; if no query show followed users or all users if none followed
+  // Filter users: search by username; if no query show followed users or all users; during search show followed first, then rest
   const filteredUsers = useMemo(() => {
-    let base = users;
+    let result: User[] = [];
 
     if (searchQuery.trim() === "") {
-      // Show followed users if any; otherwise show all regular users
+      // No search: show followed users if any; otherwise show all
       const followed = users.filter((user) =>
         user.followers.includes(currentUserId!)
       );
-      base = followed.length > 0 ? followed : users;
+      result = followed.length > 0 ? followed : users;
     } else {
       const query = searchQuery.toLowerCase();
-      // Search in the FULL users list, not just currently displayed
-      base = users.filter(
+      // Filter all users by search
+      const matching = users.filter(
         (user: User) => user.username.toLowerCase().includes(query)
       );
+
+      // Split into followed and non-followed
+      const followed = matching.filter(user =>
+        user.followers.includes(currentUserId!)
+      );
+      const notFollowed = matching.filter(user =>
+        !user.followers.includes(currentUserId!)
+      );
+
+      // Sort each group alphabetically
+      followed.sort((a, b) => a.username.localeCompare(b.username));
+      notFollowed.sort((a, b) => a.username.localeCompare(b.username));
+
+      // Combine: followed first, then non-followed
+      result = [...followed, ...notFollowed];
     }
 
-    // Always sort alphabetically by username
-    base.sort((a, b) => a.username.localeCompare(b.username));
-
-    return base;
+    return result;
   }, [searchQuery, users, currentUserId]);
 
   const isFollowing = (user: User) => {

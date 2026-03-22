@@ -17,6 +17,7 @@ import {
   removeFollower,
 } from "../controllers/user-controller";
 import { auth, requireRole } from "../utils/auth";
+import { enable2FA, disable2FA } from "../controllers/2fa-controller";
 
 const router: Router = express.Router();
 
@@ -27,6 +28,10 @@ router.get("/me", auth, getCurrentUser);
 router.put("/me", auth, updateProfile); // Allow updating current user's profile
 router.put("/me/settings", auth, updateNotificationPreferences);
 router.put("/me/email", auth, updateEmail);
+
+// 2FA routes
+router.post("/me/2fa/enable", auth, enable2FA);
+router.post("/me/2fa/disable", auth, disable2FA);
 
 // New endpoint for regular users to search other regular users
 // Must be BEFORE /:id route to avoid matching "regular" as an ID

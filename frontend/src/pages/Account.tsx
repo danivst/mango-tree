@@ -51,6 +51,7 @@ const Account = () => {
     message: string;
     type: "success" | "error";
   }>({ open: false, message: "", type: "success" });
+  const [showBioTranslation, setShowBioTranslation] = useState(false);
 
   useEffect(() => {
     if (currentUserId) {
@@ -184,12 +185,19 @@ const Account = () => {
     }
   };
 
-  // Derive the three special categories from the fetched categories
+  // Derive the three special categories from the fetched categories in specific order: recipe, question, flex
   const specialCategories = useMemo(() => {
     const lowerNames = ["recipe", "flex", "question"];
-    return categories.filter((cat) =>
+    const filtered = categories.filter((cat) =>
       lowerNames.includes(cat.name.toLowerCase())
     );
+    // Sort according to desired order: recipe -> question -> flex
+    const order = ["recipe", "question", "flex"];
+    return filtered.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      return order.indexOf(aName) - order.indexOf(bName);
+    });
   }, [categories]);
 
   // No default category selection - "All" (null) shows all posts
@@ -389,26 +397,53 @@ const Account = () => {
               <h3 style={{ margin: 0, fontSize: "18px", color: "var(--theme-text)" }}>
                 {t("bio")}
               </h3>
-              <button
-                onClick={handleOpenBioModal}
-                disabled={saving}
-                style={{
-                  padding: "6px 12px",
-                  border: "1px solid var(--theme-text)",
-                  background: "transparent",
-                  color: "var(--theme-text)",
-                  borderRadius: "6px",
-                  cursor: saving ? "not-allowed" : "pointer",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-              >
-                <span className="material-icons" style={{ fontSize: "14px" }}>edit</span>
-                {t("editBio")}
-              </button>
+              <div style={{ display: "flex", gap: "8px" }}>
+                {/* Translate Button - show only if bio is in different language than app */}
+                {user?.bio && user.translations?.bio?.[language] && user.translations.bio[language] !== user.bio && (
+                  <button
+                    onClick={() => setShowBioTranslation(!showBioTranslation)}
+                    style={{
+                      padding: "6px 16px",
+                      border: "none",
+                      background: "var(--theme-accent)",
+                      color: "var(--theme-text)",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                    title={showBioTranslation ? t("viewOriginal") : t("translate")}
+                  >
+                    <span className="material-icons" style={{ fontSize: "14px" }}>
+                      {showBioTranslation ? "translate" : "language"}
+                    </span>
+                    {showBioTranslation ? t("viewOriginal") : t("translate")}
+                  </button>
+                )}
+                <button
+                  onClick={handleOpenBioModal}
+                  disabled={saving}
+                  style={{
+                    padding: "6px 12px",
+                    border: "1px solid var(--theme-text)",
+                    background: "transparent",
+                    color: "var(--theme-text)",
+                    borderRadius: "6px",
+                    cursor: saving ? "not-allowed" : "pointer",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <span className="material-icons" style={{ fontSize: "14px" }}>edit</span>
+                  {t("editBio")}
+                </button>
+              </div>
             </div>
             <div
               style={{
@@ -420,7 +455,13 @@ const Account = () => {
                 minHeight: "40px",
               }}
             >
-              {user?.bio ? user.bio : <span style={{ opacity: 0.5 }}>{t("noBio")}</span>}
+              {user?.bio ? (
+                showBioTranslation && user.translations?.bio?.[language]
+                  ? user.translations.bio[language]
+                  : user.bio
+              ) : (
+                <span style={{ opacity: 0.5 }}>{t("noBio")}</span>
+              )}
             </div>
           </div>
 
@@ -461,6 +502,7 @@ const Account = () => {
                   fontWeight: 600,
                   cursor: "pointer",
                   transition: "all 0.2s",
+                  opacity: selectedCategoryId === category._id ? 1 : 0.6,
                 }}
               >
                 {getCategoryDisplayName(category)}

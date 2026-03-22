@@ -202,6 +202,80 @@ export const loginUser = async (
       .json({ message: "Incorrect password", field: "password" });
   }
 
+  // Check if 2FA is enabled
+  if (user.twoFactorEnabled) {
+    // Generate a 6-digit 2FA code
+    const twoFactorCode = crypto.randomInt(100000, 999999).toString();
+    const twoFactorCodeExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Save the code to the user
+    user.twoFactorCode = twoFactorCode;
+    user.twoFactorCodeExpiry = twoFactorCodeExpiry;
+    await user.save();
+
+    // Send 2FA code via email
+    const userLang = user.language || "en";
+
+    const [titleTrans, introTrans, codeLabelTrans, securityNoteTrans, signatureTrans] =
+      await Promise.all([
+        getDualTranslation("MangoTree Two-Factor Authentication"),
+        getDualTranslation(
+          "To log in to your MangoTree account, please use the following 6-digit verification code:",
+        ),
+        getDualTranslation("Your verification code:"),
+        getDualTranslation(
+          "This code will expire in 10 minutes. If you did not attempt to log in, please ignore this email or contact support if you believe this is unauthorized.",
+        ),
+        getDualTranslation("Sincerely, the MangoTree team"),
+      ]);
+
+    const title = getLocalizedText(userLang, titleTrans);
+    const intro = getLocalizedText(userLang, introTrans);
+    const codeLabel = getLocalizedText(userLang, codeLabelTrans);
+    const securityNote = getLocalizedText(userLang, securityNoteTrans);
+    const signature = getLocalizedText(userLang, signatureTrans);
+
+    const emailHtml = `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
+        <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${title}</h2>
+        <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">Hello ${user.username},</p>
+        <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">${intro}</p>
+        <div style="text-align: center; margin: 40px 0;">
+          <div style="display: inline-block; background: #f5f5f5; padding: 20px 40px; border-radius: 8px; border: 2px dashed #E77728;">
+            <h1 style="color: #E77728; margin: 0; font-size: 48px; letter-spacing: 12px; font-weight: bold;">${twoFactorCode}</h1>
+          </div>
+        </div>
+        <p style="font-size: 14px; color: #666; margin: 20px 0;">${securityNote}</p>
+        <p style="font-size: 14px; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">${signature}</p>
+      </div>
+    `;
+
+    try {
+      await sendEmail(user.email, title, emailHtml);
+    } catch (error: any) {
+      console.error("Failed to send 2FA email:", error);
+      // Clear the code if email fails
+      user.twoFactorCode = undefined;
+      user.twoFactorCodeExpiry = undefined;
+      await user.save();
+      return res.status(500).json({
+        message: "Failed to send verification email. Please try again.",
+      });
+    }
+
+    // Return response indicating 2FA is required (no tokens issued yet)
+    return res.json({
+      twoFactorRequired: true,
+      userId: user._id,
+      username: user.username,
+      role: user.role,
+      bio: user.bio,
+      translations: user.translations,
+      message: "Two-factor authentication code has been sent to your email.",
+    });
+  }
+
+  // No 2FA enabled - issue tokens normally
   const token = jwt.sign(
     { userId: user._id, username: user.username, role: user.role },
     JWT_SECRET,

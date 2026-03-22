@@ -4,6 +4,7 @@ import api from "../services/api";
 import Snackbar from "../components/Snackbar";
 import UserSidebar from "../components/UserSidebar";
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
+import { useNotifications } from "../context/NotificationContext";
 import { getTranslation } from "../utils/translations";
 import "./admin/AdminPages.css";
 
@@ -20,6 +21,7 @@ interface Tag {
 const Upload = () => {
   const navigate = useNavigate();
   const { language } = useThemeLanguage();
+  const { refreshUnreadCount } = useNotifications();
   const t = (key: string) => getTranslation(language, key);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -43,6 +45,7 @@ const Upload = () => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
+  const [tagSearchQuery, setTagSearchQuery] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({
     files: "",
     category: "",
@@ -193,21 +196,35 @@ const Upload = () => {
 
       const postData = {
         title: title.trim(),
-        content: description.trim(),
+        content: description,
         category: selectedCategory,
         tags: selectedTags,
         image: images,
       };
 
-      await api.post("/posts", postData);
+      const response = await api.post("/posts", postData);
+
+      // Determine success message using messageKey if available
+      let successMessage: string;
+      if (response.data.messageKey) {
+        successMessage = t(response.data.messageKey);
+      } else if (response.data.message) {
+        successMessage = response.data.message;
+      } else {
+        // Fallback based on status
+        successMessage = response.status === 202
+          ? t("postPendingAdminReview")
+          : t("postPublishedSuccess");
+      }
 
       setSnackbar({
         open: true,
-        message:
-          t("uploadSuccess") ||
-          "Success! Your post is pending for verification. You will be notified once it has been approved/disapproved.",
+        message: successMessage,
         type: "success",
       });
+
+      // Refresh notifications to show the new notification immediately
+      await refreshUnreadCount();
 
       // Reset form
       setTitle("");
@@ -222,10 +239,19 @@ const Upload = () => {
       }, 2000);
     } catch (error: any) {
       console.error("Upload failed:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        t("somethingWentWrong") ||
-        "Something went wrong.";
+      const errData = error.response?.data;
+      let errorMessage: string;
+
+      if (errData?.error) {
+        // Use translation key for known errors
+        errorMessage = t(errData.error);
+      } else if (errData?.message) {
+        // Fallback to raw message (e.g., from other errors)
+        errorMessage = errData.message;
+      } else {
+        errorMessage = t("somethingWentWrong");
+      }
+
       setSnackbar({
         open: true,
         message: errorMessage,
@@ -509,50 +535,87 @@ const Upload = () => {
                       borderRadius: "8px",
                       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                       zIndex: 100,
-                      minWidth: "160px",
-                      maxHeight: "200px",
+                      minWidth: "200px",
+                      maxHeight: "300px",
                       overflowY: "auto",
                     }}
                   >
-                    {tags.filter((tag) => !selectedTags.includes(tag._id))
-                      .length === 0 ? (
-                      <div
+                    {/* Search Input */}
+                    <div style={{ padding: "8px", borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
+                      <input
+                        type="text"
+                        value={tagSearchQuery}
+                        onChange={(e) => setTagSearchQuery(e.target.value)}
+                        placeholder={t("searchTags") || "Search tags..."}
                         style={{
-                          padding: "10px",
+                          width: "100%",
+                          padding: "6px 10px",
+                          border: "1px solid var(--theme-text)",
+                          borderRadius: "4px",
                           fontSize: "14px",
+                          background: "transparent",
                           color: "var(--theme-text)",
-                          opacity: 0.7,
+                          outline: "none",
+                          boxSizing: "border-box",
                         }}
-                      >
-                        No more tags
-                      </div>
-                    ) : (
-                      tags
-                        .filter((tag) => !selectedTags.includes(tag._id))
-                        .map((tag) => (
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                      />
+                    </div>
+
+                    {/* Filtered Tags List */}
+                    {(() => {
+                      const availableTags = tags.filter(
+                        (tag) =>
+                          !selectedTags.includes(tag._id) &&
+                          tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase())
+                      );
+
+                      if (availableTags.length === 0) {
+                        return (
                           <div
-                            key={tag._id}
-                            onClick={() => handleAddTag(tag._id)}
                             style={{
-                              padding: "10px 16px",
-                              cursor: "pointer",
+                              padding: "10px",
                               fontSize: "14px",
                               color: "var(--theme-text)",
-                              borderBottom: "1px solid rgba(0,0,0,0.05)",
-                              transition: "background 0.2s ease",
+                              opacity: 0.7,
+                              textAlign: "center",
                             }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.background =
-                                "rgba(0,0,0,0.05)")
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.background = "transparent")
-                            }
                           >
-                            {t(tag.name.toLowerCase()) || tag.name}
+                            {tagSearchQuery
+                              ? t("noTagsFound") || "No tags found"
+                              : t("noMoreTags") || "No more tags"}
                           </div>
-                        ))
-                    )}
+                        );
+                      }
+
+                      return availableTags.map((tag) => (
+                        <div
+                          key={tag._id}
+                          onClick={() => {
+                            handleAddTag(tag._id);
+                            setTagSearchQuery("");
+                          }}
+                          style={{
+                            padding: "10px 16px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            color: "var(--theme-text)",
+                            borderBottom: "1px solid rgba(0,0,0,0.05)",
+                            transition: "background 0.2s ease",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background =
+                              "rgba(0,0,0,0.05)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background = "transparent")
+                          }
+                        >
+                          {t(tag.name.toLowerCase()) || tag.name}
+                        </div>
+                      ));
+                    })()}
                   </div>
                 )}
               </div>

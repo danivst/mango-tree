@@ -12,6 +12,7 @@ import tagRoutes from "./routes/tag-routes";
 import notificationRoutes from "./routes/notification-routes";
 import authRoutes from "./routes/auth-routes";
 import adminRoutes from "./routes/admin-routes";
+import translateRoutes from "./routes/translate-routes";
 import { connectDB } from "./config/db";
 
 dotenv.config();
@@ -62,7 +63,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
-// app.use("/api/translate", translateRoute); // Commented out
+app.use("/api/translate", translateRoutes);
 
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

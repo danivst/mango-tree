@@ -14,6 +14,10 @@ export interface IPost extends Document {
       bg: string;
       en: string;
     };
+    tags?: {
+      bg: string[];
+      en: string[];
+    };
   };
   image: string[];
   authorId: Types.ObjectId;
@@ -45,6 +49,10 @@ const postSchema: Schema<IPost> = new Schema(
       content: {
         bg: { type: String, default: "" },
         en: { type: String, default: "" },
+      },
+      tags: {
+        bg: { type: [String], default: [] },
+        en: { type: [String], default: [] },
       },
     },
     image: {

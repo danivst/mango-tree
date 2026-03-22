@@ -61,6 +61,7 @@ export const translations: Record<Language, Record<string, string>> = {
     invalidPassword: "Password must meet the requirements",
     passwordsDoNotMatch: "Passwords do not match",
     emailCannotBeEdited: "Email cannot be edited",
+    passwordCannotBeEdited: "Password cannot be edited directly. Use change password button.",
 
     // User Profile
     memberSince: "Member Since",
@@ -76,6 +77,10 @@ export const translations: Record<Language, Record<string, string>> = {
     editBio: "Edit Bio",
     saveBio: "Save Bio",
     profilePictureUpdated: "Profile picture updated",
+    bioUpdated: "Bio updated successfully",
+    deletePost: "Delete Post",
+    confirmDeletePost: "Are you sure you want to delete this post?",
+    postDeleted: "Post deleted successfully",
     changeUsername: "Change Username",
     noBio: "No bio set",
     reportUsername: "Report username",
@@ -219,6 +224,7 @@ export const translations: Record<Language, Record<string, string>> = {
     submitRejection: "Submit Rejection",
     reasonForNotAllowing: "Reason for disapproval",
     enterReasonForDisapproval: "Enter reason for disapproval",
+    enterReasonForRejection: "Enter reason for rejection",
     submitDisapproval: "Submit Disapproval",
     contentApprovedSuccess: "Content approved successfully",
     contentDisapprovedSuccess: "Content disapproved successfully",
@@ -312,6 +318,24 @@ export const translations: Record<Language, Record<string, string>> = {
       "Success Your post is pending for verification You will be notified once it has been approved/disapproved",
     somethingWentWrong: "Something went wrong",
 
+    // Moderation Errors
+    postRejectedPrefix: "Post rejected. Reason: {reason}",
+    postNotCooking: "Post rejected. Reason: Post is not cooking-related.",
+    postInappropriate: "Post rejected. Reason: Content is inappropriate.",
+    postAIServerError: "Post rejected. Reason: AI server error. Please try again later.",
+    postPendingAdminReview:
+      "Your post has been submitted and is pending admin review due to AI service limitations.",
+    postPublishedSuccess: "Post published successfully!",
+    contentFlaggedDuringUpdate: "Content flagged during update",
+    postRejected: "Post rejected.",
+
+    // Comment Moderation Errors
+    commentRejectedPrefix: "Comment rejected. Reason: {reason}",
+    commentNotCooking: "Comment rejected. Reason: Comment is not cooking-related.",
+    commentInappropriate: "Comment rejected. Reason: Comment is inappropriate.",
+    commentAIServerError: "Comment rejected. Reason: AI server error. Please try again later.",
+    commentRejected: "Comment rejected.",
+
     // Account Settings
     changePassword: "Change Password",
     appTheme: "App Theme",
@@ -333,6 +357,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Generic
     actionFailed: "Action failed",
     mustBeLoggedIn: "You must be logged in to perform this action",
+    verify: "Verify",
 
     // Theme & Language
     dark: "Dark",
@@ -348,6 +373,13 @@ export const translations: Record<Language, Record<string, string>> = {
     viewOriginal: "View Original",
     noComments: "No comments yet",
     commentDeleted: "Comment deleted successfully",
+    writeReply: "Write a reply...",
+    reply: "Reply",
+    replyAdded: "Reply added",
+    replies: "replies",
+    hideReplies: "Hide replies",
+    showReplies: "Show replies",
+    hide: "hide",
     like: "Like",
     likes: "Likes",
     role: "Role",
@@ -414,6 +446,25 @@ export const translations: Record<Language, Record<string, string>> = {
     feature3Desc:
       "Follow users, comment on posts, and build meaningful connections.",
     landingFooter: "Already have an account? Log in to continue.",
+
+    // 2FA (Two-Factor Authentication)
+    twoFactorAuth: "Two-Factor Authentication",
+    twoFactorDescription:
+      "Add an extra layer of security to your account. When enabled, you'll receive a 6-digit verification code via email each time you log in.",
+    enable2FA: "Enable 2FA",
+    disable2FA: "Disable 2FA",
+    twoFAEnabled: "2FA is currently enabled",
+    twoFADisabled: "2FA is currently disabled",
+    send2FACode: "Send verification code",
+    verifying2FA: "Verifying...",
+    twoFACodeSent: "Verification code sent to your email",
+    twoFACodeVerified: "2FA verified successfully",
+    twoFAEnabledSuccess: "Two-factor authentication enabled successfully",
+    twoFADisabledSuccess: "Two-factor authentication disabled successfully",
+    twoFACodeLabel: "6-digit code",
+    twoFACodePlaceholder: "Enter 6-digit code",
+    invalid2FACode: "Invalid or expired code",
+    incorrect2FACode: "Incorrect verification code",
   },
 
   bg: {
@@ -491,6 +542,7 @@ export const translations: Record<Language, Record<string, string>> = {
       "Паролата трябва да е поне 8 символа и да съдържа поне една главна буква, една малка буква, едно число и един специален символ",
     passwordsDoNotMatch: "Паролите не съвпадат",
     emailCannotBeEdited: "Имейлът не може да бъде редактиран",
+    passwordCannotBeEdited: "Паролата не може да бъде променена директно. Използвайте бутона за промяна на парола.",
 
     // User Profile
     memberSince: "Член от",
@@ -506,6 +558,10 @@ export const translations: Record<Language, Record<string, string>> = {
     editBio: "Редактирай биография",
     saveBio: "Запази биография",
     profilePictureUpdated: "Профилната снимка беше обновена",
+    bioUpdated: "Биографията беше обновена успешно",
+    deletePost: "Изтрий публикация",
+    confirmDeletePost: "Сигурни ли сте, че искате да изтриете тази публикация?",
+    postDeleted: "Публикацията беше изтрита успешно",
     changeUsername: "Промени потребителско име",
     noBio: "Няма зададена биография",
     reportUsername: "Доклай потребител",
@@ -651,6 +707,7 @@ export const translations: Record<Language, Record<string, string>> = {
     submitRejection: "Изпрати отхвърляне",
     reasonForNotAllowing: "Причина за отхвърляне",
     enterReasonForDisapproval: "Въведете причина за отхвърляне",
+    enterReasonForRejection: "Въведете причина за отхвърляне",
     submitDisapproval: "Изпрати отхвърляне",
     contentApprovedSuccess: "Съдържанието е одобрено успешно",
     contentDisapprovedSuccess: "Съдържанието е отхвърлено успешно",
@@ -692,7 +749,6 @@ export const translations: Record<Language, Record<string, string>> = {
     followed: "Успешно последвате",
     successfullyFollowedUser: "Успешно последвахте потребителя",
     successfullyUnfollowedUser: "Успешно премахнахте следването на потребителя",
-    actionFailed: "Действието не беше успешно",
 
     // Follower Actions
     removeFollower: "Премахни последовател",
@@ -747,6 +803,25 @@ export const translations: Record<Language, Record<string, string>> = {
       "Успех Вашата публикация изчаква проверка Ще бъдете уведомени, когато бъде одобрена/отхвърлена",
     somethingWentWrong: "Нещо се обърка",
 
+    // Moderation Errors
+    postRejectedPrefix: "Публикацията е отхвърлена. Причина: {reason}",
+    postNotCooking: "Публикацията е отхвърлена. Причина: Публикацията не е свързана с готвене.",
+    postInappropriate: "Публикацията е отхвърлена. Причина: Съдържанието е неуместно.",
+    postAIServerError: "Публикацията е отхвърлена. Причина: Грешка в AI сървъра. Моля, опитайте по-късно.",
+    postPendingAdminReview:
+      "Публикацията ви беше изпратена и чака одобрение от администратор поради ограничения в AI услугата.",
+    postPublishedSuccess: "Публикацията беше публикувана успешно!",
+
+    contentFlaggedDuringUpdate: "Съдържанието беше отбелязано при актуализация",
+    postRejected: "Публикацията е отхвърлена.",
+
+    // Comment Moderation Errors
+    commentRejectedPrefix: "Коментарът е отхвърлен. Причина: {reason}",
+    commentNotCooking: "Коментарът е отхвърлен. Причина: Коментарът не е свързан с готвене.",
+    commentInappropriate: "Коментарът е отхвърлен. Причина: Коментарът е неуместен.",
+    commentAIServerError: "Коментарът е отхвърлен. Причина: Грешка в AI сървъра. Моля, опитайте по-късно.",
+    commentRejected: "Коментарът е отхвърлен.",
+
     // Account Settings
     changePassword: "Промени парола",
     appTheme: "Тема на приложението",
@@ -783,6 +858,13 @@ export const translations: Record<Language, Record<string, string>> = {
     viewOriginal: "Виж оригинала",
     noComments: "Няма коментари все още",
     commentDeleted: "Коментарът беше изтрит успешно",
+    writeReply: "Напишете отговор...",
+    reply: "Отговори",
+    replyAdded: "Отговорът беше добавен",
+    replies: "отговора",
+    hideReplies: "Скрий отговорите",
+    showReplies: "Покажи отговорите",
+    hide: "скрий",
     like: "Харесва",
     likes: "Харесвания",
     role: "Роля",
@@ -818,6 +900,11 @@ export const translations: Record<Language, Record<string, string>> = {
     welcomeMessage:
       "Следвайте потребители, за да видите техните публикации тук или разгледайте препоръчаното съдържание по-долу",
 
+    // Generic
+    actionFailed: "Действието не беше успешно",
+    mustBeLoggedIn: "Трябва да сте влезли в системата за да извършите това действие",
+    verify: "Потвърди",
+
     // Generic errors
     failedLoadTags: "Неуспешно зареждане на тагове",
     failedCreateTag: "Неуспешно създаване на таг",
@@ -845,6 +932,25 @@ export const translations: Record<Language, Record<string, string>> = {
     feature3Desc:
       "Следвайте потребители, коментирайте публикации и изграждайте значими връзки.",
     landingFooter: "Вече имате акаунт? Влезте в системата, за да продължите.",
+
+    // 2FA (Two-Factor Authentication)
+    twoFactorAuth: "Двуфакторна автентикация",
+    twoFactorDescription:
+      "Добавете допълнителен слой сигурност към акаунта си. Когато е активирана, ще получавате 6-цифрен код на имейл при всяко влизане.",
+    enable2FA: "Активирай 2FA",
+    disable2FA: "Деактивирай 2FA",
+    twoFAEnabled: "2FA е активирана",
+    twoFADisabled: "2FA е деактивирана",
+    send2FACode: "Изпрати код за потвърждение",
+    verifying2FA: "Потвърждаване...",
+    twoFACodeSent: "Код за потвърждение изпратен на имейла",
+    twoFACodeVerified: "2FA потвърдена успешно",
+    twoFAEnabledSuccess: "Двуфакторната автентикация е активирана успешно",
+    twoFADisabledSuccess: "Двуфакторната автентикация е деактивирана успешно",
+    twoFACodeLabel: "6-цифрен код",
+    twoFACodePlaceholder: "Въведете 6-цифрен код",
+    invalid2FACode: "Невалиден или изтекъл код",
+    incorrect2FACode: "Неверен код за потвърждение",
   },
 };
 

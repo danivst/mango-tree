@@ -1,11 +1,20 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
-import { Post } from "../services/api";
+import { Post, postsAPI } from "../services/api";
 
 interface PostCardProps {
   post: Post;
 }
+
+const detectLanguage = (text: string): 'en' | 'bg' => {
+  if (!text) return 'en';
+  if (/[а-яА-Я]/.test(text)) {
+    return 'bg';
+  }
+  return 'en';
+};
 
 const PostCard = ({ post }: PostCardProps) => {
   const { language } = useThemeLanguage();
@@ -37,8 +46,67 @@ const PostCard = ({ post }: PostCardProps) => {
     navigate(`/users/${post.authorId._id}`);
   };
 
-  const displayTitle = post.translations?.title?.[language] || post.title;
-  const displayContent = post.translations?.content?.[language] || post.content;
+  // Translation states
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [translationCache, setTranslationCache] = useState<{ title: string; content: string; tags?: string[] } | null>(null);
+  const [translating, setTranslating] = useState(false);
+
+
+  const postLanguage = detectLanguage(post.title);
+  const shouldShowTranslateButton = postLanguage !== language;
+
+  const handleTranslate = async () => {
+    if (showTranslation) {
+      setShowTranslation(false);
+      return;
+    }
+
+    if (translationCache) {
+      setShowTranslation(true);
+      return;
+    }
+
+    // If stored translation exists for UI language (including tags), use it directly
+    if (
+      post.translations?.title?.[language] &&
+      post.translations?.content?.[language] &&
+      post.translations?.tags?.[language] &&
+      post.translations.tags[language].length > 0
+    ) {
+      setTranslationCache({
+        title: post.translations.title[language],
+        content: post.translations.content[language],
+        tags: post.translations.tags[language],
+      });
+      setShowTranslation(true);
+      return;
+    }
+
+    setTranslating(true);
+    try {
+      const response = await postsAPI.translatePost(post._id, language);
+      setTranslationCache({
+        title: response.title,
+        content: response.content,
+        tags: response.tags,
+      });
+      setShowTranslation(true);
+    } catch (error: any) {
+      console.error("Translation failed:", error);
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const displayTitle = showTranslation
+    ? (translationCache?.title || post.translations?.title?.[language] || post.title)
+    : post.title;
+  const displayContent = showTranslation
+    ? (translationCache?.content || post.translations?.content?.[language] || post.content)
+    : post.content;
+  const displayTags = showTranslation
+    ? (translationCache?.tags || post.translations?.tags?.[language] || post.tags)
+    : post.tags;
 
   return (
     <div
@@ -104,9 +172,9 @@ const PostCard = ({ post }: PostCardProps) => {
       </p>
 
       {/* Tags */}
-      {post.tags && post.tags.length > 0 && (
+      {displayTags && displayTags.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
-          {post.tags.slice(0, 5).map((tag, idx) => (
+          {displayTags.slice(0, 5).map((tag, idx) => (
             <span
               key={idx}
               style={{
@@ -143,6 +211,51 @@ const PostCard = ({ post }: PostCardProps) => {
           }}
         >
           {t("waitingForApproval") || "Waiting for approval"}
+        </div>
+      )}
+
+      {/* Action Buttons Row */}
+      {shouldShowTranslateButton && (
+        <div style={{
+          display: "flex",
+          gap: "8px",
+          marginTop: "8px",
+          flexWrap: "wrap",
+        }}>
+          {/* Translate Button */}
+          {shouldShowTranslateButton && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleTranslate();
+              }}
+              disabled={translating}
+              style={{
+                padding: "6px 12px",
+                border: "2px solid var(--theme-accent)",
+                background: "var(--theme-accent)",
+                color: "var(--theme-text)",
+                borderRadius: "8px",
+                cursor: translating ? "not-allowed" : "pointer",
+                fontSize: "12px",
+                fontWeight: 500,
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                opacity: translating ? 0.7 : 1,
+              }}
+            >
+              {translating ? (
+                <span className="material-icons spin" style={{ fontSize: "14px" }}>refresh</span>
+              ) : (
+                <span className="material-icons" style={{ fontSize: "14px" }}>
+                  {showTranslation ? "translate" : "language"}
+                </span>
+              )}
+              <span>{showTranslation ? t("viewOriginal") : t("translate")}</span>
+            </button>
+          )}
+
         </div>
       )}
 
@@ -225,13 +338,15 @@ const PostCard = ({ post }: PostCardProps) => {
           </span>
         )}
 
+        {/* Dot separator */}
+        <span style={{ color: "var(--theme-text)", opacity: 0.5, fontSize: "12px" }}>•</span>
+
         {/* Date */}
         <span
           style={{
             fontSize: "13px",
             color: "var(--theme-text)",
             opacity: 0.7,
-            marginLeft: "auto",
           }}
         >
           {formatDate(post.createdAt)}

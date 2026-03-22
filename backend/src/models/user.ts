@@ -27,6 +27,10 @@ export interface IUser extends Document {
   };
   theme?: string; // User's preferred theme: dark, purple, cream, light
   language?: string; // User's preferred language: en, bg
+  // 2FA fields
+  twoFactorEnabled?: boolean;
+  twoFactorCode?: string;
+  twoFactorCodeExpiry?: Date;
   createdAt: Date;
   followers: Types.ObjectId[];
   following: Types.ObjectId[];
@@ -97,6 +101,17 @@ const userSchema: Schema<IUser> = new Schema(
       type: String,
       enum: ["en", "bg"],
       default: "en",
+    },
+    // 2FA fields
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    twoFactorCode: {
+      type: String,
+    },
+    twoFactorCodeExpiry: {
+      type: Date,
     },
     createdAt: {
       type: Date,

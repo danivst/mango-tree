@@ -9,9 +9,9 @@ import Notification from "../models/notification";
 import NotificationType from "../enums/notification-type";
 import RoleTypeValue from "../enums/role-type";
 
-import { moderateText } from "../utils/ai";
 import { AuthRequest } from "../utils/auth";
 import { getDualTranslation } from "../utils/translation";
+import { moderateText } from "../utils/ai";
 
 /* ---------- CREATE COMMENT ---------- */
 export const createComment = async (
@@ -21,23 +21,82 @@ export const createComment = async (
   try {
     const userId = req.user!.userId;
     const userIdObj = new Types.ObjectId(userId);
-    const { postId, text } = req.body;
+    const { postId, text, parentCommentId } = req.body;
 
     const post = await Post.findById(postId);
     if (!post || !post.isVisible) {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    // Automatically translate the comment text
-    const translations = await getDualTranslation(text);
+    // AI Moderation for comments (check appropriateness only)
+    let moderationResult: any = null;
+    let moderationError = false;
 
-    const comment = await Comment.create({
+    try {
+      moderationResult = await moderateText(text);
+    } catch (moderationErr: any) {
+      console.error("[createComment] Moderation service error:", moderationErr.message);
+      moderationError = true;
+      moderationResult = { flagged: false }; // Continue creating comment but flag for admin review if needed
+    }
+
+    if (moderationResult?.flagged) {
+      // For comments, only check isAppropriate (cooking-relatedness is not enforced)
+      let reasonKey: string;
+      let reasonDetail: string = moderationResult.reason || "";
+
+      reasonKey = "commentInappropriate";
+      // No need to check isCookingRelated since moderateText doesn't enforce it
+
+      // Send notification to user with "Comment rejected. Reason:" prefix
+      const prefixEn = "Comment rejected. Reason: ";
+      const prefixBg = "Коментарът е отхвърлен. Причина: ";
+      const reasonEn = moderationResult.reason || "Comment is inappropriate.";
+      const reasonBg = "Коментарът е неуместен.";
+      const messageEn = prefixEn + reasonEn;
+      const messageBg = prefixBg + reasonBg;
+
+      await Notification.create({
+        userId: userId,
+        type: NotificationType.REPORT_FEEDBACK,
+        message: messageEn,
+        translations: {
+          message: {
+            en: messageEn,
+            bg: messageBg,
+          },
+        },
+        link: null,
+      });
+
+      return res.status(400).json({
+        error: reasonKey,
+        reason: reasonDetail,
+      });
+    }
+
+    // Build comment object
+    const commentData: any = {
       postId,
       userId: userIdObj,
       text,
-      translations,
+      translations: await getDualTranslation(text),
       isVisible: true,
-    });
+    };
+
+    // If parentCommentId is provided, it's a reply
+    if (parentCommentId) {
+      const parentComment = await Comment.findById(parentCommentId);
+      if (!parentComment) {
+        return res.status(404).json({ message: "Parent comment not found" });
+      }
+      if (parentComment.postId.toString() !== postId) {
+        return res.status(400).json({ message: "Parent comment does not belong to this post" });
+      }
+      commentData.parentCommentId = new Types.ObjectId(parentCommentId);
+    }
+
+    const comment = await Comment.create(commentData);
 
     // Populate userId before returning
     const populatedComment = await Comment.findById(comment._id)
@@ -70,6 +129,36 @@ export const createComment = async (
         },
         link: `/posts/${post._id}#comment-${populatedComment!._id}`,
       });
+    }
+
+    // If this is a reply, notify the parent comment author
+    if (parentCommentId) {
+      const parentComment = await Comment.findById(parentCommentId).populate('userId', 'username');
+      const parentAuthor = parentComment?.userId;
+      if (parentAuthor && !parentAuthor._id.equals(userIdObj)) {
+        // Actor username already fetched above
+        let actorUsername = req.user?.username;
+        if (!actorUsername) {
+          const actor = await User.findById(userId).select("username");
+          actorUsername = actor?.username || "Someone";
+        }
+
+        const replyMessageEn = `${actorUsername} replied to your comment`;
+        const replyMessageBg = `${actorUsername} отговори на вашия коментар`;
+
+        await Notification.create({
+          userId: parentAuthor._id,
+          type: NotificationType.REPLY,
+          message: replyMessageEn,
+          translations: {
+            message: {
+              en: replyMessageEn,
+              bg: replyMessageBg,
+            },
+          },
+          link: `/posts/${post._id}#comment-${populatedComment!._id}`,
+        });
+      }
     }
 
     return res.status(201).json(populatedComment);
@@ -197,27 +286,33 @@ export const updateComment = async (
       return res.status(403).json({ message: "Not your comment" });
     }
 
-    const flagged = await moderateText("Comment", text);
-    if (flagged) {
-      const flaggedMessageEn = "Your comment update was flagged as inappropriate";
-      const flaggedMessageBg = "Актуализацията на коментара ви беше маркирана като неподходяща";
+    // AI Moderation for comment updates (check appropriateness only)
+    try {
+      const moderationResult = await moderateText(text);
+      if (moderationResult?.flagged) {
+        const flaggedMessageEn = "Your comment update was flagged as inappropriate";
+        const flaggedMessageBg = "Актуализацията на коментара ви беше маркирана като неподходяща";
 
-      await Notification.create({
-        userId,
-        type: NotificationType.REPORT_FEEDBACK,
-        message: flaggedMessageEn,
-        translations: {
-          message: {
-            en: flaggedMessageEn,
-            bg: flaggedMessageBg,
+        await Notification.create({
+          userId,
+          type: NotificationType.REPORT_FEEDBACK,
+          message: flaggedMessageEn,
+          translations: {
+            message: {
+              en: flaggedMessageEn,
+              bg: flaggedMessageBg,
+            },
           },
-        },
-        link: `/posts/${comment.postId}#comment-${comment._id}`,
-      });
+          link: `/posts/${comment.postId}#comment-${comment._id}`,
+        });
 
-      return res
-        .status(400)
-        .json({ message: "Comment update flagged as inappropriate" });
+        return res
+          .status(400)
+          .json({ message: "Comment update flagged as inappropriate", reason: moderationResult.reason });
+      }
+    } catch (moderationErr: any) {
+      console.error("[updateComment] Moderation service error:", moderationErr.message);
+      // Continue with update even if moderation service fails
     }
 
     // Re-translate updated text
@@ -235,6 +330,18 @@ export const updateComment = async (
 };
 
 /* ---------- DELETE COMMENT ---------- */
+// Helper to delete a comment and all its descendants recursively
+const deleteCommentTree = async (commentId: Types.ObjectId): Promise<void> => {
+  // Find all direct children
+  const children = await Comment.find({ parentCommentId: commentId });
+  // Recursively delete each child and its subtree
+  for (const child of children) {
+    await deleteCommentTree(child._id as Types.ObjectId);
+  }
+  // Finally delete this comment
+  await Comment.findByIdAndDelete(commentId);
+};
+
 export const deleteComment = async (
   req: AuthRequest,
   res: Response,
@@ -255,7 +362,8 @@ export const deleteComment = async (
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    await Comment.findByIdAndDelete(id);
+    // Delete the comment and all its replies recursively
+    await deleteCommentTree(comment._id as Types.ObjectId);
     return res.json({ message: "Comment deleted" });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -272,20 +380,64 @@ export const getCommentsByPost = async (
 
     console.log(`[getCommentsByPost] Fetching comments for post: ${postId}`);
 
+    // Fetch all comments for the post, sorted by createdAt ascending (oldest first for proper threading)
     const comments = await Comment.find({
       postId,
       $or: [{ isVisible: true }, { isVisible: { $exists: false } }],
     })
       .populate("userId", "username profileImage")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: 1 }); // Sort oldest first for proper parent-before-child ordering
 
     console.log(`[getCommentsByPost] Found ${comments.length} comments`);
-    comments.forEach(c => {
-      const user = c.userId as any;
-      console.log(`[getCommentsByPost] Comment ${c._id}: userId=${user?._id}, hasUsername=${!!user?.username}`);
+
+    // Build hierarchical tree structure
+    const commentMap = new Map<string, any>();
+    const rootComments: any[] = [];
+
+    // First pass: create map and add replies array to each comment
+    comments.forEach(comment => {
+      const commentId = comment._id as Types.ObjectId;
+      commentMap.set(commentId.toString(), {
+        ...comment.toObject(),
+        replies: []
+      });
     });
 
-    return res.json(comments);
+    // Second pass: build tree by assigning comments to their parents
+    comments.forEach(comment => {
+      const commentId = comment._id as Types.ObjectId;
+      const commentObj = commentMap.get(commentId.toString());
+
+      if (comment.parentCommentId && commentMap.has(comment.parentCommentId.toString())) {
+        // This is a reply - add it to parent's replies array
+        const parent = commentMap.get(comment.parentCommentId.toString());
+        parent.replies.push(commentObj);
+      } else {
+        // This is a root comment (no parent)
+        rootComments.push(commentObj);
+      }
+    });
+
+    // Sort replies within each parent by createdAt ascending
+    const sortRepliesRecursive = (commentList: any[]) => {
+      commentList.forEach(comment => {
+        if (comment.replies && comment.replies.length > 0) {
+          comment.replies.sort((a: any, b: any) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+          sortRepliesRecursive(comment.replies);
+        }
+      });
+    };
+
+    rootComments.sort((a, b) =>
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+    sortRepliesRecursive(rootComments);
+
+    console.log(`[getCommentsByPost] Built tree with ${rootComments.length} root comments`);
+
+    return res.json(rootComments);
   } catch (err: any) {
     console.error("[getCommentsByPost] Error:", err);
     return res.status(500).json({ message: err.message });

@@ -155,8 +155,6 @@ const UserSidebar = () => {
   let activeItem = menuItems.find((item) => {
     if (location.pathname === item.path) return true;
     if (location.pathname.startsWith(item.path + '/')) return true;
-    // Treat post pages as part of home
-    if (item.id === 'home' && location.pathname.startsWith('/posts/')) return true;
     return false;
   });
 

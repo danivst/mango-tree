@@ -84,14 +84,18 @@ api.interceptors.response.use(
 
 export interface LoginResponse {
   message?: string;
-  token: string;
-  refreshToken: string;
+  token?: string;
+  refreshToken?: string;
   user: {
     id: string;
     username: string;
     role: string;
+    bio?: string;
+    translations?: any;
   };
   redirectTo?: string;
+  twoFactorRequired?: boolean;
+  userId?: string;
 }
 
 export interface ErrorResponse {
@@ -112,6 +116,20 @@ export const authAPI = {
       console.error("API: Request failed:", error);
       console.error("API: Error response:", error.response);
       console.error("API: Error request:", error.request);
+      throw error;
+    }
+  },
+  verify2FA: async (userId: string, code: string): Promise<LoginResponse> => {
+    console.log("API: Making POST request to /api/auth/2fa/verify");
+    try {
+      const response = await api.post<LoginResponse>("/auth/2fa/verify", {
+        userId,
+        code,
+      });
+      console.log("API: Response received:", response.status, response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("API: 2FA verify failed:", error);
       throw error;
     }
   },
@@ -169,6 +187,14 @@ export const authAPI = {
         newPassword,
       },
     );
+    return response.data;
+  },
+  enable2FA: async (): Promise<{ message: string }> => {
+    const response = await api.post<{ message: string }>("/users/me/2fa/enable");
+    return response.data;
+  },
+  disable2FA: async (): Promise<{ message: string }> => {
+    const response = await api.post<{ message: string }>("/users/me/2fa/disable");
     return response.data;
   },
 };
@@ -232,6 +258,10 @@ export interface Post {
       bg: string;
       en: string;
     };
+    tags?: {
+      bg: string[];
+      en: string[];
+    };
   };
   image: string[];
   authorId: {
@@ -276,6 +306,8 @@ export interface Comment {
   updatedAt?: string;
   likes: string[];
   isLiked?: boolean;
+  parentCommentId?: string;
+  replies?: Comment[];
 }
 
 export const postsAPI = {
@@ -330,8 +362,8 @@ export const postsAPI = {
   translatePost: async (
     postId: string,
     targetLang: "en" | "bg",
-  ): Promise<{ title: string; content: string }> => {
-    const response = await api.post<{ title: string; content: string }>(
+  ): Promise<{ title: string; content: string; tags?: string[] }> => {
+    const response = await api.post<{ title: string; content: string; tags?: string[] }>(
       `/posts/${postId}/translate?targetLang=${targetLang}`,
     );
     return response.data;
@@ -399,6 +431,12 @@ export interface UserProfile {
   createdAt: string;
   profileImage?: string;
   bio?: string;
+  translations?: {
+    bio: {
+      bg: string;
+      en: string;
+    };
+  };
   followers: string[];
   following: string[];
   theme?: string;

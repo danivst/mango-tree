@@ -188,14 +188,7 @@ const ToReview = () => {
             )}
 
             {selectedContent.type === "post" && (
-              <div
-                style={{
-                  marginTop: "20px",
-                  padding: "16px",
-                  background: "rgba(0,0,0,0.05)",
-                  borderRadius: "8px",
-                }}
-              >
+              <div style={{ marginTop: "20px" }}>
                 {/* 1. Title */}
                 <h3 style={{ marginTop: 0, marginBottom: "16px" }}>
                   {selectedContent.content.title}
@@ -259,14 +252,7 @@ const ToReview = () => {
 
             {/* Comments have simpler view */}
             {selectedContent.type === "comment" && (
-              <div
-                style={{
-                  marginTop: "20px",
-                  padding: "16px",
-                  background: "rgba(0,0,0,0.05)",
-                  borderRadius: "8px",
-                }}
-              >
+              <div style={{ marginTop: "20px" }}>
                 <p style={{ whiteSpace: "pre-wrap" }}>
                   {selectedContent.content.text ||
                     selectedContent.content.content}

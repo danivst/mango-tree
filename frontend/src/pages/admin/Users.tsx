@@ -11,9 +11,8 @@ import {
 } from "../../utils/tableUtils";
 import "./AdminPages.css";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
-import { getTranslation } from "../../utils/translations";
+import { getTranslation, Language } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
-import { getToken } from "../../utils/auth";
 import { Category } from "../../services/adminAPI";
 
 type DeleteStep = "warning" | "reason" | "confirm" | null;
@@ -26,14 +25,6 @@ const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
-
-  const getCategoryDisplayName = (categoryName: string) => {
-    const translated = t(categoryName.toLowerCase());
-    if (translated && translated !== categoryName.toLowerCase()) {
-      return translated;
-    }
-    return categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-  };
 
   const [deleteStep, setDeleteStep] = useState<DeleteStep>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
@@ -62,19 +53,37 @@ const Users = () => {
   const [userCategories, setUserCategories] = useState<Category[]>([]);
   const [selectedUserCategoryId, setSelectedUserCategoryId] = useState<string | null>(null);
 
-  // Compute special categories (recipe, flex, question) for tabs
+  // Compute special categories (recipe, question, flex) in specific order
   const specialCategories = useMemo(() => {
     if (!userCategories.length) return [];
     const lowerNames = ["recipe", "flex", "question"];
-    return userCategories.filter((cat) => lowerNames.includes(cat.name.toLowerCase()));
+    const filtered = userCategories.filter((cat) => lowerNames.includes(cat.name.toLowerCase()));
+    // Sort according to desired order: recipe -> question -> flex
+    const order = ["recipe", "question", "flex"];
+    return filtered.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      return order.indexOf(aName) - order.indexOf(bName);
+    });
   }, [userCategories]);
 
-  // Set default selected category when specialCategories load
+  // Reset category selection when viewing a different user
   useEffect(() => {
-    if (selectedUser && specialCategories.length > 0 && !selectedUserCategoryId) {
-      setSelectedUserCategoryId(specialCategories[0]._id);
+    if (selectedUser) {
+      setSelectedUserCategoryId(null);
     }
-  }, [selectedUser, specialCategories, selectedUserCategoryId]);
+  }, [selectedUser]);
+
+  // Determine which language to use for category names (use user's language if bg, otherwise admin's UI language)
+  const categoryDisplayLanguage: Language = selectedUser?.language === "bg" ? "bg" : language;
+
+  const getCategoryDisplayName = (categoryName: string, lang: Language = categoryDisplayLanguage) => {
+    const translated = getTranslation(lang, categoryName.toLowerCase());
+    if (translated && translated !== categoryName.toLowerCase()) {
+      return translated;
+    }
+    return categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+  };
 
   // Refs for table container
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -417,15 +426,9 @@ const Users = () => {
     try {
       const userData = await usersAPI.getUser(userId);
 
-      // Fetch user's posts
+      // Fetch user's posts (include all for admin moderation)
       const postsResponse = await api.get<PostType[]>(`/posts/author/${userId}`);
-      let posts = postsResponse.data;
-      // If viewing another user's profile (i.e., the admin is not the user), hide unapproved posts
-      const currentUserId = getToken() ? JSON.parse(atob(getToken()!.split('.')[1])).userId : null;
-      if (currentUserId && currentUserId !== userData._id) {
-        posts = posts.filter(post => post.isApproved !== false);
-      }
-      setUserPosts(posts);
+      setUserPosts(postsResponse.data);
 
       // Fetch categories for post category names (and tabs if needed)
       const categoriesResponse = await api.get<Category[]>("/categories");
@@ -1077,8 +1080,27 @@ const Users = () => {
                 <hr style={{ border: 0, borderTop: "1px solid var(--theme-text)", opacity: 0.2, margin: "32px 0" }} />
 
                 {/* Category Tabs */}
-                {specialCategories.length > 0 && (
+                {userCategories.length > 0 && (
                   <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+                    {/* All Button */}
+                    <button
+                      onClick={() => setSelectedUserCategoryId(null)}
+                      style={{
+                        flex: 1,
+                        padding: "12px 16px",
+                        border: selectedUserCategoryId === null ? "2px solid var(--theme-text)" : "none",
+                        borderRadius: "8px",
+                        background: "transparent",
+                        color: "var(--theme-text)",
+                        fontSize: "16px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        opacity: selectedUserCategoryId === null ? 1 : 0.6,
+                      }}
+                    >
+                      {t("all") || "All"}
+                    </button>
                     {specialCategories
                       .filter((category) => category._id)
                       .map((category) => (
@@ -1088,17 +1110,18 @@ const Users = () => {
                           style={{
                             flex: 1,
                             padding: "12px 16px",
-                            border: selectedUserCategoryId === category._id ? "2px solid var(--theme-accent)" : "2px solid var(--theme-text)",
-                            background: selectedUserCategoryId === category._id ? "var(--theme-accent)" : "transparent",
+                            border: selectedUserCategoryId === category._id ? "2px solid var(--theme-text)" : "none",
+                            borderRadius: "8px",
+                            background: "transparent",
                             color: "var(--theme-text)",
                             fontSize: "16px",
                             fontWeight: 600,
                             cursor: "pointer",
                             transition: "all 0.2s",
-                            borderRadius: "8px",
+                            opacity: selectedUserCategoryId === category._id ? 1 : 0.6,
                           }}
                         >
-                          {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
+                          {getCategoryDisplayName(category.name)}
                         </button>
                       ))}
                   </div>

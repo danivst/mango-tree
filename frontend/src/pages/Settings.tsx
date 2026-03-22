@@ -19,6 +19,9 @@ const Settings = () => {
     username: string;
     email: string;
     role: string;
+    twoFactorEnabled?: boolean;
+    bio?: string;
+    translations?: any;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteStep, setDeleteStep] = useState<DeleteStep>(null);
@@ -36,6 +39,10 @@ const Settings = () => {
     type: "success" | "error";
   }>({ open: false, message: "", type: "success" });
   const [deleting, setDeleting] = useState(false);
+  // 2FA states
+  const [showEnable2FAModal, setShowEnable2FAModal] = useState(false);
+  const [settingsTwoFACode, setSettingsTwoFACode] = useState("");
+  const [settingsVerifying2FA, setSettingsVerifying2FA] = useState(false);
 
   useEffect(() => {
     fetchUserInfo();
@@ -103,6 +110,82 @@ const Settings = () => {
       });
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleEnable2FA = async () => {
+    if (!user) return;
+    try {
+      await authAPI.enable2FA();
+      setShowEnable2FAModal(true);
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || t("actionFailed"),
+        type: "error",
+      });
+    }
+  };
+
+  const handleVerifySettings2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    if (!settingsTwoFACode || settingsTwoFACode.length !== 6 || !/^\d+$/.test(settingsTwoFACode)) {
+      setSnackbar({
+        open: true,
+        message: t("invalid2FACode"),
+        type: "error",
+      });
+      return;
+    }
+
+    setSettingsVerifying2FA(true);
+    try {
+      const response = await authAPI.verify2FA(user._id, settingsTwoFACode);
+      // Update user with new token and 2FA status
+      const token = response.token;
+      const refreshToken = response.refreshToken;
+      if (token && refreshToken) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("refreshToken", refreshToken);
+      }
+      setUser({ ...user, twoFactorEnabled: true });
+      setShowEnable2FAModal(false);
+      setSettingsTwoFACode("");
+      setSnackbar({
+        open: true,
+        message: t("twoFAEnabledSuccess"),
+        type: "success",
+      });
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || t("actionFailed"),
+        type: "error",
+      });
+      setSettingsTwoFACode("");
+    } finally {
+      setSettingsVerifying2FA(false);
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    if (!user) return;
+    try {
+      await authAPI.disable2FA();
+      setUser({ ...user, twoFactorEnabled: false });
+      setSnackbar({
+        open: true,
+        message: t("twoFADisabledSuccess"),
+        type: "success",
+      });
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || t("actionFailed"),
+        type: "error",
+      });
     }
   };
 
@@ -261,13 +344,35 @@ const Settings = () => {
             </div>
             <div className="admin-form-group">
               <label className="admin-form-label">{t("password")}</label>
-              <button
-                className="admin-button-primary"
-                onClick={() => setShowPasswordForm(!showPasswordForm)}
-                style={{ whiteSpace: "nowrap" }}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  alignItems: "flex-start",
+                }}
               >
-                {t("changePassword")}
-              </button>
+                <input
+                  type="password"
+                  className="admin-form-input"
+                  value={"•".repeat(8)}
+                  readOnly
+                  disabled
+                  style={{
+                    flex: 1,
+                    background: "rgba(0, 0, 0, 0.1)",
+                    cursor: "not-allowed",
+                    opacity: 0.6,
+                  }}
+                  title={t("passwordCannotBeEdited")}
+                />
+                <button
+                  className="admin-button-primary"
+                  onClick={() => setShowPasswordForm(!showPasswordForm)}
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  {t("changePassword")}
+                </button>
+              </div>
               {showPasswordForm && (
                 <form
                   onSubmit={handleChangePassword}
@@ -316,13 +421,6 @@ const Settings = () => {
                   </div>
                   <div style={{ display: "flex", gap: "12px" }}>
                     <button
-                      type="submit"
-                      className="admin-button-primary"
-                      disabled={changingPassword}
-                    >
-                      {changingPassword ? t("sending") : t("changePassword")}
-                    </button>
-                    <button
                       type="button"
                       className="admin-button-secondary"
                       onClick={() => {
@@ -334,9 +432,53 @@ const Settings = () => {
                     >
                       {t("cancel")}
                     </button>
+                    <button
+                      type="submit"
+                      className="admin-button-primary"
+                      disabled={changingPassword}
+                    >
+                      {changingPassword ? t("sending") : t("changePassword")}
+                    </button>
                   </div>
                 </form>
               )}
+            </div>
+            {/* 2FA Section */}
+            <div className="admin-form-group" style={{ marginTop: "24px", borderTop: "1px solid #eee", paddingTop: "24px" }}>
+              <label className="admin-form-label">{t("twoFactorAuth")}</label>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  alignItems: "center",
+                }}
+              >
+                <p style={{ margin: 0, color: "#666", fontSize: "14px", lineHeight: "1.5", flex: 1 }}>
+                  {t("twoFactorDescription")}
+                </p>
+                {user?.twoFactorEnabled ? (
+                  <>
+                    <span style={{ color: "#4CAF50", fontWeight: "bold", fontSize: "14px", whiteSpace: "nowrap" }}>
+                      {t("twoFAEnabled")}
+                    </span>
+                    <button
+                      className="admin-button-secondary"
+                      onClick={handleDisable2FA}
+                      style={{ fontSize: "14px", padding: "8px 16px", whiteSpace: "nowrap" }}
+                    >
+                      {t("disable2FA")}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="admin-button-primary"
+                    onClick={handleEnable2FA}
+                    style={{ fontSize: "14px", padding: "8px 16px", whiteSpace: "nowrap" }}
+                  >
+                    {t("enable2FA")}
+                  </button>
+                )}
+              </div>
             </div>
             {!isAdmin && (
               <div className="admin-form-group" style={{ marginTop: "32px" }}>
@@ -622,6 +764,56 @@ const Settings = () => {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        )}
+        {/* Enable 2FA Modal */}
+        {showEnable2FAModal && (
+          <div className="admin-modal-overlay">
+            <div className="admin-modal">
+              <h2 className="admin-modal-title">{t("twoFactorAuth")}</h2>
+              <p className="admin-modal-text">
+                {t("twoFactorDescription")}
+              </p>
+              <form onSubmit={handleVerifySettings2FA} style={{ marginTop: "20px" }}>
+                <div className="admin-form-group">
+                  <label className="admin-form-label">{t("twoFACodeLabel")}</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    className="admin-form-input twofa-code-input"
+                    value={settingsTwoFACode}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                      setSettingsTwoFACode(value);
+                    }}
+                    placeholder={t("twoFACodePlaceholder")}
+                    autoFocus
+                    disabled={settingsVerifying2FA}
+                  />
+                </div>
+                <div className="admin-modal-actions">
+                  <button
+                    type="button"
+                    className="admin-button-secondary"
+                    onClick={() => {
+                      setShowEnable2FAModal(false);
+                      setSettingsTwoFACode("");
+                    }}
+                    disabled={settingsVerifying2FA}
+                  >
+                    {t("cancel")}
+                  </button>
+                  <button
+                    type="submit"
+                    className="admin-button-primary"
+                    disabled={settingsVerifying2FA || settingsTwoFACode.length !== 6}
+                  >
+                    {settingsVerifying2FA ? t("verifying2FA") : t("verify")}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

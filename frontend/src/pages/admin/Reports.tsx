@@ -8,6 +8,14 @@ import { useAdminData } from "../../context/AdminDataContext";
 import "./AdminPages.css";
 import api from "../../services/api";
 
+const detectLanguage = (text: string): 'en' | 'bg' => {
+  if (!text) return 'en';
+  if (/[а-яА-ЯёЁ]/.test(text)) {
+    return 'bg';
+  }
+  return 'en';
+};
+
 const deeplTranslate = async (
   text: string,
   sourceLang: string,
@@ -39,7 +47,11 @@ const Reports = () => {
     message: string;
     type: "success" | "error";
   }>({ open: false, message: "", type: "success" });
-  const [translatedReason, setTranslatedReason] = useState<string | null>(null);
+
+  // Reason translation states
+  const [showReasonTranslation, setShowReasonTranslation] = useState(false);
+  const [reasonTranslationCache, setReasonTranslationCache] = useState<string | null>(null);
+  const [reasonTranslating, setReasonTranslating] = useState(false);
 
   // Helper to display target type with proper pluralization
   const getTargetTypeLabel = (targetType: string) => {
@@ -74,28 +86,53 @@ const Reports = () => {
 
   const handleView = async (report: Report) => {
     setSelectedReport(report);
-    const sourceLang = language === "en" ? "bg" : "en";
-    const targetLang = language;
-    if (sourceLang !== targetLang) {
-      try {
-        const translated = await deeplTranslate(report.reason, sourceLang, targetLang);
-        setTranslatedReason(translated);
-      } catch {
-        setTranslatedReason(null);
-      }
-    } else {
-      setTranslatedReason(null);
-    }
+    // Reset translation states when viewing a new report
+    setShowReasonTranslation(false);
+    setReasonTranslationCache(null);
+    setReasonTranslating(false);
     // Update URL with report ID
     navigate(`/admin/dashboard/reports/${report._id}`, { replace: true });
   };
+
+  const handleTranslateReason = async () => {
+    if (!selectedReport) return;
+
+    if (showReasonTranslation) {
+      setShowReasonTranslation(false);
+      return;
+    }
+
+    if (reasonTranslationCache) {
+      setShowReasonTranslation(true);
+      return;
+    }
+
+    setReasonTranslating(true);
+    try {
+      const reasonLang = detectLanguage(selectedReport.reason);
+      const targetLang = reasonLang === "en" ? "bg" : "en";
+      const translated = await deeplTranslate(selectedReport.reason, reasonLang, targetLang);
+      setReasonTranslationCache(translated);
+      setShowReasonTranslation(true);
+    } catch (error) {
+      console.error("Failed to translate reason:", error);
+    } finally {
+      setReasonTranslating(false);
+    }
+  };
+
+  const shouldShowTranslateButton = selectedReport
+    ? detectLanguage(selectedReport.reason) !== language
+    : false;
 
   const handleBackToList = () => {
     setSelectedReport(null);
     setShowReject(false);
     setShowDelete(false);
     setReason("");
-    setTranslatedReason(null);
+    setShowReasonTranslation(false);
+    setReasonTranslationCache(null);
+    setReasonTranslating(false);
     navigate("/admin/dashboard/reports", { replace: true });
   };
 
@@ -207,31 +244,53 @@ const Reports = () => {
               <strong>{t("category")}:</strong>{" "}
               {getTargetTypeLabel(selectedReport.targetType)}
             </p>
-            <div
-              style={{
-                marginTop: "20px",
-                padding: "16px",
-                background: "rgba(0,0,0,0.05)",
-                borderRadius: "8px",
-              }}
-            >
-              <p>
+            <div style={{ marginTop: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
                 <strong>{t("reasonDescription")}:</strong>
-              </p>
-              {translatedReason !== null ? (
-                <p>{translatedReason}</p>
-              ) : (
-                <p>{selectedReport.reason}</p>
+                {shouldShowTranslateButton && (
+                  <button
+                    onClick={handleTranslateReason}
+                    disabled={reasonTranslating}
+                    style={{
+                      padding: "4px 10px",
+                      border: "2px solid var(--theme-accent)",
+                      background: "var(--theme-accent)",
+                      color: "var(--theme-text)",
+                      borderRadius: "8px",
+                      cursor: reasonTranslating ? "not-allowed" : "pointer",
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      opacity: reasonTranslating ? 0.7 : 1,
+                    }}
+                  >
+                    {reasonTranslating ? (
+                      <span className="material-icons spin" style={{ fontSize: "14px" }}>refresh</span>
+                    ) : (
+                      <span className="material-icons" style={{ fontSize: "14px" }}>
+                        {showReasonTranslation ? "translate" : "language"}
+                      </span>
+                    )}
+                    <span>
+                      {reasonTranslating
+                        ? t("translating") || "Translating..."
+                        : showReasonTranslation
+                        ? t("viewOriginal")
+                        : t("translate")
+                      }
+                    </span>
+                  </button>
+                )}
+              </div>
+              {(showReasonTranslation ? reasonTranslationCache : selectedReport.reason) && (
+                <p style={{ whiteSpace: "pre-wrap" }}>
+                  {showReasonTranslation ? reasonTranslationCache : selectedReport.reason}
+                </p>
               )}
             </div>
-            <div
-              style={{
-                marginTop: "20px",
-                padding: "16px",
-                background: "rgba(0,0,0,0.05)",
-                borderRadius: "8px",
-              }}
-            >
+            <div style={{ marginTop: "20px" }}>
               <p>
                 <strong>{t("referenceToItem")}:</strong>{" "}
                 <button

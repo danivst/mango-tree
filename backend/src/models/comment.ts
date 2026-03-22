@@ -9,9 +9,11 @@ export interface IComment extends Document {
     bg: string;
     en: string;
   };
-  createdAt: Date;
   likes: Types.ObjectId[]; // array of user IDs who liked
-  isVisible?: boolean; // Added isVisible
+  isVisible?: boolean;
+  parentCommentId?: Types.ObjectId; // Reference to parent comment (for replies)
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const commentSchema: Schema<IComment> = new Schema(
@@ -45,15 +47,20 @@ const commentSchema: Schema<IComment> = new Schema(
       type: Boolean,
       default: true,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+    parentCommentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Comment",
+      default: null,
     },
   },
   {
     timestamps: true,
   },
 );
+
+// Index for efficient querying of replies
+commentSchema.index({ parentCommentId: 1, createdAt: 1 });
+commentSchema.index({ postId: 1, createdAt: 1 });
 
 const Comment: Model<IComment> = mongoose.model<IComment>(
   "Comment",

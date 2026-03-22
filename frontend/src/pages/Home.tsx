@@ -293,46 +293,61 @@ const Home = () => {
     }
   }, [currentUserId, isSearching, loadInitialFeed]);
 
-  // Intersection Observer for infinite scroll
+  // Refs to hold latest values for observer callback
+  const loadMoreFeedRef = useRef(loadMoreFeed);
+  const loadMoreSearchRef = useRef(loadMoreSearch);
+  const feedLoadingRef = useRef(feedLoading);
+  const feedHasMoreRef = useRef(feedHasMore);
+  const searchLoadingRef = useRef(searchLoading);
+  const searchHasMoreRef = useRef(searchHasMore);
+  const isSearchingRef = useRef(isSearching);
+
+  // Update refs when state/function changes
+  useEffect(() => { loadMoreFeedRef.current = loadMoreFeed; }, [loadMoreFeed]);
+  useEffect(() => { loadMoreSearchRef.current = loadMoreSearch; }, [loadMoreSearch]);
+  useEffect(() => { feedLoadingRef.current = feedLoading; }, [feedLoading]);
+  useEffect(() => { feedHasMoreRef.current = feedHasMore; }, [feedHasMore]);
+  useEffect(() => { searchLoadingRef.current = searchLoading; }, [searchLoading]);
+  useEffect(() => { searchHasMoreRef.current = searchHasMore; }, [searchHasMore]);
+  useEffect(() => { isSearchingRef.current = isSearching; }, [isSearching]);
+
+  // Stable sentinel ref and observer
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const lastElementRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (isSearching ? searchLoading : feedLoading) return;
 
-      // Clean up previous observer
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-        observerRef.current = null;
-      }
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
 
-      if (!node) return;
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
 
-      observerRef.current = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting) {
-            if (isSearching) {
-              loadMoreSearch();
-            } else {
-              loadMoreFeed();
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          if (isSearchingRef.current) {
+            if (!searchLoadingRef.current && searchHasMoreRef.current) {
+              loadMoreSearchRef.current();
+            }
+          } else {
+            if (!feedLoadingRef.current && feedHasMoreRef.current) {
+              loadMoreFeedRef.current();
             }
           }
-        },
-        { threshold: 1.0 }
-      );
+        }
+      },
+      { threshold: 1.0 }
+    );
 
-      observerRef.current.observe(node);
-    },
-    [isSearching, searchLoading, feedLoading, loadMoreSearch, loadMoreFeed]
-  );
+    observerRef.current.observe(node);
 
-  // Cleanup observer on unmount
-  useEffect(() => {
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
     };
-  }, []);
+  }, []); // Run once on mount
 
 
   // Loading spinner
@@ -394,7 +409,7 @@ const Home = () => {
                 ))}
               </div>
               {searchLoading && <LoadingSpinner />}
-              {!searchLoading && searchHasMore && <div ref={lastElementRef} style={{ height: "20px" }} />}
+              {!searchLoading && searchHasMore && <div ref={sentinelRef} style={{ height: "20px" }} />}
               {!searchHasMore && searchResults.length > 0 && (
                 <div className="admin-loading" style={{ padding: "20px" }}>
                   {t("noMorePosts") || "No more posts"}
@@ -513,7 +528,7 @@ const Home = () => {
             </div>
 
             {feedLoading && <LoadingSpinner />}
-            {!feedLoading && feedHasMore && <div ref={lastElementRef} style={{ height: "20px" }} />}
+            {!feedLoading && feedHasMore && <div ref={sentinelRef} style={{ height: "20px" }} />}
             {!feedHasMore && feedPosts.length > 0 && (
               <div className="admin-loading" style={{ padding: "20px" }}>
                 {t("noMorePosts") || "No more posts"}

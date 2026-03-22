@@ -40,6 +40,7 @@ const UserProfile = () => {
   }>({ open: false, message: "", type: "success" });
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [showBioTranslation, setShowBioTranslation] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -173,10 +174,17 @@ const UserProfile = () => {
     );
   };
 
-  // Derive the three special categories
+  // Derive the three special categories in specific order: recipe, question, flex
   const specialCategories = useMemo(() => {
     const lowerNames = ["recipe", "flex", "question"];
-    return categories.filter((cat) => lowerNames.includes(cat.name.toLowerCase()));
+    const filtered = categories.filter((cat) => lowerNames.includes(cat.name.toLowerCase()));
+    // Sort according to desired order: recipe -> question -> flex
+    const order = ["recipe", "question", "flex"];
+    return filtered.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      return order.indexOf(aName) - order.indexOf(bName);
+    });
   }, [categories]);
 
   // No default category selection - "All" (null) shows all posts
@@ -326,7 +334,7 @@ const UserProfile = () => {
               <div style={{ display: "flex", gap: "32px" }}>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
-                    {posts.length}
+                    {posts.filter(p => p.isApproved !== false).length}
                   </div>
                   <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
                     {t("posts")}
@@ -355,9 +363,36 @@ const UserProfile = () => {
           {/* Bio */}
           {user.bio && (
             <div style={{ marginBottom: "24px" }}>
-              <h3 style={{ margin: "0 0 12px 0", fontSize: "18px", color: "var(--theme-text)" }}>
-                {t("bio")}
-              </h3>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <h3 style={{ margin: 0, fontSize: "18px", color: "var(--theme-text)" }}>
+                  {t("bio")}
+                </h3>
+                {/* Translate Button - show only if bio is in different language than app */}
+                {user?.bio && user.translations?.bio?.[language] && user.translations.bio[language] !== user.bio && (
+                  <button
+                    onClick={() => setShowBioTranslation(!showBioTranslation)}
+                    style={{
+                      padding: "6px 16px",
+                      border: "none",
+                      background: "var(--theme-accent)",
+                      color: "var(--theme-text)",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                    title={showBioTranslation ? t("viewOriginal") : t("translate")}
+                  >
+                    <span className="material-icons" style={{ fontSize: "14px" }}>
+                      {showBioTranslation ? "translate" : "language"}
+                    </span>
+                    {showBioTranslation ? t("viewOriginal") : t("translate")}
+                  </button>
+                )}
+              </div>
               <p
                 style={{
                   background: "var(--theme-bg)",
@@ -368,7 +403,9 @@ const UserProfile = () => {
                   color: "var(--theme-text)",
                 }}
               >
-                {user.bio}
+                {showBioTranslation && user.translations?.bio?.[language]
+                  ? user.translations.bio[language]
+                  : user.bio}
               </p>
             </div>
           )}
@@ -413,6 +450,7 @@ const UserProfile = () => {
                     fontWeight: 600,
                     cursor: "pointer",
                     transition: "all 0.2s",
+                    opacity: selectedCategoryId === category._id ? 1 : 0.6, // Dim button if category ID is missing
                   }}
                 >
                   {getCategoryDisplayName(category)}
