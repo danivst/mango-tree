@@ -101,9 +101,11 @@ export const createPost = async (
         link: null,
       });
 
-      return res.status(400).json({
+      // Return 200 OK with rejection info - this is a moderation decision, not an error
+      return res.json({
         error: reasonKey,
         reason: reasonDetail,
+        flagged: true,
       });
     }
 

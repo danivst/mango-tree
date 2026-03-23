@@ -55,7 +55,7 @@ const Upload = () => {
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
-    type: "success" | "error";
+    type: "success" | "error" | "warning";
   }>({ open: false, message: "", type: "success" });
 
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -204,24 +204,40 @@ const Upload = () => {
 
       const response = await api.post("/posts", postData);
 
-      // Determine success message using messageKey if available
-      let successMessage: string;
-      if (response.data.messageKey) {
-        successMessage = t(response.data.messageKey);
-      } else if (response.data.message) {
-        successMessage = response.data.message;
-      } else {
-        // Fallback based on status
-        successMessage = response.status === 202
-          ? t("postPendingAdminReview")
-          : t("postPublishedSuccess");
-      }
+      // Check if content was flagged by AI (server returns flagged: true)
+      if (response.data.flagged || response.data.error) {
+        // Content was rejected by moderation
+        const reasonKey = response.data.error;
+        const errorMessage = response.data.reason || t(reasonKey) || t("postRejected");
 
-      setSnackbar({
-        open: true,
-        message: successMessage,
-        type: "success",
-      });
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          type: "error",
+        });
+      } else {
+        // Content was accepted - either published or pending admin review
+        let successMessage: string;
+        if (response.data.messageKey) {
+          successMessage = t(response.data.messageKey);
+        } else if (response.data.message) {
+          successMessage = response.data.message;
+        } else if (response.status === 202) {
+          successMessage = t("postPendingAdminReview");
+        } else {
+          successMessage = t("postPublishedSuccess");
+        }
+
+        // Use warning type for pending admin review, success for published
+        const snackbarType: "success" | "error" | "warning" =
+          response.status === 202 ? "warning" : "success";
+
+        setSnackbar({
+          open: true,
+          message: successMessage,
+          type: snackbarType,
+        });
+      }
 
       // Refresh notifications to show the new notification immediately
       await refreshUnreadCount();

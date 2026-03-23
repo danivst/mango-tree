@@ -1040,14 +1040,27 @@ const Post = () => {
       const response = await api.post(`/comments`, commentData);
       console.log('Comment created response:', response.data);
 
-      // Add the new comment to the list
-      setComments(prev => [response.data, ...prev]);
-      setNewComment("");
-      setSnackbar({
-        open: true,
-        message: t("commentAdded") || "Comment added successfully",
-        type: "success",
-      });
+      // Check if comment was flagged by AI moderation (server returns flagged: true)
+      if (response.data.flagged || response.data.error) {
+        // Comment was rejected by moderation
+        const reasonKey = response.data.error;
+        const errorMessage = response.data.reason || t(reasonKey) || t("commentRejected");
+
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          type: "error",
+        });
+      } else {
+        // Add the new comment to the list
+        setComments(prev => [response.data, ...prev]);
+        setNewComment("");
+        setSnackbar({
+          open: true,
+          message: t("commentAdded") || "Comment added successfully",
+          type: "success",
+        });
+      }
     } catch (error: any) {
       console.error('Failed to post comment:', error);
       console.error('Error response:', error.response?.data);
@@ -1055,7 +1068,7 @@ const Post = () => {
       let errorMessage: string;
 
       if (errData?.error) {
-        // Use translation key for known errors (moderation rejections)
+        // Use translation key for known errors (except moderation which is now handled above)
         errorMessage = t(errData.error);
       } else if (errData?.message) {
         // Fallback to raw message
@@ -1140,30 +1153,43 @@ const Post = () => {
         parentCommentId: parentCommentId,
       });
 
-      const newReply = response.data;
+      // Check if reply was flagged by AI moderation
+      if (response.data.flagged || response.data.error) {
+        // Reply was rejected
+        const reasonKey = response.data.error;
+        const errorMessage = response.data.reason || t(reasonKey) || t("commentRejected");
 
-      // Optimistically add reply to the tree
-      setComments(prev => {
-        const updatedTree = updateCommentInTree(prev, parentCommentId, (parent) => ({
-          ...parent,
-          replies: [...(parent.replies || []), newReply]
-        }));
-        return updatedTree;
-      });
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          type: "error",
+        });
+      } else {
+        const newReply = response.data;
 
-      setSnackbar({
-        open: true,
-        message: t("replyAdded") || "Reply added",
-        type: "success",
-      });
+        // Optimistically add reply to the tree
+        setComments(prev => {
+          const updatedTree = updateCommentInTree(prev, parentCommentId, (parent) => ({
+            ...parent,
+            replies: [...(parent.replies || []), newReply]
+          }));
+          return updatedTree;
+        });
 
-      // Reset reply state
-      setReplyingToCommentId(null);
-      setReplyTexts(prev => {
-        const newState = { ...prev };
-        delete newState[parentCommentId];
-        return newState;
-      });
+        setSnackbar({
+          open: true,
+          message: t("replyAdded") || "Reply added",
+          type: "success",
+        });
+
+        // Reset reply state
+        setReplyingToCommentId(null);
+        setReplyTexts(prev => {
+          const newState = { ...prev };
+          delete newState[parentCommentId];
+          return newState;
+        });
+      }
     } catch (error: any) {
       console.error('Failed to post reply:', error);
       setSnackbar({

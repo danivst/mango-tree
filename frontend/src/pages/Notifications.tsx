@@ -53,19 +53,25 @@ const Notifications = () => {
       case "comment":
         return "comment";
       case "report_feedback":
+        // Check if it's about AI service limitations (warning, not error)
+        if (
+          lowerMessage.includes("service limitations") ||
+          lowerMessage.includes("ai service")
+        ) {
+          return "warning";
+        }
+        // Actual rejections (errors)
         if (
           lowerMessage.includes("removed") ||
           lowerMessage.includes("inappropriate") ||
           lowerMessage.includes("violated") ||
           lowerMessage.includes("deleted") ||
-          lowerMessage.includes("service limitations") ||
-          lowerMessage.includes("ai service") ||
           lowerMessage.includes("not cooking-related")
         ) {
           return "close";
-        } else {
-          return "check_circle";
         }
+        // Success/Resolved notifications
+        return "check_circle";
       case "system":
         if (lowerMessage.includes("warning") || lowerMessage.includes("alert")) {
           return "warning";
@@ -87,19 +93,25 @@ const Notifications = () => {
       return "#2196F3";
     }
     if (type === "report_feedback") {
+      // AI service limitations = warning (amber)
+      if (
+        lowerMessage.includes("service limitations") ||
+        lowerMessage.includes("ai service")
+      ) {
+        return "#FF9800";
+      }
+      // Actual rejections = error (red)
       if (
         lowerMessage.includes("removed") ||
         lowerMessage.includes("inappropriate") ||
         lowerMessage.includes("violated") ||
         lowerMessage.includes("deleted") ||
-        lowerMessage.includes("service limitations") ||
-        lowerMessage.includes("ai service") ||
         lowerMessage.includes("not cooking-related")
       ) {
         return "#F44336";
-      } else {
-        return "#4CAF50";
       }
+      // Success/resolved = green
+      return "#4CAF50";
     }
     if (type === "system") {
       return "#FF9800";

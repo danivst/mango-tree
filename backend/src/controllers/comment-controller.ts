@@ -69,9 +69,11 @@ export const createComment = async (
         link: null,
       });
 
-      return res.status(400).json({
+      // Return 200 OK with rejection info - moderation decision, not an error
+      return res.json({
         error: reasonKey,
         reason: reasonDetail,
+        flagged: true,
       });
     }
 
@@ -306,9 +308,12 @@ export const updateComment = async (
           link: `/posts/${comment.postId}#comment-${comment._id}`,
         });
 
-        return res
-          .status(400)
-          .json({ message: "Comment update flagged as inappropriate", reason: moderationResult.reason });
+        // Return 200 OK with rejection info - moderation decision, not an error
+        return res.json({
+          flagged: true,
+          reason: moderationResult.reason,
+          message: "Comment update flagged as inappropriate",
+        });
       }
     } catch (moderationErr: any) {
       console.error("[updateComment] Moderation service error:", moderationErr.message);

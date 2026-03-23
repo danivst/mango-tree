@@ -151,17 +151,28 @@ const UserSidebar = () => {
     }
   };
 
-  // Determine active item: try to match current location first
-  let activeItem = menuItems.find((item) => {
-    if (location.pathname === item.path) return true;
-    if (location.pathname.startsWith(item.path + '/')) return true;
-    return false;
-  });
+  // Determine active item: prioritize exact matches including home route
+  let activeItem: SidebarItem | undefined;
 
-  // If no match, fall back to last active item (e.g., when viewing a user profile)
+  // Special handling for home route to ensure it's always active on /home and /home/suggested
+  if (location.pathname === "/home" || location.pathname.startsWith("/home/")) {
+    activeItem = menuItems.find(item => item.id === "home");
+  } else {
+    // General matching for other routes
+    activeItem = menuItems.find((item) => {
+      if (location.pathname === item.path) return true;
+      if (location.pathname.startsWith(item.path + '/')) return true;
+      return false;
+    });
+  }
+
+  // If still no match, fall back to last active item (e.g., when viewing a user profile)
   if (!activeItem && lastActiveItemId) {
     activeItem = menuItems.find((item) => item.id === lastActiveItemId);
   }
+
+  // Debug: log to help troubleshoot active item detection
+  console.log("[UserSidebar] pathname:", location.pathname, "activeItem:", activeItem?.id, "lastActiveItemId:", lastActiveItemId);
 
   return (
     <>

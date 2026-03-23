@@ -26,6 +26,11 @@ interface GeminiRequest {
     temperature: number;
     maxOutputTokens: number;
     responseMimeType: string;
+    responseSchema?: {
+      type: string;
+      properties: Record<string, { type: string }>;
+      required: string[];
+    };
   };
 }
 
@@ -179,7 +184,17 @@ Logic:
       generationConfig: {
         temperature: 0.1,
         maxOutputTokens: 200,
-        responseMimeType: "application/json"
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            isCookingRelated: { type: "BOOLEAN" },
+            isAppropriate: { type: "BOOLEAN" },
+            flagged: { type: "BOOLEAN" },
+            reason: { type: "STRING" }
+          },
+          required: ["isCookingRelated", "isAppropriate", "flagged", "reason"]
+        }
       }
     };
 
@@ -194,19 +209,29 @@ Logic:
       }
     );
 
-    const responseText = response.data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    const responseData = response.data.candidates?.[0]?.content?.parts?.[0];
 
-    if (!responseText) {
-      console.warn("[moderateWithGemini] Gemini returned empty response");
+    // Debug: log the full response structure to understand what we're getting
+    console.log("[moderateWithGemini] Response data structure:", JSON.stringify(response.data, null, 2));
+    console.log("[moderateWithGemini] ResponseData:", JSON.stringify(responseData, null, 2));
+
+    // Try to get JSON from structured output first, fallback to text parsing
+    let json;
+    if (responseData?.json) {
+      json = responseData.json;
+      console.log("[moderateWithGemini] Got structured JSON response");
+    } else if (responseData?.text) {
+      console.log("[moderateWithGemini] Got text response, extracting JSON...");
+      const text = responseData.text.trim();
+      const jsonMatch = text.match(/\{.*\}/s);
+      const jsonString = jsonMatch ? jsonMatch[0] : text;
+      json = JSON.parse(jsonString);
+    } else {
+      console.warn("[moderateWithGemini] Gemini returned empty or invalid response");
       return { flagged: true, reason: "No response from AI service" };
     }
 
-    // Extract JSON from response (in case there's extra text)
-    const jsonMatch = responseText.match(/\{.*\}/s);
-    const jsonString = jsonMatch ? jsonMatch[0] : responseText;
-
     try {
-      const json = JSON.parse(jsonString);
       console.log("[moderateWithGemini] Parsed response:", JSON.stringify(json, null, 2));
 
       let flagged: boolean;
@@ -226,14 +251,20 @@ Logic:
         }
       }
 
-      return {
+      const result: ModerationResult = {
         flagged,
         reason,
-        isCookingRelated: json.isCookingRelated,
         isAppropriate: json.isAppropriate,
       };
+
+      // Only include isCookingRelated when we actually check for it
+      if (checkCookingRelated) {
+        result.isCookingRelated = json.isCookingRelated;
+      }
+
+      return result;
     } catch (parseErr) {
-      console.error("[moderateWithGemini] Failed to parse Gemini response:", parseErr, "Raw response:", responseText);
+      console.error("[moderateWithGemini] Failed to parse Gemini response:", parseErr, "Raw response:", response.data);
       return { flagged: true, reason: "Invalid AI response format" };
     }
   } catch (err: any) {
