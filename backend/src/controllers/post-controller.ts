@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-
-import Post, { IPost } from "../models/post";
+import Post from "../models/post";
 import Comment from "../models/comment";
 import User from "../models/user";
 import Tag from "../models/tag";
@@ -9,10 +8,31 @@ import Notification from "../models/notification";
 import NotificationType from "../enums/notification-type";
 import RoleTypeValue from "../enums/role-type";
 import moderateContent from "../utils/ai";
-import { AuthRequest } from "../utils/auth";
+import { AuthRequest } from "../interfaces/auth";
 import { getDualTranslation } from "../utils/translation";
 
-/* ---------- CREATE POST ---------- */
+/**
+ * Creates a new post with title, content, optional image, category, and tags.
+ * Automatically translates title and content to both English and Bulgarian.
+ * Moderates content via AI; if flagged as inappropriate, returns a flagged status (200 OK) with rejection reason.
+ * If moderation service fails, the post is created but marked as pending admin approval.
+ * Notifies the author upon successful publication or if pending review.
+ *
+ * @param req - AuthRequest with body { title, content, image?, category, tags? }
+ * @param res - Response with created post or flagged status
+ * @returns 201 with post on success, 200 with flagged:true if rejected, 400 for validation errors,
+ *          500 on server error
+ *
+ * @example
+ * ```json
+ * {
+ *   "title": "My Delicious Pasta",
+ *   "content": "Here's how I make pasta...",
+ *   "category": "category_id",
+ *   "tags": ["italian", "easy"]
+ * }
+ * ```
+ */
 export const createPost = async (
   req: AuthRequest,
   res: Response,
@@ -225,7 +245,14 @@ export const createPost = async (
   }
 };
 
-/* ---------- TOGGLE LIKE POST ---------- */
+/**
+ * Toggles like/unlike on a post.
+ * If liking, sends a notification to the post author.
+ *
+ * @param req - AuthRequest with params { id } (post ID)
+ * @param res - Response with { message: "Liked" | "Unliked", totalLikes: number }
+ * @returns 200 with like status and total likes, 404 if post not found
+ */
 export const toggleLikePost = async (
   req: AuthRequest,
   res: Response,
@@ -289,7 +316,16 @@ export const toggleLikePost = async (
   }
 };
 
-/* ---------- UPDATE POST ---------- */
+/**
+ * Updates a post's title, content, image, category, and/or tags.
+ * Only the post author or an admin can update.
+ * Re-moderates new content via AI; if flagged, returns 400 with error.
+ * Automatically re-translates updated fields.
+ *
+ * @param req - AuthRequest with params { id } and body containing any updatable fields
+ * @param res - Response with updated post or error
+ * @returns 200 with updated post, 400 if flagged, 403 if not authorized, 404 if post not found
+ */
 export const updatePost = async (
   req: AuthRequest,
   res: Response,
@@ -399,6 +435,14 @@ export const updatePost = async (
 };
 
 /* ---------- FEED & GETTERS ---------- */
+/**
+ * Retrieves all visible posts, sorted by creation date (newest first).
+ * Includes author details and comment counts.
+ *
+ * @param req - Express request
+ * @param res - Response with array of posts with commentCount
+ * @returns 200 with posts array, 500 on error
+ */
 export const getAllPosts = async (
   req: Request,
   res: Response,
@@ -428,6 +472,14 @@ export const getAllPosts = async (
   }
 };
 
+/**
+ * Retrieves a single visible post by ID, with author and category populated.
+ * Includes comment count.
+ *
+ * @param req - Express request with params { id }
+ * @param res - Response with post object including commentCount
+ * @returns 200 with post, 404 if not found or not visible
+ */
 export const getPostById = async (
   req: Request,
   res: Response,
@@ -457,6 +509,13 @@ export const getPostById = async (
 };
 
 /* ---------- TRANSLATE POST ---------- */
+/**
+ * Translates a post's title, content, and tags to the requested language.
+ *
+ * @param req - AuthRequest with params { id } and query { targetLang: 'en'|'bg' }
+ * @param res - Response with { title, content, tags, sourceLang, targetLang }
+ * @returns 200 with translations, 400 for invalid language, 404 if post not found
+ */
 export const translatePost = async (
   req: AuthRequest,
   res: Response,
@@ -515,6 +574,14 @@ export const translatePost = async (
   }
 };
 
+/**
+ * Deletes a post. Only the author or an admin can delete.
+ * Sends a notification to the author (self-deletion) or to the post author (admin deletion).
+ *
+ * @param req - AuthRequest with params { id }
+ * @param res - Response with success message
+ * @returns 200 on success, 403 if not authorized, 404 if post not found
+ */
 export const deletePost = async (
   req: AuthRequest,
   res: Response,
@@ -587,6 +654,15 @@ export const deletePost = async (
   }
 };
 
+/**
+ * Retrieves the home feed for the authenticated user.
+ * Excludes the user's own posts and includes comment counts.
+ * Supports pagination via query parameters `limit` and `skip`.
+ *
+ * @param req - AuthRequest with optional query { limit?, skip? }
+ * @param res - Response with { posts: Post[], total: number, hasMore: boolean }
+ * @returns 200 with paginated posts, 404 if user not found
+ */
 export const getHomeFeed = async (
   req: AuthRequest,
   res: Response,
@@ -636,6 +712,14 @@ export const getHomeFeed = async (
 };
 
 /* ---------- GET POSTS BY AUTHOR ---------- */
+/**
+ * Retrieves all visible posts by a specific author, with author and category populated.
+ * Includes comment counts.
+ *
+ * @param req - AuthRequest with params { authorId }
+ * @param res - Response with array of posts
+ * @returns 200 with posts array, 500 on error
+ */
 export const getPostsByAuthor = async (
   req: AuthRequest,
   res: Response,
@@ -670,6 +754,15 @@ export const getPostsByAuthor = async (
 };
 
 /* ---------- SEARCH POSTS ---------- */
+/**
+ * Searches posts by text using MongoDB full-text search with regex fallback.
+ * Returns posts matching the query, with author and category populated.
+ * Includes comment counts and pagination.
+ *
+ * @param req - AuthRequest with query { q, limit=50, skip=0 }
+ * @param res - Response with { posts: Post[], total: number, hasMore: boolean }
+ * @returns 200 with results, 400 if query missing, 500 on error
+ */
 export const searchPosts = async (
   req: AuthRequest,
   res: Response,
@@ -678,7 +771,6 @@ export const searchPosts = async (
     const { q, limit = 50, skip = 0 } = req.query;
     const query = (q as string)?.trim();
 
-    console.log(`[searchPosts] Query: "${query}", limit: ${limit}, skip: ${skip}, user: ${req.user?.userId}`);
 
     if (!query) {
       return res.status(400).json({ message: "Search query is required" });
@@ -704,11 +796,9 @@ export const searchPosts = async (
       .limit(parseInt(limit as string) || 50)
       .lean();
 
-    console.log(`[searchPosts] $text search found ${posts.length} posts`);
 
     // If $text search returned nothing, try a fallback regex search (case insensitive)
     if (posts.length === 0) {
-      console.log('[searchPosts] $text search returned 0, trying regex fallback...');
       const regexQuery = {
         $or: [
           { title: { $regex: query, $options: 'i' } },
@@ -726,7 +816,6 @@ export const searchPosts = async (
         .limit(parseInt(limit as string) || 50)
         .lean();
 
-      console.log(`[searchPosts] Regex fallback found ${posts.length} posts`);
     }
 
     // Get total count for pagination
@@ -748,7 +837,6 @@ export const searchPosts = async (
       commentCount: countsMap.get(post._id.toString()) || 0
     }));
 
-    console.log(`[searchPosts] Total: ${total}, hasMore: ${parseInt(skip as string) + parseInt(limit as string) < total}`);
 
     return res.json({
       posts: postsWithCounts,
@@ -762,6 +850,14 @@ export const searchPosts = async (
 };
 
 /* ---------- GET FOLLOWED POSTS ---------- */
+/**
+ * Retrieves posts from users that the authenticated user is following.
+ * Excludes the user's own posts. Supports pagination.
+ *
+ * @param req - AuthRequest with optional query { limit?, skip? }
+ * @param res - Response with { posts: Post[], total: number, hasMore: boolean }
+ * @returns 200 with paginated posts, 401 if not authenticated, 404 if user not found
+ */
 export const getFollowedPosts = async (
   req: AuthRequest,
   res: Response,
@@ -863,6 +959,15 @@ export const getFollowedPosts = async (
 };
 
 /* ---------- GET SUGGESTED POSTS ---------- */
+/**
+ * Retrieves suggested posts for the user based on their activity.
+ * Recommendations consider liked posts, commented posts, and followed categories/tags.
+ * Excludes posts from followed users and already liked posts.
+ *
+ * @param req - AuthRequest with optional query { limit?, skip? }
+ * @param res - Response with { posts: Post[], total: number, hasMore: boolean }
+ * @returns 200 with paginated suggested posts, 401 if not authenticated, 404 if user not found
+ */
 export const getSuggestedPosts = async (
   req: AuthRequest,
   res: Response,

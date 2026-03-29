@@ -11,6 +11,7 @@ import "./AdminPages.css";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
+import Footer from "../../components/Footer";
 
 const BannedUsers = () => {
   const { bannedUsers, bannedUsersState, fetchBannedUsers } = useAdminData();
@@ -483,6 +484,7 @@ const BannedUsers = () => {
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       />
+      <Footer />
     </div>
   );
 };

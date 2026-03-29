@@ -465,6 +465,7 @@ export const translations: Record<Language, Record<string, string>> = {
     twoFACodePlaceholder: "Enter 6-digit code",
     invalid2FACode: "Invalid or expired code",
     incorrect2FACode: "Incorrect verification code",
+    copyright: "© 2026 MangoTree. All rights reserved.",
   },
 
   bg: {
@@ -951,6 +952,7 @@ export const translations: Record<Language, Record<string, string>> = {
     twoFACodePlaceholder: "Въведете 6-цифрен код",
     invalid2FACode: "Невалиден или изтекъл код",
     incorrect2FACode: "Неверен код за потвърждение",
+    copyright: "© 2026 MangoTree. Всички права запазени.",
   },
 };
 

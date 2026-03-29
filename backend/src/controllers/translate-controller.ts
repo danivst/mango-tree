@@ -1,6 +1,20 @@
 import { Request, Response } from "express";
 import { getDualTranslation } from "../utils/translation";
 
+/**
+ * @file translate-controller.ts
+ * @description Provides on-demand text translation using DeepL API.
+ * Translates any text to both English and Bulgarian, returns requested target.
+ */
+
+/**
+ * Translates text to the specified target language.
+ * Uses DeepL to get both translations, then returns the requested one.
+ *
+ * @param req - Request with body { text, sourceLang?, targetLang: 'en'|'bg' }
+ * @param res - Response with { translation: string }
+ * @returns 200 with translated text, 400 if text missing or invalid targetLang
+ */
 export const translateText = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { text, sourceLang, targetLang } = req.body;

@@ -53,20 +53,32 @@ const Notifications = () => {
       case "comment":
         return "comment";
       case "report_feedback":
-        // Check if it's about AI service limitations (warning, not error)
+        // Check for AI service warnings (pending admin review due to service issues)
         if (
           lowerMessage.includes("service limitations") ||
-          lowerMessage.includes("ai service")
+          lowerMessage.includes("ai service") ||
+          lowerMessage.includes("pending admin review") ||
+          lowerMessage.includes("pending for preview by admin")
         ) {
           return "warning";
         }
-        // Actual rejections (errors)
+        // Check for post rejection - any message starting with "Post rejected" or Bulgarian equivalent
+        if (
+          message.startsWith("Post rejected.") ||
+          message.startsWith("Публикацията е отхвърлена.")
+        ) {
+          return "close";
+        }
+        // Also check for keywords indicating rejection
         if (
           lowerMessage.includes("removed") ||
           lowerMessage.includes("inappropriate") ||
           lowerMessage.includes("violated") ||
           lowerMessage.includes("deleted") ||
-          lowerMessage.includes("not cooking-related")
+          lowerMessage.includes("not cooking-related") ||
+          lowerMessage.includes("отхвърлена") ||
+          lowerMessage.includes("не е свързана с готвене") ||
+          lowerMessage.includes("неуместно")
         ) {
           return "close";
         }
@@ -93,20 +105,27 @@ const Notifications = () => {
       return "#2196F3";
     }
     if (type === "report_feedback") {
-      // AI service limitations = warning (amber)
+      // AI service warnings = warning (amber)
       if (
         lowerMessage.includes("service limitations") ||
-        lowerMessage.includes("ai service")
+        lowerMessage.includes("ai service") ||
+        lowerMessage.includes("pending admin review") ||
+        lowerMessage.includes("pending for preview by admin")
       ) {
         return "#FF9800";
       }
-      // Actual rejections = error (red)
+      // Post rejections = error (red)
       if (
+        message.startsWith("Post rejected.") ||
+        message.startsWith("Публикацията е отхвърлена.") ||
         lowerMessage.includes("removed") ||
         lowerMessage.includes("inappropriate") ||
         lowerMessage.includes("violated") ||
         lowerMessage.includes("deleted") ||
-        lowerMessage.includes("not cooking-related")
+        lowerMessage.includes("not cooking-related") ||
+        lowerMessage.includes("отхвърлена") ||
+        lowerMessage.includes("не е свързана с готвене") ||
+        lowerMessage.includes("неуместно")
       ) {
         return "#F44336";
       }
@@ -352,6 +371,9 @@ const Notifications = () => {
             open={snackbar.open}
             onClose={() => setSnackbar({ ...snackbar, open: false })}
           />
+          <footer className="page-footer">
+            <p>{t("copyright")}</p>
+          </footer>
         </div>
       </div>
 

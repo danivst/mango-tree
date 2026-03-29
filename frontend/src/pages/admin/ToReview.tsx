@@ -6,6 +6,7 @@ import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
 import "./AdminPages.css";
+import Footer from "../../components/Footer";
 
 const ToReview = () => {
   const navigate = useNavigate();
@@ -324,6 +325,7 @@ const ToReview = () => {
           open={snackbar.open}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
+        <Footer />
       </div>
       </>
     );
@@ -402,6 +404,7 @@ const ToReview = () => {
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       />
+      <Footer />
     </div>
   );
 };

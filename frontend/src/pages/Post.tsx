@@ -129,6 +129,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   width: "100%",
                   height: "100%",
                   background: "var(--theme-accent)",
+                  border: "2px solid var(--theme-text)",
+                  boxSizing: "border-box",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1322,6 +1324,8 @@ const Post = () => {
                     height: "40px",
                     borderRadius: "50%",
                     background: "var(--theme-accent)",
+                    border: "2px solid var(--theme-text)",
+                    boxSizing: "border-box",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -1719,6 +1723,9 @@ const Post = () => {
           open={snackbar.open}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
+        <footer className="page-footer">
+          <p>{t("copyright")}</p>
+        </footer>
 
         {/* Report Modal */}
         {reportModalOpen && (

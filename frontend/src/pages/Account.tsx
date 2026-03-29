@@ -299,6 +299,8 @@ const Account = () => {
                       fontWeight: 600,
                       color: "var(--theme-text)",
                       background: "var(--theme-accent)",
+                      border: "2px solid var(--theme-text)",
+                      boxSizing: "border-box",
                     }}
                   >
                     {user.username.charAt(0).toUpperCase()}
@@ -620,6 +622,9 @@ const Account = () => {
           open={snackbar.open}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
+        <footer className="page-footer">
+          <p>{t("copyright")}</p>
+        </footer>
       </div>
     </div>
   );

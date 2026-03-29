@@ -14,6 +14,7 @@ import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation, Language } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
 import { Category } from "../../services/adminAPI";
+import Footer from "../../components/Footer";
 
 type DeleteStep = "warning" | "reason" | "confirm" | null;
 type BanUnbanStep = "warning" | "reason" | "confirm" | "unban_confirm" | null;
@@ -32,8 +33,6 @@ const Users = () => {
   const [banUnbanStep, setBanUnbanStep] = useState<BanUnbanStep>(null); // New state for ban modal
   const [banUserId, setBanUserId] = useState<string | null>(null); // New state for ban user ID
   const [banReason, setBanReason] = useState(""); // New state for ban reason
-  const [showAddAdmin, setShowAddAdmin] = useState(false);
-  const [adminEmail, setAdminEmail] = useState("");
   const [sortState, setSortState] = useState<SortState>({
     column: null,
     direction: null,
@@ -386,37 +385,6 @@ const Users = () => {
     }
   };
 
-  const handleAddAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!adminEmail || !adminEmail.includes("@")) {
-      setSnackbar({
-        open: true,
-        message: t("emailMustContainAt"),
-        type: "error",
-      });
-      return;
-    }
-
-    try {
-      await adminAPI.createAdmin(adminEmail);
-      setSnackbar({
-        open: true,
-        message: t("adminAccountCreatedSuccess"),
-        type: "success",
-      });
-      setShowAddAdmin(false);
-      setAdminEmail("");
-      await fetchUsers();
-    } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: error.response?.data?.message || t("failedToCreateAdmin"),
-        type: "error",
-      });
-    }
-  };
-
   const handleViewProfile = async (userId: string) => {
     setSelectedUser(null);
     setUserPosts([]);
@@ -471,25 +439,6 @@ const Users = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button
-            className="admin-add-button"
-            onClick={() => setShowAddAdmin(true)}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            {t("addAdmin")}
-          </button>
         </div>
       </div>
 
@@ -899,48 +848,6 @@ const Users = () => {
         </div>
       )}
 
-      {/* Add Admin Modal */}
-      {showAddAdmin && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal admin-modal-add">
-            <h2 className="admin-modal-title">{t("addAdmin")}</h2>
-            <form onSubmit={handleAddAdmin}>
-              <div className="admin-form-group">
-                <label className="admin-form-label">{t("email")}</label>
-                <input
-                  type="email"
-                  className="admin-form-input"
-                  value={adminEmail}
-                  onChange={(e) => setAdminEmail(e.target.value)}
-                  required
-                  placeholder={t("enterAdminEmail")}
-                />
-                <p
-                  style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}
-                >
-                  {t("adminEmailInfo")}
-                </p>
-              </div>
-              <div className="admin-modal-actions">
-                <button
-                  type="button"
-                  className="admin-button-secondary"
-                  onClick={() => {
-                    setShowAddAdmin(false);
-                    setAdminEmail("");
-                  }}
-                >
-                  {t("cancel")}
-                </button>
-                <button type="submit" className="admin-button-primary">
-                  {t("createAdmin")}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* User Profile Preview Modal */}
       {selectedUser && (
         <div className="admin-modal-overlay" style={{ zIndex: 2100 }}>
@@ -1001,6 +908,8 @@ const Users = () => {
                             fontWeight: 600,
                             color: "var(--theme-text)",
                             background: "var(--theme-accent)",
+                            border: "2px solid var(--theme-text)",
+                            boxSizing: "border-box",
                           }}
                         >
                           {selectedUser.username.charAt(0).toUpperCase()}
@@ -1130,7 +1039,7 @@ const Users = () => {
                 {/* Posts Grid */}
                 {userPosts.length === 0 ? (
                   <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
-                    {selectedUserCategoryId ? t("noPostsFound") : t("selectCategory")}
+                    {t("noPostsFound")}
                   </div>
                 ) : (
                   <div className="admin-cards-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
@@ -1192,6 +1101,7 @@ const Users = () => {
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       />
+      <Footer />
     </div>
   );
 };

@@ -543,6 +543,9 @@ const Home = () => {
           open={snackbar.open}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
+        <footer className="page-footer">
+          <p>{t("copyright")}</p>
+        </footer>
       </div>
     </div>
   );

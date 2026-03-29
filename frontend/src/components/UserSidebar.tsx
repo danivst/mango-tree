@@ -28,6 +28,7 @@ const UserSidebar = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("tokenExpiration");
+    localStorage.removeItem("lastActiveMenuItem");
     setSnackbar({
       open: true,
       message: t("successfullyLoggedOut"),
@@ -39,7 +40,7 @@ const UserSidebar = () => {
   };
   const navigate = useNavigate();
   const location = useLocation();
-  const { language } = useThemeLanguage();
+  const { language, theme } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -180,7 +181,7 @@ const UserSidebar = () => {
         <div className="sidebar-overlay" onClick={() => setIsCollapsed(true)} />
       )}
       <div
-        className={`admin-sidebar ${isCollapsed ? "collapsed" : ""} ${isMobile ? "mobile" : ""}`}
+        className={`admin-sidebar ${isCollapsed ? "collapsed" : ""} ${isMobile ? "mobile" : ""} ${theme === 'mango' ? 'mango-theme' : ''}`}
       >
         <div className="sidebar-header">
           {!isCollapsed && (

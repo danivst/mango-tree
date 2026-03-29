@@ -1,20 +1,30 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { Types } from "mongoose";
-
 import User from "../models/user";
 import RoleTypeValue from "../enums/role-type";
 import Notification from "../models/notification";
 import NotificationType from "../enums/notification-type";
-import { AuthRequest } from "../utils/auth";
-import { getDualTranslation } from "../utils/translation"; // Standardized import
+import { AuthRequest } from "../interfaces/auth";
+import { getDualTranslation } from "../utils/translation";
+import { getLocalizedText } from "../utils/get-translation";
 import { sendEmail } from "../utils/email";
+import {
+  getAccountDeletedEmailTemplate,
+  getSuspensionEmailTemplate,
+} from "../utils/email-templates";
 
-// Helper to get translation based on user language
-const getLocalizedText = (userLang: string, translations: { bg: string; en: string }): string => {
-  return userLang === 'bg' ? translations.bg : translations.en;
-};
+/**
+ * @file user-controller.ts
+ * @description Handles all user-related HTTP endpoints including profile management,
+ * user discovery, following/followers, and user deletion.
+ */
 
-/* ---------- CHECK USERNAME UNIQUENESS ---------- */
+/**
+ * Checks if a username is available.
+ * @param req - Express request with username query parameter
+ * @param res - Express response
+ * @returns JSON response with { exists: boolean }
+ */
 export const checkUsername = async (
   req: AuthRequest,
   res: Response,
@@ -32,7 +42,15 @@ export const checkUsername = async (
   }
 };
 
-/* ---------- GET USER PROFILE ---------- */
+/**
+ * Retrieves a user's public profile by ID.
+ * Access control: Users can view their own profile or others' profiles only if not banned.
+ * Admins can view any profile including banned users.
+ *
+ * @param req - AuthRequest with params.id (user ID)
+ * @param res - Express response
+ * @returns User object with passwordHash excluded, or 404 if not found
+ */
 export const getUserProfile = async (
   req: AuthRequest,
   res: Response,
@@ -55,7 +73,16 @@ export const getUserProfile = async (
   }
 };
 
-/* ---------- UPDATE PROFILE ---------- */
+/**
+ * Updates a user's profile information.
+ * Supports both /users/:id and /users/me endpoints.
+ * Users can update their own profile; admins can update any user's profile.
+ *
+ * @param req - AuthRequest with optional params.id, body may contain:
+ *              bio, username, profileImage, theme, language
+ * @param res - Express response with updated user (passwordHash excluded)
+ * @returns Updated user object or 400/403/404 error
+ */
 export const updateProfile = async (
   req: AuthRequest,
   res: Response,
@@ -120,7 +147,16 @@ export const updateProfile = async (
   }
 };
 
-/* ---------- TOGGLE FOLLOW ---------- */
+/**
+ * Toggles following/unfollowing a user.
+ * Creates a follow relationship or removes it if already following.
+ * Sends a notification to the followed user.
+ * Cannot follow yourself or banned users.
+ *
+ * @param req - AuthRequest with body { targetId: string }
+ * @param res - Express response with message "Followed" or "Unfollowed"
+ * @returns 400 if trying to follow self or banned user, 404 if users not found
+ */
 export const toggleFollow = async (
   req: AuthRequest,
   res: Response,
@@ -189,7 +225,13 @@ export const toggleFollow = async (
   }
 };
 
-/* ---------- GET CURRENT USER ---------- */
+/**
+ * Retrieves the authenticated user's profile.
+ *
+ * @param req - AuthRequest with authenticated user
+ * @param res - Express response with user object (passwordHash excluded)
+ * @returns User object or 404 if not found
+ */
 export const getCurrentUser = async (
   req: AuthRequest,
   res: Response,
@@ -203,7 +245,14 @@ export const getCurrentUser = async (
   }
 };
 
-/* ---------- UPDATE NOTIFICATION PREFERENCES ---------- */
+/**
+ * Updates the authenticated user's notification preferences.
+ *
+ * @param req - AuthRequest with body { notificationPreferences }
+ *              notificationPreferences: { emailReports, emailComments, inAppReports, inAppComments }
+ * @param res - Express response with success message and updated user
+ * @returns Updated user with preferences, 400 if preferences missing, 404 if user not found
+ */
 export const updateNotificationPreferences = async (
   req: AuthRequest,
   res: Response,
@@ -240,7 +289,14 @@ export const updateNotificationPreferences = async (
   }
 };
 
-/* ---------- UPDATE EMAIL ---------- */
+/**
+ * Updates the authenticated user's email address.
+ * Validates email format and ensures email is not already in use by another account.
+ *
+ * @param req - AuthRequest with body { email: string }
+ * @param res - Express response with success message and updated user
+ * @returns Updated user, 400 for invalid/duplicate email, 404 if user not found
+ */
 export const updateEmail = async (
   req: AuthRequest,
   res: Response,
@@ -280,7 +336,14 @@ export const updateEmail = async (
   }
 };
 
-/* ---------- GET ALL USERS (All authenticated users) ---------- */
+/**
+ * Retrieves all regular (non-admin) users.
+ * Excludes admins, banned users, and the requesting user from results.
+ *
+ * @param req - AuthRequest with authenticated user
+ * @param res - Express response with array of User objects (passwordHash excluded)
+ * @returns Sorted by creation date (newest first)
+ */
 export const getAllUsers = async (
   req: AuthRequest,
   res: Response,
@@ -296,7 +359,7 @@ export const getAllUsers = async (
       .sort({ createdAt: -1 });
 
     const filteredUsers = users.filter(
-      (u) => (u._id as any).toString() !== req.user!.userId,
+      (u) => u._id.toString() !== req.user!.userId,
     );
     return res.json(filteredUsers);
   } catch (err: any) {
@@ -304,7 +367,14 @@ export const getAllUsers = async (
   }
 };
 
-/* ---------- GET ALL ADMINS (Admin Only) ---------- */
+/**
+ * Retrieves all admin users.
+ * Admin role required to access this endpoint.
+ *
+ * @param req - AuthRequest with user.role === 'admin'
+ * @param res - Express response with array of admin User objects (passwordHash excluded)
+ * @returns 403 if requester is not admin
+ */
 export const getAllAdmins = async (
   req: AuthRequest,
   res: Response,
@@ -328,7 +398,15 @@ export const getAllAdmins = async (
   }
 };
 
-/* ---------- GET REGULAR USERS (FOR USER SEARCH) ---------- */
+/**
+ * Retrieves all regular users for user search/discovery.
+ * Excludes admins, banned users, and the requesting user.
+ * Intended for user search functionality.
+ *
+ * @param req - AuthRequest with authenticated user
+ * @param res - Express response with array of User objects (passwordHash excluded)
+ * @returns Sorted by creation date (newest first)
+ */
 export const getRegularUsers = async (
   req: AuthRequest,
   res: Response,
@@ -344,7 +422,7 @@ export const getRegularUsers = async (
 
     // Exclude the current user from the results
     const filteredUsers = users.filter(
-      (u) => (u._id as any).toString() !== req.user!.userId,
+      (u) => u._id.toString() !== req.user!.userId,
     );
     return res.json(filteredUsers);
   } catch (err: any) {
@@ -352,7 +430,17 @@ export const getRegularUsers = async (
   }
 };
 
-/* ---------- DELETE USER ---------- */
+/**
+ * Deletes a user account and all associated data.
+ * Users can delete their own account; admins can delete any account.
+ * When an admin deletes a user, a notification with reason is sent.
+ * Sends a confirmation email before deletion.
+ * Cleans up follow relationships and associated posts/comments.
+ *
+ * @param req - AuthRequest with params.id (user ID to delete), optional body { reason }
+ * @param res - Express response with success message
+ * @returns 403 if not authorized, 404 if user not found
+ */
 export const deleteUser = async (
   req: AuthRequest,
   res: Response,
@@ -416,13 +504,9 @@ export const deleteUser = async (
     const body = getLocalizedText(userLang, bodyTrans);
     const signature = getLocalizedText(userLang, signatureTrans);
 
-    const emailHtml = `
-      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
-        <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${title}</h2>
-        <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 30px 0;">${body}</p>
-        <p style="font-size: 14px; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">${signature}</p>
-      </div>
-    `;
+    const emailHtml = isSelfDeletion
+      ? getAccountDeletedEmailTemplate({ title, body, signature })
+      : getSuspensionEmailTemplate({ title, message: body, signature });
 
     try {
       await sendEmail(user.email, title, emailHtml);
@@ -431,48 +515,40 @@ export const deleteUser = async (
       // Continue with deletion even if email fails
     }
 
-    const Post = (await import("../models/post")).default;
-    const Comment = (await import("../models/comment")).default;
+    // Import models for cleanup
+    const PostModel = (await import("../models/post")).default;
+    const CommentModel = (await import("../models/comment")).default;
 
-    await Post.deleteMany({ authorId: id });
-    await Comment.deleteMany({ userId: id });
+    // Delete user's posts and comments first
+    await PostModel.deleteMany({ authorId: id });
+    await CommentModel.deleteMany({ userId: id });
 
-    await User.findByIdAndDelete(id);
-    // Clean up follow relationships BEFORE deleting the user
-    // 1. Remove this user from others' followers lists (who this user follows)
-    // 2. Remove this user from others' following lists (who follows this user)
+    // Clean up follow relationships before deleting the user
     try {
-      const userToDelete = await User.findById(id);
-      if (userToDelete) {
-        const userIdObj = new Types.ObjectId(id);
-
-        // For each user that the deleted user follows, remove the deleted user from their followers
-        if (userToDelete.following && userToDelete.following.length > 0) {
-          await Promise.all(
-            userToDelete.following.map((followedId: Types.ObjectId) =>
-              User.findByIdAndUpdate(followedId, {
-                $pull: { followers: userIdObj }
-              })
-            )
-          );
-        }
-
-        // For each user that follows the deleted user, remove the deleted user from their following
-        if (userToDelete.followers && userToDelete.followers.length > 0) {
-          await Promise.all(
-            userToDelete.followers.map((followerId: Types.ObjectId) =>
-              User.findByIdAndUpdate(followerId, {
-                $pull: { following: userIdObj }
-              })
-            )
-          );
-        }
+      if (user.following && user.following.length > 0) {
+        await Promise.all(
+          user.following.map((followedId: Types.ObjectId) =>
+            User.findByIdAndUpdate(followedId, {
+              $pull: { followers: user._id }
+            })
+          )
+        );
+      }
+      if (user.followers && user.followers.length > 0) {
+        await Promise.all(
+          user.followers.map((followerId: Types.ObjectId) =>
+            User.findByIdAndUpdate(followerId, {
+              $pull: { following: user._id }
+            })
+          )
+        );
       }
     } catch (cleanupErr) {
       console.error("Error cleaning up follow relationships:", cleanupErr);
       // Continue with deletion even if cleanup fails
     }
 
+    // Finally delete the user account
     await User.findByIdAndDelete(id);
     return res.json({ message: "Account deleted" });
   } catch (err: any) {
@@ -480,7 +556,15 @@ export const deleteUser = async (
   }
 };
 
-/* ---------- GET FOLLOWERS ---------- */
+/**
+ * Retrieves the list of users who follow a specific user.
+ * Users can view their own followers or another user's followers if they are admin.
+ * Excludes banned users from the results.
+ *
+ * @param req - AuthRequest with params.id (target user ID)
+ * @param res - Express response with array of User objects (passwordHash excluded)
+ * @returns Array of follower users, 404 if target user not found, 403 if not authorized
+ */
 export const getFollowers = async (
   req: AuthRequest,
   res: Response,
@@ -515,7 +599,15 @@ export const getFollowers = async (
   }
 };
 
-/* ---------- GET FOLLOWING ---------- */
+/**
+ * Retrieves the list of users that a specific user is following.
+ * Users can view their own following list or another user's if they are admin.
+ * Excludes banned users from the results.
+ *
+ * @param req - AuthRequest with params.id (target user ID)
+ * @param res - Express response with array of User objects (passwordHash excluded)
+ * @returns Array of followed users, 404 if target user not found, 403 if not authorized
+ */
 export const getFollowing = async (
   req: AuthRequest,
   res: Response,
@@ -550,7 +642,14 @@ export const getFollowing = async (
   }
 };
 
-/* ---------- REMOVE FOLLOWER ---------- */
+/**
+ * Removes a follower from the authenticated user's followers list.
+ * The authenticated user must be the one being unfollowed.
+ *
+ * @param req - AuthRequest with params.followerId (ID of follower to remove)
+ * @param res - Express response with success message
+ * @returns 400 if follower relationship doesn't exist, 404 if users not found
+ */
 export const removeFollower = async (
   req: AuthRequest,
   res: Response,

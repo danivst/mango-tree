@@ -256,3 +256,8 @@
     left: 16px;
   }
 }
+
+/* Mango theme: darker unselected items */
+.admin-sidebar.mango-theme .sidebar-item {
+  opacity: 0.8;
+}

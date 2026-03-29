@@ -2,22 +2,36 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-
 import User from "../models/user";
-import BannedUser from "../models/banned_user"; // Import BannedUser model
+import BannedUser from "../models/banned-user";
 import { sendEmail } from "../utils/email";
 import { JWT_SECRET, JWT_REFRESH_SECRET, CLIENT_URL } from "../config/env";
 import RoleTypeValue from "../enums/role-type";
 import { getDualTranslation } from "../utils/translation";
-import { AuthRequest } from "../utils/auth";
+import { getLocalizedText } from "../utils/get-translation";
+import { AuthRequest } from "../interfaces/auth";
+import {
+  getWelcomeEmailTemplate,
+  getAdminCreatedEmailTemplate,
+  getPasswordResetEmailTemplate,
+  get2FAEmailTemplate
+} from "../utils/email-templates";
 
-// Helper to get translation based on user language
-const getLocalizedText = (
-  userLang: string,
-  translations: { bg: string; en: string },
-): string => {
-  return userLang === "bg" ? translations.bg : translations.en;
-};
+/**
+ * @file auth-controller.ts
+ * @description Handles authentication, authorization, and account management endpoints.
+ * Includes registration, login, password reset, and 2FA functionality.
+ */
+
+/**
+ * Registers a new user account.
+ * Validates input, checks against banned emails/usernames, creates user,
+ * and sends a welcome email in the user's preferred language.
+ *
+ * @param req - Request with body { username, email, password }
+ * @param res - Response with 201 status on success, includes JWT tokens
+ * @returns User object (without password), tokens, success message
+ */
 
 /* ---------- REGISTER ---------- */
 export const registerUser = async (
@@ -136,14 +150,13 @@ export const registerUser = async (
   const body = getLocalizedText(userLang, bodyTrans);
   const signature = getLocalizedText(userLang, signatureTrans);
 
-  const emailHtml = `
-    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
-      <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${title}</h2>
-      <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">${greeting}</p>
-      <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 30px 0;">${body}</p>
-      <p style="font-size: 14px; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">${signature}</p>
-    </div>
-  `;
+  const emailHtml = getWelcomeEmailTemplate({
+    username,
+    title,
+    greeting,
+    body,
+    signature,
+  });
 
   try {
     await sendEmail(email, title, emailHtml);
@@ -166,7 +179,15 @@ export const registerUser = async (
   });
 };
 
-/* ---------- LOGIN ---------- */
+/**
+ * Authenticates a user with username and password.
+ * Checks ban status, supports 2FA if enabled, and issues JWT tokens.
+ * If 2FA is enabled, sends verification code and requires 2FA completion.
+ *
+ * @param req - Request with body { username, password }
+ * @param res - Response with tokens and user data, or 2FA required flag
+ * @returns 200 with tokens if successful, 403 if banned, 500 if 2FA email fails
+ */
 export const loginUser = async (
   req: Request,
   res: Response,
@@ -216,39 +237,36 @@ export const loginUser = async (
     // Send 2FA code via email
     const userLang = user.language || "en";
 
-    const [titleTrans, introTrans, codeLabelTrans, securityNoteTrans, signatureTrans] =
-      await Promise.all([
-        getDualTranslation("MangoTree Two-Factor Authentication"),
-        getDualTranslation(
-          "To log in to your MangoTree account, please use the following 6-digit verification code:",
-        ),
-        getDualTranslation("Your verification code:"),
-        getDualTranslation(
-          "This code will expire in 10 minutes. If you did not attempt to log in, please ignore this email or contact support if you believe this is unauthorized.",
-        ),
-        getDualTranslation("Sincerely, the MangoTree team"),
-      ]);
+    const [
+      titleTrans,
+      introTrans,
+      codeLabelTrans,
+      securityNoteTrans,
+      signatureTrans,
+    ] = await Promise.all([
+      getDualTranslation("MangoTree Two-Factor Authentication"),
+      getDualTranslation(
+        "To log in to your MangoTree account, please use the following 6-digit verification code:",
+      ),
+      getDualTranslation("Your verification code:"),
+      getDualTranslation(
+        "This code will expire in 10 minutes. If you did not attempt to log in, please ignore this email or contact support if you believe this is unauthorized.",
+      ),
+      getDualTranslation("Sincerely, the MangoTree team"),
+    ]);
 
     const title = getLocalizedText(userLang, titleTrans);
     const intro = getLocalizedText(userLang, introTrans);
-    const codeLabel = getLocalizedText(userLang, codeLabelTrans);
     const securityNote = getLocalizedText(userLang, securityNoteTrans);
     const signature = getLocalizedText(userLang, signatureTrans);
 
-    const emailHtml = `
-      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
-        <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${title}</h2>
-        <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">Hello ${user.username},</p>
-        <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">${intro}</p>
-        <div style="text-align: center; margin: 40px 0;">
-          <div style="display: inline-block; background: #f5f5f5; padding: 20px 40px; border-radius: 8px; border: 2px dashed #E77728;">
-            <h1 style="color: #E77728; margin: 0; font-size: 48px; letter-spacing: 12px; font-weight: bold;">${twoFactorCode}</h1>
-          </div>
-        </div>
-        <p style="font-size: 14px; color: #666; margin: 20px 0;">${securityNote}</p>
-        <p style="font-size: 14px; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">${signature}</p>
-      </div>
-    `;
+    const emailHtml = get2FAEmailTemplate({
+      title,
+      intro: `${user.username}, ${intro}`,
+      code: twoFactorCode,
+      securityNote,
+      signature,
+    });
 
     try {
       await sendEmail(user.email, title, emailHtml);
@@ -304,7 +322,16 @@ export const loginUser = async (
   });
 };
 
-/* ---------- REGISTER ADMIN (ADMIN ONLY) ---------- */
+/**
+ * Creates a new admin account.
+ * Extracts username from email (before @) and generates a default password.
+ * Sends credentials via email in user's language.
+ * Note: Should be restricted to super-admin only in production.
+ *
+ * @param req - Request with body { email }
+ * @param res - Response with created admin user (id, username, email, role)
+ * @returns 201 on success, 400 on validation/duplicate, 500 if email fails
+ */
 export const registerAdmin = async (
   req: Request,
   res: Response,
@@ -383,31 +410,25 @@ export const registerAdmin = async (
 
   const title = getLocalizedText(userLang, titleTrans);
   const greeting = getLocalizedText(userLang, greetingTrans);
-  const credentials = getLocalizedText(userLang, credentialsTrans);
+  const credentialsLabel = getLocalizedText(userLang, credentialsTrans);
   const usernameLabel = getLocalizedText(userLang, usernameLabelTrans);
   const passwordLabel = getLocalizedText(userLang, passwordLabelTrans);
   const instruction = getLocalizedText(userLang, instructionTrans);
   const footer = getLocalizedText(userLang, footerTrans);
   const signature = getLocalizedText(userLang, signatureTrans);
 
-  const emailHtml = `
-    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
-      <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${title}</h2>
-      <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">${greeting}</p>
-      <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;"><strong>${credentials}</strong></p>
-      <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 0 0 20px 0;">
-        <p style="font-size: 16px; line-height: 1.8; color: #333; margin: 0 0 10px 0;">
-          ${usernameLabel} <strong>${username}</strong><br>
-          ${passwordLabel} <strong style="color: #d32f2f;">${defaultPassword}</strong>
-        </p>
-      </div>
-      <p style="font-size: 16px; font-weight: bold; color: #d32f2f; margin: 20px 0;">
-        ${instruction}
-      </p>
-      <p style="font-size: 14px; color: #666; margin: 20px 0;">${footer}</p>
-      <p style="font-size: 14px; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">${signature}</p>
-    </div>
-  `;
+  const emailHtml = getAdminCreatedEmailTemplate({
+    username,
+    defaultPassword,
+    title,
+    greeting,
+    credentialsLabel,
+    usernameLabel,
+    passwordLabel,
+    instruction,
+    footer,
+    signature,
+  });
 
   try {
     await sendEmail(email, title, emailHtml);
@@ -431,7 +452,14 @@ export const registerAdmin = async (
   });
 };
 
-/* ---------- SETUP PASSWORD ---------- */
+/**
+ * Sets a new password using a valid reset token.
+ * Typically used after password reset request or initial account setup.
+ *
+ * @param req - Request with body { token, password }
+ * @param res - Response with success message or 400 for invalid token/weak password
+ * @returns 200 on success, 400 on validation failure
+ */
 export const setupPassword = async (
   req: Request,
   res: Response,
@@ -474,7 +502,15 @@ export const setupPassword = async (
   return res.json({ message: "Password set successfully. You can now login." });
 };
 
-/* ---------- REQUEST PASSWORD RESET ---------- */
+/**
+ * Initiates the password reset process.
+ * Generates a secure token, stores it on the user with 15-minute expiry,
+ * and sends a password reset email with the reset link.
+ *
+ * @param req - Request with body { email }
+ * @param res - Response with confirmation message or 400 if email not found
+ * @returns 200 with "Email sent!" or 500 if email fails
+ */
 export const requestPasswordReset = async (
   req: Request,
   res: Response,
@@ -529,18 +565,15 @@ export const requestPasswordReset = async (
   const automatedMsg = getLocalizedText(userLang, automatedTrans);
   const signature = getLocalizedText(userLang, signatureTrans);
 
-  const emailHtml = `
-    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
-      <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${title}</h2>
-      <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">${intro}</p>
-      <p style="text-align: center; margin: 30px 0;">
-        <a href="${resetLink}" style="display: inline-block; background: #E77728; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">${buttonText}</a>
-      </p>
-      <p style="font-size: 14px; color: #666; margin: 20px 0;">${ignoreMsg}</p>
-      <p style="font-size: 14px; color: #666; margin: 20px 0;">${automatedMsg}</p>
-      <p style="font-size: 14px; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">${signature}</p>
-    </div>
-  `;
+  const emailHtml = getPasswordResetEmailTemplate({
+    resetLink,
+    title,
+    intro,
+    buttonText,
+    ignoreMsg,
+    automatedMsg,
+    signature,
+  });
 
   try {
     await sendEmail(email, title, emailHtml);
@@ -550,7 +583,15 @@ export const requestPasswordReset = async (
   }
 };
 
-/* ---------- RESET PASSWORD ---------- */
+/**
+ * Completes the password reset by validating token and setting new password.
+ * Token is consumed and cleared after use.
+ *
+ * @param req - Request with body { token, password, email? }
+ *              Email is optional but if provided must match user's email
+ * @param res - Response with success message
+ * @returns 200 on success, 400 for invalid/expired token or email mismatch
+ */
 export const resetPassword = async (
   req: Request,
   res: Response,
@@ -576,7 +617,14 @@ export const resetPassword = async (
   return res.json({ message: "Password reset successfully." });
 };
 
-/* ---------- GET RESET TOKEN INFO ---------- */
+/**
+ * Validates a password reset token and returns the associated email.
+ * Used by the frontend to pre-fill the email field on the reset form.
+ *
+ * @param req - Request with params { token }
+ * @param res - Response with { email: string } or 400 if invalid/expired
+ * @returns User's email or error
+ */
 export const getResetTokenInfo = async (
   req: Request,
   res: Response,
@@ -592,7 +640,14 @@ export const getResetTokenInfo = async (
   return res.json({ email: user.email });
 };
 
-/* ---------- CHANGE PASSWORD (LOGGED IN) ---------- */
+/**
+ * Changes the authenticated user's password.
+ * Requires current password for verification and validates new password strength.
+ *
+ * @param req - AuthRequest with body { currentPassword, newPassword }
+ * @param res - Response with success message or 400/404/500 errors
+ * @returns 200 on success, 400 for validation failures, 404 if user not found
+ */
 export const changePassword = async (
   req: AuthRequest,
   res: Response,

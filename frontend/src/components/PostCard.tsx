@@ -297,6 +297,8 @@ const PostCard = ({ post }: PostCardProps) => {
                 height: "32px",
                 borderRadius: "50%",
                 background: "var(--theme-accent)",
+                border: "2px solid var(--theme-text)",
+                boxSizing: "border-box",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

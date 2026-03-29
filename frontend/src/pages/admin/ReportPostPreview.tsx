@@ -8,6 +8,7 @@ import api from "../../services/api";
 import { Category } from "../../services/adminAPI";
 import "./AdminPages.css";
 import Snackbar from "../../components/Snackbar";
+import Footer from "../../components/Footer";
 
 const ReportPostPreview = () => {
   const navigate = useNavigate();
@@ -488,6 +489,8 @@ const ReportPostPreview = () => {
                   height: "40px",
                   borderRadius: "50%",
                   background: "var(--theme-accent)",
+                  border: "2px solid var(--theme-text)",
+                  boxSizing: "border-box",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -663,6 +666,7 @@ const ReportPostPreview = () => {
           open={snackbar.open}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
+        <Footer />
       </div>
     );
   }
@@ -713,13 +717,47 @@ const ReportPostPreview = () => {
         {/* Comment Content */}
         <div style={{ marginBottom: "24px" }}>
           <div style={{ marginBottom: "16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <p style={{ fontSize: "16px", opacity: 0.8, margin: "0 0 8px 0" }}>
-                @{comment.userId?.username}
-              </p>
-              <p style={{ fontSize: "14px", opacity: 0.6, margin: 0 }}>
-                {formatCommentTime(comment.createdAt)}
-              </p>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              {/* Comment Author Avatar */}
+              {comment.userId?.profileImage ? (
+                <img
+                  src={comment.userId.profileImage}
+                  alt={comment.userId.username}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    background: "var(--theme-accent)",
+                    border: "2px solid var(--theme-text)",
+                    boxSizing: "border-box",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--theme-text)",
+                    fontWeight: 600,
+                    fontSize: "18px",
+                  }}
+                >
+                  {comment.userId?.username?.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <p style={{ fontSize: "16px", opacity: 0.8, margin: "0 0 8px 0" }}>
+                  @{comment.userId?.username}
+                </p>
+                <p style={{ fontSize: "14px", opacity: 0.6, margin: 0 }}>
+                  {formatCommentTime(comment.createdAt)}
+                </p>
+              </div>
             </div>
             {/* Translate Button for Comment */}
             <button
@@ -770,6 +808,7 @@ const ReportPostPreview = () => {
           open={snackbar.open}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
+        <Footer />
       </div>
     );
   }
@@ -855,6 +894,8 @@ const ReportPostPreview = () => {
                     fontWeight: 600,
                     color: "var(--theme-text)",
                     background: "var(--theme-accent)",
+                    border: "2px solid var(--theme-text)",
+                    boxSizing: "border-box",
                   }}
                 >
                   {user.username.charAt(0).toUpperCase()}
@@ -977,7 +1018,7 @@ const ReportPostPreview = () => {
         {/* Posts Grid */}
         {filteredPosts.length === 0 ? (
           <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
-            {selectedUserCategoryId ? t("noPostsFound") : t("selectCategory")}
+            {t("noPostsFound")}
           </div>
         ) : (
           <div className="admin-cards-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
@@ -1025,6 +1066,7 @@ const ReportPostPreview = () => {
           open={snackbar.open}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
+        <Footer />
       </div>
     );
   }
@@ -1062,6 +1104,7 @@ const ReportPostPreview = () => {
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       />
+      <Footer />
     </div>
   );
 };

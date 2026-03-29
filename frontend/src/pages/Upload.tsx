@@ -206,7 +206,8 @@ const Upload = () => {
 
       // Check if content was flagged by AI (server returns flagged: true)
       if (response.data.flagged || response.data.error) {
-        // Content was rejected by moderation
+        // Content was rejected by moderation - DO NOT clear form or redirect
+        // User should stay on page to edit and retry
         const reasonKey = response.data.error;
         const errorMessage = response.data.reason || t(reasonKey) || t("postRejected");
 
@@ -237,22 +238,22 @@ const Upload = () => {
           message: successMessage,
           type: snackbarType,
         });
+
+        // Refresh notifications to show the new notification immediately
+        await refreshUnreadCount();
+
+        // Reset form only on success
+        setTitle("");
+        setDescription("");
+        setSelectedCategory("");
+        setSelectedTags([]);
+        setFiles([]);
+
+        // Redirect to home after a delay only on success
+        setTimeout(() => {
+          navigate("/home");
+        }, 2000);
       }
-
-      // Refresh notifications to show the new notification immediately
-      await refreshUnreadCount();
-
-      // Reset form
-      setTitle("");
-      setDescription("");
-      setSelectedCategory("");
-      setSelectedTags([]);
-      setFiles([]);
-
-      // Redirect to home after a delay
-      setTimeout(() => {
-        navigate("/home");
-      }, 2000);
     } catch (error: any) {
       console.error("Upload failed:", error);
       const errData = error.response?.data;
@@ -731,6 +732,9 @@ const Upload = () => {
           type={snackbar.type}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
+        <footer className="page-footer">
+          <p>{t("copyright")}</p>
+        </footer>
       </div>
     </div>
   );

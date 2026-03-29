@@ -1,8 +1,14 @@
 import { Response } from 'express';
 import Notification from '../models/notification';
-import { AuthRequest } from '../utils/auth';
+import { AuthRequest } from '../interfaces/auth';
 
-/* ---------- GET NOTIFICATIONS ---------- */
+/**
+ * Retrieves all notifications for the authenticated user, sorted by creation date (newest first).
+ *
+ * @param req - AuthRequest
+ * @param res - Response with array of Notification documents
+ * @returns 200 with notifications array
+ */
 export const getNotifications = async (
   req: AuthRequest,
   res: Response
@@ -20,7 +26,13 @@ export const getNotifications = async (
   }
 };
 
-/* ---------- MARK SINGLE AS READ ---------- */
+/**
+ * Marks a specific notification as read.
+ *
+ * @param req - AuthRequest with params { id } (notification ID)
+ * @param res - Response with success message or 404
+ * @returns 200 on success, 404 if notification not found
+ */
 export const markAsRead = async (
   req: AuthRequest,
   res: Response
@@ -45,7 +57,13 @@ export const markAsRead = async (
   }
 };
 
-/* ---------- MARK ALL AS READ ---------- */
+/**
+ * Marks all notifications for the authenticated user as read.
+ *
+ * @param req - AuthRequest
+ * @param res - Response with success message
+ * @returns 200 with count of updated notifications
+ */
 export const markAllAsRead = async (
   req: AuthRequest,
   res: Response
@@ -61,7 +79,13 @@ export const markAllAsRead = async (
   }
 };
 
-/* ---------- DELETE SINGLE NOTIFICATION ---------- */
+/**
+ * Deletes a single notification.
+ *
+ * @param req - AuthRequest with params { id }
+ * @param res - Response with success message or 404
+ * @returns 200 on success, 404 if not found
+ */
 export const deleteNotification = async (
   req: AuthRequest,
   res: Response
@@ -82,7 +106,13 @@ export const deleteNotification = async (
   }
 };
 
-/* ---------- DELETE ALL NOTIFICATIONS ---------- */
+/**
+ * Deletes all notifications for the authenticated user.
+ *
+ * @param req - AuthRequest
+ * @param res - Response with success message
+ * @returns 200 with count of deleted notifications
+ */
 export const deleteAllNotifications = async (
   req: AuthRequest,
   res: Response

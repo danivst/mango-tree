@@ -1,3 +1,12 @@
+/**
+ * @file user-routes.ts
+ * @description User-related API routes.
+ * Handles user profiles, authentication, following/followers, and account management.
+ *
+ * Base path: /api/users
+ * Middleware: All routes require authentication unless explicitly stated otherwise.
+ */
+
 import express, { Router } from "express";
 import RoleTypeValue from "../enums/role-type";
 import {
@@ -21,34 +30,146 @@ import { enable2FA, disable2FA } from "../controllers/2fa-controller";
 
 const router: Router = express.Router();
 
-// Username check route FIRST
+/**
+ * @route GET /check-username
+ * @description Check if a username is available
+ * @query username - Username to check
+ * @access Public (auth required but that's enforced by middleware)
+ */
 router.get("/check-username", auth, checkUsername);
 
+/**
+ * Routes for the authenticated user's own profile and settings.
+ * All require authentication.
+ */
+/**
+ * @route GET /me
+ * @description Get current user's profile
+ * @access Authenticated
+ */
 router.get("/me", auth, getCurrentUser);
-router.put("/me", auth, updateProfile); // Allow updating current user's profile
+
+/**
+ * @route PUT /me
+ * @description Update current user's profile (username, bio, profile image, theme, language)
+ * @access Authenticated
+ */
+router.put("/me", auth, updateProfile);
+
+/**
+ * @route PUT /me/settings
+ * @description Update notification preferences
+ * @access Authenticated
+ */
 router.put("/me/settings", auth, updateNotificationPreferences);
+
+/**
+ * @route PUT /me/email
+ * @description Change email address
+ * @access Authenticated
+ */
 router.put("/me/email", auth, updateEmail);
 
-// 2FA routes
+/**
+ * Two-factor authentication routes for authenticated user.
+ */
+/**
+ * @route POST /me/2fa/enable
+ * @description Initiate 2FA setup (sends verification code to email)
+ * @access Authenticated
+ */
 router.post("/me/2fa/enable", auth, enable2FA);
+
+/**
+ * @route POST /me/2fa/disable
+ * @description Disable 2FA for the account
+ * @access Authenticated
+ */
 router.post("/me/2fa/disable", auth, disable2FA);
 
-// New endpoint for regular users to search other regular users
-// Must be BEFORE /:id route to avoid matching "regular" as an ID
+/**
+ * User discovery and admin listing routes.
+ */
+/**
+ * @route GET /regular
+ * @description Get all regular (non-admin, non-banned) users for discovery
+ * @access Authenticated
+ */
 router.get("/regular", auth, getRegularUsers);
 
-// Admin only endpoint to get all admin users
+/**
+ * @route GET /admins
+ * @description Get all admin users
+ * @access Admin only
+ */
 router.get("/admins", auth, requireRole(RoleTypeValue.ADMIN), getAllAdmins);
 
+/**
+ * Social relationship routes: followers and following.
+ */
+/**
+ * @route GET /:id/followers
+ * @description Get list of users who follow the specified user
+ * @param {string} id - User ID
+ * @access Authenticated (can view own followers or any if admin)
+ */
 router.get("/:id/followers", auth, getFollowers);
+
+/**
+ * @route GET /:id/following
+ * @description Get list of users that the specified user is following
+ * @param {string} id - User ID
+ * @access Authenticated (can view own following or any if admin)
+ */
 router.get("/:id/following", auth, getFollowing);
+
+/**
+ * @route DELETE /followers/:followerId
+ * @description Remove a follower from your followers list
+ * @param {string} followerId - ID of follower to remove
+ * @access Authenticated
+ */
 router.delete("/followers/:followerId", auth, removeFollower);
 
-router.get("/:id", auth, getUserProfile);
-router.put("/:id", auth, updateProfile);
+/**
+ * @route POST /follow
+ * @description Toggle following/unfollowing a user
+ * @access Authenticated
+ */
 router.post("/follow", auth, toggleFollow);
 
+/**
+ * Generic user profile and management routes.
+ */
+/**
+ * @route GET /:id
+ * @description Get a user's public profile by ID
+ * @param {string} id - User ID
+ * @access Authenticated
+ */
+router.get("/:id", auth, getUserProfile);
+
+/**
+ * @route PUT /:id
+ * @description Update a user's profile (self or admin only)
+ * @param {string} id - User ID
+ * @access Authenticated (owner or admin)
+ */
+router.put("/:id", auth, updateProfile);
+
+/**
+ * @route GET /
+ * @description Get all non-banned regular users (excluding requester)
+ * @access Authenticated
+ */
 router.get("/", auth, getAllUsers);
+
+/**
+ * @route DELETE /:id
+ * @description Delete a user account (self or admin only)
+ * @param {string} id - User ID to delete
+ * @access Authenticated (owner or admin)
+ */
 router.delete("/:id", auth, deleteUser);
 
 export default router;

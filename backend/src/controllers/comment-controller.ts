@@ -1,19 +1,33 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-
 import Comment from "../models/comment";
 import Post from "../models/post";
 import User from "../models/user";
 import Notification from "../models/notification";
-
 import NotificationType from "../enums/notification-type";
 import RoleTypeValue from "../enums/role-type";
-
-import { AuthRequest } from "../utils/auth";
+import { AuthRequest } from "../interfaces/auth";
 import { getDualTranslation } from "../utils/translation";
 import { moderateText } from "../utils/ai";
 
-/* ---------- CREATE COMMENT ---------- */
+/**
+ * @file comment-controller.ts
+ * @description Manages comment and reply operations including AI moderation,
+ * notifications, and translation.
+ */
+
+/**
+ * Creates a new comment or reply on a post.
+ * Moderates content via AI; if flagged as inappropriate, sends notification
+ * and returns flagged status (200 OK, not an error).
+ * Generates bilingual translations for the comment text.
+ * Sends notifications to post author (for new comments) and parent comment author (for replies).
+ *
+ * @param req - AuthRequest with body { postId, text, parentCommentId? }
+ * @param res - Response with created comment or flagged status
+ * @returns 201 with populated comment, or 200 with flagged: true if inappropriate,
+ *          404 if post not found, 500 on server error
+ */
 export const createComment = async (
   req: AuthRequest,
   res: Response,
@@ -169,7 +183,14 @@ export const createComment = async (
   }
 };
 
-/* ---------- TOGGLE LIKE COMMENT ---------- */
+/**
+ * Toggles like/unlike on a comment.
+ * Sends a notification to comment author when liked (not when unliking).
+ *
+ * @param req - AuthRequest with params { id } (comment ID)
+ * @param res - Response with { message, likes[] }
+ * @returns 200 with updated likes array, 404 if comment not found
+ */
 export const toggleLikeComment = async (
   req: AuthRequest,
   res: Response,
@@ -184,12 +205,7 @@ export const toggleLikeComment = async (
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    console.log(`[toggleLikeComment] User ${userId} (${userIdObj}) toggling like on comment ${comment._id}`);
-    console.log(`[toggleLikeComment] Comment current likes:`, comment.likes);
-
     const hasLiked = comment.likes.some((likeId) => likeId.equals(userIdObj));
-
-    console.log(`[toggleLikeComment] User has already liked?`, hasLiked);
 
     if (hasLiked) {
       comment.likes = comment.likes.filter(
@@ -235,7 +251,14 @@ export const toggleLikeComment = async (
   }
 };
 
-/* ---------- TRANSLATE COMMENT ---------- */
+/**
+ * Translates a comment's text to the requested language.
+ * Uses DeepL API to get both translations, then returns the requested one.
+ *
+ * @param req - AuthRequest with params { id } and query { targetLang: 'en'|'bg' }
+ * @param res - Response with { text, sourceLang, targetLang }
+ * @returns 200 with translated text, 400 for invalid language, 404 if comment not found
+ */
 export const translateComment = async (
   req: AuthRequest,
   res: Response,
@@ -269,7 +292,15 @@ export const translateComment = async (
   }
 };
 
-/* ---------- UPDATE COMMENT ---------- */
+/**
+ * Updates a comment's text (owner only).
+ * Re-translates the new text via DeepL and re-moderates via AI.
+ * If flagged, sends notification but still saves the update.
+ *
+ * @param req - AuthRequest with params { id } and body { text }
+ * @param res - Response with updated comment or flagged status
+ * @returns 200 with updated comment or flagged: true, 403 if not owner, 404 if not found
+ */
 export const updateComment = async (
   req: AuthRequest,
   res: Response,
@@ -347,6 +378,14 @@ const deleteCommentTree = async (commentId: Types.ObjectId): Promise<void> => {
   await Comment.findByIdAndDelete(commentId);
 };
 
+/**
+ * Deletes a comment and all its replies recursively.
+ * Owner or admin only. Uses helper deleteCommentTree for cascade deletion.
+ *
+ * @param req - AuthRequest with params { id }
+ * @param res - Response with success message or error
+ * @returns 200 on success, 403 if not authorized, 404 if comment not found
+ */
 export const deleteComment = async (
   req: AuthRequest,
   res: Response,
@@ -375,15 +414,20 @@ export const deleteComment = async (
   }
 };
 
-/* ---------- GET COMMENTS BY POST ---------- */
+/**
+ * Retrieves all comments for a specific post, organized as a tree.
+ * Returns only visible comments. Builds nested structure using parentCommentId.
+ *
+ * @param req - Request with params { postId }
+ * @param res - Response with array of root comments, each having replies[] nested
+ * @returns 200 with hierarchical comment tree, 500 on error
+ */
 export const getCommentsByPost = async (
   req: Request,
   res: Response,
 ): Promise<Response> => {
   try {
     const { postId } = req.params;
-
-    console.log(`[getCommentsByPost] Fetching comments for post: ${postId}`);
 
     // Fetch all comments for the post, sorted by createdAt ascending (oldest first for proper threading)
     const comments = await Comment.find({
@@ -392,8 +436,6 @@ export const getCommentsByPost = async (
     })
       .populate("userId", "username profileImage")
       .sort({ createdAt: 1 }); // Sort oldest first for proper parent-before-child ordering
-
-    console.log(`[getCommentsByPost] Found ${comments.length} comments`);
 
     // Build hierarchical tree structure
     const commentMap = new Map<string, any>();
@@ -440,8 +482,6 @@ export const getCommentsByPost = async (
     );
     sortRepliesRecursive(rootComments);
 
-    console.log(`[getCommentsByPost] Built tree with ${rootComments.length} root comments`);
-
     return res.json(rootComments);
   } catch (err: any) {
     console.error("[getCommentsByPost] Error:", err);
@@ -449,7 +489,14 @@ export const getCommentsByPost = async (
   }
 };
 
-/* ---------- GET COMMENT BY ID ---------- */
+/**
+ * Retrieves a single comment by ID.
+ * Only returns visible comments.
+ *
+ * @param req - Request with params { id }
+ * @param res - Response with comment populated with userId
+ * @returns 200 with comment, 404 if not found
+ */
 export const getComment = async (
   req: Request,
   res: Response,

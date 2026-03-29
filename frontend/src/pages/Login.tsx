@@ -959,6 +959,10 @@ const Login = () => {
         </div>
       )}
 
+      <footer className="login-footer">
+        <p>{t("copyright")}</p>
+      </footer>
+
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

@@ -1,26 +1,29 @@
+/**
+ * @file auth.ts
+ * @description Authentication middleware and utilities for JWT-based authorization.
+ * Provides request authentication and role-based access control.
+ */
+
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
 import { RoleType } from '../enums/role-type';
+import { JwtPayload, AuthRequest } from '../interfaces/auth';
 
-/* ---------- JWT PAYLOAD ---------- */
-export interface JwtPayload {
-  userId: string;
-  username?: string;
-  role: RoleType;
-}
-
-/* ---------- AUTH REQUEST ---------- */
-export interface AuthRequest extends Request {
-  user?: JwtPayload;
-}
-
-/* ---------- AUTH MIDDLEWARE ---------- */
+/**
+ * Authentication middleware.
+ * Verifies JWT token from Authorization header and attaches user payload to request.
+ * Allows OPTIONS requests to pass through for CORS preflight.
+ *
+ * @param req - Express request (typed as AuthRequest after middleware)
+ * @param res - Express response
+ * @param next - Express next function
+ * @returns 401 if no token, 403 if invalid token, or calls next() if valid
+ */
 export const auth = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) => {
+): void => {
   console.log("[auth] Middleware called for:", req.method, req.path);
 
   // Allow OPTIONS requests (CORS preflight) to pass through without auth
@@ -32,9 +35,8 @@ export const auth = (
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     console.log("[auth] No token provided");
-    return res
-      .status(401)
-      .json({ message: 'No token, authorization denied' });
+    res.status(401).json({ message: 'No token, authorization denied' });
+    return;
   }
 
   const token = authHeader.split(' ')[1];
@@ -50,16 +52,29 @@ export const auth = (
     next();
   } catch (err: any) {
     console.log("[auth] Token invalid:", err.message);
-    return res.status(403).json({ message: 'Invalid or expired token' });
+    res.status(403).json({ message: 'Invalid or expired token' });
+    return;
   }
 };
 
-/* ---------- ROLE-BASED GUARD ---------- */
+/**
+ * Role-based access control middleware factory.
+ * Creates a middleware that requires the user to have one of the specified roles.
+ *
+ * @param roles - Allowed roles (variadic)
+ * @returns Middleware function that checks user role
+ *
+ * @example
+ * ```typescript
+ * router.get('/admin', requireRole(RoleType.ADMIN), adminHandler);
+ * ```
+ */
 export const requireRole =
   (...roles: RoleType[]) =>
-  (req: AuthRequest, res: Response, next: NextFunction) => {
+  (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Access denied' });
+      res.status(403).json({ message: 'Access denied' });
+      return;
     }
     next();
   };

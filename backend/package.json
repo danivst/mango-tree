@@ -5,7 +5,11 @@
     "start": "node dist/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "seed:categories": "ts-node src/scripts/seed-categories.ts",
+    "seed:tags": "ts-node src/scripts/seed-tags.ts",
+    "create-user": "ts-node src/scripts/create-user.ts",
+    "create-admin": "ts-node src/scripts/create-admin.ts"
   },
   "dependencies": {
     "axios": "^1.13.2",

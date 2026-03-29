@@ -1,19 +1,14 @@
+/**
+ * @file tag.ts
+ * @description Mongoose model for Tag.
+ * Tags categorize posts by cuisine, meal type, difficulty, etc.
+ *
+ * @see ITag interface for the full type definition
+ */
+
 import mongoose, { Document, Schema, Model } from "mongoose";
 import TagType from "../enums/tag-type";
-
-export interface ITag extends Document {
-  name: string;
-  // Key name is the language code, value is translated name
-  translations: {
-    name: {
-      bg: string;
-      en: string;
-    };
-  };
-  type?: keyof typeof TagType;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+import { ITag } from "../interfaces/tag";
 
 const tagSchema: Schema<ITag> = new Schema(
   {
@@ -30,6 +25,10 @@ const tagSchema: Schema<ITag> = new Schema(
       type: String,
       enum: Object.values(TagType),
       required: false,
+    },
+    createdBy: {
+      type: String,
+      default: "",
     },
   },
   {

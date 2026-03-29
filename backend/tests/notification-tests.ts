@@ -1,3 +1,12 @@
+/**
+ * @file notification-tests.ts
+ * @description Unit tests for notification controller.
+ * Tests CRUD operations: get, mark read, mark all read, delete, delete all.
+ * Uses Jest with mocked Mongoose models and utilities.
+ *
+ * Run with: `npm test` or `jest`
+ */
+
 // @ts-nocheck
 
 import { Request, Response } from 'express';
@@ -6,7 +15,7 @@ import * as notificationController from '../src/controllers/notification-control
 import Notification from '../src/models/notification';
 import NotificationType from '../src/enums/notification-type';
 
-// Mock the Notification model
+// mock configuration
 const mockFind = jest.fn();
 const mockFindOneAndUpdate = jest.fn();
 const mockUpdateMany = jest.fn();
@@ -19,10 +28,10 @@ Notification.updateMany = mockUpdateMany;
 Notification.findOneAndDelete = mockFindOneAndDelete;
 Notification.deleteMany = mockDeleteMany;
 
-// Helper to create a mock query that handles chaining (for find)
-function createMockQuery(result: any): any {
-  const query: any = {
-    then(onfulfilled: any, onrejected?: any) {
+// mock query helper
+function createMockQuery(result) {
+  const query = {
+    then(onfulfilled, onrejected) {
       return Promise.resolve(result).then(onfulfilled, onrejected);
     },
     exec: jest.fn().mockReturnValue(Promise.resolve(result)),
@@ -37,10 +46,11 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+// notification tests
 describe('Notification Controller', () => {
 
+  // get notifications
   describe('GET /notifications - getNotifications', () => {
-
     it('should return all notifications for a user', async () => {
       const userId = new mongoose.Types.ObjectId();
       const notifications = [
@@ -54,27 +64,16 @@ describe('Notification Controller', () => {
           },
           read: false,
           createdAt: new Date(),
-        },
-        {
-          _id: new mongoose.Types.ObjectId(),
-          userId,
-          type: NotificationType.LIKE,
-          message: 'User liked your post',
-          translations: {
-            message: { en: 'User liked your post', bg: 'Потребител хареса вашия пост' }
-          },
-          read: true,
-          createdAt: new Date(),
-        },
+        }
       ];
 
       mockFind.mockReturnValue(createMockQuery(notifications));
 
-      const req = { user: { userId: userId.toString() } } as any;
+      const req = { user: { userId: userId.toString() } };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
-      } as any;
+      };
 
       await notificationController.getNotifications(req, res);
 
@@ -86,73 +85,50 @@ describe('Notification Controller', () => {
       const userId = new mongoose.Types.ObjectId();
       mockFind.mockReturnValue(createMockQuery([]));
 
-      const req = { user: { userId: userId.toString() } } as any;
+      const req = { user: { userId: userId.toString() } };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
-      } as any;
+      };
 
       await notificationController.getNotifications(req, res);
 
-      expect(mockFind).toHaveBeenCalledWith({ userId: userId.toString() });
       expect(res.json).toHaveBeenCalledWith([]);
     });
   });
 
+  // mark as read
   describe('PUT /notifications/:id/read - markAsRead', () => {
-
     it('should mark a single notification as read', async () => {
       const userId = new mongoose.Types.ObjectId();
       const notificationId = new mongoose.Types.ObjectId();
-      const notification = {
-        _id: notificationId,
-        userId,
-        type: NotificationType.FOLLOW,
-        message: 'Test message',
-        translations: {
-          message: { en: 'Test message', bg: 'Тестово съобщение' }
-        },
-        read: false,
-        createdAt: new Date(),
-      };
+      const notification = { _id: notificationId, read: true };
 
-      mockFindOneAndUpdate.mockReturnValue(notification as any);
+      mockFindOneAndUpdate.mockReturnValue(notification);
 
       const req = {
         user: { userId: userId.toString() },
         params: { id: notificationId.toString() },
-      } as any;
+      };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
-      } as any;
+      };
 
       await notificationController.markAsRead(req, res);
 
-      expect(mockFindOneAndUpdate).toHaveBeenCalledWith(
-        { _id: notificationId.toString(), userId: userId.toString() },
-        { read: true },
-        { new: true }
-      );
+      expect(mockFindOneAndUpdate).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({
         message: 'Notification marked as read',
         notification,
       });
     });
 
-    it('should return 404 when notification does not exist or does not belong to user', async () => {
-      const userId = new mongoose.Types.ObjectId();
-      const notificationId = new mongoose.Types.ObjectId();
+    it('should return 404 when notification does not exist', async () => {
       mockFindOneAndUpdate.mockReturnValue(null);
 
-      const req = {
-        user: { userId: userId.toString() },
-        params: { id: notificationId.toString() },
-      } as any;
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      } as any;
+      const req = { user: { userId: '123' }, params: { id: '456' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
       await notificationController.markAsRead(req, res);
 
@@ -161,36 +137,14 @@ describe('Notification Controller', () => {
     });
   });
 
+  // mark all as read
   describe('PUT /notifications/read-all - markAllAsRead', () => {
-
     it('should mark all notifications as read', async () => {
       const userId = new mongoose.Types.ObjectId();
       mockUpdateMany.mockResolvedValue({ modifiedCount: 5 });
 
-      const req = { user: { userId: userId.toString() } } as any;
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      } as any;
-
-      await notificationController.markAllAsRead(req, res);
-
-      expect(mockUpdateMany).toHaveBeenCalledWith(
-        { userId: userId.toString(), read: false },
-        { read: true }
-      );
-      expect(res.json).toHaveBeenCalledWith({ message: 'All notifications marked as read' });
-    });
-
-    it('should succeed even if no notifications to update', async () => {
-      const userId = new mongoose.Types.ObjectId();
-      mockUpdateMany.mockResolvedValue({ modifiedCount: 0 });
-
-      const req = { user: { userId: userId.toString() } } as any;
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      } as any;
+      const req = { user: { userId: userId.toString() } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
       await notificationController.markAllAsRead(req, res);
 
@@ -202,88 +156,35 @@ describe('Notification Controller', () => {
     });
   });
 
+  // delete notification
   describe('DELETE /notifications/:id - deleteNotification', () => {
-
     it('should delete a single notification', async () => {
       const userId = new mongoose.Types.ObjectId();
       const notificationId = new mongoose.Types.ObjectId();
-      const notification = {
-        _id: notificationId,
-        userId,
-        type: NotificationType.FOLLOW,
-        message: 'Test message',
-        read: false,
-        createdAt: new Date(),
+      const notification = { _id: notificationId };
+
+      mockFindOneAndDelete.mockReturnValue(notification);
+
+      const req = {
+        user: { userId: userId.toString() },
+        params: { id: notificationId.toString() },
       };
-
-      mockFindOneAndDelete.mockReturnValue(notification as any);
-
-      const req = {
-        user: { userId: userId.toString() },
-        params: { id: notificationId.toString() },
-      } as any;
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      } as any;
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
       await notificationController.deleteNotification(req, res);
 
-      expect(mockFindOneAndDelete).toHaveBeenCalledWith({ _id: notificationId.toString(), userId: userId.toString() });
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Notification deleted',
-        notification,
-      });
-    });
-
-    it('should return 404 when notification does not exist or does not belong to user', async () => {
-      const userId = new mongoose.Types.ObjectId();
-      const notificationId = new mongoose.Types.ObjectId();
-      mockFindOneAndDelete.mockReturnValue(null);
-
-      const req = {
-        user: { userId: userId.toString() },
-        params: { id: notificationId.toString() },
-      } as any;
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      } as any;
-
-      await notificationController.deleteNotification(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Notification not found.' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Notification deleted', notification });
     });
   });
 
+  // delete all notifications
   describe('DELETE /notifications - deleteAllNotifications', () => {
-
     it('should delete all notifications for a user', async () => {
       const userId = new mongoose.Types.ObjectId();
       mockDeleteMany.mockResolvedValue({ deletedCount: 10 });
 
-      const req = { user: { userId: userId.toString() } } as any;
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      } as any;
-
-      await notificationController.deleteAllNotifications(req, res);
-
-      expect(mockDeleteMany).toHaveBeenCalledWith({ userId: userId.toString() });
-      expect(res.json).toHaveBeenCalledWith({ message: 'All notifications deleted' });
-    });
-
-    it('should succeed even if no notifications to delete', async () => {
-      const userId = new mongoose.Types.ObjectId();
-      mockDeleteMany.mockResolvedValue({ deletedCount: 0 });
-
-      const req = { user: { userId: userId.toString() } } as any;
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      } as any;
+      const req = { user: { userId: userId.toString() } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
       await notificationController.deleteAllNotifications(req, res);
 

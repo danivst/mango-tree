@@ -1,22 +1,15 @@
+/**
+ * @file report.ts
+ * @description Mongoose model for Report.
+ * Tracks user reports against content (posts, comments, users) and their resolution status.
+ *
+ * @see IReport interface for the full type definition
+ */
+
 import mongoose, { Document, Schema, Model, Types } from "mongoose";
 import ReportStatusType from "../enums/report-status-type";
 import ReportTargetType from "../enums/report-target-type";
-
-export interface IReport extends Document {
-  reportedBy: Types.ObjectId;
-  targetType: (typeof ReportTargetType)[keyof typeof ReportTargetType];
-  targetId: Types.ObjectId;
-  reason: string;
-  // Key name is the language code, value is translated reason
-  translations: {
-    reason: {
-      bg: string;
-      en: string;
-    };
-  };
-  status: (typeof ReportStatusType)[keyof typeof ReportStatusType];
-  createdAt: Date;
-}
+import { IReport } from "../interfaces/report";
 
 const reportSchema: Schema<IReport> = new Schema(
   {

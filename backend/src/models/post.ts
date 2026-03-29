@@ -1,34 +1,13 @@
-import mongoose, { Document, Schema, Model, Types } from "mongoose";
+/**
+ * @file post.ts
+ * @description Mongoose model for Post.
+ * User-generated content with AI moderation, translations, and search indexes.
+ *
+ * @see IPost interface for the full type definition
+ */
 
-export interface IPost extends Document {
-  _id: Types.ObjectId;
-  title: string;
-  content: string;
-  // Key name is the language code, value is translated text
-  translations: {
-    title: {
-      bg: string;
-      en: string;
-    };
-    content: {
-      bg: string;
-      en: string;
-    };
-    tags?: {
-      bg: string[];
-      en: string[];
-    };
-  };
-  image: string[];
-  authorId: Types.ObjectId;
-  category: Schema.Types.ObjectId;
-  tags: string[];
-  likes: Types.ObjectId[];
-  createdAt: Date;
-  updatedAt: Date;
-  isApproved: boolean;
-  isVisible: boolean;
-}
+import mongoose, { Document, Schema, Model, Types } from "mongoose";
+import { IPost } from "../interfaces/post";
 
 const postSchema: Schema<IPost> = new Schema(
   {

@@ -4,13 +4,15 @@
   display: flex;
   padding-left: 0;
   transition: background-color 0.3s ease;
+  overflow: hidden;
 }
 
 .dashboard-main {
   flex: 1;
   margin-left: 300px;
   padding: 40px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 @media (max-width: 768px) {
@@ -18,5 +20,6 @@
     margin-left: 0;
     padding: 20px;
     padding-top: 80px;
+    height: 100vh;
   }
 }

@@ -7,6 +7,7 @@ import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
 import "./AdminPages.css";
 import api from "../../services/api";
+import Footer from "../../components/Footer";
 
 const detectLanguage = (text: string): 'en' | 'bg' => {
   if (!text) return 'en';
@@ -202,6 +203,7 @@ const Reports = () => {
     return (
       <div className="admin-page">
         <div className="admin-loading">{t("loading")}</div>
+        <Footer />
       </div>
     );
   }
@@ -406,6 +408,7 @@ const Reports = () => {
           open={snackbar.open}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
+        <Footer />
       </div>
     );
   }
@@ -476,6 +479,7 @@ const Reports = () => {
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       />
+      <Footer />
     </div>
   );
 };

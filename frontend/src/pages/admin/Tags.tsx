@@ -11,6 +11,7 @@ import {
   SortState,
 } from "../../utils/tableUtils";
 import "./AdminPages.css";
+import Footer from "../../components/Footer";
 
 const Tags = () => {
   const { tags, tagsState, fetchTags } = useAdminData();
@@ -481,7 +482,7 @@ const Tags = () => {
       {/* Add Tag Modal */}
       {showAddTag && (
         <div className="admin-modal-overlay">
-          <div className="admin-modal admin-modal-add">
+          <div className="admin-modal">
             <h2 className="admin-modal-title">{t("addTag")}</h2>
             <form onSubmit={handleAddTag}>
               <div className="admin-form-group">
@@ -575,6 +576,7 @@ const Tags = () => {
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       />
+      <Footer />
     </div>
   );
 };

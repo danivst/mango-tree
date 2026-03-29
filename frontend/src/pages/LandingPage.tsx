@@ -89,6 +89,9 @@ const LandingPage = () => {
           </div>
         </div>
       </main>
+      <footer className="landing-footer">
+        <p>{t("copyright")}</p>
+      </footer>
     </div>
   );
 };

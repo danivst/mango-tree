@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import Snackbar from "./Snackbar";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 interface TokenPayload {
   userId: string;
@@ -27,7 +28,7 @@ interface SidebarItem {
 const AdminSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { language } = useThemeLanguage();
+  const { language, theme } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -242,21 +243,7 @@ const AdminSidebar = () => {
     {
       id: "settings",
       label: t("settings"),
-      icon: (
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24" />
-        </svg>
-      ),
+      icon: <SettingsIcon style={{ fontSize: 20 }} />,
       path: "/admin/dashboard/settings",
     },
   ];
@@ -292,7 +279,7 @@ const AdminSidebar = () => {
         <div className="sidebar-overlay" onClick={() => setIsCollapsed(true)} />
       )}
       <div
-        className={`admin-sidebar ${isCollapsed ? "collapsed" : ""} ${isMobile ? "mobile" : ""}`}
+        className={`admin-sidebar ${isCollapsed ? "collapsed" : ""} ${isMobile ? "mobile" : ""} ${theme === 'mango' ? 'mango-theme' : ''}`}
       >
         <div className="sidebar-header">
           {!isCollapsed && (

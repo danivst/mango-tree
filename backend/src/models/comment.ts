@@ -1,20 +1,13 @@
-import mongoose, { Document, Schema, Model, Types } from "mongoose";
+/**
+ * @file comment.ts
+ * @description Mongoose model for Comment.
+ * Supports nested replies via parentCommentId.
+ *
+ * @see IComment interface for the full type definition
+ */
 
-export interface IComment extends Document {
-  postId: Types.ObjectId;
-  userId: Types.ObjectId;
-  text: string;
-  // Key name is the language code, value is translated text
-  translations: {
-    bg: string;
-    en: string;
-  };
-  likes: Types.ObjectId[]; // array of user IDs who liked
-  isVisible?: boolean;
-  parentCommentId?: Types.ObjectId; // Reference to parent comment (for replies)
-  createdAt: Date;
-  updatedAt: Date;
-}
+import mongoose, { Document, Schema, Model, Types } from "mongoose";
+import { IComment } from "../interfaces/comment";
 
 const commentSchema: Schema<IComment> = new Schema(
   {

@@ -1,10 +1,23 @@
 import { Request, Response } from "express";
 import RoleTypeValue from "../enums/role-type";
 import Tag from "../models/tag";
-import { AuthRequest } from "../utils/auth";
+import { AuthRequest } from "../interfaces/auth";
 import { getDualTranslation } from "../utils/translation";
 
-/* ---------- GET ALL TAGS ---------- */
+/**
+ * @file tag-controller.ts
+ * @description Manages tag CRUD operations.
+ * Tags classify posts by cuisine, meal time, difficulty, etc.
+ * All routes require ADMIN role except GET /.
+ */
+
+/**
+ * Retrieves all tags sorted by English name.
+ *
+ * @param req - Request
+ * @param res - Response with array of Tag documents
+ * @returns 200 with tags array
+ */
 export const getTags = async (
   req: Request,
   res: Response,
@@ -12,27 +25,20 @@ export const getTags = async (
   try {
     // Sort by English name by default
     const tags = await Tag.find().sort({ "name.en": 1 });
-
-    const tagsWithCreator = tags.map((tag) => {
-      const tagObj = tag.toObject();
-      return {
-        ...tagObj,
-        // Using the logic you provided
-        createdBy:
-          tagObj.createdAt &&
-          new Date(tagObj.createdAt) < new Date("2024-01-01")
-            ? "System"
-            : "System",
-      };
-    });
-
-    return res.json(tagsWithCreator);
+    return res.json(tags);
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
 };
 
-/* ---------- CREATE TAG ---------- */
+/**
+ * Creates a new tag with automatic bilingual translation.
+ * Admin only. Name is automatically translated to both English and Bulgarian.
+ *
+ * @param req - AuthRequest with body { name: string, type? }
+ * @param res - Response with created tag or error
+ * @returns 201 on success, 403 if not admin, 400 if missing name or duplicate
+ */
 export const createTag = async (
   req: AuthRequest,
   res: Response,
@@ -54,11 +60,16 @@ export const createTag = async (
 
     if (exists) return res.status(400).json({ message: "Tag already exists." });
 
-    const tag = await Tag.create({ name: dualNames });
-
+    // Get user info for createdBy
     const userModel = await (await import("../models/user")).default;
     const user = await userModel.findById(req.user!.userId);
-    const createdBy = user?.email || "System";
+    const createdBy = user?.username || "System";
+
+    const tag = await Tag.create({
+      name: dualNames.en,
+      translations: dualNames,
+      createdBy,
+    });
 
     return res.status(201).json({
       message: "Tag created",
@@ -72,7 +83,14 @@ export const createTag = async (
   }
 };
 
-/* ---------- UPDATE TAG ---------- */
+/**
+ * Updates a tag's name and translations.
+ * Admin only. Name changes are automatically re-translated.
+ *
+ * @param req - AuthRequest with params { id } and body { name? }
+ * @param res - Response with updated tag or error
+ * @returns 200 on success, 403 if not admin, 404 if not found
+ */
 export const updateTag = async (
   req: AuthRequest,
   res: Response,
@@ -90,7 +108,10 @@ export const updateTag = async (
 
     const tag = await Tag.findByIdAndUpdate(
       id,
-      { name: dualNames },
+      {
+        name: dualNames.en,
+        translations: dualNames,
+      },
       { new: true },
     );
 
@@ -102,7 +123,14 @@ export const updateTag = async (
   }
 };
 
-/* ---------- DELETE TAG ---------- */
+/**
+ * Deletes a tag by ID.
+ * Admin only.
+ *
+ * @param req - AuthRequest with params { id }
+ * @param res - Response with success message or error
+ * @returns 200 on success, 403 if not admin, 404 if not found
+ */
 export const deleteTag = async (
   req: AuthRequest,
   res: Response,

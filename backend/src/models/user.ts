@@ -1,40 +1,14 @@
+/**
+ * @file user.ts
+ * @description Mongoose model for User.
+ * Core user account with authentication, profile, preferences, and social features.
+ *
+ * @see IUser interface for the full type definition
+ */
+
 import mongoose, { Document, Schema, Model, Types } from "mongoose";
 import RoleTypeValue from "../enums/role-type";
-
-export interface IUser extends Document {
-  username: string;
-  email: string;
-  passwordHash: string;
-  role: (typeof RoleTypeValue)[keyof typeof RoleTypeValue];
-  resetToken?: string;
-  resetTokenExpiry?: Date;
-  profileImage?: string;
-  bio?: string;
-  isApproved?: boolean; // Added isApproved
-  isBanned?: boolean; // Added isBanned
-  // Key name is the language code, value is translated bio
-  translations: {
-    bio: {
-      bg: string;
-      en: string;
-    };
-  };
-  notificationPreferences: {
-    emailReports: boolean;
-    emailComments: boolean;
-    inAppReports: boolean;
-    inAppComments: boolean;
-  };
-  theme?: string; // User's preferred theme: dark, purple, cream, light
-  language?: string; // User's preferred language: en, bg
-  // 2FA fields
-  twoFactorEnabled?: boolean;
-  twoFactorCode?: string;
-  twoFactorCodeExpiry?: Date;
-  createdAt: Date;
-  followers: Types.ObjectId[];
-  following: Types.ObjectId[];
-}
+import { IUser } from "../interfaces/user";
 
 const userSchema: Schema<IUser> = new Schema(
   {

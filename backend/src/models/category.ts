@@ -1,17 +1,13 @@
-import mongoose, { Document, Schema, Model } from "mongoose";
+/**
+ * @file category.ts
+ * @description Mongoose model for Category.
+ * Categories organize posts by topic and support bilingual names.
+ *
+ * @see ICategory interface for the full type definition
+ */
 
-export interface ICategory extends Document {
-  name: string;
-  // Key name is the language code, value is translated category name
-  translations: {
-    name: {
-      bg: string;
-      en: string;
-    };
-  };
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+import mongoose, { Document, Schema, Model, Types } from "mongoose";
+import { ICategory } from "../interfaces/category";
 
 const categorySchema: Schema<ICategory> = new Schema(
   {
@@ -23,6 +19,10 @@ const categorySchema: Schema<ICategory> = new Schema(
     translations: {
       bg: { type: String, default: "" },
       en: { type: String, default: "" },
+    },
+    createdBy: {
+      type: String,
+      default: "",
     },
   },
   {

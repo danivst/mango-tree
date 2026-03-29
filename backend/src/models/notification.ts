@@ -1,21 +1,14 @@
+/**
+ * @file notification.ts
+ * @description Mongoose model for Notification.
+ * In-app notifications sent to users for various events.
+ *
+ * @see INotification interface for the full type definition
+ */
+
 import mongoose, { Document, Schema, Model, Types } from "mongoose";
 import NotificationType from "../enums/notification-type";
-
-export interface INotification extends Document {
-  userId: Types.ObjectId;
-  type: keyof typeof NotificationType;
-  message: string;
-  // Key name is the language code, value is translated text
-  translations: {
-    message: {
-      bg: string;
-      en: string;
-    };
-  };
-  link?: string | null;
-  read: boolean;
-  createdAt: Date;
-}
+import { INotification } from "../interfaces/notification";
 
 const notificationSchema: Schema<INotification> = new Schema(
   {

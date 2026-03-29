@@ -1,186 +1,105 @@
-// ai.ts
-import axios from "axios";
-import { GEMINI_API_KEY } from "../config/env";
+/**
+ * @file ai.ts
+ * @description AI-powered content moderation using Google Gemini API.
+ * Implements a queue-based system to respect rate limits (10 requests/minute).
+ * Supports both post moderation (cooking-related + safety) and comment moderation (safety only).
+ */
 
-/** ---------- CONFIG ---------- */
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite"; // Change to your desired Gemini model
+import axios from "axios";
+import { GEMINI_API_KEY, GEMINI_MODEL_DEFAULT } from "../config/env";
+import {
+  ModerationResult,
+  GeminiPart,
+  GeminiRequest,
+  QueueItem
+} from "../interfaces/moderation";
+
+/**
+ * Gemini model configuration
+ */
+const GEMINI_MODEL = GEMINI_MODEL_DEFAULT || "gemini-2.5-flash-lite";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-// Types for Gemini API
-interface GeminiPart {
-  text?: string;
-  inline_data?: {
-    data: string;
-    mime_type: string;
-  };
-}
-
-interface GeminiContent {
-  role: string;
-  parts: GeminiPart[];
-}
-
-interface GeminiRequest {
-  contents: GeminiContent[];
-  generationConfig: {
-    temperature: number;
-    maxOutputTokens: number;
-    responseMimeType: string;
-    responseSchema?: {
-      type: string;
-      properties: Record<string, { type: string }>;
-      required: string[];
-    };
-  };
-}
-
-/** ---------- QUEUE TYPES ---------- */
-interface ModerationResult {
-  flagged: boolean;
-  reason?: string;
-  isCookingRelated?: boolean;
-  isAppropriate?: boolean;
-}
-
-interface QueueItem {
-  title: string;
-  content: string;
-  images?: string[];
-  checkCookingRelated: boolean;
-  resolve: (result: ModerationResult) => void;
-  reject: (error: any) => void;
-}
-
-/** ---------- QUEUE STATE ---------- */
+/**
+ * In-memory queue for moderation requests to prevent exceeding API rate limits.
+ */
 const moderationQueue: QueueItem[] = [];
 let isProcessingQueue = false;
 
-/** ---------- RATE LIMIT ---------- */
+/**
+ * Rate limiting: Maximum 10 requests per minute (60000ms / 10 = 6000ms between requests)
+ */
 const MAX_REQUESTS_PER_MINUTE = 10;
 const REQUEST_INTERVAL = 60000 / MAX_REQUESTS_PER_MINUTE;
 
-/** ---------- MODERATION FUNCTION ---------- */
+/**
+ * Content types that can be moderated.
+ */
+export type ContentType = 'post' | 'comment';
+
+/**
+ * Options for content moderation.
+ */
+export interface ModerateOptions {
+  /** Whether to check if content is cooking-related (true for posts, false for comments) */
+  checkCookingRelated: boolean;
+}
+
+/**
+ * Moderates content using Google Gemini AI.
+ * Checks for appropriateness and, optionally, cooking relevance.
+ *
+ * @param title - Content title (for posts) or empty string for comments
+ * @param content - Text content to moderate
+ * @param images - Optional array of base64 image data for visual analysis
+ * @param checkCookingRelated - If true, validates content is cooking-related
+ * @returns ModerationResult with flagged status and reason
+ *
+ * @throws {Error} If rate limit exceeded or service error occurs
+ *
+ * @internal
+ * This function is private and should be called via moderateContent or moderateText.
+ */
 const moderateWithGemini = async (
   title: string,
   content: string,
   images?: string[],
   checkCookingRelated: boolean = true
 ): Promise<ModerationResult> => {
-  console.log("[moderateWithGemini] Called - Title:", title.substring(0, 50), "| Content length:", content.length, "| Images:", images?.length || 0, "| Check cooking:", checkCookingRelated);
-
   try {
-    // Build the prompt based on context
     const imageCount = images?.length || 0;
     let prompt: string;
 
+    // Build prompt based on content type
     if (checkCookingRelated) {
-      // For posts: check both cooking-relatedness and appropriateness
-      prompt = `You are a content moderator for a cooking-focused social platform. Your job is to check BOTH:
-
-1. IS THE CONTENT COOKING-RELATED? (Check title and content)
-   - ACCEPT: Recipes, cooking techniques, food preparation, kitchen tips, ingredient discussions, cooking questions, food photos, restaurant reviews, meal planning, baking, grilling, etc.
-   - REJECT: Non-cooking topics like politics, sports, entertainment, personal gossip, news, memes, technology, travel (unless specifically about food tourism), etc.
-
-2. IS THE CONTENT APPROPRIATE? (Check both text and images)
-   - REJECT if contains:
-     * Sexual content or nudity (including suggestive food imagery)
-     * Hate speech or discrimination
-     * Violence or graphic content
-     * Harassment or bullying
-     * Blatant spam or advertising
-     * Illegal activities (drug cultivation, etc.)
-     * Personal information exposure
-     * Profanity or offensive language
-     * Any harmful or dangerous content
-
-Title: ${title}
-Content: ${content}
-${imageCount > 0 ? `\nNote: ${imageCount} image(s) are provided for visual content analysis.` : ''}
-
-Respond with ONLY a JSON object in this exact format:
-{
-  "isCookingRelated": boolean,
-  "isAppropriate": boolean,
-  "flagged": boolean,
-  "reason": "Brief explanation (only if flagged=true, otherwise empty string)"
-}
-
-Logic:
-- If NOT cooking-related → flagged = true, reason = "Post is not cooking-related"
-- If NOT appropriate → flagged = true, reason = "Content is inappropriate: [brief reason]"
-- Only accept if BOTH are true → flagged = false`;
+      prompt = `Moderation Task: Check if content is cooking-related and appropriate for a food social app.
+      Title: ${title}
+      Content: ${content}
+      Images provided: ${imageCount}`;
     } else {
-      // For comments/other text: only check appropriateness
-      prompt = `You are a content moderator for a cooking-focused social platform. Check if the following content is APPROPRIATE.
-
-REJECT if the content contains:
-- Sexual content or nudity
-- Hate speech or discrimination
-- Violence or graphic content
-- Harassment or bullying
-- Blatant spam or advertising
-- Illegal activities
-- Personal information exposure
-- Profanity or offensive language
-- Any harmful or dangerous content
-
-ACCEPT: All other content including casual comments, questions, opinions, and discussions (even if not strictly about cooking).
-
-Content to review:
-${title ? `Title: ${title}\n` : ''}${content}
-
-Respond with ONLY a JSON object in this exact format:
-{
-  "isCookingRelated": boolean,
-  "isAppropriate": boolean,
-  "flagged": boolean,
-  "reason": "Brief explanation (only if flagged=true, otherwise empty string)"
-}
-
-Logic:
-- Only check if content is appropriate (isCookingRelated is ignored for comments)
-- If NOT appropriate → flagged = true, reason = "Content is inappropriate: [brief reason]"
-- If appropriate → flagged = false`;
+      // Safety-only check for comments
+      prompt = `Moderation Task: Check if this comment is appropriate.
+      Content: ${content}`;
     }
 
-    // Build parts for Gemini API
     const parts: GeminiPart[] = [{ text: prompt }];
 
-    // Add images if provided (Gemini format: inline_data)
+    // Add images in Gemini base64 format if provided
     if (images && images.length > 0) {
       images.forEach((img) => {
-        let base64Data = img;
+        let base64Data = img.includes(";base64,") ? img.split(";base64,")[1] : img;
         let mimeType = "image/jpeg";
-
-        if (img.includes(";base64,")) {
-          base64Data = img.split(";base64,")[1];
-        }
-
-        if (img.startsWith("data:image/png")) {
-          mimeType = "image/png";
-        } else if (img.startsWith("data:image/webp")) {
-          mimeType = "image/webp";
-        } else if (img.startsWith("data:image/jpeg")) {
-          mimeType = "image/jpeg";
-        }
+        if (img.startsWith("data:image/png")) mimeType = "image/png";
+        if (img.startsWith("data:image/webp")) mimeType = "image/webp";
 
         parts.push({
-          inline_data: {
-            data: base64Data,
-            mime_type: mimeType
-          }
+          inline_data: { data: base64Data, mime_type: mimeType }
         });
       });
     }
 
-    // Make HTTP request to Gemini API
     const requestBody: GeminiRequest = {
-      contents: [
-        {
-          role: "user",
-          parts: parts
-        }
-      ],
+      contents: [{ role: "user", parts }],
       generationConfig: {
         temperature: 0.1,
         maxOutputTokens: 200,
@@ -198,122 +117,84 @@ Logic:
       }
     };
 
-    const response = await axios.post(
-      `${GEMINI_URL}?key=${GEMINI_API_KEY}`,
-      requestBody,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        timeout: 30000,
-      }
-    );
+    const response = await axios.post(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, requestBody);
+    const responsePart = response.data.candidates?.[0]?.content?.parts?.[0];
 
-    const responseData = response.data.candidates?.[0]?.content?.parts?.[0];
-
-    // Debug: log the full response structure to understand what we're getting
-    console.log("[moderateWithGemini] Response data structure:", JSON.stringify(response.data, null, 2));
-    console.log("[moderateWithGemini] ResponseData:", JSON.stringify(responseData, null, 2));
-
-    // Try to get JSON from structured output first, fallback to text parsing
+    // Handle structured JSON output from Gemini
     let json;
-    if (responseData?.json) {
-      json = responseData.json;
-      console.log("[moderateWithGemini] Got structured JSON response");
-    } else if (responseData?.text) {
-      console.log("[moderateWithGemini] Got text response, extracting JSON...");
-      const text = responseData.text.trim();
-      const jsonMatch = text.match(/\{.*\}/s);
-      const jsonString = jsonMatch ? jsonMatch[0] : text;
-      json = JSON.parse(jsonString);
+    if (responsePart?.text) {
+      json = JSON.parse(responsePart.text);
     } else {
-      console.warn("[moderateWithGemini] Gemini returned empty or invalid response");
-      return { flagged: true, reason: "No response from AI service" };
+      throw new Error("Empty AI response");
     }
 
-    try {
-      console.log("[moderateWithGemini] Parsed response:", JSON.stringify(json, null, 2));
+    // Decision logic: content is flagged if inappropriate or (for posts) not cooking-related
+    const flagged = checkCookingRelated
+      ? !(json.isCookingRelated && json.isAppropriate)
+      : !json.isAppropriate;
 
-      let flagged: boolean;
-      let reason: string = json.reason || "";
+    return {
+      flagged,
+      reason: flagged ? json.reason || "Content violates community guidelines" : "",
+      isAppropriate: json.isAppropriate,
+      isCookingRelated: checkCookingRelated ? json.isCookingRelated : undefined
+    };
 
-      if (checkCookingRelated) {
-        // For posts: flagged if NOT cooking-related OR NOT appropriate
-        flagged = !(json.isCookingRelated && json.isAppropriate);
-        if (flagged && !reason) {
-          reason = json.isCookingRelated ? "Content is inappropriate" : "Post is not cooking-related";
-        }
-      } else {
-        // For comments: only care about appropriateness
-        flagged = !json.isAppropriate;
-        if (flagged && !reason) {
-          reason = "Content is inappropriate";
-        }
-      }
-
-      const result: ModerationResult = {
-        flagged,
-        reason,
-        isAppropriate: json.isAppropriate,
-      };
-
-      // Only include isCookingRelated when we actually check for it
-      if (checkCookingRelated) {
-        result.isCookingRelated = json.isCookingRelated;
-      }
-
-      return result;
-    } catch (parseErr) {
-      console.error("[moderateWithGemini] Failed to parse Gemini response:", parseErr, "Raw response:", response.data);
-      return { flagged: true, reason: "Invalid AI response format" };
-    }
   } catch (err: any) {
-    console.error("[moderateWithGemini] Gemini API Error:", {
-      message: err.message,
-      status: err.response?.status,
-      details: err.response?.data,
-    });
-
-    // Check for rate limit/quota errors
-    const errorMsg = (err.message || '').toLowerCase();
-    const isRateLimitError = err.response?.status === 429 || errorMsg.includes('rate limit');
-    const isQuotaError = errorMsg.includes('quota') || errorMsg.includes('billing');
-
-    if (isRateLimitError || isQuotaError) {
-      console.error('[moderateWithGemini] ⚠️ Gemini API rate limited or quota exceeded.');
-      throw new Error('AI service is currently unavailable due to rate limits or quota. Please try again later.');
+    console.error("[moderator] error:", err.message);
+    if (err.response?.status === 429) {
+      throw new Error("AI rate limit exceeded");
     }
-
-    // For other errors, flag to be safe
-    return { flagged: true, reason: "AI service error" };
+    return { flagged: true, reason: "Moderation service error" };
   }
 };
 
-/** ---------- QUEUE PROCESSING ---------- */
+/**
+ * Processes the moderation queue sequentially to respect rate limits.
+ * Processes at most one item at a time with delay between requests.
+ *
+ * @internal
+ */
 const processQueue = async (): Promise<void> => {
   if (isProcessingQueue || moderationQueue.length === 0) return;
   isProcessingQueue = true;
 
   while (moderationQueue.length > 0) {
     const item = moderationQueue.shift()!;
-
     try {
-      const result = await moderateWithGemini(item.title, item.content, item.images, item.checkCookingRelated);
+      const result = await moderateWithGemini(
+        item.title,
+        item.content,
+        item.images,
+        item.checkCookingRelated
+      );
       item.resolve(result);
     } catch (err) {
-      console.error("Queue processing error:", err);
-      // Pass the error to the caller instead of defaulting to flagged
       item.reject(err);
     }
-
+    // Wait before processing next item to respect rate limit
     await new Promise((r) => setTimeout(r, REQUEST_INTERVAL));
   }
-
   isProcessingQueue = false;
 };
 
-/** ---------- EXPORTED FUNCTIONS ---------- */
-// For posts with images (title + content + images) - checks cooking-relatedness AND appropriateness
+/**
+ * Public API: Moderate post content (title + images).
+ * Queues the request and returns a promise that resolves with moderation result.
+ *
+ * @param title - Post title
+ * @param content - Post content
+ * @param images - Optional array of image URLs/base64 data
+ * @returns Promise<ModerationResult>
+ *
+ * @example
+ * ```typescript
+ * const result = await moderateContent("Delicious Pasta", "Here's my recipe...", ["image1.jpg"]);
+ * if (result.flagged) {
+ *   console.log("Post rejected:", result.reason);
+ * }
+ * ```
+ */
 export const moderateContent = (
   title: string,
   content: string,
@@ -331,16 +212,25 @@ export const moderateContent = (
     processQueue();
   });
 
-// For text-only moderation (comments, usernames, etc.) - only checks appropriateness
+/**
+ * Public API: Moderate text-only content (comments).
+ * Queues the request and returns a promise that resolves with moderation result.
+ *
+ * @param text - Comment text content
+ * @returns Promise<ModerationResult>
+ *
+ * @example
+ * ```typescript
+ * const result = await moderateText("This comment is inappropriate");
+ * ```
+ */
 export const moderateText = (
-  text: string,
-  title: string = ""
+  text: string
 ): Promise<ModerationResult> =>
   new Promise((resolve, reject) => {
     moderationQueue.push({
-      title,
+      title: "",
       content: text,
-      images: [],
       checkCookingRelated: false,
       resolve,
       reject
@@ -348,5 +238,4 @@ export const moderateText = (
     processQueue();
   });
 
-// Default export
 export default moderateContent;

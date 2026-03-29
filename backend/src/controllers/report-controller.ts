@@ -5,18 +5,20 @@ import Comment from "../models/comment";
 import User from "../models/user";
 import Notification from "../models/notification";
 import NotificationType from "../enums/notification-type";
-import ReportTargetTypeValue, {
-  ReportTargetType,
-} from "../enums/report-target-type";
-import ReportStatusTypeValue, {
-  ReportStatusType,
-} from "../enums/report-status-type";
+import ReportTargetTypeValue, { ReportTargetType } from "../enums/report-target-type";
+import ReportStatusTypeValue, { ReportStatusType } from "../enums/report-status-type";
 import RoleTypeValue from "../enums/role-type";
-import { AuthRequest } from "../utils/auth";
-// Import your new translation module
+import { AuthRequest } from "../interfaces/auth";
 import { getDualTranslation } from "../utils/translation";
 
-/* ---------- CREATE REPORT ---------- */
+/**
+ * Submits a report against a post, comment, or user.
+ * Validates that the target exists before creating the report.
+ *
+ * @param req - AuthRequest with body { targetType: 'post'|'comment'|'user', targetId: string, reason: string }
+ * @param res - Response with { message, report } or error
+ * @returns 201 on success, 400 for invalid target or missing fields, 404 if target not found
+ */
 export const createReport = async (
   req: AuthRequest,
   res: Response,
@@ -66,7 +68,14 @@ export const createReport = async (
   }
 };
 
-/* ---------- GET ALL REPORTS ---------- */
+/**
+ * Retrieves all reports, sorted by newest first.
+ * Admin only.
+ *
+ * @param req - AuthRequest with user.role === ADMIN
+ * @param res - Response with array of Report documents (populated with reporter info)
+ * @returns 200 with reports array, 403 if not admin
+ */
 export const getAllReports = async (
   req: AuthRequest,
   res: Response,
@@ -84,7 +93,14 @@ export const getAllReports = async (
   }
 };
 
-/* ---------- UPDATE REPORT STATUS ---------- */
+/**
+ * Updates the status of a report (e.g., PENDING, RESOLVED, REJECTED, ACTION_TAKEN).
+ * Admin only. If rejecting with a reason, sends a notification to the reporter.
+ *
+ * @param req - AuthRequest with params { id } and body { status: string, reason?: string }
+ * @param res - Response with { message, report } or error
+ * @returns 200 on success, 400 for invalid status, 404 if report not found, 403 if not admin
+ */
 export const updateReportStatus = async (
   req: AuthRequest,
   res: Response,
@@ -143,7 +159,14 @@ export const updateReportStatus = async (
   }
 };
 
-/* ---------- DELETE REPORTED ITEM ---------- */
+/**
+ * Deletes the reported item (post or comment) and notifies relevant parties.
+ * Admin only. Sends notifications to the item author and the reporter.
+ *
+ * @param req - AuthRequest with params { id } (report ID) and body { reason: string }
+ * @param res - Response with { message } or error
+ * @returns 200 on success, 400 if target not found, 404 if report not found, 403 if not admin
+ */
 export const deleteReportedItem = async (
   req: AuthRequest,
   res: Response,

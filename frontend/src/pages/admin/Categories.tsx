@@ -11,6 +11,7 @@ import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
 import "./AdminPages.css";
+import Footer from "../../components/Footer";
 
 const Categories = () => {
   const { categories, categoriesState, fetchCategories } = useAdminData();
@@ -445,6 +446,7 @@ const Categories = () => {
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       />
+      <Footer />
     </div>
   );
 };
