@@ -8,7 +8,7 @@ const Footer = () => {
 
   return (
     <div className="page-footer">
-      <p>© {currentYear} Mango Tree. {t("allRightsReserved") || "All rights reserved."}</p>
+      <p>© {currentYear} Mango Tree. {t("copyright") || "All rights reserved."}</p>
     </div>
   );
 };

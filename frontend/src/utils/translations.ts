@@ -33,6 +33,8 @@ export const translations: Record<Language, Record<string, string>> = {
     no: "No",
     yes: "Yes",
     preview: "Preview",
+    ok: "OK",
+    retry: "Retry",
 
     // Auth
     login: "Log in",
@@ -77,6 +79,7 @@ export const translations: Record<Language, Record<string, string>> = {
     passwordsDoNotMatch: "Passwords do not match",
     emailCannotBeEdited: "Email cannot be edited",
     passwordCannotBeEdited: "Password cannot be edited directly. Use change password button.",
+    unableToLoadResetForm: "Unable to load password reset form. Please request a new password reset.",
 
     // User Profile
     memberSince: "Member Since",
@@ -127,6 +130,7 @@ export const translations: Record<Language, Record<string, string>> = {
     categoryDeleteFailed: "Failed to delete category",
     categoryUpdateFailed: "Failed to update category",
     deleteCategoryError: "Failed to delete category",
+    deleteCategoryWarning: "Are you sure you want to delete this category? This action cannot be undone",
     tagNameEmpty: "Tag name cannot be empty",
     tagNameTooLong: "Tag name cannot be longer than 20 characters",
     tagCreated: "Tag created successfully",
@@ -138,6 +142,10 @@ export const translations: Record<Language, Record<string, string>> = {
     tagUpdatedSuccess: "Tag updated successfully",
     deleteTagWarning:
       "Are you sure you want to delete this tag? This action cannot be undone",
+    tagDeleteFailed: "Failed to delete tag",
+    noMoreTags: "No more tags available",
+    noTagsFound: "No tags found",
+    searchTags: "Search tags",
     saveChanges: "Save Changes",
 
     // Admin
@@ -310,6 +318,7 @@ export const translations: Record<Language, Record<string, string>> = {
     confirmRemoveFollowerMessage:
       "Are you sure you want to remove {username} as a follower? They will not be notified",
     followerRemoved: "Follower removed successfully",
+    suspensionMessage: "Your account is temporarily suspended. Reason: {reason}. Suspension will be lifted on {unbanDate}. Please check your email for more information.",
 
     // Post Upload
     uploadPost: "Upload a post",
@@ -367,6 +376,7 @@ export const translations: Record<Language, Record<string, string>> = {
     passwordResetEmailSent: "Password reset email sent",
     emailMustContainAt: "Email must contain @ symbol",
     unableToEditUsername: "Unable to edit username",
+    usernameUpdated: "Username updated successfully",
 
     // Generic
     actionFailed: "Action failed",
@@ -384,6 +394,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Post Page
     translate: "Translate",
+    translating: "Translating...",
     viewOriginal: "View Original",
     noComments: "No comments yet",
     commentDeleted: "Comment deleted successfully",
@@ -395,6 +406,7 @@ export const translations: Record<Language, Record<string, string>> = {
     showReplies: "Show replies",
     hide: "hide",
     like: "Like",
+    unlike: "Unlike",
     likes: "Likes",
     role: "Role",
     created: "Created",
@@ -501,6 +513,8 @@ export const translations: Record<Language, Record<string, string>> = {
     no: "Не",
     yes: "Да",
     preview: "Преглед",
+    ok: "OK",
+    retry: "Опитай отново",
 
     // System
     close: "Затвори",
@@ -560,6 +574,7 @@ export const translations: Record<Language, Record<string, string>> = {
     passwordsDoNotMatch: "Паролите не съвпадат",
     emailCannotBeEdited: "Имейлът не може да бъде редактиран",
     passwordCannotBeEdited: "Паролата не може да бъде променена директно. Използвайте бутона за промяна на парола.",
+    unableToLoadResetForm: "Неуспешно зареждане на формата за промяна на парола. Моля, поискайте нова промяна на паролата.",
 
     // User Profile
     memberSince: "Член от",
@@ -580,6 +595,7 @@ export const translations: Record<Language, Record<string, string>> = {
     confirmDeletePost: "Сигурни ли сте, че искате да изтриете тази публикация?",
     postDeleted: "Публикацията беше изтрита успешно",
     changeUsername: "Промяна на потребителско име",
+    usernameUpdated: "Потребителското име беше обновено успешно",
     noBio: "Няма зададена биография",
     reportUsername: "Докладване на потребител",
     confirmReportUser: "Сигурни ли сте, че искате да докладвате {username}?",
@@ -611,6 +627,7 @@ export const translations: Record<Language, Record<string, string>> = {
     categoryDeleteFailed: "Неуспешно изтриване на категория",
     categoryUpdateFailed: "Неуспешно обновяване на категория",
     deleteCategoryError: "Неуспешно изтриване на категория",
+    deleteCategoryWarning: "Сигурни ли сте, че искате да изтриете тази категория? Това действие е необратимо",
     tagNameEmpty: "Името на тага не може да е празно",
     tagNameTooLong: "Името на тага не може да е по-дълго от 20 символа",
     tagCreated: "Тагът е създаден успешно",
@@ -622,6 +639,10 @@ export const translations: Record<Language, Record<string, string>> = {
     tagUpdatedSuccess: "Тагът е обновен успешно",
     deleteTagWarning:
       "Сигурни ли сте, че искате да изтриете този таг? Това действие е необратимо",
+    tagDeleteFailed: "Неуспешно изтриване на таг",
+    noMoreTags: "Няма повече налични тагове",
+    noTagsFound: "Няма намерени тагове",
+    searchTags: "Търсене на тагове",
     saveChanges: "Запазване на промените",
 
     // Admin
@@ -799,6 +820,7 @@ export const translations: Record<Language, Record<string, string>> = {
     accountDeletedBody:
       "Вашият акаунт беше перманентно изтрит от MangoTree. Това действие беше направено от администратор.",
     accountDeletedSuccessfully: "Акаунтът е изтрит успешно",
+    suspensionMessage: "Вашият акаунт е временно блокиран. Причина: {reason}. Блокировката ще бъде отменена на {unbanDate}. Моля, проверете имейла си за повече информация.",
 
     // Post Upload
     uploadPost: "Качване на публикация",
@@ -871,6 +893,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Post Page
     translate: "Преведи",
+    translating: "Превеждане...",
     viewOriginal: "Виж оригинала",
     noComments: "Няма коментари все още",
     commentDeleted: "Коментарът беше изтрит успешно",
@@ -882,6 +905,7 @@ export const translations: Record<Language, Record<string, string>> = {
     showReplies: "Покажи отговорите",
     hide: "скрий",
     like: "Отхаресай",
+    unlike: "Харесай",
     likes: "Харесвания",
     role: "Роля",
     created: "Създаден на",
@@ -938,7 +962,7 @@ export const translations: Record<Language, Record<string, string>> = {
     landingDescription:
       "MangoTree е социална платформа, в която можеш да споделяш мислите си, да откриваш ново съдържание и да се свързваш с хора с подобни интереси. Присъедини се към общността ни днес!",
     getStarted: "Започни",
-    feature1Title: "Сподели мнението си",
+    feature1Title: "Сподели креативността и мнението си",
     feature1Desc:
       "Създавай публикации, изразявай идеите си и нека креативността ти блесне.",
     feature2Title: "Открий съдържание",
