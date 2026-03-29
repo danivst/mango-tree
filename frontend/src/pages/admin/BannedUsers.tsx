@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { adminAPI } from "../../services/adminAPI";
+import { adminAPI } from "../../services/admin-api";
 import Snackbar from "../../components/Snackbar";
 import {
   sortData,
   paginateData,
   getTotalPages,
   SortState,
-} from "../../utils/tableUtils";
+} from "../../utils/table-utils";
 import "./AdminPages.css";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
@@ -49,11 +49,13 @@ const BannedUsers = () => {
     if (!container) return;
 
     // Only start drag if clicking on the container (not on interactive elements like buttons/links)
-    if ((e.target as HTMLElement).tagName === 'INPUT' ||
-        (e.target as HTMLElement).tagName === 'BUTTON' ||
-        (e.target as HTMLElement).tagName === 'A' ||
-        (e.target as HTMLElement).closest('button') ||
-        (e.target as HTMLElement).closest('a')) {
+    if (
+      (e.target as HTMLElement).tagName === "INPUT" ||
+      (e.target as HTMLElement).tagName === "BUTTON" ||
+      (e.target as HTMLElement).tagName === "A" ||
+      (e.target as HTMLElement).closest("button") ||
+      (e.target as HTMLElement).closest("a")
+    ) {
       return;
     }
 
@@ -62,8 +64,8 @@ const BannedUsers = () => {
     dragStartX.current = e.clientX;
     scrollStartLeft.current = container.scrollLeft;
 
-    document.body.style.userSelect = 'none';
-    if (container) container.style.cursor = 'grabbing';
+    document.body.style.userSelect = "none";
+    if (container) container.style.cursor = "grabbing";
   };
 
   useEffect(() => {
@@ -80,23 +82,22 @@ const BannedUsers = () => {
     const handleMouseUp = () => {
       if (isDragging) {
         setIsDragging(false);
-        document.body.style.userSelect = '';
+        document.body.style.userSelect = "";
         const container = tableContainerRef.current;
-        if (container) container.style.cursor = 'grab';
+        if (container) container.style.cursor = "grab";
       }
     };
 
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
     }
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging]);
-
 
   const filteredData = useMemo(() => {
     let filtered = bannedUsers;
@@ -280,10 +281,17 @@ const BannedUsers = () => {
             className="admin-button-secondary"
             onClick={handleRefresh}
             disabled={loading}
-            style={{ marginRight: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+            style={{
+              marginRight: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
           >
-            <span className="material-icons" style={{ fontSize: '16px' }}>refresh</span>
-            {t('refresh') || 'Refresh'}
+            <span className="material-icons" style={{ fontSize: "16px" }}>
+              refresh
+            </span>
+            {t("refresh") || "Refresh"}
           </button>
           <input
             type="text"
@@ -297,7 +305,16 @@ const BannedUsers = () => {
       </div>
 
       {error && (
-        <div className="admin-error" style={{ color: '#d32f2f', marginBottom: '16px', padding: '12px', background: '#ffebee', borderRadius: '8px' }}>
+        <div
+          className="admin-error"
+          style={{
+            color: "#d32f2f",
+            marginBottom: "16px",
+            padding: "12px",
+            background: "#ffebee",
+            borderRadius: "8px",
+          }}
+        >
           <strong>Error:</strong> {error}
         </div>
       )}
@@ -305,7 +322,10 @@ const BannedUsers = () => {
       {loading ? (
         <div className="admin-loading">Loading...</div>
       ) : !hasFetched ? (
-        <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
+        <div
+          className="admin-loading"
+          style={{ textAlign: "center", padding: "40px" }}
+        >
           No data loaded. Click Refresh to load data.
         </div>
       ) : paginatedData.length === 0 ? (
@@ -315,7 +335,7 @@ const BannedUsers = () => {
           className="admin-table-container"
           ref={tableContainerRef}
           onMouseDown={handleMouseDown}
-          style={{ cursor: 'grab' }}
+          style={{ cursor: "grab" }}
         >
           {/* Main table with bottom scrollbar */}
           <table className="admin-table">

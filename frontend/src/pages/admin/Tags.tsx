@@ -2,14 +2,14 @@ import { useState, useEffect, useMemo } from "react";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
-import { adminAPI, Tag } from "../../services/adminAPI";
+import { adminAPI, Tag } from "../../services/admin-api";
 import Snackbar from "../../components/Snackbar";
 import {
   sortData,
   paginateData,
   getTotalPages,
   SortState,
-} from "../../utils/tableUtils";
+} from "../../utils/table-utils";
 import "./AdminPages.css";
 import Footer from "../../components/Footer";
 
@@ -42,7 +42,6 @@ const Tags = () => {
   const [editTagId, setEditTagId] = useState<string | null>(null);
   const [editTagName, setEditTagName] = useState("");
 
-
   // Filter tags based on search, creator, and date range
   const filteredData = useMemo(() => {
     let filtered = tags;
@@ -70,6 +69,7 @@ const Tags = () => {
     if (dateFrom) {
       const fromDate = new Date(dateFrom);
       filtered = filtered.filter((tag) => {
+        if (!tag.createdAt) return false;
         const tagDate = new Date(tag.createdAt);
         return tagDate >= fromDate;
       });
@@ -79,6 +79,7 @@ const Tags = () => {
       const toDate = new Date(dateTo);
       toDate.setHours(23, 59, 59, 999);
       filtered = filtered.filter((tag) => {
+        if (!tag.createdAt) return false;
         const tagDate = new Date(tag.createdAt);
         return tagDate <= toDate;
       });
@@ -288,7 +289,10 @@ const Tags = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("tagUpdateFailed") || "Failed to update tag.",
+        message:
+          error.response?.data?.message ||
+          t("tagUpdateFailed") ||
+          "Failed to update tag.",
         type: "error",
       });
     }
@@ -303,10 +307,17 @@ const Tags = () => {
             className="admin-button-secondary"
             onClick={handleRefresh}
             disabled={loading}
-            style={{ marginRight: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+            style={{
+              marginRight: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
           >
-            <span className="material-icons" style={{ fontSize: '16px' }}>refresh</span>
-            {t('refresh') || 'Refresh'}
+            <span className="material-icons" style={{ fontSize: "16px" }}>
+              refresh
+            </span>
+            {t("refresh") || "Refresh"}
           </button>
           <input
             type="text"
@@ -338,7 +349,16 @@ const Tags = () => {
       </div>
 
       {error && (
-        <div className="admin-error" style={{ color: '#d32f2f', marginBottom: '16px', padding: '12px', background: '#ffebee', borderRadius: '8px' }}>
+        <div
+          className="admin-error"
+          style={{
+            color: "#d32f2f",
+            marginBottom: "16px",
+            padding: "12px",
+            background: "#ffebee",
+            borderRadius: "8px",
+          }}
+        >
           <strong>Error:</strong> {error}
         </div>
       )}
@@ -346,7 +366,10 @@ const Tags = () => {
       {loading ? (
         <div className="admin-loading">{t("loading")}</div>
       ) : !hasFetched ? (
-        <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
+        <div
+          className="admin-loading"
+          style={{ textAlign: "center", padding: "40px" }}
+        >
           No data loaded. Click Refresh to load data.
         </div>
       ) : (

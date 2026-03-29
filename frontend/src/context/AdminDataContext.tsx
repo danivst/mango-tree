@@ -1,5 +1,13 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { adminAPI, Category, Tag, User, Report, BannedUser, FlaggedContent } from '../services/adminAPI';
+import React, { createContext, useContext, useState, useCallback } from "react";
+import {
+  adminAPI,
+  Category,
+  Tag,
+  User,
+  Report,
+  BannedUser,
+  FlaggedContent,
+} from "../services/admin-api";
 
 interface AdminDataState<T> {
   data: T[];
@@ -37,9 +45,13 @@ interface AdminDataContextType {
   initialize: () => Promise<void>;
 }
 
-const AdminDataContext = createContext<AdminDataContextType | undefined>(undefined);
+const AdminDataContext = createContext<AdminDataContextType | undefined>(
+  undefined,
+);
 
-export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   // Individual states
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -60,7 +72,9 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [usersError, setUsersError] = useState<string | null>(null);
   const [bannedUsersError, setBannedUsersError] = useState<string | null>(null);
   const [reportsError, setReportsError] = useState<string | null>(null);
-  const [flaggedContentError, setFlaggedContentError] = useState<string | null>(null);
+  const [flaggedContentError, setFlaggedContentError] = useState<string | null>(
+    null,
+  );
 
   const [categoriesFetched, setCategoriesFetched] = useState(false);
   const [tagsFetched, setTagsFetched] = useState(false);
@@ -78,7 +92,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setCategories(data);
       setCategoriesFetched(true);
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Failed to load categories';
+      const errorMsg =
+        error.response?.data?.message || "Failed to load categories";
       setCategoriesError(errorMsg);
       throw error;
     } finally {
@@ -95,7 +110,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setTags(data);
       setTagsFetched(true);
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Failed to load tags';
+      const errorMsg = error.response?.data?.message || "Failed to load tags";
       setTagsError(errorMsg);
       throw error;
     } finally {
@@ -128,7 +143,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setUsersFetched(true);
       setBannedUsersFetched(true);
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Failed to load users';
+      const errorMsg = error.response?.data?.message || "Failed to load users";
       setUsersError(errorMsg);
       throw error;
     } finally {
@@ -145,7 +160,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setBannedUsers(data);
       setBannedUsersFetched(true);
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Failed to load banned users';
+      const errorMsg =
+        error.response?.data?.message || "Failed to load banned users";
       setBannedUsersError(errorMsg);
       throw error;
     } finally {
@@ -159,11 +175,14 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setReportsError(null);
     try {
       const data = await adminAPI.getReports();
-      const pendingReports = data.filter((report: Report) => report.status === 'pending');
+      const pendingReports = data.filter(
+        (report: Report) => report.status === "pending",
+      );
       setReports(pendingReports);
       setReportsFetched(true);
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Failed to load reports';
+      const errorMsg =
+        error.response?.data?.message || "Failed to load reports";
       setReportsError(errorMsg);
       throw error;
     } finally {
@@ -180,7 +199,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setFlaggedContent(data);
       setFlaggedContentFetched(true);
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Failed to load flagged content';
+      const errorMsg =
+        error.response?.data?.message || "Failed to load flagged content";
       setFlaggedContentError(errorMsg);
       throw error;
     } finally {
@@ -198,7 +218,14 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       fetchReports(),
       fetchFlaggedContent(),
     ]);
-  }, [fetchCategories, fetchTags, fetchUsers, fetchBannedUsers, fetchReports, fetchFlaggedContent]);
+  }, [
+    fetchCategories,
+    fetchTags,
+    fetchUsers,
+    fetchBannedUsers,
+    fetchReports,
+    fetchFlaggedContent,
+  ]);
 
   const value: AdminDataContextType = {
     categories,
@@ -207,12 +234,42 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     bannedUsers,
     reports,
     flaggedContent,
-    categoriesState: { data: categories, loading: categoriesLoading, error: categoriesError, hasFetched: categoriesFetched },
-    tagsState: { data: tags, loading: tagsLoading, error: tagsError, hasFetched: tagsFetched },
-    usersState: { data: users, loading: usersLoading, error: usersError, hasFetched: usersFetched },
-    bannedUsersState: { data: bannedUsers, loading: bannedUsersLoading, error: bannedUsersError, hasFetched: bannedUsersFetched },
-    reportsState: { data: reports, loading: reportsLoading, error: reportsError, hasFetched: reportsFetched },
-    flaggedContentState: { data: flaggedContent, loading: flaggedContentLoading, error: flaggedContentError, hasFetched: flaggedContentFetched },
+    categoriesState: {
+      data: categories,
+      loading: categoriesLoading,
+      error: categoriesError,
+      hasFetched: categoriesFetched,
+    },
+    tagsState: {
+      data: tags,
+      loading: tagsLoading,
+      error: tagsError,
+      hasFetched: tagsFetched,
+    },
+    usersState: {
+      data: users,
+      loading: usersLoading,
+      error: usersError,
+      hasFetched: usersFetched,
+    },
+    bannedUsersState: {
+      data: bannedUsers,
+      loading: bannedUsersLoading,
+      error: bannedUsersError,
+      hasFetched: bannedUsersFetched,
+    },
+    reportsState: {
+      data: reports,
+      loading: reportsLoading,
+      error: reportsError,
+      hasFetched: reportsFetched,
+    },
+    flaggedContentState: {
+      data: flaggedContent,
+      loading: flaggedContentLoading,
+      error: flaggedContentError,
+      hasFetched: flaggedContentFetched,
+    },
     fetchCategories,
     fetchTags,
     fetchUsers,
@@ -232,7 +289,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 export const useAdminData = (): AdminDataContextType => {
   const context = useContext(AdminDataContext);
   if (!context) {
-    throw new Error('useAdminData must be used within AdminDataProvider');
+    throw new Error("useAdminData must be used within AdminDataProvider");
   }
   return context;
 };

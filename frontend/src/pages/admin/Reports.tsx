@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { adminAPI, Report } from "../../services/adminAPI";
+import { adminAPI, Report } from "../../services/admin-api";
 import Snackbar from "../../components/Snackbar";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
@@ -9,12 +9,12 @@ import "./AdminPages.css";
 import api from "../../services/api";
 import Footer from "../../components/Footer";
 
-const detectLanguage = (text: string): 'en' | 'bg' => {
-  if (!text) return 'en';
+const detectLanguage = (text: string): "en" | "bg" => {
+  if (!text) return "en";
   if (/[а-яА-ЯёЁ]/.test(text)) {
-    return 'bg';
+    return "bg";
   }
-  return 'en';
+  return "en";
 };
 
 const deeplTranslate = async (
@@ -51,7 +51,9 @@ const Reports = () => {
 
   // Reason translation states
   const [showReasonTranslation, setShowReasonTranslation] = useState(false);
-  const [reasonTranslationCache, setReasonTranslationCache] = useState<string | null>(null);
+  const [reasonTranslationCache, setReasonTranslationCache] = useState<
+    string | null
+  >(null);
   const [reasonTranslating, setReasonTranslating] = useState(false);
 
   // Helper to display target type with proper pluralization
@@ -61,7 +63,6 @@ const Reports = () => {
     }
     return t(targetType);
   };
-
 
   // Load selected report when reportId param changes
   useEffect(() => {
@@ -112,7 +113,11 @@ const Reports = () => {
     try {
       const reasonLang = detectLanguage(selectedReport.reason);
       const targetLang = reasonLang === "en" ? "bg" : "en";
-      const translated = await deeplTranslate(selectedReport.reason, reasonLang, targetLang);
+      const translated = await deeplTranslate(
+        selectedReport.reason,
+        reasonLang,
+        targetLang,
+      );
       setReasonTranslationCache(translated);
       setShowReasonTranslation(true);
     } catch (error) {
@@ -247,7 +252,14 @@ const Reports = () => {
               {getTargetTypeLabel(selectedReport.targetType)}
             </p>
             <div style={{ marginTop: "20px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "8px",
+                }}
+              >
                 <strong>{t("reasonDescription")}:</strong>
                 {shouldShowTranslateButton && (
                   <button
@@ -269,9 +281,17 @@ const Reports = () => {
                     }}
                   >
                     {reasonTranslating ? (
-                      <span className="material-icons spin" style={{ fontSize: "14px" }}>refresh</span>
+                      <span
+                        className="material-icons spin"
+                        style={{ fontSize: "14px" }}
+                      >
+                        refresh
+                      </span>
                     ) : (
-                      <span className="material-icons" style={{ fontSize: "14px" }}>
+                      <span
+                        className="material-icons"
+                        style={{ fontSize: "14px" }}
+                      >
                         {showReasonTranslation ? "translate" : "language"}
                       </span>
                     )}
@@ -279,16 +299,19 @@ const Reports = () => {
                       {reasonTranslating
                         ? t("translating") || "Translating..."
                         : showReasonTranslation
-                        ? t("viewOriginal")
-                        : t("translate")
-                      }
+                          ? t("viewOriginal")
+                          : t("translate")}
                     </span>
                   </button>
                 )}
               </div>
-              {(showReasonTranslation ? reasonTranslationCache : selectedReport.reason) && (
+              {(showReasonTranslation
+                ? reasonTranslationCache
+                : selectedReport.reason) && (
                 <p style={{ whiteSpace: "pre-wrap" }}>
-                  {showReasonTranslation ? reasonTranslationCache : selectedReport.reason}
+                  {showReasonTranslation
+                    ? reasonTranslationCache
+                    : selectedReport.reason}
                 </p>
               )}
             </div>
@@ -308,7 +331,8 @@ const Reports = () => {
                     fontFamily: "inherit",
                   }}
                 >
-                  {getTargetTypeLabel(selectedReport.targetType)} #{selectedReport.targetId}
+                  {getTargetTypeLabel(selectedReport.targetType)} #
+                  {selectedReport.targetId}
                 </button>
               </p>
             </div>
@@ -423,16 +447,27 @@ const Reports = () => {
             className="admin-button-secondary"
             onClick={handleRefresh}
             disabled={loading}
-            style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+            style={{ display: "flex", alignItems: "center", gap: "4px" }}
           >
-            <span className="material-icons" style={{ fontSize: '16px' }}>refresh</span>
-            {t('refresh') || 'Refresh'}
+            <span className="material-icons" style={{ fontSize: "16px" }}>
+              refresh
+            </span>
+            {t("refresh") || "Refresh"}
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="admin-error" style={{ color: '#d32f2f', marginBottom: '16px', padding: '12px', background: '#ffebee', borderRadius: '8px' }}>
+        <div
+          className="admin-error"
+          style={{
+            color: "#d32f2f",
+            marginBottom: "16px",
+            padding: "12px",
+            background: "#ffebee",
+            borderRadius: "8px",
+          }}
+        >
           <strong>Error:</strong> {error}
         </div>
       )}
@@ -440,11 +475,16 @@ const Reports = () => {
       {loading ? (
         <div className="admin-loading">{t("loading")}</div>
       ) : !hasFetched ? (
-        <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
+        <div
+          className="admin-loading"
+          style={{ textAlign: "center", padding: "40px" }}
+        >
           No data loaded. Click Refresh to load data.
         </div>
       ) : reports.length === 0 ? (
-        <div className="admin-loading">{t("noReports") || "No reports submitted"}</div>
+        <div className="admin-loading">
+          {t("noReports") || "No reports submitted"}
+        </div>
       ) : (
         <div className="admin-cards-grid">
           {reports.map((report) => (

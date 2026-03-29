@@ -833,7 +833,7 @@ const Post = () => {
       let newLikes: string[];
       if (hasLiked) {
         response = await postsAPI.unlikeComment(commentId);
-        newLikes = currentLikes.filter(id => id !== currentUserId);
+        newLikes = currentLikes.filter((id: string) => id !== currentUserId);
       } else {
         response = await postsAPI.likeComment(commentId);
         newLikes = [...currentLikes, currentUserId];
@@ -1568,7 +1568,7 @@ const Post = () => {
                       gap: "8px",
                     }}
                   >
-                    {post.image.map((_, index) => (
+                    {post.image.map((_: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
@@ -1592,7 +1592,7 @@ const Post = () => {
         {/* Tags */}
         {displayTags && displayTags.length > 0 && (
           <div style={{ marginBottom: "16px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {displayTags.map((tag, index) => (
+            {displayTags.map((tag: string, index: number) => (
               <span
                 key={index}
                 style={{

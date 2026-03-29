@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { adminAPI, FlaggedContent } from "../../services/adminAPI";
+import { adminAPI, FlaggedContent } from "../../services/admin-api";
 import Snackbar from "../../components/Snackbar";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
@@ -13,7 +13,8 @@ const ToReview = () => {
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
   const { contentId } = useParams<{ contentId?: string }>();
-  const { flaggedContent, flaggedContentState, fetchFlaggedContent } = useAdminData();
+  const { flaggedContent, flaggedContentState, fetchFlaggedContent } =
+    useAdminData();
   const { loading, error, hasFetched } = flaggedContentState;
   const [selectedContent, setSelectedContent] = useState<FlaggedContent | null>(
     null,
@@ -33,7 +34,6 @@ const ToReview = () => {
     }
     return t(type);
   };
-
 
   // Load selected content when contentId param changes
   useEffect(() => {
@@ -146,187 +146,205 @@ const ToReview = () => {
   if (selectedContent) {
     return (
       <>
-      <div className="admin-page">
-        <div className="admin-content-view">
-          <div style={{ marginBottom: "24px" }}>
-            <button
-              onClick={handleBackToList}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 16px",
-                border: "2px solid var(--theme-text)",
-                borderRadius: "12px",
-                background: "transparent",
-                color: "var(--theme-text)",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: 500,
-              }}
-            >
-              <span className="material-icons" style={{ fontSize: "18px" }}>
-                arrow_back
-              </span>
-              {t("goBack") || "Go Back"}
-            </button>
-          </div>
-          <div className="admin-content-card">
-            <h2 style={{ marginTop: 0 }}>{t("contentDetails")}</h2>
-            <p>
-              <strong>{t("type")}:</strong>{" "}
-              {getTypeLabel(selectedContent.type)}
-            </p>
-            <p>
-              <strong>{t("author")}:</strong>{" "}
-              {selectedContent.authorId?.username}
-            </p>
-            {selectedContent.content.category && (
+        <div className="admin-page">
+          <div className="admin-content-view">
+            <div style={{ marginBottom: "24px" }}>
+              <button
+                onClick={handleBackToList}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 16px",
+                  border: "2px solid var(--theme-text)",
+                  borderRadius: "12px",
+                  background: "transparent",
+                  color: "var(--theme-text)",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                <span className="material-icons" style={{ fontSize: "18px" }}>
+                  arrow_back
+                </span>
+                {t("goBack") || "Go Back"}
+              </button>
+            </div>
+            <div className="admin-content-card">
+              <h2 style={{ marginTop: 0 }}>{t("contentDetails")}</h2>
               <p>
-                <strong>{t("category")}:</strong>{" "}
-                {t(selectedContent.content.category?.toLowerCase()) || selectedContent.content.category}
+                <strong>{t("type")}:</strong>{" "}
+                {getTypeLabel(selectedContent.type)}
               </p>
-            )}
+              <p>
+                <strong>{t("author")}:</strong>{" "}
+                {selectedContent.authorId?.username}
+              </p>
+              {selectedContent.content.category && (
+                <p>
+                  <strong>{t("category")}:</strong>{" "}
+                  {t(selectedContent.content.category?.toLowerCase()) ||
+                    selectedContent.content.category}
+                </p>
+              )}
 
-            {selectedContent.type === "post" && (
-              <div style={{ marginTop: "20px" }}>
-                {/* 1. Title */}
-                <h3 style={{ marginTop: 0, marginBottom: "16px" }}>
-                  {selectedContent.content.title}
-                </h3>
+              {selectedContent.type === "post" && (
+                <div style={{ marginTop: "20px" }}>
+                  {/* 1. Title */}
+                  <h3 style={{ marginTop: 0, marginBottom: "16px" }}>
+                    {selectedContent.content.title}
+                  </h3>
 
-                {/* 2. Images */}
-                {selectedContent.content.image &&
-                  selectedContent.content.image.length > 0 && (
-                    <div style={{ marginBottom: "20px" }}>
-                      {selectedContent.content.image.map((img: string, idx: number) => (
-                        <img
-                          key={idx}
-                          src={img}
-                          alt={`Post image ${idx + 1}`}
-                          style={{
-                            maxWidth: "100%",
-                            maxHeight: "400px",
-                            objectFit: "contain",
-                            marginBottom: "8px",
-                            border: "1px solid #ddd",
-                            borderRadius: "4px",
-                          }}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                {/* 3. Tags */}
-                {selectedContent.content.tags &&
-                  selectedContent.content.tags.length > 0 && (
-                    <div style={{ marginBottom: "20px" }}>
-                      <strong>{t("tags") || "Tags"}:</strong>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
-                        {selectedContent.content.tags.map((tag: string, idx: number) => (
-                          <span
-                            key={idx}
-                            style={{
-                              background: "var(--theme-accent)",
-                              color: "var(--theme-text)",
-                              padding: "4px 12px",
-                              borderRadius: "16px",
-                              fontSize: "14px",
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                  {/* 2. Images */}
+                  {selectedContent.content.image &&
+                    selectedContent.content.image.length > 0 && (
+                      <div style={{ marginBottom: "20px" }}>
+                        {selectedContent.content.image.map(
+                          (img: string, idx: number) => (
+                            <img
+                              key={idx}
+                              src={img}
+                              alt={`Post image ${idx + 1}`}
+                              style={{
+                                maxWidth: "100%",
+                                maxHeight: "400px",
+                                objectFit: "contain",
+                                marginBottom: "8px",
+                                border: "1px solid #ddd",
+                                borderRadius: "4px",
+                              }}
+                            />
+                          ),
+                        )}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                {/* 4. Description (content body) */}
-                <div>
-                  <strong>{t("description") || "Description"}:</strong>
-                  <p style={{ marginTop: "8px", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                    {selectedContent.content.content}
+                  {/* 3. Tags */}
+                  {selectedContent.content.tags &&
+                    selectedContent.content.tags.length > 0 && (
+                      <div style={{ marginBottom: "20px" }}>
+                        <strong>{t("tags") || "Tags"}:</strong>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                            marginTop: "8px",
+                          }}
+                        >
+                          {selectedContent.content.tags.map(
+                            (tag: string, idx: number) => (
+                              <span
+                                key={idx}
+                                style={{
+                                  background: "var(--theme-accent)",
+                                  color: "var(--theme-text)",
+                                  padding: "4px 12px",
+                                  borderRadius: "16px",
+                                  fontSize: "14px",
+                                }}
+                              >
+                                {tag}
+                              </span>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* 4. Description (content body) */}
+                  <div>
+                    <strong>{t("description") || "Description"}:</strong>
+                    <p
+                      style={{
+                        marginTop: "8px",
+                        lineHeight: 1.6,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {selectedContent.content.content}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Comments have simpler view */}
+              {selectedContent.type === "comment" && (
+                <div style={{ marginTop: "20px" }}>
+                  <p style={{ whiteSpace: "pre-wrap" }}>
+                    {selectedContent.content.text ||
+                      selectedContent.content.content}
                   </p>
                 </div>
-              </div>
-            )}
-
-            {/* Comments have simpler view */}
-            {selectedContent.type === "comment" && (
-              <div style={{ marginTop: "20px" }}>
-                <p style={{ whiteSpace: "pre-wrap" }}>
-                  {selectedContent.content.text ||
-                    selectedContent.content.content}
-                </p>
-              </div>
-            )}
-            {!showDisapprove ? (
-              <div
-                className="admin-modal-actions"
-                style={{ marginTop: "24px" }}
-              >
-                <button
-                  className="admin-button-danger"
-                  onClick={() => setShowDisapprove(true)}
+              )}
+              {!showDisapprove ? (
+                <div
+                  className="admin-modal-actions"
+                  style={{ marginTop: "24px" }}
                 >
-                  {t("disapprove")}
-                </button>
-                <button
-                  className="admin-button-primary"
-                  onClick={() =>
-                    handleApprove(
-                      selectedContent._id,
-                      selectedContent.type as "post" | "comment",
-                    )
-                  }
-                >
-                  {t("approve")}
-                </button>
-              </div>
-            ) : (
-              <div style={{ marginTop: "24px" }}>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">
-                    {t("reasonForNotAllowing")}
-                  </label>
-                  <textarea
-                    className="admin-form-textarea"
-                    value={disapproveReason}
-                    onChange={(e) => setDisapproveReason(e.target.value)}
-                    required
-                    rows={4}
-                    placeholder={t("enterReasonForDisapproval")}
-                  />
-                </div>
-                <div className="admin-modal-actions">
-                  <button
-                    className="admin-button-secondary"
-                    onClick={() => {
-                      setShowDisapprove(false);
-                      setDisapproveReason("");
-                    }}
-                  >
-                    {t("cancel")}
-                  </button>
                   <button
                     className="admin-button-danger"
-                    onClick={handleDisapprove}
+                    onClick={() => setShowDisapprove(true)}
                   >
-                    {t("submitDisapproval")}
+                    {t("disapprove")}
+                  </button>
+                  <button
+                    className="admin-button-primary"
+                    onClick={() =>
+                      handleApprove(
+                        selectedContent._id,
+                        selectedContent.type as "post" | "comment",
+                      )
+                    }
+                  >
+                    {t("approve")}
                   </button>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div style={{ marginTop: "24px" }}>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">
+                      {t("reasonForNotAllowing")}
+                    </label>
+                    <textarea
+                      className="admin-form-textarea"
+                      value={disapproveReason}
+                      onChange={(e) => setDisapproveReason(e.target.value)}
+                      required
+                      rows={4}
+                      placeholder={t("enterReasonForDisapproval")}
+                    />
+                  </div>
+                  <div className="admin-modal-actions">
+                    <button
+                      className="admin-button-secondary"
+                      onClick={() => {
+                        setShowDisapprove(false);
+                        setDisapproveReason("");
+                      }}
+                    >
+                      {t("cancel")}
+                    </button>
+                    <button
+                      className="admin-button-danger"
+                      onClick={handleDisapprove}
+                    >
+                      {t("submitDisapproval")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+          <Snackbar
+            message={snackbar.message}
+            type={snackbar.type}
+            open={snackbar.open}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+          />
+          <Footer />
         </div>
-        <Snackbar
-          message={snackbar.message}
-          type={snackbar.type}
-          open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        />
-        <Footer />
-      </div>
       </>
     );
   }
@@ -340,22 +358,36 @@ const ToReview = () => {
             className="admin-button-secondary"
             onClick={handleRefresh}
             disabled={loading}
-            style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+            style={{ display: "flex", alignItems: "center", gap: "4px" }}
           >
-            <span className="material-icons" style={{ fontSize: '16px' }}>refresh</span>
-            {t('refresh') || 'Refresh'}
+            <span className="material-icons" style={{ fontSize: "16px" }}>
+              refresh
+            </span>
+            {t("refresh") || "Refresh"}
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="admin-error" style={{ color: '#d32f2f', marginBottom: '16px', padding: '12px', background: '#ffebee', borderRadius: '8px' }}>
+        <div
+          className="admin-error"
+          style={{
+            color: "#d32f2f",
+            marginBottom: "16px",
+            padding: "12px",
+            background: "#ffebee",
+            borderRadius: "8px",
+          }}
+        >
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {!hasFetched ? (
-        <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
+        <div
+          className="admin-loading"
+          style={{ textAlign: "center", padding: "40px" }}
+        >
           No data loaded. Click Refresh to load data.
         </div>
       ) : flaggedContent.length === 0 ? (
@@ -381,9 +413,7 @@ const ToReview = () => {
                 >
                   @{content.authorId?.username}
                   {content.content.category && (
-                    <>
-                      {" "}• {t(content.content.category.toLowerCase())}
-                    </>
+                    <> • {t(content.content.category.toLowerCase())}</>
                   )}
                 </p>
                 <button

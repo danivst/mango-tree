@@ -3,5 +3,8 @@
     "node-fetch": "^2.7.0",
     "zod": "^4.3.6",
     "zod-to-json-schema": "^3.25.1"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.2"
   }
 }

@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
-import { adminAPI, Category } from "../../services/adminAPI";
+import { adminAPI, Category } from "../../services/admin-api";
 import Snackbar from "../../components/Snackbar";
 import {
   sortData,
   paginateData,
   getTotalPages,
   SortState,
-} from "../../utils/tableUtils";
+} from "../../utils/table-utils";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
@@ -37,7 +37,6 @@ const Categories = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
   const [editCategoryName, setEditCategoryName] = useState("");
-
 
   const filteredData = useMemo(() => {
     let filtered = categories;
@@ -178,10 +177,17 @@ const Categories = () => {
             className="admin-button-secondary"
             onClick={handleRefresh}
             disabled={loading}
-            style={{ marginRight: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+            style={{
+              marginRight: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
           >
-            <span className="material-icons" style={{ fontSize: '16px' }}>refresh</span>
-            {t('refresh') || 'Refresh'}
+            <span className="material-icons" style={{ fontSize: "16px" }}>
+              refresh
+            </span>
+            {t("refresh") || "Refresh"}
           </button>
           <input
             type="text"
@@ -215,7 +221,16 @@ const Categories = () => {
       </div>
 
       {error && (
-        <div className="admin-error" style={{ color: '#d32f2f', marginBottom: '16px', padding: '12px', background: '#ffebee', borderRadius: '8px' }}>
+        <div
+          className="admin-error"
+          style={{
+            color: "#d32f2f",
+            marginBottom: "16px",
+            padding: "12px",
+            background: "#ffebee",
+            borderRadius: "8px",
+          }}
+        >
           <strong>Error:</strong> {error}
         </div>
       )}
@@ -223,7 +238,10 @@ const Categories = () => {
       {loading ? (
         <div className="admin-loading">{t("loading")}</div>
       ) : !hasFetched ? (
-        <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
+        <div
+          className="admin-loading"
+          style={{ textAlign: "center", padding: "40px" }}
+        >
           No data loaded. Click Refresh to load data.
         </div>
       ) : (

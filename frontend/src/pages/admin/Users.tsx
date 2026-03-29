@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { adminAPI } from "../../services/adminAPI";
+import { adminAPI } from "../../services/admin-api";
 import Snackbar from "../../components/Snackbar";
 import api from "../../services/api";
 import { usersAPI, UserProfile, Post as PostType } from "../../services/api";
@@ -8,12 +8,12 @@ import {
   paginateData,
   getTotalPages,
   SortState,
-} from "../../utils/tableUtils";
+} from "../../utils/table-utils";
 import "./AdminPages.css";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation, Language } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
-import { Category } from "../../services/adminAPI";
+import { Category } from "../../services/admin-api";
 import Footer from "../../components/Footer";
 
 type DeleteStep = "warning" | "reason" | "confirm" | null;
@@ -50,13 +50,17 @@ const Users = () => {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [userPosts, setUserPosts] = useState<PostType[]>([]);
   const [userCategories, setUserCategories] = useState<Category[]>([]);
-  const [selectedUserCategoryId, setSelectedUserCategoryId] = useState<string | null>(null);
+  const [selectedUserCategoryId, setSelectedUserCategoryId] = useState<
+    string | null
+  >(null);
 
   // Compute special categories (recipe, question, flex) in specific order
   const specialCategories = useMemo(() => {
     if (!userCategories.length) return [];
     const lowerNames = ["recipe", "flex", "question"];
-    const filtered = userCategories.filter((cat) => lowerNames.includes(cat.name.toLowerCase()));
+    const filtered = userCategories.filter((cat) =>
+      lowerNames.includes(cat.name.toLowerCase()),
+    );
     // Sort according to desired order: recipe -> question -> flex
     const order = ["recipe", "question", "flex"];
     return filtered.sort((a, b) => {
@@ -74,9 +78,13 @@ const Users = () => {
   }, [selectedUser]);
 
   // Determine which language to use for category names (use user's language if bg, otherwise admin's UI language)
-  const categoryDisplayLanguage: Language = selectedUser?.language === "bg" ? "bg" : language;
+  const categoryDisplayLanguage: Language =
+    selectedUser?.language === "bg" ? "bg" : language;
 
-  const getCategoryDisplayName = (categoryName: string, lang: Language = categoryDisplayLanguage) => {
+  const getCategoryDisplayName = (
+    categoryName: string,
+    lang: Language = categoryDisplayLanguage,
+  ) => {
     const translated = getTranslation(lang, categoryName.toLowerCase());
     if (translated && translated !== categoryName.toLowerCase()) {
       return translated;
@@ -98,11 +106,13 @@ const Users = () => {
     if (!container) return;
 
     // Only start drag if clicking on the container (not on interactive elements like buttons/links)
-    if ((e.target as HTMLElement).tagName === 'INPUT' ||
-        (e.target as HTMLElement).tagName === 'BUTTON' ||
-        (e.target as HTMLElement).tagName === 'A' ||
-        (e.target as HTMLElement).closest('button') ||
-        (e.target as HTMLElement).closest('a')) {
+    if (
+      (e.target as HTMLElement).tagName === "INPUT" ||
+      (e.target as HTMLElement).tagName === "BUTTON" ||
+      (e.target as HTMLElement).tagName === "A" ||
+      (e.target as HTMLElement).closest("button") ||
+      (e.target as HTMLElement).closest("a")
+    ) {
       return;
     }
 
@@ -111,8 +121,8 @@ const Users = () => {
     dragStartX.current = e.clientX;
     scrollStartLeft.current = container.scrollLeft;
 
-    document.body.style.userSelect = 'none';
-    if (container) container.style.cursor = 'grabbing';
+    document.body.style.userSelect = "none";
+    if (container) container.style.cursor = "grabbing";
   };
 
   useEffect(() => {
@@ -129,23 +139,22 @@ const Users = () => {
     const handleMouseUp = () => {
       if (isDragging) {
         setIsDragging(false);
-        document.body.style.userSelect = '';
+        document.body.style.userSelect = "";
         const container = tableContainerRef.current;
-        if (container) container.style.cursor = 'grab';
+        if (container) container.style.cursor = "grab";
       }
     };
 
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
     }
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging]);
-
 
   // Filter users based on search
   const filteredData = useMemo(() => {
@@ -395,7 +404,9 @@ const Users = () => {
       const userData = await usersAPI.getUser(userId);
 
       // Fetch user's posts (include all for admin moderation)
-      const postsResponse = await api.get<PostType[]>(`/posts/author/${userId}`);
+      const postsResponse = await api.get<PostType[]>(
+        `/posts/author/${userId}`,
+      );
       setUserPosts(postsResponse.data);
 
       // Fetch categories for post category names (and tabs if needed)
@@ -416,7 +427,9 @@ const Users = () => {
 
   const userToBan = banUserId ? users.find((u) => u._id === banUserId) : null;
   const userToUnban = banUserId ? users.find((u) => u._id === banUserId) : null;
-  const userToDelete = deleteUserId ? users.find((u) => u._id === deleteUserId) : null;
+  const userToDelete = deleteUserId
+    ? users.find((u) => u._id === deleteUserId)
+    : null;
 
   return (
     <div className="admin-page">
@@ -427,10 +440,17 @@ const Users = () => {
             className="admin-button-secondary"
             onClick={handleRefresh}
             disabled={loading}
-            style={{ marginRight: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+            style={{
+              marginRight: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
           >
-            <span className="material-icons" style={{ fontSize: '16px' }}>refresh</span>
-            {t('refresh') || 'Refresh'}
+            <span className="material-icons" style={{ fontSize: "16px" }}>
+              refresh
+            </span>
+            {t("refresh") || "Refresh"}
           </button>
           <input
             type="text"
@@ -443,7 +463,16 @@ const Users = () => {
       </div>
 
       {error && (
-        <div className="admin-error" style={{ color: '#d32f2f', marginBottom: '16px', padding: '12px', background: '#ffebee', borderRadius: '8px' }}>
+        <div
+          className="admin-error"
+          style={{
+            color: "#d32f2f",
+            marginBottom: "16px",
+            padding: "12px",
+            background: "#ffebee",
+            borderRadius: "8px",
+          }}
+        >
           <strong>Error:</strong> {error}
         </div>
       )}
@@ -451,7 +480,10 @@ const Users = () => {
       {loading ? (
         <div className="admin-loading">Loading...</div>
       ) : !hasFetched ? (
-        <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
+        <div
+          className="admin-loading"
+          style={{ textAlign: "center", padding: "40px" }}
+        >
           No data loaded. Click Refresh to load data.
         </div>
       ) : (
@@ -459,7 +491,7 @@ const Users = () => {
           className="admin-table-container"
           ref={tableContainerRef}
           onMouseDown={handleMouseDown}
-          style={{ cursor: 'grab' }}
+          style={{ cursor: "grab" }}
         >
           {/* Main table with bottom scrollbar */}
           <table className="admin-table">
@@ -624,7 +656,9 @@ const Users = () => {
             {deleteStep === "warning" && (
               <>
                 <h2 className="admin-modal-title">{t("deleteAccount")}</h2>
-                <p className="admin-modal-text">{t("adminDeleteAccountWarning")}</p>
+                <p className="admin-modal-text">
+                  {t("adminDeleteAccountWarning")}
+                </p>
                 <div className="admin-modal-actions">
                   <button
                     className="admin-button-secondary"
@@ -647,7 +681,9 @@ const Users = () => {
 
             {deleteStep === "reason" && (
               <>
-                <h2 className="admin-modal-title">{t("adminReasonForDeletion")}</h2>
+                <h2 className="admin-modal-title">
+                  {t("adminReasonForDeletion")}
+                </h2>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -685,7 +721,9 @@ const Users = () => {
 
             {deleteStep === "confirm" && (
               <>
-                <h2 className="admin-modal-title">{t("adminConfirmDeletion")}</h2>
+                <h2 className="admin-modal-title">
+                  {t("adminConfirmDeletion")}
+                </h2>
                 <p className="admin-modal-text">
                   {t("adminConfirmDeletionText").replace(
                     "{username}",
@@ -851,12 +889,23 @@ const Users = () => {
       {/* User Profile Preview Modal */}
       {selectedUser && (
         <div className="admin-modal-overlay" style={{ zIndex: 2100 }}>
-          <div className="admin-modal" style={{ maxWidth: "900px", maxHeight: "90vh", overflowY: "auto" }}>
+          <div
+            className="admin-modal"
+            style={{ maxWidth: "900px", maxHeight: "90vh", overflowY: "auto" }}
+          >
             {previewLoading ? (
-              <div className="admin-loading" style={{ padding: "40px" }}>{t("loading")}</div>
+              <div className="admin-loading" style={{ padding: "40px" }}>
+                {t("loading")}
+              </div>
             ) : (
               <>
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginBottom: "16px",
+                  }}
+                >
                   <button
                     onClick={() => setSelectedUser(null)}
                     style={{
@@ -873,7 +922,14 @@ const Users = () => {
                   </button>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "24px", marginBottom: "24px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "24px",
+                    marginBottom: "24px",
+                  }}
+                >
                   {/* Profile Picture */}
                   <div style={{ position: "relative" }}>
                     <div
@@ -920,43 +976,94 @@ const Users = () => {
 
                   {/* User Info */}
                   <div style={{ flex: 1 }}>
-                    <h1 style={{ fontSize: "28px", fontWeight: 700, margin: 0, color: "var(--theme-text)" }}>
+                    <h1
+                      style={{
+                        fontSize: "28px",
+                        fontWeight: 700,
+                        margin: 0,
+                        color: "var(--theme-text)",
+                      }}
+                    >
                       @{selectedUser.username}
                     </h1>
-                    <p style={{ fontSize: "14px", opacity: 0.7, margin: "8px 0 16px 0", color: "var(--theme-text)" }}>
-                      {t("memberSince")}: {new Date(selectedUser.createdAt).toLocaleDateString(
+                    <p
+                      style={{
+                        fontSize: "14px",
+                        opacity: 0.7,
+                        margin: "8px 0 16px 0",
+                        color: "var(--theme-text)",
+                      }}
+                    >
+                      {t("memberSince")}:{" "}
+                      {new Date(selectedUser.createdAt).toLocaleDateString(
                         language === "bg" ? "bg-BG" : "en-US",
                         {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
-                        }
+                        },
                       )}
                     </p>
 
                     {/* Stats */}
                     <div style={{ display: "flex", gap: "32px" }}>
                       <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
+                        <div
+                          style={{
+                            fontSize: "24px",
+                            fontWeight: 600,
+                            color: "var(--theme-text)",
+                          }}
+                        >
                           {userPosts.length}
                         </div>
-                        <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
+                        <div
+                          style={{
+                            fontSize: "14px",
+                            color: "var(--theme-text)",
+                            opacity: 0.8,
+                          }}
+                        >
                           {t("posts")}
                         </div>
                       </div>
                       <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
+                        <div
+                          style={{
+                            fontSize: "24px",
+                            fontWeight: 600,
+                            color: "var(--theme-text)",
+                          }}
+                        >
                           {selectedUser.followers?.length || 0}
                         </div>
-                        <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
+                        <div
+                          style={{
+                            fontSize: "14px",
+                            color: "var(--theme-text)",
+                            opacity: 0.8,
+                          }}
+                        >
                           {t("followers")}
                         </div>
                       </div>
                       <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
+                        <div
+                          style={{
+                            fontSize: "24px",
+                            fontWeight: 600,
+                            color: "var(--theme-text)",
+                          }}
+                        >
                           {selectedUser.following?.length || 0}
                         </div>
-                        <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
+                        <div
+                          style={{
+                            fontSize: "14px",
+                            color: "var(--theme-text)",
+                            opacity: 0.8,
+                          }}
+                        >
                           {t("following")}
                         </div>
                       </div>
@@ -967,7 +1074,13 @@ const Users = () => {
                 {/* Bio */}
                 {selectedUser.bio && (
                   <div style={{ marginBottom: "24px" }}>
-                    <h3 style={{ margin: "0 0 12px 0", fontSize: "18px", color: "var(--theme-text)" }}>
+                    <h3
+                      style={{
+                        margin: "0 0 12px 0",
+                        fontSize: "18px",
+                        color: "var(--theme-text)",
+                      }}
+                    >
                       {t("bio")}
                     </h3>
                     <p
@@ -986,18 +1099,34 @@ const Users = () => {
                 )}
 
                 {/* Divider */}
-                <hr style={{ border: 0, borderTop: "1px solid var(--theme-text)", opacity: 0.2, margin: "32px 0" }} />
+                <hr
+                  style={{
+                    border: 0,
+                    borderTop: "1px solid var(--theme-text)",
+                    opacity: 0.2,
+                    margin: "32px 0",
+                  }}
+                />
 
                 {/* Category Tabs */}
                 {userCategories.length > 0 && (
-                  <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      marginBottom: "24px",
+                    }}
+                  >
                     {/* All Button */}
                     <button
                       onClick={() => setSelectedUserCategoryId(null)}
                       style={{
                         flex: 1,
                         padding: "12px 16px",
-                        border: selectedUserCategoryId === null ? "2px solid var(--theme-text)" : "none",
+                        border:
+                          selectedUserCategoryId === null
+                            ? "2px solid var(--theme-text)"
+                            : "none",
                         borderRadius: "8px",
                         background: "transparent",
                         color: "var(--theme-text)",
@@ -1015,11 +1144,16 @@ const Users = () => {
                       .map((category) => (
                         <button
                           key={category._id}
-                          onClick={() => setSelectedUserCategoryId(category._id)}
+                          onClick={() =>
+                            setSelectedUserCategoryId(category._id)
+                          }
                           style={{
                             flex: 1,
                             padding: "12px 16px",
-                            border: selectedUserCategoryId === category._id ? "2px solid var(--theme-text)" : "none",
+                            border:
+                              selectedUserCategoryId === category._id
+                                ? "2px solid var(--theme-text)"
+                                : "none",
                             borderRadius: "8px",
                             background: "transparent",
                             color: "var(--theme-text)",
@@ -1027,7 +1161,8 @@ const Users = () => {
                             fontWeight: 600,
                             cursor: "pointer",
                             transition: "all 0.2s",
-                            opacity: selectedUserCategoryId === category._id ? 1 : 0.6,
+                            opacity:
+                              selectedUserCategoryId === category._id ? 1 : 0.6,
                           }}
                         >
                           {getCategoryDisplayName(category.name)}
@@ -1038,18 +1173,51 @@ const Users = () => {
 
                 {/* Posts Grid */}
                 {userPosts.length === 0 ? (
-                  <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
+                  <div
+                    className="admin-loading"
+                    style={{ textAlign: "center", padding: "40px" }}
+                  >
                     {t("noPostsFound")}
                   </div>
                 ) : (
-                  <div className="admin-cards-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+                  <div
+                    className="admin-cards-grid"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fill, minmax(280px, 1fr))",
+                      gap: "16px",
+                    }}
+                  >
                     {userPosts
-                      .filter((post) => !selectedUserCategoryId || (post.category && post.category._id === selectedUserCategoryId))
+                      .filter(
+                        (post) =>
+                          !selectedUserCategoryId ||
+                          (post.category &&
+                            post.category._id === selectedUserCategoryId),
+                      )
                       .map((post) => (
-                        <div key={post._id} className="admin-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <div
+                          key={post._id}
+                          className="admin-card"
+                          style={{
+                            padding: "16px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "12px",
+                          }}
+                        >
                           {/* Post Image if exists */}
                           {post.image && post.image.length > 0 && (
-                            <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: "8px", overflow: "hidden", background: "#000" }}>
+                            <div
+                              style={{
+                                position: "relative",
+                                paddingTop: "56.25%",
+                                borderRadius: "8px",
+                                overflow: "hidden",
+                                background: "#000",
+                              }}
+                            >
                               <img
                                 src={post.image[0]}
                                 alt={post.title}
@@ -1065,24 +1233,60 @@ const Users = () => {
                             </div>
                           )}
                           {/* Post Title */}
-                          <h3 style={{ fontSize: "18px", fontWeight: 600, margin: 0, color: "var(--theme-text)" }}>
+                          <h3
+                            style={{
+                              fontSize: "18px",
+                              fontWeight: 600,
+                              margin: 0,
+                              color: "var(--theme-text)",
+                            }}
+                          >
                             {post.title}
                           </h3>
                           {/* Category & Date */}
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px", color: "var(--theme-text)", opacity: 0.8 }}>
-                            <span>{post.category ? getCategoryDisplayName(post.category.name) : '—'}</span>
-                            <span>{new Date(post.createdAt).toLocaleDateString(
-                              language === "bg" ? "bg-BG" : "en-US",
-                              {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              }
-                            )}</span>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              fontSize: "13px",
+                              color: "var(--theme-text)",
+                              opacity: 0.8,
+                            }}
+                          >
+                            <span>
+                              {post.category
+                                ? getCategoryDisplayName(post.category.name)
+                                : "—"}
+                            </span>
+                            <span>
+                              {new Date(post.createdAt).toLocaleDateString(
+                                language === "bg" ? "bg-BG" : "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )}
+                            </span>
                           </div>
                           {/* Likes count */}
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
-                            <span className="material-icons" style={{ fontSize: "18px" }}>favorite</span>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontSize: "14px",
+                              color: "var(--theme-text)",
+                              opacity: 0.8,
+                            }}
+                          >
+                            <span
+                              className="material-icons"
+                              style={{ fontSize: "18px" }}
+                            >
+                              favorite
+                            </span>
                             {post.likes?.length || 0}
                           </div>
                         </div>

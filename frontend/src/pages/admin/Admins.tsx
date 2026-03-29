@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import api from "../../services/api";
-import { adminAPI } from "../../services/adminAPI";
+import { adminAPI } from "../../services/admin-api";
 import "./AdminPages.css";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
@@ -154,7 +154,7 @@ const Admins = () => {
         year: "numeric",
         month: "short",
         day: "numeric",
-      }
+      },
     );
   };
 
@@ -165,7 +165,7 @@ const Admins = () => {
     if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase();
       result = result.filter((admin) =>
-        admin.username.toLowerCase().includes(query)
+        admin.username.toLowerCase().includes(query),
       );
     }
 
@@ -193,7 +193,7 @@ const Admins = () => {
   const totalPages = Math.ceil(filteredAndSortedAdmins.length / itemsPerPage);
   const paginatedData = filteredAndSortedAdmins.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   useEffect(() => {
@@ -274,10 +274,17 @@ const Admins = () => {
               className="admin-button-secondary"
               onClick={fetchAdmins}
               disabled={loading}
-              style={{ marginRight: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              style={{
+                marginRight: "8px",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
             >
-              <span className="material-icons" style={{ fontSize: '16px' }}>refresh</span>
-              {t('refresh') || 'Refresh'}
+              <span className="material-icons" style={{ fontSize: "16px" }}>
+                refresh
+              </span>
+              {t("refresh") || "Refresh"}
             </button>
             <input
               type="text"
@@ -310,7 +317,9 @@ const Admins = () => {
 
         {filteredAndSortedAdmins.length === 0 ? (
           <div className="admin-loading">
-            {searchQuery.trim() !== "" ? t("noSearchResults") : t("noUsersFound")}
+            {searchQuery.trim() !== ""
+              ? t("noSearchResults")
+              : t("noUsersFound")}
           </div>
         ) : (
           <>
@@ -378,20 +387,24 @@ const Admins = () => {
                 >
                   {"<"}
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    className={`admin-pagination-button ${
-                      currentPage === page ? "active" : ""
-                    }`}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      className={`admin-pagination-button ${
+                        currentPage === page ? "active" : ""
+                      }`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
                 <button
                   className="admin-pagination-button"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   {">"}
@@ -418,7 +431,11 @@ const Admins = () => {
                     placeholder={t("enterAdminEmail")}
                   />
                   <p
-                    style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}
+                    style={{
+                      fontSize: "12px",
+                      color: "#666",
+                      marginTop: "4px",
+                    }}
                   >
                     {t("adminEmailInfo")}
                   </p>

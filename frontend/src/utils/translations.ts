@@ -1,5 +1,20 @@
-export type Language = "en" | "bg";
+/**
+ * @file translations.ts
+ * @description Centralized translation strings for the MangoTree application.
+ * Provides bilingual support for English (en) and Bulgarian (bg).
+ * The `translations` object contains all UI text keyed by language.
+ * Use `getTranslation()` to retrieve the appropriate string at runtime.
+ */
 
+import type { Language } from "./types";
+export type { Language };
+
+/**
+ * Complete translation dictionary for both languages.
+ * Keys are message identifiers; values are the translated strings.
+ *
+ * @type {Record<Language, Record<string, string>>}
+ */
 export const translations: Record<Language, Record<string, string>> = {
   en: {
     // UI Labels
@@ -84,7 +99,7 @@ export const translations: Record<Language, Record<string, string>> = {
     changeUsername: "Change Username",
     noBio: "No bio set",
     reportUsername: "Report username",
-    confirmReportUser: "Are you sure you want to report {username}",
+    confirmReportUser: "Are you sure you want to report {username}?",
     viewProfile: "View Profile",
     userProfile: "User Profile",
 
@@ -141,7 +156,7 @@ export const translations: Record<Language, Record<string, string>> = {
     confirmBan: "Confirm Ban",
     confirmUnban: "Confirm Unban",
     banUserWarning:
-      "Are you sure you want to ban {username}? This action will delete all their content and prevent them from logging in It can be reversed by unbanning the user",
+      "Are you sure you want to ban {username}? This action will delete all their content and prevent them from logging in. It can be reversed by unbanning the user, but their content will be forever lost.",
     unbanWarning:
       "Are you sure you want to unban {username}? They will regain access to their account",
     unbanUser: "Unban User",
@@ -156,11 +171,10 @@ export const translations: Record<Language, Record<string, string>> = {
     confirmBanText:
       "Are you sure you want to ban {username}? This will ban the user The action is reversible",
     adminUsernameEditDisabled:
-      "Your role does not permit you to edit your username Please reach out to a supervisor",
+      "Your role does not permit you to edit your username. Please reach out to a supervisor",
     adminDeleteAccountDisabled:
-      "Your role does not permit you to delete your account Please reach out to a supervisor",
+      "Your role does not permit you to delete your account. Please reach out to a supervisor",
     adminSettings: "Admin Settings",
-    adminSettingsPlaceholder: "Admin Settings Placeholder",
     adminSettingsDescription:
       "This page will contain various administrative settings such as global configurations moderation tools etc",
 
@@ -270,12 +284,12 @@ export const translations: Record<Language, Record<string, string>> = {
     // Account Actions
     deleteAccount: "Delete Account",
     deleteAccountWarning:
-      "Are you sure you wish to proceed? Deleting your account is permanent. Your posts and comments will also be terminated?",
+      "Are you sure you wish to proceed? Deleting your account is permanent. Your posts and comments will also be terminated.",
     reasonForDeletion: "Reason for deletion",
     reasonForDeletionPlaceholder: "Enter the reason for account termination",
     confirmDeletion: "Confirm Deletion",
     confirmDeletionText:
-      "Do you wish to proceed and permanently delete {username}'s account",
+      "Do you wish to proceed and permanently delete {username}'s account?",
     terminateAccount: "Terminate Account",
     // Admin-specific deletion (more severe warning)
     adminDeleteAccountWarning:
@@ -300,7 +314,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Post Upload
     uploadPost: "Upload a post",
     files: "Files",
-    browseFiles: "Browse Files",
+    browseFiles: "Browse files",
     supportedFormats:
       "Supported formats: JPEG, PNG, WebP (verified by AI model)",
     title: "Title",
@@ -331,7 +345,6 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Comment Moderation Errors
     commentRejectedPrefix: "Comment rejected. Reason: {reason}",
-    commentNotCooking: "Comment rejected. Reason: Comment is not cooking-related.",
     commentInappropriate: "Comment rejected. Reason: Comment is inappropriate.",
     commentAIServerError: "Comment rejected. Reason: AI server error. Please try again later.",
     commentRejected: "Comment rejected.",
@@ -353,6 +366,7 @@ export const translations: Record<Language, Record<string, string>> = {
     passwordSetSuccess: "Password set successfully Redirecting to login",
     passwordResetEmailSent: "Password reset email sent",
     emailMustContainAt: "Email must contain @ symbol",
+    unableToEditUsername: "Unable to edit username",
 
     // Generic
     actionFailed: "Action failed",
@@ -465,6 +479,8 @@ export const translations: Record<Language, Record<string, string>> = {
     twoFACodePlaceholder: "Enter 6-digit code",
     invalid2FACode: "Invalid or expired code",
     incorrect2FACode: "Incorrect verification code",
+
+    // Copyright
     copyright: "© 2026 MangoTree. All rights reserved.",
   },
 
@@ -495,7 +511,7 @@ export const translations: Record<Language, Record<string, string>> = {
     added: "Добавен",
     by: "Създаден от",
     question: "Въпрос",
-    flex: "Гъвкав",
+    flex: "Флекс",
     recipe: "Рецепта",
     post: "Публикация",
     user: "Потребител",
@@ -508,9 +524,9 @@ export const translations: Record<Language, Record<string, string>> = {
     email: "Имейл",
     password: "Парола",
     forgotPassword: "Забравена парола",
-    forgotPasswordTitle: "Нулиране на парола",
+    forgotPasswordTitle: "Промяна на парола",
     forgotPasswordSubtitle:
-      "Въведете имейл адреса си и ще ви изпратим линк за нулиране на паролата.",
+      "Въведете имейл адреса си и ще ви изпратим линк за промяна на паролата.",
     loggingIn: "Влизане...",
     creatingAccount: "Създаване на профил...",
     send: "Изпращане",
@@ -524,8 +540,8 @@ export const translations: Record<Language, Record<string, string>> = {
     invalidOrExpiredToken: "Невалиден или изтекъл токен",
     currentPassword: "Текуща парола",
     newPassword: "Нова парола",
-    confirmPassword: "Потвърди парола",
-    resetPassword: "Нулирай парола",
+    confirmPassword: "Потвърдете парола",
+    resetPassword: "Променете парола",
     enterYourUsername: "Въведете потребителското си име",
     enterYourEmail: "Въведете имейла си",
     enterYourPassword: "Въведете паролата си",
@@ -556,17 +572,17 @@ export const translations: Record<Language, Record<string, string>> = {
     noFollowingFound: "Не следвате никого",
     waitingForApproval: "Чака за одобрение",
     bio: "Биография",
-    editBio: "Редактирай биография",
-    saveBio: "Запази биография",
+    editBio: "Редактиране на биография",
+    saveBio: "Запазете биография",
     profilePictureUpdated: "Профилната снимка беше обновена",
     bioUpdated: "Биографията беше обновена успешно",
-    deletePost: "Изтрий публикация",
+    deletePost: "Изтриване",
     confirmDeletePost: "Сигурни ли сте, че искате да изтриете тази публикация?",
     postDeleted: "Публикацията беше изтрита успешно",
-    changeUsername: "Промени потребителско име",
+    changeUsername: "Промяна на потребителско име",
     noBio: "Няма зададена биография",
-    reportUsername: "Доклай потребител",
-    confirmReportUser: "Сигурни ли сте, че искате да докладвате {username}",
+    reportUsername: "Докладване на потребител",
+    confirmReportUser: "Сигурни ли сте, че искате да докладвате {username}?",
     viewProfile: "Виж профил",
     userProfile: "Профил на потребител",
 
@@ -606,11 +622,11 @@ export const translations: Record<Language, Record<string, string>> = {
     tagUpdatedSuccess: "Тагът е обновен успешно",
     deleteTagWarning:
       "Сигурни ли сте, че искате да изтриете този таг? Това действие е необратимо",
-    saveChanges: "Запази промените",
+    saveChanges: "Запазване на промените",
 
     // Admin
-    addAdmin: "Добави администратор",
-    createAdmin: "Създай администратор",
+    addAdmin: "Добавяне на администратор",
+    createAdmin: "Създаване на администратор",
     enterAdminEmail: "Въведете имейл на администратор",
     adminEmailInfo:
       "Имейл за създаване на парола ще бъде изпратен на този адрес",
@@ -618,19 +634,19 @@ export const translations: Record<Language, Record<string, string>> = {
       "Администраторски акаунт създаден успешно! Имейл за настройка на парола изпратен.",
     failedToCreateAdmin: "Неуспешно създаване на администратор",
     allUsers: "Всички потребители",
-    userNotFound: "Потребителът не е намерен",
-    banUser: "Блокирай потребител",
+    userNotFound: "Потребителят не е намерен",
+    banUser: "Блокиране на потребител",
     ban: "Блокирай",
-    unban: "Разблокирай",
+    unban: "Отблокирай",
     confirmBan: "Потвърди блокиране",
-    confirmUnban: "Потвърди разблокиране",
+    confirmUnban: "Потвърди отзблокиране",
     banUserWarning:
-      "Сигурни ли сте, че искате да блокирате {username}? Това действие ще изтрие цялото му съдържание и ще го спре от вход Действието може да бъде върнато, като се разблокира потребителя",
+      "Сигурни ли сте, че искате да блокирате {username}? Това действие ще изтрие цялото му съдържание и ще премахне достъпа му до системата. Изтриването може да бъде отменено чрез отблокиране на потребителя, но съдържанието няма да бъде възстановено.",
     unbanWarning:
-      "Сигурни ли сте, че искате да разблокирате {username}? Те ще възстановят достъп до акаунта си",
-    unbanUser: "Разблокирай потребител",
+      "Сигурни ли сте, че искате да отблокирате {username}? Те ще възстановят достъп до акаунта си",
+    unbanUser: "Отзблокирай потребител",
     unbanUserConfirm:
-      "Сигурни ли сте, че искате да разблокирате {username}? Те ще възстановят достъп до акаунта си",
+      "Сигурни ли сте, че искате да отблокирате {username}? Те ще възстановят достъп до акаунта си",
     bannedUsers: "Блокирани потребители",
     bannedAt: "Блокиран на",
     noBannedUsersFound: "Няма блокирани потребители",
@@ -640,13 +656,14 @@ export const translations: Record<Language, Record<string, string>> = {
     confirmBanText:
       "Сигурни ли сте, че искате да блокирате {username}? Това ще блокира потребителя Действието може да бъде върнато",
     adminUsernameEditDisabled:
-      "Вашата роля не ви позволява да редактирате потребителското си име Моля, свържете се с ръководител",
+      "Вашата роля не ви позволява да редактирате потребителското си име.",
     adminDeleteAccountDisabled:
-      "Вашата роля не ви позволява да изтриете акаунта си Моля, свържете се с ръководител",
+      "Вашата роля не ви позволява да изтриете акаунта си.",
     adminSettings: "Администраторски настройки",
     adminSettingsPlaceholder: "Настройки на администратора",
     adminSettingsDescription:
       "Тази страница съдържа административни и модераторски настройки",
+    unableToEditUsername: "Вашата роля не ви позволява да редактирате потребителското си име.",
 
     // Admin Dashboard
     toReview: "За преглед",
@@ -659,9 +676,9 @@ export const translations: Record<Language, Record<string, string>> = {
     report: "Доклад",
     reasonForReport: "Причина за доклад",
     reportSubmitted: "Докладът беше изпратен успешно",
-    reportPost: "Доклай публикация",
-    reportComment: "Доклай коментар",
-    reportUser: "Доклай потребител",
+    reportPost: "Докладвай публикация",
+    reportComment: "Докладвай коментар",
+    reportUser: "Докладвай потребител",
     enterReportReason: "Моля, опишете защо докладвате тази публикация",
     enterReportReasonComment: "Моля, опишете защо докладвате този коментар",
     enterReportReasonUser: "Моля, опишете защо докладвате този потребител",
@@ -691,12 +708,12 @@ export const translations: Record<Language, Record<string, string>> = {
     // Comments
     comments: "Коментари",
     writeComment: "Напишете коментар",
-    postComment: "Публикувай коментар",
+    postComment: "Публикувайте коментар",
     commentAdded: "Коментарът беше добавен успешно",
     commentCannotBeEmpty: "Коментарът не може да бъде празен",
     mustBeLoggedInToComment:
       "Моля, влезте в системата, за да оставите коментар",
-    confirmDeleteComment: "Сигурни ли сте, че искате да изтриете този коментар",
+    confirmDeleteComment: "Сигурни ли сте, че искате да изтриете този коментар?",
 
     // Content Approval
     approve: "Одобри",
@@ -705,11 +722,11 @@ export const translations: Record<Language, Record<string, string>> = {
     reject: "Отхвърли",
     reasonForRejecting: "Причина за отхвърляне",
     enterReason: "Въведете причина за отхвърляне",
-    submitRejection: "Изпрати отхвърляне",
+    submitRejection: "Изпратете отхвърляне",
     reasonForNotAllowing: "Причина за отхвърляне",
     enterReasonForDisapproval: "Въведете причина за отхвърляне",
     enterReasonForRejection: "Въведете причина за отхвърляне",
-    submitDisapproval: "Изпрати отхвърляне",
+    submitDisapproval: "Изпратете отхвърляне",
     contentApprovedSuccess: "Съдържанието е одобрено успешно",
     contentDisapprovedSuccess: "Съдържанието е отхвърлено успешно",
     pleaseProvideDisapprovalReason: "Моля, въведете причина за отхвърляне",
@@ -717,15 +734,15 @@ export const translations: Record<Language, Record<string, string>> = {
     failedToDisapproveContent: "Неуспешно отхвърляне на съдържание",
 
     // Notifications
-    refresh: "Освежи",
-    refreshNotifications: "Освежи известията",
-    markAllAsRead: "Отбеляжи всички като прочетени",
+    refresh: "Обнови",
+    refreshNotifications: "Обнови известията",
+    markAllAsRead: "Отбележи всички като прочетени",
     clearAll: "Изчисти всички",
-    deleteNotification: "Изтрий известието",
-    clearAllConfirm: "Сигурни ли сте, че искате да изтриете всички известия",
+    deleteNotification: "Изтрий известие",
+    clearAllConfirm: "Сигурни ли сте, че искате да изтриете всички известия?",
     confirmAction: "Потвърди действие",
     allNotificationsCleared: "Всички известия са изчистени",
-    notificationDeleted: "Изведението е изтрито",
+    notificationDeleted: "Известието е изтрито",
     failedToDeleteNotification: "Неуспешно изтриване на известие",
     failedToClearNotifications: "Неуспешно изчистване на известия",
     noNotifications: "Няма известия все още",
@@ -744,10 +761,10 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Follow System
     follow: "Следвай",
-    unfollow: "Отстрани",
+    unfollow: "Отпоследвай",
     followStatusUpdated: "Статусът на следване е актуализиран",
-    unfollowed: "Успешно премахнахте следването",
-    followed: "Успешно последвате",
+    unfollowed: "Успешно отпоследвахте",
+    followed: "Успешно последвахте",
     successfullyFollowedUser: "Успешно последвахте потребителя",
     successfullyUnfollowedUser: "Успешно премахнахте следването на потребителя",
 
@@ -788,9 +805,9 @@ export const translations: Record<Language, Record<string, string>> = {
     files: "Файлове",
     browseFiles: "Преглед на файлове",
     supportedFormats:
-      "Поддържани формати: JPEG, PNG, WebP (проверено от AI модел)",
+      "Поддържани формати: JPEG, PNG, WebP (проверени от AI модел)",
     title: "Заглавие",
-    briefDescription: "Кратко описание на качвания файл",
+    briefDescription: "Кратко описание",
     description: "Описание",
     detailedDescription: "Подробно описание на това, което сте качили",
     uploading: "Качване...",
@@ -799,9 +816,9 @@ export const translations: Record<Language, Record<string, string>> = {
     enterTitleError: "Моля, въведете заглавие",
     enterDescriptionError: "Моля, въведете описание",
     filesSkippedError:
-      "Някои файлове бяха пропуснати Поддържат се само JPEG, PNG и WebP формати",
+      "Някои файлове бяха пропуснати. Поддържат се само JPEG, PNG и WebP формати",
     uploadSuccess:
-      "Успех Вашата публикация изчаква проверка Ще бъдете уведомени, когато бъде одобрена/отхвърлена",
+      "Успех! Вашата публикация изчаква проверка. Ще бъдете уведомени, когато бъде одобрена/отхвърлена",
     somethingWentWrong: "Нещо се обърка",
 
     // Moderation Errors
@@ -812,13 +829,11 @@ export const translations: Record<Language, Record<string, string>> = {
     postPendingAdminReview:
       "Публикацията ви беше изпратена и чака одобрение от администратор поради ограничения в AI услугата.",
     postPublishedSuccess: "Публикацията беше публикувана успешно!",
-
     contentFlaggedDuringUpdate: "Съдържанието беше отбелязано при актуализация",
     postRejected: "Публикацията е отхвърлена.",
 
     // Comment Moderation Errors
     commentRejectedPrefix: "Коментарът е отхвърлен. Причина: {reason}",
-    commentNotCooking: "Коментарът е отхвърлен. Причина: Коментарът не е свързан с готвене.",
     commentInappropriate: "Коментарът е отхвърлен. Причина: Коментарът е неуместен.",
     commentAIServerError: "Коментарът е отхвърлен. Причина: Грешка в AI сървъра. Моля, опитайте по-късно.",
     commentRejected: "Коментарът е отхвърлен.",
@@ -830,15 +845,15 @@ export const translations: Record<Language, Record<string, string>> = {
     rememberMe: "ЗАПОМНИ МЕ",
     onlyJPGE: "Поддържат се само JPEG, PNG и WebP формати",
     invalidResetLink:
-      "Невалиден линк за нулиране Моля, изпращете нов заявка за нулиране на парола",
+      "Невалиден линк за нулиране на парола. Моля, изпратете нова заявка за нулиране на парола",
     passwordResetSuccess: "Паролата е нулирана успешно",
     fillAllPasswordFields: "Моля, попълнете всички полета за парола",
     passwordChangedSuccess: "Паролата е променена успешно",
     settingsSavedSuccess: "Настройките са запазени успешно",
     emailUpdatedSuccess:
-      "Имейлът е обновен успешно Моля, проверете отново ако е необходимо",
+      "Имейлът е обновен успешно. Моля, проверете отново ако е необходимо",
     invalidOrMissingToken: "Невалиден или липсващ токен",
-    passwordSetSuccess: "Паролата е зададена успешно Пренасочване към входа",
+    passwordSetSuccess: "Паролата е зададена успешно. Пренасочване към входа",
     passwordResetEmailSent: "Имейлът за нулиране на парола е изпратен",
     emailMustContainAt: "Имейлът трябва да съдържа @ символ",
 
@@ -866,7 +881,7 @@ export const translations: Record<Language, Record<string, string>> = {
     hideReplies: "Скрий отговорите",
     showReplies: "Покажи отговорите",
     hide: "скрий",
-    like: "Харесва",
+    like: "Отхаресай",
     likes: "Харесвания",
     role: "Роля",
     created: "Създаден на",
@@ -889,21 +904,21 @@ export const translations: Record<Language, Record<string, string>> = {
     searchResults: "Резултати от търсене",
     searchFailed: "Търсенето не беше успешно",
     foundPosts: "Намерени публикации",
-    failedLoadFeed: "Неуспешно зареждане на лента",
+    failedLoadFeed: "Неуспешно зареждане на съдържание",
     failedLoadMore: "Неуспешно зареждане на още",
     noMorePosts: "Няма повече публикации",
-    postsFromFollowed: "Публикации от хора, които следвате",
+    postsFromFollowed: "Публикации от хора, които следваш",
     suggestedForYou: "Препоръчани за теб",
     noSuggestedPosts: "Няма препоръчани публикации",
     noFollowedPosts:
-      "Все още не следвате никого Следвайте потребители, за да видите техните публикации тук",
+      "Все още не следвате никого. Следвайте потребители, за да видите техните публикации тук",
     welcome: "Добре дошли",
     welcomeMessage:
       "Следвайте потребители, за да видите техните публикации тук или разгледайте препоръчаното съдържание по-долу",
 
     // Generic
     actionFailed: "Действието не беше успешно",
-    mustBeLoggedIn: "Трябва да сте влезли в системата за да извършите това действие",
+    mustBeLoggedIn: "Трябва да сте влезли в системата, за да извършите това действие",
     verify: "Потвърди",
 
     // Generic errors
@@ -919,19 +934,19 @@ export const translations: Record<Language, Record<string, string>> = {
     // Landing Page
     landingWelcome: "Добре дошли в MangoTree",
     landingTagline:
-      "Свързвай се, споделяй и растей с общност, която има значение.",
+      "Свързвай се, споделяй и расти с общност, която има значение.",
     landingDescription:
-      "MangoTree е социална платформа, където можеш да споделяш мислите си, да откриваш ново съдържание и да се свързваш с хора с подобни интереси. Присъединете се към общността ни днес и започнете пътя си.",
+      "MangoTree е социална платформа, в която можеш да споделяш мислите си, да откриваш ново съдържание и да се свързваш с хора с подобни интереси. Присъедини се към общността ни днес!",
     getStarted: "Започни",
-    feature1Title: "Сподели гласа си",
+    feature1Title: "Сподели мнението си",
     feature1Desc:
-      "Създавайте публикации, изразявайте идеите си и нека креативността ви блесне.",
+      "Създавай публикации, изразявай идеите си и нека креативността ти блесне.",
     feature2Title: "Открий съдържание",
     feature2Desc:
-      "Разглеждайте персонализирани ленти и изследвайте съдържание, създадено специално за вас.",
-    feature3Title: "Свързвай се и ангажирай",
+      "Разглеждай персонализирано съдържание и изследвай такова, създадено специално за вас.",
+    feature3Title: "Свързвай се с другите",
     feature3Desc:
-      "Следвайте потребители, коментирайте публикации и изграждайте значими връзки.",
+      "Следвай потребители, коментирай публикации и изграждай значими връзки.",
     landingFooter: "Вече имате акаунт? Влезте в системата, за да продължите.",
 
     // 2FA (Two-Factor Authentication)
@@ -952,10 +967,21 @@ export const translations: Record<Language, Record<string, string>> = {
     twoFACodePlaceholder: "Въведете 6-цифрен код",
     invalid2FACode: "Невалиден или изтекъл код",
     incorrect2FACode: "Неверен код за потвърждение",
+
+    // Copyright
     copyright: "© 2026 MangoTree. Всички права запазени.",
   },
 };
 
+/**
+ * Get the translated string for a given language and key.
+ * Falls back to the key itself if translation is missing.
+ *
+ * @function getTranslation
+ * @param {Language} language - Target language ('en' or 'bg')
+ * @param {string} key - Translation key (must exist in the dictionary)
+ * @returns {string} The translated string or the key if not found
+ */
 export const getTranslation = (language: Language, key: string): string => {
   return translations[language][key] || key;
 };

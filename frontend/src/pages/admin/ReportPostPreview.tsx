@@ -1,11 +1,17 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { adminAPI, Report } from "../../services/adminAPI";
+import { adminAPI, Report } from "../../services/admin-api";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation, Language } from "../../utils/translations";
-import { postsAPI, usersAPI, UserProfile, Comment, Post as PostType } from "../../services/api";
+import {
+  postsAPI,
+  usersAPI,
+  UserProfile,
+  Comment,
+  Post as PostType,
+} from "../../services/api";
 import api from "../../services/api";
-import { Category } from "../../services/adminAPI";
+import { Category } from "../../services/admin-api";
 import "./AdminPages.css";
 import Snackbar from "../../components/Snackbar";
 import Footer from "../../components/Footer";
@@ -29,25 +35,35 @@ const ReportPostPreview = () => {
 
   // Translation states (for post preview)
   const [showTranslation, setShowTranslation] = useState(false);
-  const [translationCache, setTranslationCache] = useState<{ title: string; content: string; tags?: string[] } | null>(null);
+  const [translationCache, setTranslationCache] = useState<{
+    title: string;
+    content: string;
+    tags?: string[];
+  } | null>(null);
   const [translating, setTranslating] = useState(false);
 
   // Translation states for comment
   const [commentShowTranslation, setCommentShowTranslation] = useState(false);
-  const [commentTranslationCache, setCommentTranslationCache] = useState<string | null>(null);
+  const [commentTranslationCache, setCommentTranslationCache] = useState<
+    string | null
+  >(null);
   const [commentTranslating, setCommentTranslating] = useState(false);
 
   // States for user preview
   const [user, setUser] = useState<UserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<PostType[]>([]);
   const [userCategories, setUserCategories] = useState<Category[]>([]);
-  const [selectedUserCategoryId, setSelectedUserCategoryId] = useState<string | null>(null);
+  const [selectedUserCategoryId, setSelectedUserCategoryId] = useState<
+    string | null
+  >(null);
 
   // Compute special categories (recipe, question, flex) for tabs in correct order
   const specialCategories = useMemo(() => {
     if (!userCategories.length) return [];
     const lowerNames = ["recipe", "question", "flex"];
-    const filtered = userCategories.filter((cat) => lowerNames.includes(cat.name.toLowerCase()));
+    const filtered = userCategories.filter((cat) =>
+      lowerNames.includes(cat.name.toLowerCase()),
+    );
     // Sort according to desired order: recipe -> question -> flex
     const order = ["recipe", "question", "flex"];
     return filtered.sort((a, b) => {
@@ -60,7 +76,9 @@ const ReportPostPreview = () => {
   // Filter posts by selected category
   const filteredPosts = useMemo(() => {
     if (!selectedUserCategoryId) return userPosts; // Show all posts when "All" selected
-    return userPosts.filter((post) => post.category && post.category._id === selectedUserCategoryId);
+    return userPosts.filter(
+      (post) => post.category && post.category._id === selectedUserCategoryId,
+    );
   }, [userPosts, selectedUserCategoryId]);
 
   useEffect(() => {
@@ -112,7 +130,9 @@ const ReportPostPreview = () => {
           setUser(userData);
 
           // Fetch user's posts (include all for admin moderation)
-          const postsResponse = await api.get<PostType[]>(`/posts/author/${currentReport.targetId}`);
+          const postsResponse = await api.get<PostType[]>(
+            `/posts/author/${currentReport.targetId}`,
+          );
           setUserPosts(postsResponse.data);
 
           // Fetch categories for post category names (and tabs if needed)
@@ -138,9 +158,13 @@ const ReportPostPreview = () => {
 
   // Determine which language to use for category names
   // For user profile previews, use the user's language if set to bg, otherwise use admin's UI language
-  const categoryDisplayLanguage: Language = report?.targetType === "user" && user?.language === "bg" ? "bg" : language;
+  const categoryDisplayLanguage: Language =
+    report?.targetType === "user" && user?.language === "bg" ? "bg" : language;
 
-  const getCategoryDisplayName = (categoryName: string, lang: Language = categoryDisplayLanguage) => {
+  const getCategoryDisplayName = (
+    categoryName: string,
+    lang: Language = categoryDisplayLanguage,
+  ) => {
     const translated = getTranslation(lang, categoryName.toLowerCase());
     if (translated && translated !== categoryName.toLowerCase()) {
       return translated;
@@ -156,7 +180,9 @@ const ReportPostPreview = () => {
 
   const handlePrevImage = () => {
     if (post?.image && post.image.length > 0) {
-      setCurrentImageIndex((prev) => (prev - 1 + post.image.length) % post.image.length);
+      setCurrentImageIndex(
+        (prev) => (prev - 1 + post.image.length) % post.image.length,
+      );
     }
   };
 
@@ -169,16 +195,23 @@ const ReportPostPreview = () => {
       return t("justNow") || "Just now";
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      const unit = minutes === 1 ? (t("minute") || "minute") : (t("minutes") || "minutes");
-      return language === "bg" ? `${t("ago")} ${minutes} ${unit}` : `${minutes} ${unit} ago`;
+      const unit =
+        minutes === 1 ? t("minute") || "minute" : t("minutes") || "minutes";
+      return language === "bg"
+        ? `${t("ago")} ${minutes} ${unit}`
+        : `${minutes} ${unit} ago`;
     } else if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      const unit = hours === 1 ? (t("hour") || "hour") : (t("hours") || "hours");
-      return language === "bg" ? `${t("ago")} ${hours} ${unit}` : `${hours} ${unit} ago`;
+      const unit = hours === 1 ? t("hour") || "hour" : t("hours") || "hours";
+      return language === "bg"
+        ? `${t("ago")} ${hours} ${unit}`
+        : `${hours} ${unit} ago`;
     } else if (diffInSeconds < 604800) {
       const days = Math.floor(diffInSeconds / 86400);
-      const unit = days === 1 ? (t("day") || "day") : (t("days") || "days");
-      return language === "bg" ? `${t("ago")} ${days} ${unit}` : `${days} ${unit} ago`;
+      const unit = days === 1 ? t("day") || "day" : t("days") || "days";
+      return language === "bg"
+        ? `${t("ago")} ${days} ${unit}`
+        : `${days} ${unit} ago`;
     } else {
       return date.toLocaleDateString(language === "bg" ? "bg-BG" : "en-US", {
         year: "numeric",
@@ -189,31 +222,34 @@ const ReportPostPreview = () => {
   };
 
   // Language detection for translation
-  const detectLanguage = (text: string): 'en' | 'bg' => {
-    if (!text) return 'en';
+  const detectLanguage = (text: string): "en" | "bg" => {
+    if (!text) return "en";
     if (/[а-яА-Я]/.test(text)) {
-      return 'bg';
+      return "bg";
     }
-    return 'en';
+    return "en";
   };
 
   // Category style function for colored badges
   const getCategoryStyle = (categoryName: string) => {
-    const styles: Record<string, { borderColor: string; backgroundColor: string; color: string }> = {
+    const styles: Record<
+      string,
+      { borderColor: string; backgroundColor: string; color: string }
+    > = {
       flex: {
         borderColor: "#2196F3",
         backgroundColor: "rgba(33, 150, 243, 0.15)",
-        color: "#1976D2"
+        color: "#1976D2",
       },
       recipe: {
         borderColor: "#4CAF50",
         backgroundColor: "rgba(76, 175, 80, 0.15)",
-        color: "#388E3C"
+        color: "#388E3C",
       },
       question: {
         borderColor: "#9C27B0",
         backgroundColor: "rgba(156, 39, 176, 0.15)",
-        color: "#7B1FA2"
+        color: "#7B1FA2",
       },
     };
     return styles[categoryName.toLowerCase()] || null;
@@ -253,7 +289,11 @@ const ReportPostPreview = () => {
     setTranslating(true);
     try {
       const response = await postsAPI.translatePost(post._id, language);
-      setTranslationCache({ title: response.title, content: response.content, tags: response.tags });
+      setTranslationCache({
+        title: response.title,
+        content: response.content,
+        tags: response.tags,
+      });
       setShowTranslation(true);
     } catch (error: any) {
       setSnackbar({
@@ -281,7 +321,7 @@ const ReportPostPreview = () => {
     }
 
     // Get the current comment from the array
-    const comment = comments.find(c => c._id === commentId);
+    const comment = comments.find((c) => c._id === commentId);
     if (!comment) return;
 
     // If stored translation exists for UI language, use it directly without fetching
@@ -384,13 +424,19 @@ const ReportPostPreview = () => {
     const isPostInUserLanguage = postLanguage === language;
     const isWaitingForApproval = post.isApproved === false;
     const displayTitle = showTranslation
-      ? (translationCache?.title || post.translations?.title?.[language] || post.title)
+      ? translationCache?.title ||
+        post.translations?.title?.[language] ||
+        post.title
       : post.title;
     const displayContent = showTranslation
-      ? (translationCache?.content || post.translations?.content?.[language] || post.content)
+      ? translationCache?.content ||
+        post.translations?.content?.[language] ||
+        post.content
       : post.content;
     const displayTags = showTranslation
-      ? (translationCache?.tags || post.translations?.tags?.[language] || post.tags)
+      ? translationCache?.tags ||
+        post.translations?.tags?.[language] ||
+        post.tags
       : post.tags;
 
     return (
@@ -417,8 +463,18 @@ const ReportPostPreview = () => {
             </span>
             {t("goBack") || "Go Back"}
           </button>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "16px", flexWrap: "wrap" }}>
-            <h1 className="admin-page-title" style={{ margin: 0 }}>{displayTitle}</h1>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              marginTop: "16px",
+              flexWrap: "wrap",
+            }}
+          >
+            <h1 className="admin-page-title" style={{ margin: 0 }}>
+              {displayTitle}
+            </h1>
             {/* Translate Toggle Button */}
             {!isPostInUserLanguage && (
               <button
@@ -440,26 +496,35 @@ const ReportPostPreview = () => {
                 }}
               >
                 {translating ? (
-                  <span className="material-icons spin" style={{ fontSize: "14px" }}>refresh</span>
+                  <span
+                    className="material-icons spin"
+                    style={{ fontSize: "14px" }}
+                  >
+                    refresh
+                  </span>
                 ) : (
                   <span className="material-icons" style={{ fontSize: "14px" }}>
                     {showTranslation ? "translate" : "language"}
                   </span>
                 )}
-                <span>{showTranslation ? t("viewOriginal") : t("translate")}</span>
+                <span>
+                  {showTranslation ? t("viewOriginal") : t("translate")}
+                </span>
               </button>
             )}
             {isWaitingForApproval && (
-              <div style={{
-                display: "inline-block",
-                padding: "6px 16px",
-                background: "rgba(255, 193, 7, 0.2)",
-                color: "#ffc107",
-                borderRadius: "12px",
-                fontSize: "12px",
-                fontWeight: 500,
-                border: "1px solid rgba(255, 193, 7, 0.5)",
-              }}>
+              <div
+                style={{
+                  display: "inline-block",
+                  padding: "6px 16px",
+                  background: "rgba(255, 193, 7, 0.2)",
+                  color: "#ffc107",
+                  borderRadius: "12px",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  border: "1px solid rgba(255, 193, 7, 0.5)",
+                }}
+              >
                 {t("waitingForApproval") || "Waiting for approval"}
               </div>
             )}
@@ -468,9 +533,7 @@ const ReportPostPreview = () => {
 
         {/* Author (no buttons) */}
         <div style={{ marginBottom: "24px" }}>
-          <div
-            style={{ display: "flex", alignItems: "center", gap: "8px" }}
-          >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             {post.authorId.profileImage ? (
               <img
                 src={post.authorId.profileImage}
@@ -502,7 +565,13 @@ const ReportPostPreview = () => {
                 {post.authorId.username.charAt(0).toUpperCase()}
               </div>
             )}
-            <span style={{ fontSize: "16px", fontWeight: 500, color: "var(--theme-text)" }}>
+            <span
+              style={{
+                fontSize: "16px",
+                fontWeight: 500,
+                color: "var(--theme-text)",
+              }}
+            >
               @{post.authorId.username}
             </span>
           </div>
@@ -518,15 +587,19 @@ const ReportPostPreview = () => {
               borderRadius: "8px",
               display: "inline-block",
               border: "2px solid",
-              ...(getCategoryStyle(post.category.name) ? {
-                borderColor: getCategoryStyle(post.category.name)!.borderColor,
-                backgroundColor: getCategoryStyle(post.category.name)!.backgroundColor,
-                color: getCategoryStyle(post.category.name)!.color,
-              } : {
-                borderColor: "var(--theme-text)",
-                backgroundColor: "transparent",
-                color: "var(--theme-text)",
-              }),
+              ...(getCategoryStyle(post.category.name)
+                ? {
+                    borderColor: getCategoryStyle(post.category.name)!
+                      .borderColor,
+                    backgroundColor: getCategoryStyle(post.category.name)!
+                      .backgroundColor,
+                    color: getCategoryStyle(post.category.name)!.color,
+                  }
+                : {
+                    borderColor: "var(--theme-text)",
+                    backgroundColor: "transparent",
+                    color: "var(--theme-text)",
+                  }),
             }}
           >
             {getCategoryDisplayName(post.category.name)}
@@ -609,7 +682,7 @@ const ReportPostPreview = () => {
                       gap: "8px",
                     }}
                   >
-                    {post.image.map((_, index) => (
+                    {post.image.map((_: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
@@ -618,7 +691,10 @@ const ReportPostPreview = () => {
                           height: "8px",
                           borderRadius: "50%",
                           border: "none",
-                          background: index === currentImageIndex ? "white" : "rgba(255,255,255,0.5)",
+                          background:
+                            index === currentImageIndex
+                              ? "white"
+                              : "rgba(255,255,255,0.5)",
                           cursor: "pointer",
                         }}
                       />
@@ -632,8 +708,15 @@ const ReportPostPreview = () => {
 
         {/* Tags */}
         {displayTags && displayTags.length > 0 && (
-          <div style={{ marginBottom: "16px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {displayTags.map((tag, index) => (
+          <div
+            style={{
+              marginBottom: "16px",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "8px",
+            }}
+          >
+            {displayTags.map((tag: string, index: number) => (
               <span
                 key={index}
                 style={{
@@ -653,7 +736,15 @@ const ReportPostPreview = () => {
 
         {/* Description */}
         <div style={{ marginBottom: "32px" }}>
-          <p style={{ fontFamily: "Poppins, sans-serif", fontSize: "14px", color: "var(--theme-text)", lineHeight: 1.7, margin: 0 }}>
+          <p
+            style={{
+              fontFamily: "Poppins, sans-serif",
+              fontSize: "14px",
+              color: "var(--theme-text)",
+              lineHeight: 1.7,
+              margin: 0,
+            }}
+          >
             {displayContent}
           </p>
         </div>
@@ -685,7 +776,9 @@ const ReportPostPreview = () => {
 
     // Compute displayed comment text based on translation state
     const displayCommentText = commentShowTranslation
-      ? (commentTranslationCache || comment.translations?.[language] || comment.text)
+      ? commentTranslationCache ||
+        comment.translations?.[language] ||
+        comment.text
       : comment.text;
 
     return (
@@ -716,7 +809,14 @@ const ReportPostPreview = () => {
 
         {/* Comment Content */}
         <div style={{ marginBottom: "24px" }}>
-          <div style={{ marginBottom: "16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div
+            style={{
+              marginBottom: "16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               {/* Comment Author Avatar */}
               {comment.userId?.profileImage ? (
@@ -751,7 +851,13 @@ const ReportPostPreview = () => {
                 </div>
               )}
               <div>
-                <p style={{ fontSize: "16px", opacity: 0.8, margin: "0 0 8px 0" }}>
+                <p
+                  style={{
+                    fontSize: "16px",
+                    opacity: 0.8,
+                    margin: "0 0 8px 0",
+                  }}
+                >
                   @{comment.userId?.username}
                 </p>
                 <p style={{ fontSize: "14px", opacity: 0.6, margin: 0 }}>
@@ -779,13 +885,20 @@ const ReportPostPreview = () => {
               }}
             >
               {commentTranslating ? (
-                <span className="material-icons spin" style={{ fontSize: "14px" }}>refresh</span>
+                <span
+                  className="material-icons spin"
+                  style={{ fontSize: "14px" }}
+                >
+                  refresh
+                </span>
               ) : (
                 <span className="material-icons" style={{ fontSize: "14px" }}>
                   {commentShowTranslation ? "translate" : "language"}
                 </span>
               )}
-              <span>{commentShowTranslation ? t("viewOriginal") : t("translate")}</span>
+              <span>
+                {commentShowTranslation ? t("viewOriginal") : t("translate")}
+              </span>
             </button>
           </div>
           <p
@@ -830,7 +943,7 @@ const ReportPostPreview = () => {
           year: "numeric",
           month: "short",
           day: "numeric",
-        }
+        },
       );
     };
 
@@ -859,7 +972,14 @@ const ReportPostPreview = () => {
             {t("goBack") || "Go Back"}
           </button>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "24px", marginBottom: "24px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "24px",
+            marginBottom: "24px",
+          }}
+        >
           {/* Profile Picture */}
           <div style={{ position: "relative" }}>
             <div
@@ -906,36 +1026,86 @@ const ReportPostPreview = () => {
 
           {/* User Info */}
           <div style={{ flex: 1 }}>
-            <h1 style={{ fontSize: "28px", fontWeight: 700, margin: 0, color: "var(--theme-text)" }}>
+            <h1
+              style={{
+                fontSize: "28px",
+                fontWeight: 700,
+                margin: 0,
+                color: "var(--theme-text)",
+              }}
+            >
               @{user.username}
             </h1>
-            <p style={{ fontSize: "14px", opacity: 0.7, margin: "8px 0 16px 0", color: "var(--theme-text)" }}>
+            <p
+              style={{
+                fontSize: "14px",
+                opacity: 0.7,
+                margin: "8px 0 16px 0",
+                color: "var(--theme-text)",
+              }}
+            >
               {t("memberSince")}: {formatDate(user.createdAt)}
             </p>
 
             {/* Stats */}
             <div style={{ display: "flex", gap: "32px" }}>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
+                <div
+                  style={{
+                    fontSize: "24px",
+                    fontWeight: 600,
+                    color: "var(--theme-text)",
+                  }}
+                >
                   {userPosts.length}
                 </div>
-                <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--theme-text)",
+                    opacity: 0.8,
+                  }}
+                >
                   {t("posts")}
                 </div>
               </div>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
+                <div
+                  style={{
+                    fontSize: "24px",
+                    fontWeight: 600,
+                    color: "var(--theme-text)",
+                  }}
+                >
                   {user.followers?.length || 0}
                 </div>
-                <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--theme-text)",
+                    opacity: 0.8,
+                  }}
+                >
                   {t("followers")}
                 </div>
               </div>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
+                <div
+                  style={{
+                    fontSize: "24px",
+                    fontWeight: 600,
+                    color: "var(--theme-text)",
+                  }}
+                >
                   {user.following?.length || 0}
                 </div>
-                <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--theme-text)",
+                    opacity: 0.8,
+                  }}
+                >
                   {t("following")}
                 </div>
               </div>
@@ -946,7 +1116,13 @@ const ReportPostPreview = () => {
         {/* Bio */}
         {user.bio && (
           <div style={{ marginBottom: "24px" }}>
-            <h3 style={{ margin: "0 0 12px 0", fontSize: "18px", color: "var(--theme-text)" }}>
+            <h3
+              style={{
+                margin: "0 0 12px 0",
+                fontSize: "18px",
+                color: "var(--theme-text)",
+              }}
+            >
               {t("bio")}
             </h3>
             <p
@@ -965,7 +1141,14 @@ const ReportPostPreview = () => {
         )}
 
         {/* Divider */}
-        <hr style={{ border: 0, borderTop: "1px solid var(--theme-text)", opacity: 0.2, margin: "32px 0" }} />
+        <hr
+          style={{
+            border: 0,
+            borderTop: "1px solid var(--theme-text)",
+            opacity: 0.2,
+            margin: "32px 0",
+          }}
+        />
 
         {/* Category Tabs */}
         {userCategories.length > 0 && (
@@ -976,7 +1159,10 @@ const ReportPostPreview = () => {
               style={{
                 flex: 1,
                 padding: "12px 16px",
-                border: selectedUserCategoryId === null ? "2px solid var(--theme-text)" : "none",
+                border:
+                  selectedUserCategoryId === null
+                    ? "2px solid var(--theme-text)"
+                    : "none",
                 borderRadius: "8px",
                 background: "transparent",
                 color: "var(--theme-text)",
@@ -998,7 +1184,10 @@ const ReportPostPreview = () => {
                   style={{
                     flex: 1,
                     padding: "12px 16px",
-                    border: selectedUserCategoryId === category._id ? "2px solid var(--theme-text)" : "none",
+                    border:
+                      selectedUserCategoryId === category._id
+                        ? "2px solid var(--theme-text)"
+                        : "none",
                     borderRadius: "8px",
                     background: "transparent",
                     color: "var(--theme-text)",
@@ -1017,16 +1206,43 @@ const ReportPostPreview = () => {
 
         {/* Posts Grid */}
         {filteredPosts.length === 0 ? (
-          <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
+          <div
+            className="admin-loading"
+            style={{ textAlign: "center", padding: "40px" }}
+          >
             {t("noPostsFound")}
           </div>
         ) : (
-          <div className="admin-cards-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+          <div
+            className="admin-cards-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: "16px",
+            }}
+          >
             {filteredPosts.map((post) => (
-              <div key={post._id} className="admin-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div
+                key={post._id}
+                className="admin-card"
+                style={{
+                  padding: "16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
                 {/* Post Image if exists */}
                 {post.image && post.image.length > 0 && (
-                  <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: "8px", overflow: "hidden", background: "#000" }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      paddingTop: "56.25%",
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      background: "#000",
+                    }}
+                  >
                     <img
                       src={post.image[0]}
                       alt={post.title}
@@ -1042,17 +1258,48 @@ const ReportPostPreview = () => {
                   </div>
                 )}
                 {/* Post Title */}
-                <h3 style={{ fontSize: "18px", fontWeight: 600, margin: 0, color: "var(--theme-text)" }}>
+                <h3
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    margin: 0,
+                    color: "var(--theme-text)",
+                  }}
+                >
                   {post.title}
                 </h3>
                 {/* Category & Date */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px", color: "var(--theme-text)", opacity: 0.8 }}>
-                  <span>{post.category ? getCategoryDisplayName(post.category.name) : '—'}</span>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontSize: "13px",
+                    color: "var(--theme-text)",
+                    opacity: 0.8,
+                  }}
+                >
+                  <span>
+                    {post.category
+                      ? getCategoryDisplayName(post.category.name)
+                      : "—"}
+                  </span>
                   <span>{formatDate(post.createdAt)}</span>
                 </div>
                 {/* Likes count */}
-                <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
-                  <span className="material-icons" style={{ fontSize: "18px" }}>favorite</span>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    fontSize: "14px",
+                    color: "var(--theme-text)",
+                    opacity: 0.8,
+                  }}
+                >
+                  <span className="material-icons" style={{ fontSize: "18px" }}>
+                    favorite
+                  </span>
                   {post.likes?.length || 0}
                 </div>
               </div>

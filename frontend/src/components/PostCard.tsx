@@ -174,7 +174,7 @@ const PostCard = ({ post }: PostCardProps) => {
       {/* Tags */}
       {displayTags && displayTags.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
-          {displayTags.slice(0, 5).map((tag, idx) => (
+          {displayTags.slice(0, 5).map((tag: string, idx: number) => (
             <span
               key={idx}
               style={{

@@ -123,7 +123,7 @@ const Account = () => {
     try {
       setSaving(true);
       await api.put<UserProfile>(`/users/${currentUserId}`, { profileImage: profileImagePreview });
-      setUser((prev) => (prev ? { ...prev, profileImage: profileImagePreview } : prev));
+      setUser((prev: UserProfile | null) => (prev ? { ...prev, profileImage: profileImagePreview } : prev));
       setProfileImageFile(null);
       setProfileImagePreview("");
       setSnackbar({
