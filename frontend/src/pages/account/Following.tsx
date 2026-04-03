@@ -7,7 +7,24 @@ import UserSidebar from "../../components/UserSidebar";
 import Snackbar from "../../components/Snackbar";
 import GoBackButton from "../../components/GoBackButton";
 import { getToken } from "../../utils/auth";
-import "./../admin/AdminPages.css";
+import "../../styles/shared.css";
+import "./Following.css";
+
+/**
+ * @interface User
+ * @description User data structure for account pages.
+ * Minimal subset of User model needed for following/followers display.
+ *
+ * @property {string} _id - User's unique identifier
+ * @property {string} username - Display username
+ * @property {string} email - Email address (not displayed)
+ * @property {string} role - User's role
+ * @property {string} createdAt - Account creation timestamp
+ * @property {string} [profileImage] - Optional profile picture URL
+ * @property {string} [bio] - Optional user bio
+ * @property {string[]} followers - Array of user IDs who follow this user
+ * @property {string[]} following - Array of user IDs this user follows
+ */
 
 interface User {
   _id: string;
@@ -21,10 +38,32 @@ interface User {
   following: string[];
 }
 
+/**
+ * @file Following.tsx
+ * @description User account page showing the list of users the current user follows.
+ * Displays followees in a grid with avatar, username, join date, and follow/unfollow button.
+ * Allows unfollowing directly from this page.
+ *
+ * Route: /account/following
+ * Access: Authenticated users only
+ * Components: UserSidebar, GoBackButton, Snackbar
+ *
+ * @page
+ * @requires useNavigate - Navigation to user profiles
+ * @requires useThemeLanguage - Translation and language detection
+ * @requires api - User API calls
+ */
+
 const Following = () => {
   const navigate = useNavigate();
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
+
+  /**
+   * Extracts current user's ID from JWT token.
+   * Uses lazy initialization to parse token only once on mount.
+   * Returns null if no token or parsing fails.
+   */
   const currentUserId = (() => {
     const token = getToken();
     if (!token) return null;
@@ -44,12 +83,21 @@ const Following = () => {
     type: "success" | "error";
   }>({ open: false, message: "", type: "success" });
 
+  /**
+   * Effect: fetch following list when currentUserId becomes available.
+   * Runs once on mount if user is authenticated.
+   */
   useEffect(() => {
     if (currentUserId) {
       fetchFollowing();
     }
   }, [currentUserId]);
 
+  /**
+   * Fetches the list of users that the current user follows.
+   * Sorts alphabetically by username for consistent display.
+   * Sets loading state and handles errors with snackbar.
+   */
   const fetchFollowing = async () => {
     try {
       setLoading(true);
@@ -62,7 +110,7 @@ const Following = () => {
       console.error("Failed to fetch following:", error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("failedLoadUsers"),
+        message: t("failedLoadUsers"),
         type: "error",
       });
     } finally {
@@ -70,6 +118,13 @@ const Following = () => {
     }
   };
 
+  /**
+   * Handles follow/unfollow toggle on a user.
+   * Optimistically updates UI by refetching list.
+   * Shows appropriate success message.
+   *
+   * @param {string} targetId - User ID to follow/unfollow
+   */
   const handleToggleFollow = async (targetId: string) => {
     try {
       const targetUser = following.find(u => u._id === targetId);
@@ -86,16 +141,29 @@ const Following = () => {
       console.error("Failed to toggle follow:", error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     }
   };
 
+  /**
+   * Navigates to user's profile page when username or avatar is clicked.
+   * Stops propagation to avoid triggering parent click handlers if any.
+   *
+   * @param {string} userId - ID of user to view
+   */
   const handleUserClick = (userId: string) => {
     navigate(`/users/${userId}`);
   };
 
+  /**
+   * Formats date string according to current language locale.
+   * Used for "member since" date display.
+   *
+   * @param {string} dateString - ISO date string
+   * @returns {string} - Localized formatted date
+   */
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(
       language === "bg" ? "bg-BG" : "en-US",
@@ -107,71 +175,57 @@ const Following = () => {
     );
   };
 
+  /**
+   * Checks if current user is following the given user.
+   * Used to determine follow button state (follow vs unfollow).
+   *
+   * @param {User} user - User to check follow status against
+   * @returns {boolean} - True if current user follows this user
+   */
   const isFollowing = (user: User) => {
     return currentUserId && user.followers.includes(currentUserId);
   };
 
+  // Loading state: show spinner/message
   if (loading) {
     return (
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+      <div className="following-container">
         <UserSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-loading">{t("loading")}</div>
+        <div className="page-container">
+          <div className="loading">{t("loading")}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div className="following-container">
       <UserSidebar />
-      <div className="admin-page" style={{ flex: 1 }}>
-        <div className="admin-page-header">
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <GoBackButton />
-            <h1 className="admin-page-title" style={{ display: "inline-block", marginLeft: "16px" }}>{t("following")}</h1>
-          </div>
+      <div className="page-container">
+        <div className="d-flex align-items-center gap-3 mb-6">
+          <GoBackButton />
+          <h1 className="page-title" style={{ margin: 0 }}>{t("following")}</h1>
         </div>
 
+        {/* Empty state: no users followed */}
         {following.length === 0 ? (
-          <div className="admin-loading">{t("noFollowingFound")}</div>
+          <div className="loading">{t("noFollowingFound")}</div>
         ) : (
-          <div className="admin-cards-grid">
+          // Grid of followed users
+          <div className="cards-grid">
             {following.map((user) => (
-              <div key={user._id} className="admin-card" style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+              <div key={user._id} className="card user-card">
                 {/* Profile Image */}
                 {user.profileImage ? (
                   <img
                     src={user.profileImage}
                     alt={user.username}
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "2px solid var(--theme-accent)",
-                      flexShrink: 0,
-                      cursor: "pointer",
-                    }}
+                    className="avatar avatar-lg"
                     onClick={() => handleUserClick(user._id)}
                   />
                 ) : (
                   <div
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "50%",
-                      background: "var(--theme-accent)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "24px",
-                      fontWeight: 600,
-                      color: "var(--theme-text)",
-                      border: "2px solid var(--theme-accent)",
-                      flexShrink: 0,
-                      cursor: "pointer",
-                    }}
+                    className="avatar-fallback avatar-fallback-lg"
                     onClick={() => handleUserClick(user._id)}
                   >
                     {user.username.charAt(0).toUpperCase()}
@@ -179,57 +233,33 @@ const Following = () => {
                 )}
 
                 {/* User Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="user-card-info">
                   <h3
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "18px",
-                      fontWeight: 600,
-                      color: "var(--theme-text)",
-                      cursor: "pointer",
-                    }}
+                    className="user-card-username"
                     onClick={() => handleUserClick(user._id)}
                   >
                     @{user.username}
                   </h3>
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      opacity: 0.7,
-                      marginBottom: "8px",
-                      color: "var(--theme-text)",
-                    }}
-                  >
+                  <p className="user-card-meta">
                     {t("memberSince")}: {formatDate(user.createdAt)}
                   </p>
                 </div>
 
                 {/* Follow/Unfollow Button */}
                 <button
-                  className={`admin-button-secondary ${isFollowing(user) ? "unfollow" : ""}`}
+                  className={`btn-secondary btn-sm icon-btn ${isFollowing(user) ? "btn-following" : "btn-follow"}`}
                   onClick={() => handleToggleFollow(user._id)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "8px 16px",
-                    minWidth: "auto",
-                    flexShrink: 0,
-                    borderColor: isFollowing(user) ? "#a50104" : undefined,
-                    color: isFollowing(user) ? "#a50104" : undefined,
-                    background: isFollowing(user) ? "rgba(165, 1, 4, 0.1)" : undefined,
-                  }}
                 >
-                  <span className="material-icons" style={{ fontSize: "18px" }}>
+                  <span className="material-icons text-lg">
                     {isFollowing(user) ? "person_remove" : "person_add"}
                   </span>
-                  {isFollowing(user) ? t("unfollow") : t("follow")}
                 </button>
               </div>
             ))}
           </div>
         )}
 
+        {/* Notification snackbar */}
         <Snackbar
           message={snackbar.message}
           type={snackbar.type}

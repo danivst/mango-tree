@@ -5,9 +5,57 @@ import Snackbar from "../../components/Snackbar";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
-import "./AdminPages.css";
+import "../../styles/shared.css";
+import "./Reports.css";
 import api from "../../services/api";
 import Footer from "../../components/Footer";
+import GoBackButton from "../../components/GoBackButton";
+
+/**
+ * @file Reports.tsx
+ * @description Admin page for handling user-submitted content reports.
+ * Displays posts and comments reported by users for inappropriate content or violations.
+ *
+ * Features:
+ * - List reported posts and comments (filterable by type)
+ * - View report details: reason, reporter, reported content
+ * - Dismiss reports (mark as reviewed, no action)
+ * - Delete reported content (and optionally ban author)
+ * - Ban author from delete modal checkbox
+ * - Translation support for report reasons (EN/BG)
+ * - Direct navigation to reported content's page
+ *
+ * Report Types:
+ * - post: User reported a post
+ * - comment: User reported a comment
+ *
+ * Actions:
+ * - Dismiss: Mark report as "reviewed" without deleting content
+ * - Delete Content: Delete the reported post/comment, optionally ban author
+ *
+ * Data Source:
+ * - Uses AdminDataContext.reports (filtered to pending only) from fetchReports()
+ *
+ * Access Control:
+ * - Route protected by AdminRoute (admin only)
+ *
+ * Architecture:
+ * - Uses child component ReportItem for each report entry
+ * - ReportItem contains modal for delete/ban actions
+ * - Internationalization: translates report reasons using stored translations or Deepl API
+ *
+ * @page
+ * @requires useState - Reports list, selected report type filter, report preview, modal states, loading
+ * @requires useMemo - Computed filtered reports by type
+ * @requires useEffect - No direct mount effect; data from AdminDataContext
+ * @requires useThemeLanguage - Current UI language for translations
+ * @requires useAdminData - Access to reports array (pending only) and reportsState
+ * @requires useNavigate - Navigate to post detail page, admin home
+ * @requires adminAPI - Get reports, update report status (dismiss), delete post/comment
+ * @requires api - General API for Deepl translation, deleting users (for ban)
+ * @requires Snackbar - Feedback on dismiss/delete/ban
+ * @requires Footer - Footer component
+ */
 
 const detectLanguage = (text: string): "en" | "bg" => {
   if (!text) return "en";
@@ -80,7 +128,7 @@ const Reports = () => {
     } catch (err: any) {
       setSnackbar({
         open: true,
-        message: err.response?.data?.message || t("somethingWentWrong"),
+        message: t("somethingWentWrong"),
         type: "error",
       });
     }
@@ -164,7 +212,7 @@ const Reports = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("failedToRejectReport"),
+        message: t("failedToRejectReport"),
         type: "error",
       });
     }
@@ -192,7 +240,7 @@ const Reports = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("failedToDeleteItem"),
+        message: t("failedToDeleteItem"),
         type: "error",
       });
     }
@@ -206,8 +254,8 @@ const Reports = () => {
 
   if (loading) {
     return (
-      <div className="admin-page">
-        <div className="admin-loading">{t("loading")}</div>
+      <div>
+        <div className="loading">{t("loading")}</div>
         <Footer />
       </div>
     );
@@ -216,33 +264,13 @@ const Reports = () => {
   // If a report is selected (either by URL param or state), show detail view
   if (selectedReport) {
     return (
-      <div className="admin-page">
-        <div className="admin-content-view">
-          <div style={{ marginBottom: "24px" }}>
-            <button
-              onClick={handleBackToList}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 16px",
-                border: "2px solid var(--theme-text)",
-                borderRadius: "12px",
-                background: "transparent",
-                color: "var(--theme-text)",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: 500,
-              }}
-            >
-              <span className="material-icons" style={{ fontSize: "18px" }}>
-                arrow_back
-              </span>
-              {t("goBack") || "Go Back"}
-            </button>
+      <div>
+        <div className="content-view">
+          <div className="mb-6">
+            <GoBackButton onClick={handleBackToList} />
           </div>
-          <div className="admin-content-card">
-            <h2 style={{ marginTop: 0 }}>{t("reportDetails")}</h2>
+          <div className="content-card">
+            <h2 className="m-0">{t("reportDetails")}</h2>
             <p>
               <strong>{t("submittedBy")}:</strong>{" "}
               {selectedReport.reportedBy.username}
@@ -251,53 +279,25 @@ const Reports = () => {
               <strong>{t("category")}:</strong>{" "}
               {getTargetTypeLabel(selectedReport.targetType)}
             </p>
-            <div style={{ marginTop: "20px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "8px",
-                }}
-              >
+            <div className="mt-5">
+              <div className="info-row">
                 <strong>{t("reasonDescription")}:</strong>
                 {shouldShowTranslateButton && (
                   <button
                     onClick={handleTranslateReason}
                     disabled={reasonTranslating}
-                    style={{
-                      padding: "4px 10px",
-                      border: "2px solid var(--theme-accent)",
-                      background: "var(--theme-accent)",
-                      color: "var(--theme-text)",
-                      borderRadius: "8px",
-                      cursor: reasonTranslating ? "not-allowed" : "pointer",
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      opacity: reasonTranslating ? 0.7 : 1,
-                    }}
+                    className={`btn-translate ${reasonTranslating ? 'opacity-70' : ''}`}
                   >
                     {reasonTranslating ? (
-                      <span
-                        className="material-icons spin"
-                        style={{ fontSize: "14px" }}
-                      >
-                        refresh
-                      </span>
+                      <span className="material-icons spin text-sm">refresh</span>
                     ) : (
-                      <span
-                        className="material-icons"
-                        style={{ fontSize: "14px" }}
-                      >
+                      <span className="material-icons text-sm">
                         {showReasonTranslation ? "translate" : "language"}
                       </span>
                     )}
                     <span>
                       {reasonTranslating
-                        ? t("translating") || "Translating..."
+                        ? t("translating")
                         : showReasonTranslation
                           ? t("viewOriginal")
                           : t("translate")}
@@ -308,28 +308,19 @@ const Reports = () => {
               {(showReasonTranslation
                 ? reasonTranslationCache
                 : selectedReport.reason) && (
-                <p style={{ whiteSpace: "pre-wrap" }}>
+                <p className="whitespace-pre-wrap">
                   {showReasonTranslation
                     ? reasonTranslationCache
                     : selectedReport.reason}
                 </p>
               )}
             </div>
-            <div style={{ marginTop: "20px" }}>
+            <div className="mt-5">
               <p>
                 <strong>{t("referenceToItem")}:</strong>{" "}
                 <button
                   onClick={handlePreviewPost}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "var(--theme-text)",
-                    textDecoration: "underline",
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    padding: 0,
-                    fontFamily: "inherit",
-                  }}
+                  className="link-button"
                 >
                   {getTargetTypeLabel(selectedReport.targetType)} #
                   {selectedReport.targetId}
@@ -338,11 +329,10 @@ const Reports = () => {
             </div>
             {!showReject && !showDelete ? (
               <div
-                className="admin-modal-actions"
-                style={{ marginTop: "24px" }}
+                className="modal-actions mt-6"
               >
                 <button
-                  className="admin-button-secondary"
+                  className="btn-secondary"
                   onClick={() => {
                     setShowReject(true);
                     setShowDelete(false);
@@ -351,7 +341,7 @@ const Reports = () => {
                   {t("reject")}
                 </button>
                 <button
-                  className="admin-button-danger"
+                  className="btn-danger"
                   onClick={() => {
                     setShowDelete(true);
                     setShowReject(false);
@@ -361,21 +351,20 @@ const Reports = () => {
                 </button>
               </div>
             ) : showReject ? (
-              <div style={{ marginTop: "24px" }}>
-                <p style={{ marginBottom: "12px" }}>
+              <div className="mt-6">
+                <p className="mb-3">
                   {t("reasonForRejecting")}:
                 </p>
                 <textarea
-                  className="admin-form-textarea"
+                  className="form-textarea mb-3"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={4}
                   placeholder={t("enterReasonForRejection")}
-                  style={{ marginBottom: "12px" }}
                 />
-                <div className="admin-modal-actions">
+                <div className="modal-actions">
                   <button
-                    className="admin-button-secondary"
+                    className="btn-secondary"
                     onClick={() => {
                       setShowReject(false);
                       setReason("");
@@ -384,7 +373,7 @@ const Reports = () => {
                     {t("cancel")}
                   </button>
                   <button
-                    className="admin-button-secondary"
+                    className="btn-secondary"
                     onClick={handleReject}
                   >
                     {t("submitRejection")}
@@ -392,21 +381,20 @@ const Reports = () => {
                 </div>
               </div>
             ) : (
-              <div style={{ marginTop: "24px" }}>
-                <p style={{ marginBottom: "12px" }}>
+              <div className="mt-6">
+                <p className="mb-3">
                   {t("reasonForDeleting")}:
                 </p>
                 <textarea
-                  className="admin-form-textarea"
+                  className="form-textarea mb-3"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={4}
                   placeholder={t("enterReasonForDeletion")}
-                  style={{ marginBottom: "12px" }}
                 />
-                <div className="admin-modal-actions">
+                <div className="modal-actions">
                   <button
-                    className="admin-button-secondary"
+                    className="btn-secondary"
                     onClick={() => {
                       setShowDelete(false);
                       setReason("");
@@ -415,7 +403,7 @@ const Reports = () => {
                     {t("cancel")}
                   </button>
                   <button
-                    className="admin-button-danger"
+                    className="btn-danger"
                     onClick={handleDeleteItem}
                   >
                     {t("deleteItem")}
@@ -439,72 +427,52 @@ const Reports = () => {
 
   // Otherwise show the list of reports
   return (
-    <div className="admin-page">
-      <div className="admin-page-header">
-        <h1 className="admin-page-title">{t("reports")}</h1>
-        <div className="admin-page-actions">
+    <div>
+      <div className="page-container-header">
+        <h1 className="page-container-title">{t("reports")}</h1>
+        <div className="page-container-actions">
           <button
-            className="admin-button-secondary"
+            className="btn-secondary icon-btn"
             onClick={handleRefresh}
             disabled={loading}
-            style={{ display: "flex", alignItems: "center", gap: "4px" }}
           >
-            <span className="material-icons" style={{ fontSize: "16px" }}>
+            <span className="material-icons text-base">
               refresh
             </span>
-            {t("refresh") || "Refresh"}
+            {t("refresh")}
           </button>
         </div>
       </div>
 
       {error && (
-        <div
-          className="admin-error"
-          style={{
-            color: "#d32f2f",
-            marginBottom: "16px",
-            padding: "12px",
-            background: "#ffebee",
-            borderRadius: "8px",
-          }}
-        >
+        <div className="error-box-colored">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {loading ? (
-        <div className="admin-loading">{t("loading")}</div>
+        <div className="loading">{t("loading")}</div>
       ) : !hasFetched ? (
-        <div
-          className="admin-loading"
-          style={{ textAlign: "center", padding: "40px" }}
-        >
+        <div className="loading">
           No data loaded. Click Refresh to load data.
         </div>
       ) : reports.length === 0 ? (
-        <div className="admin-loading">
-          {t("noReports") || "No reports submitted"}
+        <div className="loading">
+          {t("noReports")}
         </div>
       ) : (
-        <div className="admin-cards-grid">
+        <div className="cards-grid">
           {reports.map((report) => (
-            <div key={report._id} className="admin-card">
-              <div className="admin-card-category">
+            <div key={report._id} className="card">
+              <div className="card-title">
                 {getTargetTypeLabel(report.targetType)}
               </div>
-              <p
-                style={{
-                  fontSize: "14px",
-                  opacity: 0.7,
-                  marginBottom: "12px",
-                }}
-              >
+              <p className="text-sm opacity-70 mb-3">
                 @{report.reportedBy.username}
               </p>
               <button
-                className="admin-button-secondary"
+                className="btn-secondary mt-auto w-full"
                 onClick={() => handleView(report)}
-                style={{ marginTop: "auto", width: "100%" }}
               >
                 {t("view")}
               </button>

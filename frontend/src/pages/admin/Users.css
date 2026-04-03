@@ -1,0 +1,227 @@
+/* Users page specific styles */
+
+/* User link in table (underline) */
+.user-profile-link {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  color: var(--theme-text);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* User Preview Modal */
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Preview Avatar */
+.preview-avatar-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.preview-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid var(--theme-accent);
+  background: #ccc;
+  flex-shrink: 0;
+}
+
+.preview-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: 600;
+  color: var(--theme-text);
+  background: var(--theme-accent);
+  border: 2px solid var(--theme-text);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+/* Preview Info */
+.preview-info {
+  flex: 1;
+}
+
+.preview-username {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--theme-text);
+}
+
+.preview-member-since {
+  font-size: 14px;
+  opacity: 0.7;
+  margin: 8px 0 16px 0;
+  color: var(--theme-text);
+}
+
+/* Preview Stats */
+.preview-stats {
+  display: flex;
+  gap: 32px;
+}
+
+.preview-stat-item {
+  text-align: center;
+}
+
+.preview-stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--theme-text);
+}
+
+.preview-stat-label {
+  font-size: 14px;
+  color: var(--theme-text);
+  opacity: 0.8;
+}
+
+/* Preview Bio */
+.preview-bio-section {
+  margin-bottom: 24px;
+}
+
+.preview-bio-title {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  color: var(--theme-text);
+}
+
+.preview-bio-content {
+  background: var(--theme-bg);
+  padding: 20px;
+  border-radius: 12px;
+  margin: 0;
+  line-height: 1.7;
+  color: var(--theme-text);
+}
+
+/* Preview Divider */
+.preview-divider {
+  border: 0;
+  border-top: 1px solid var(--theme-text);
+  opacity: 0.2;
+  margin: 32px 0;
+}
+
+/* Preview Category Tabs */
+.preview-category-tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.preview-category-tab {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid var(--theme-text);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--theme-text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Poppins', sans-serif;
+}
+
+.preview-category-tab.active {
+  opacity: 1;
+}
+
+.preview-category-tab:not(.active) {
+  border: none;
+  opacity: 0.6;
+}
+
+/* Preview Posts Grid */
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* Preview Post Card */
+.preview-post-card {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-post-image-container {
+  position: relative;
+  padding-top: 56.25%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.preview-post-card-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-post-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--theme-text);
+}
+
+.preview-post-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--theme-text);
+  opacity: 0.8;
+}
+
+.preview-post-likes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--theme-text);
+  opacity: 0.8;
+}
+
+.preview-post-likes .material-icons {
+  font-size: 18px;
+}
+
+/* Z-index utility */
+.z-index-high {
+  z-index: 2100;
+}

@@ -7,11 +7,42 @@ import {
   getTotalPages,
   SortState,
 } from "../../utils/table-utils";
-import "./AdminPages.css";
+import "../../styles/shared.css";
+import "./BannedUsers.css";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
 import Footer from "../../components/Footer";
+
+/**
+ * @file BannedUsers.tsx
+ * @description Admin page for viewing and managing banned users.
+ * Displays users who have been banned, with ban reason and ban date.
+ *
+ * Features:
+ * - List all banned users (from AdminDataContext)
+ * - Sortable columns: username, email, ban reason, ban date
+ * - Search filter by username/email
+ * - Date range filter (ban date from/to) - UI present but filter not implemented
+ * - Pagination (20 per page)
+ * - Unban action with confirmation modal (immediate, no reason required)
+ *
+ * Data Source:
+ * - Uses AdminDataContext.bannedUsers (fetched by initialize() or fetchBannedUsers())
+ *
+ * Access Control:
+ * - Route protected by AdminRoute (admin only)
+ *
+ * @page
+ * @requires useState - Banned users list, search, sort, pagination, modal state
+ * @requires useEffect - No direct effect; data from AdminDataContext
+ * @requires useMemo - Filtered/sorted/paginated computed list
+ * @requires useThemeLanguage - Translations
+ * @requires useAdminData - Access to bannedUsers array and bannedUsersState
+ * @requires Snackbar - Feedback on unban success/error
+ * @requires Footer - Footer component
+ * @requires sortData, paginateData, getTotalPages - Table utilities
+ */
 
 const BannedUsers = () => {
   const { bannedUsers, bannedUsersState, fetchBannedUsers } = useAdminData();
@@ -34,6 +65,9 @@ const BannedUsers = () => {
   }>({ open: false, message: "", type: "success" });
   const [unbanUserId, setUnbanUserId] = useState<string | null>(null); // New state for user to unban
   const [showUnbanConfirm, setShowUnbanConfirm] = useState(false); // New state for unban modal visibility
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null); // New state for user to delete
+  const [deleteStep, setDeleteStep] = useState<"warning" | "reason" | "confirm" | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
 
   // Refs for table container
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -192,7 +226,7 @@ const BannedUsers = () => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ opacity: 0.3 }}
+          className="sort-icon-inactive"
         >
           <path d="M8 9l4-4 4 4M8 15l4 4 4-4" />
         </svg>
@@ -241,7 +275,7 @@ const BannedUsers = () => {
     } catch (err: any) {
       setSnackbar({
         open: true,
-        message: err.response?.data?.message || "Failed to load banned users",
+        message: t("failedToLoadBannedUsers"),
         type: "error",
       });
     }
@@ -262,7 +296,47 @@ const BannedUsers = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to unban user",
+        message: t("failedToUnbanUser"),
+        type: "error",
+      });
+    }
+  };
+
+  const handleDeleteClick = (userId: string) => {
+    setDeleteUserId(userId);
+    setDeleteStep("warning");
+  };
+
+  const handleDeleteContinue = () => {
+    setDeleteStep("reason");
+  };
+
+  const handleDeleteBack = () => {
+    setDeleteStep("warning");
+    setDeleteReason("");
+  };
+
+  const handleDeleteTerminate = () => {
+    setDeleteStep("confirm");
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteUserId) return;
+    try {
+      await adminAPI.deleteUser(deleteUserId, deleteReason);
+      setSnackbar({
+        open: true,
+        message: `User ${userToDelete?.username} deleted successfully.`,
+        type: "success",
+      });
+      setDeleteStep(null);
+      setDeleteUserId(null);
+      setDeleteReason("");
+      await fetchBannedUsers(); // Refresh the list
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: t("failedToDeleteUser"),
         type: "error",
       });
     }
@@ -272,30 +346,28 @@ const BannedUsers = () => {
     return bannedUsers.find((user) => user._id === unbanUserId);
   }, [unbanUserId, bannedUsers]);
 
+  const userToDelete = useMemo(() => {
+    return bannedUsers.find((user) => user._id === deleteUserId);
+  }, [deleteUserId, bannedUsers]);
+
   return (
-    <div className="admin-page">
-      <div className="admin-page-header">
-        <h1 className="admin-page-title">{t("bannedUsers")}</h1>
-        <div className="admin-page-actions">
+    <div>
+      <div className="page-container-header">
+        <h1 className="page-container-title">{t("bannedUsers")}</h1>
+        <div className="page-container-actions">
           <button
-            className="admin-button-secondary"
+            className="btn-secondary icon-btn mr-2"
             onClick={handleRefresh}
             disabled={loading}
-            style={{
-              marginRight: "8px",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
           >
-            <span className="material-icons" style={{ fontSize: "16px" }}>
+            <span className="material-icons text-base">
               refresh
             </span>
-            {t("refresh") || "Refresh"}
+            {t("refresh")}
           </button>
           <input
             type="text"
-            className="admin-search-input"
+            className="search-input"
             placeholder={t("search") + "..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -305,111 +377,66 @@ const BannedUsers = () => {
       </div>
 
       {error && (
-        <div
-          className="admin-error"
-          style={{
-            color: "#d32f2f",
-            marginBottom: "16px",
-            padding: "12px",
-            background: "#ffebee",
-            borderRadius: "8px",
-          }}
-        >
+        <div className="error-box-colored">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {loading ? (
-        <div className="admin-loading">Loading...</div>
+        <div className="loading">Loading...</div>
       ) : !hasFetched ? (
-        <div
-          className="admin-loading"
-          style={{ textAlign: "center", padding: "40px" }}
-        >
+        <div className="loading">
           No data loaded. Click Refresh to load data.
         </div>
       ) : paginatedData.length === 0 ? (
-        <div className="admin-no-entries">{t("noBannedUsersFound")}</div>
+        <div className="no-results">{t("noBannedUsersFound")}</div>
       ) : (
         <div
-          className="admin-table-container"
+          className="table-container table-grab"
           ref={tableContainerRef}
           onMouseDown={handleMouseDown}
-          style={{ cursor: "grab" }}
         >
           {/* Main table with bottom scrollbar */}
-          <table className="admin-table">
+          <table className="table">
             <thead>
               <tr>
                 <th
-                  className="sortable-header"
+                  className="sortable-header min-w-150"
                   onClick={() => handleSort("username")}
-                  style={{ minWidth: "150px" }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="sort-header-content">
                     {t("username")}
                     {getSortIcon("username")}
                   </div>
                 </th>
                 <th
-                  className="sortable-header"
+                  className="sortable-header min-w-200"
                   onClick={() => handleSort("email")}
-                  style={{ minWidth: "200px" }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="sort-header-content">
                     {t("email")}
                     {getSortIcon("email")}
                   </div>
                 </th>
                 <th
-                  className="sortable-header"
+                  className="sortable-header min-w-200"
                   onClick={() => handleSort("ban_reason")}
-                  style={{ minWidth: "200px" }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="sort-header-content">
                     {t("reasonForBan")}
                     {getSortIcon("ban_reason")}
                   </div>
                 </th>
                 <th
-                  className="sortable-header"
+                  className="sortable-header min-w-150"
                   onClick={() => handleSort("banned_at")}
-                  style={{ minWidth: "150px" }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="sort-header-content">
                     {t("bannedAt")}
                     {getSortIcon("banned_at")}
                   </div>
                 </th>
-                <th style={{ minWidth: "100px" }}>{t("actions")}</th>
+                <th className="min-w-100">{t("actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -429,12 +456,20 @@ const BannedUsers = () => {
                     )}
                   </td>
                   <td>
-                    <button
-                      className="admin-button-danger" // Reusing danger style for Unban for consistency with prompt
-                      onClick={() => handleUnbanClick(bannedUser._id)}
-                    >
-                      {t("unban")}
-                    </button>
+                    <div className="table-actions">
+                      <button
+                        className="btn-danger"
+                        onClick={() => handleDeleteClick(bannedUser._id)}
+                      >
+                        {t("delete")}
+                      </button>
+                      <button
+                        className="btn-admin-action"
+                        onClick={() => handleUnbanClick(bannedUser._id)}
+                      >
+                        {t("unban")}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -443,20 +478,20 @@ const BannedUsers = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="admin-pagination">
+            <div className="pagination">
               <button
-                className="admin-pagination-button"
+                className="pagination-button"
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
               >
                 {t("previous")}
               </button>
-              <span className="admin-pagination-info">
+              <span className="pagination-info">
                 {t("page")} {currentPage} {t("of")} {totalPages} (
                 {sortedData.length} {t("total")})
               </span>
               <button
-                className="admin-pagination-button"
+                className="pagination-button"
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
@@ -471,15 +506,15 @@ const BannedUsers = () => {
 
       {/* Unban Confirmation Modal */}
       {showUnbanConfirm && userToUnban && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal admin-modal-danger">
-            <h2 className="admin-modal-title">{t("confirmUnban")}</h2>
-            <p className="admin-modal-text">
+        <div className="modal-overlay">
+          <div className="modal modal-danger">
+            <h2 className="modal-title">{t("confirmUnban")}</h2>
+            <p className="modal-text">
               {t("unbanWarning").replace("{username}", userToUnban.username)}
             </p>
-            <div className="admin-modal-actions">
+            <div className="modal-actions">
               <button
-                className="admin-button-secondary"
+                className="btn-secondary"
                 onClick={() => {
                   setShowUnbanConfirm(false);
                   setUnbanUserId(null);
@@ -488,12 +523,113 @@ const BannedUsers = () => {
                 {t("cancel")}
               </button>
               <button
-                className="admin-button-danger"
+                className="btn-admin-action"
                 onClick={handleUnbanConfirm}
               >
                 {t("unban")}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Modal - Multi-step */}
+      {deleteStep && userToDelete && (
+        <div className="modal-overlay">
+          <div className="modal modal-danger">
+            {deleteStep === "warning" && (
+              <>
+                <h2 className="modal-title">{t("deleteAccount")}</h2>
+                <p className="modal-text">
+                  {t("adminDeleteAccountWarning")}
+                </p>
+                <div className="modal-actions">
+                  <button
+                    className="btn-secondary"
+                    onClick={() => {
+                      setDeleteStep(null);
+                      setDeleteUserId(null);
+                    }}
+                  >
+                    {t("close")}
+                  </button>
+                  <button
+                    className="btn-primary"
+                    onClick={handleDeleteContinue}
+                  >
+                    {t("continue")}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {deleteStep === "reason" && (
+              <>
+                <h2 className="modal-title">
+                  {t("adminReasonForDeletion")}
+                </h2>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleDeleteTerminate();
+                  }}
+                >
+                  <div className="form-group">
+                    <label className="form-label">
+                      {t("adminReasonForDeletion")}
+                    </label>
+                    <textarea
+                      className="form-textarea"
+                      value={deleteReason}
+                      onChange={(e) => setDeleteReason(e.target.value)}
+                      required
+                      rows={4}
+                      placeholder={t("adminReasonForDeletionPlaceholder")}
+                    />
+                  </div>
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={handleDeleteBack}
+                    >
+                      {t("goBack")}
+                    </button>
+                    <button type="submit" className="btn-primary">
+                      {t("terminateAccount")}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {deleteStep === "confirm" && (
+              <>
+                <h2 className="modal-title">{t("adminConfirmDeletion")}</h2>
+                <p className="modal-text">
+                  {t("adminConfirmDeletionText").replace(
+                    "{username}",
+                    userToDelete.username,
+                  )}
+                </p>
+                <div className="modal-actions">
+                  <button
+                    className="btn-secondary"
+                    onClick={() => {
+                      setDeleteStep("reason");
+                    }}
+                  >
+                    {t("no")}
+                  </button>
+                  <button
+                    className="btn-danger"
+                    onClick={handleDeleteConfirm}
+                  >
+                    {t("yes")}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -1,0 +1,515 @@
+/* ============================================
+   POST PAGE STYLES
+   ============================================ */
+
+/* Post page container */
+.post-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Comment Item Styles */
+.comment-item {
+  background: var(--theme-bg);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.comment-body {
+  display: flex;
+  gap: 12px;
+}
+
+.comment-avatar-container {
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.comment-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--theme-accent);
+  border: 2px solid var(--theme-text);
+  border-radius: 50%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-text);
+  font-weight: 600;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: var(--theme-text);
+  cursor: pointer;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.comment-time {
+  color: var(--theme-text);
+  opacity: 0.6;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Base style for comment action buttons (common static properties) */
+.btn-comment-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  min-width: auto;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Like button variant - static base, dynamic colors via inline */
+.btn-like {
+  font-size: 12px;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.btn-like.liked {
+  border-color: #e0245e;
+  color: #e0245e;
+  background: rgba(224, 36, 94, 0.1);
+}
+
+/* Reply button variant */
+.btn-reply {
+  font-size: 12px;
+  border: 1px solid rgba(0,0,0,0.1);
+  color: var(--theme-text);
+  background: transparent;
+}
+
+/* Toggle replies button */
+.btn-toggle {
+  font-size: 12px;
+  border: 1px solid rgba(0,0,0,0.1);
+  color: var(--theme-text);
+  background: transparent;
+}
+
+/* Report button variant */
+.btn-report {
+  font-size: 12px;
+  border: 1px solid #ff9800;
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.1);
+  border-radius: 8px;
+  justify-content: center;
+}
+
+/* Delete button variant */
+.btn-delete {
+  font-size: 12px;
+  border: 1px solid #a50104;
+  color: #a50104;
+  background: rgba(165, 1, 4, 0.1);
+  border-radius: 8px;
+}
+
+
+.comment-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.comment-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.comment-text {
+  font-family: 'Poppins', sans-serif;
+  color: var(--theme-text);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.reply-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+.reply-buttons-container {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.btn-cancel {
+  padding: 6px 16px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: transparent;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+}
+
+.btn-submit-reply {
+  padding: 6px 16px;
+  border: none;
+  background: var(--theme-accent);
+  color: var(--theme-text);
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.replies-container {
+  margin-top: 12px;
+}
+
+/* Main Post Styles */
+.page-section {
+  margin-bottom: 24px;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.page-title-no-margin {
+  margin: 0;
+}
+
+.approval-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 193, 7, 0.5);
+}
+
+.author-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.author-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.author-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.author-avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--theme-accent);
+  border: 2px solid var(--theme-text);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-text);
+  font-weight: 600;
+}
+
+.author-username {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--theme-text);
+}
+
+.image-carousel {
+  position: relative;
+  width: 100%;
+  max-height: 500px;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: var(--theme-bg);
+}
+
+.post-image {
+  width: 100%;
+  height: 500px;
+  object-fit: contain;
+}
+
+.carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-prev {
+  left: 12px;
+}
+
+.carousel-next {
+  right: 12px;
+}
+
+.image-indicators {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.image-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.tags-container {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  background: transparent;
+  color: var(--theme-text);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  border: 1px solid var(--theme-text);
+}
+
+.description-container {
+  margin-bottom: 32px;
+}
+
+.markdown-paragraph {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: var(--theme-text);
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.markdown-strong {
+  font-weight: 600;
+}
+
+.markdown-em {
+  font-style: italic;
+}
+
+.markdown-paragraph {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: var(--theme-text);
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--theme-text);
+  opacity: 0.2;
+  margin-bottom: 32px;
+}
+
+.comment-form-container {
+  margin-bottom: 32px;
+}
+
+.comment-form-textarea {
+  margin-bottom: 12px;
+}
+
+.comment-form-buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-submit-comment {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.login-prompt {
+  text-align: center;
+  padding: 24px;
+  background: var(--theme-bg);
+  border-radius: 12px;
+  margin-bottom: 32px;
+  border: 1px dashed var(--theme-text);
+  opacity: 0.8;
+}
+
+.login-prompt-text {
+  margin: 0;
+  color: var(--theme-text);
+}
+
+.section-heading {
+  font-family: 'Poppins', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin-bottom: 24px;
+}
+
+.no-comments {
+  text-align: center;
+  padding: 40px;
+  opacity: 0.6;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Nested comment adjustments */
+.comment-item.nested {
+  margin-left: 20px;
+}
+
+/* Button variants for comment actions */
+.btn-comment-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  min-width: auto;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-comment-action.button-disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-like {
+  color: var(--theme-text);
+  background: transparent;
+}
+
+.btn-like.liked {
+  border-color: #e0245e;
+  color: #e0245e;
+  background: rgba(224, 36, 94, 0.1);
+}
+
+.btn-report {
+  border-color: #ff9800;
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.1);
+}
+
+.btn-delete {
+  border-color: #a50104;
+  color: #a50104;
+  background: rgba(165, 1, 4, 0.1);
+}
+
+/* Post action buttons (like, follow, delete, report) */
+.post-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  min-width: auto;
+  flex-shrink: 0;
+}
+
+/* Category badge on post */
+.category-badge {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  display: inline-block;
+  border: 2px solid;
+}
+
+/* Translate button on post */
+.post-translate-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 2px solid var(--theme-accent);
+  background: var(--theme-accent);
+  color: var(--theme-text);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+  font-family: 'Poppins', sans-serif;
+}
+

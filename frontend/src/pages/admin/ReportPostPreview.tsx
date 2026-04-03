@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { adminAPI, Report } from "../../services/admin-api";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation, Language } from "../../utils/translations";
@@ -12,12 +12,57 @@ import {
 } from "../../services/api";
 import api from "../../services/api";
 import { Category } from "../../services/admin-api";
-import "./AdminPages.css";
+import "../../styles/shared.css";
+import "../Post.css";
+import "./ReportPostPreview.css";
 import Snackbar from "../../components/Snackbar";
 import Footer from "../../components/Footer";
+import GoBackButton from "../../components/GoBackButton";
+
+/**
+ * @file ReportPostPreview.tsx
+ * @description Admin detailed view of a reported post with full context and moderation actions.
+ * Shows the post being reported, report details, reporter info, and provides action buttons.
+ *
+ * Features:
+ * - Display reported post: title, content, author, images, tags, category
+ * - Show report details: reporter, reason, additional context, timestamps
+ * - Translate post content if needed (EN/BG)
+ * - Post actions:
+ *   - Dismiss report (keep post, mark report reviewed)
+ *   - Delete post with ban option (delete post and optionally ban author)
+ *   - View reported content directly (navigate to post)
+ *
+ * Workflow:
+ * 1. Admin opens report from Reports page → navigates to this page with reportId param
+ * 2. Fetches report details and associated post via Admin API
+ * 3. Admin reviews content and takes action
+ *
+ * Data Sources:
+ * - Report: GET /api/admin/reports/:reportId
+ * - Post: GET /api/posts/:postId
+ *
+ * Access Control:
+ * - Route protected by AdminRoute (admin only)
+ *
+ * State:
+ * - Report and post data loading states
+ * - Modal for delete/ban confirmation
+ * - Snackbar for feedback
+ *
+ * @page
+ * @requires useState - Report data, post data, modals, loading, snackbar
+ * @requires useEffect - Fetch report and post on mount (when reportId changes)
+ * @requires useParams - Get reportId from route /admin/report-post-preview/:reportId
+ * @requires useNavigate - Go back to reports list or to post page
+ * @requires useThemeLanguage - Language for translation
+ * @requires adminAPI - Fetch single report, get post, dismiss report, delete post/comment
+ * @requires postsAPI - Fetch post details (if needed)
+ * @requires Snackbar - Action feedback
+ * @requires Footer - Footer component
+ */
 
 const ReportPostPreview = () => {
-  const navigate = useNavigate();
   const { reportId } = useParams<{ reportId: string }>();
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
@@ -95,7 +140,7 @@ const ReportPostPreview = () => {
       if (!currentReport) {
         setSnackbar({
           open: true,
-          message: t("somethingWentWrong") || "Report not found",
+          message: t("somethingWentWrong"),
           type: "error",
         });
         return;
@@ -148,7 +193,7 @@ const ReportPostPreview = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("somethingWentWrong"),
+        message: t("somethingWentWrong"),
         type: "error",
       });
     } finally {
@@ -192,23 +237,23 @@ const ReportPostPreview = () => {
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
-      return t("justNow") || "Just now";
+      return t("justNow");
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
       const unit =
-        minutes === 1 ? t("minute") || "minute" : t("minutes") || "minutes";
+        minutes === 1 ? t("minute") : t("minutes");
       return language === "bg"
         ? `${t("ago")} ${minutes} ${unit}`
         : `${minutes} ${unit} ago`;
     } else if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      const unit = hours === 1 ? t("hour") || "hour" : t("hours") || "hours";
+      const unit = hours === 1 ? t("hour") : t("hours");
       return language === "bg"
         ? `${t("ago")} ${hours} ${unit}`
         : `${hours} ${unit} ago`;
     } else if (diffInSeconds < 604800) {
       const days = Math.floor(diffInSeconds / 86400);
-      const unit = days === 1 ? t("day") || "day" : t("days") || "days";
+      const unit = days === 1 ? t("day") : t("days");
       return language === "bg"
         ? `${t("ago")} ${days} ${unit}`
         : `${days} ${unit} ago`;
@@ -228,31 +273,6 @@ const ReportPostPreview = () => {
       return "bg";
     }
     return "en";
-  };
-
-  // Category style function for colored badges
-  const getCategoryStyle = (categoryName: string) => {
-    const styles: Record<
-      string,
-      { borderColor: string; backgroundColor: string; color: string }
-    > = {
-      flex: {
-        borderColor: "#2196F3",
-        backgroundColor: "rgba(33, 150, 243, 0.15)",
-        color: "#1976D2",
-      },
-      recipe: {
-        borderColor: "#4CAF50",
-        backgroundColor: "rgba(76, 175, 80, 0.15)",
-        color: "#388E3C",
-      },
-      question: {
-        borderColor: "#9C27B0",
-        backgroundColor: "rgba(156, 39, 176, 0.15)",
-        color: "#7B1FA2",
-      },
-    };
-    return styles[categoryName.toLowerCase()] || null;
   };
 
   const handleTranslate = async () => {
@@ -298,7 +318,7 @@ const ReportPostPreview = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("somethingWentWrong"),
+        message: t("somethingWentWrong"),
         type: "error",
       });
     } finally {
@@ -340,7 +360,7 @@ const ReportPostPreview = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("somethingWentWrong"),
+        message: t("somethingWentWrong"),
         type: "error",
       });
     } finally {
@@ -350,62 +370,22 @@ const ReportPostPreview = () => {
 
   if (loading) {
     return (
-      <div className="admin-page">
-        <div style={{ marginBottom: "24px" }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 16px",
-              border: "2px solid var(--theme-text)",
-              borderRadius: "12px",
-              background: "transparent",
-              color: "var(--theme-text)",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: 500,
-            }}
-          >
-            <span className="material-icons" style={{ fontSize: "18px" }}>
-              arrow_back
-            </span>
-            {t("goBack") || "Go Back"}
-          </button>
+      <div>
+        <div className="section-spacing">
+          <GoBackButton />
         </div>
-        <div className="admin-loading">{t("loading")}</div>
+        <div className="loading">{t("loading")}</div>
       </div>
     );
   }
 
   if (!report) {
     return (
-      <div className="admin-page">
-        <div style={{ marginBottom: "24px" }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 16px",
-              border: "2px solid var(--theme-text)",
-              borderRadius: "12px",
-              background: "transparent",
-              color: "var(--theme-text)",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: 500,
-            }}
-          >
-            <span className="material-icons" style={{ fontSize: "18px" }}>
-              arrow_back
-            </span>
-            {t("goBack") || "Go Back"}
-          </button>
+      <div>
+        <div className="section-spacing">
+          <GoBackButton />
         </div>
-        <div className="admin-loading">{t("somethingWentWrong")}</div>
+        <div className="loading">{t("somethingWentWrong")}</div>
       </div>
     );
   }
@@ -414,8 +394,8 @@ const ReportPostPreview = () => {
   if (report.targetType === "post") {
     if (!post) {
       return (
-        <div className="admin-page">
-          <div className="admin-loading">{t("somethingWentWrong")}</div>
+        <div>
+          <div className="loading">{t("somethingWentWrong")}</div>
         </div>
       );
     }
@@ -440,39 +420,11 @@ const ReportPostPreview = () => {
       : post.tags;
 
     return (
-      <div className="admin-page">
-        <div style={{ marginBottom: "24px" }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 16px",
-              border: "2px solid var(--theme-text)",
-              borderRadius: "12px",
-              background: "transparent",
-              color: "var(--theme-text)",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: 500,
-            }}
-          >
-            <span className="material-icons" style={{ fontSize: "18px" }}>
-              arrow_back
-            </span>
-            {t("goBack") || "Go Back"}
-          </button>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              marginTop: "16px",
-              flexWrap: "wrap",
-            }}
-          >
-            <h1 className="admin-page-title" style={{ margin: 0 }}>
+      <div>
+        <div className="mb-24">
+          <GoBackButton />
+          <div className="post-preview-header">
+            <h1 className="page-container-title">
               {displayTitle}
             </h1>
             {/* Translate Toggle Button */}
@@ -480,30 +432,14 @@ const ReportPostPreview = () => {
               <button
                 onClick={handleTranslate}
                 disabled={translating}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  padding: "6px 12px",
-                  border: "2px solid var(--theme-accent)",
-                  background: "var(--theme-accent)",
-                  color: "var(--theme-text)",
-                  borderRadius: "8px",
-                  cursor: translating ? "not-allowed" : "pointer",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  opacity: translating ? 0.7 : 1,
-                }}
+                className="btn-translate"
               >
                 {translating ? (
-                  <span
-                    className="material-icons spin"
-                    style={{ fontSize: "14px" }}
-                  >
+                  <span className="material-icons spin icon-sm">
                     refresh
                   </span>
                 ) : (
-                  <span className="material-icons" style={{ fontSize: "14px" }}>
+                  <span className="material-icons icon-sm">
                     {showTranslation ? "translate" : "language"}
                   </span>
                 )}
@@ -513,65 +449,28 @@ const ReportPostPreview = () => {
               </button>
             )}
             {isWaitingForApproval && (
-              <div
-                style={{
-                  display: "inline-block",
-                  padding: "6px 16px",
-                  background: "rgba(255, 193, 7, 0.2)",
-                  color: "#ffc107",
-                  borderRadius: "12px",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  border: "1px solid rgba(255, 193, 7, 0.5)",
-                }}
-              >
-                {t("waitingForApproval") || "Waiting for approval"}
+              <div className="approval-badge">
+                {t("waitingForApproval")}
               </div>
             )}
           </div>
         </div>
 
         {/* Author (no buttons) */}
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="mb-24">
+          <div className="author-info">
             {post.authorId.profileImage ? (
               <img
                 src={post.authorId.profileImage}
                 alt={post.authorId.username}
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                }}
+                className="author-avatar"
               />
             ) : (
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  background: "var(--theme-accent)",
-                  border: "2px solid var(--theme-text)",
-                  boxSizing: "border-box",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--theme-text)",
-                  fontWeight: 600,
-                  fontSize: "18px",
-                }}
-              >
+              <div className="author-avatar-fallback">
                 {post.authorId.username.charAt(0).toUpperCase()}
               </div>
             )}
-            <span
-              style={{
-                fontSize: "16px",
-                fontWeight: 500,
-                color: "var(--theme-text)",
-              }}
-            >
+            <span className="author-username">
               @{post.authorId.username}
             </span>
           </div>
@@ -580,27 +479,11 @@ const ReportPostPreview = () => {
         {/* Category Badge */}
         {post.category && (
           <span
-            style={{
-              fontSize: "13px",
-              fontWeight: 700,
-              padding: "6px 14px",
-              borderRadius: "8px",
-              display: "inline-block",
-              border: "2px solid",
-              ...(getCategoryStyle(post.category.name)
-                ? {
-                    borderColor: getCategoryStyle(post.category.name)!
-                      .borderColor,
-                    backgroundColor: getCategoryStyle(post.category.name)!
-                      .backgroundColor,
-                    color: getCategoryStyle(post.category.name)!.color,
-                  }
-                : {
-                    borderColor: "var(--theme-text)",
-                    backgroundColor: "transparent",
-                    color: "var(--theme-text)",
-                  }),
-            }}
+            className={`category-badge ${
+              ["flex", "recipe", "question"].includes(post.category.name.toLowerCase())
+                ? post.category.name.toLowerCase()
+                : "default"
+            }`}
           >
             {getCategoryDisplayName(post.category.name)}
           </span>
@@ -608,95 +491,32 @@ const ReportPostPreview = () => {
 
         {/* Image Carousel */}
         {post.image && post.image.length > 0 && (
-          <div style={{ marginBottom: "24px" }}>
-            <div
-              style={{
-                position: "relative",
-                width: "100%",
-                maxHeight: "500px",
-                borderRadius: "12px",
-                overflow: "hidden",
-                backgroundColor: "var(--theme-bg)",
-              }}
-            >
+          <div className="mb-24">
+            <div className="image-carousel">
               <img
                 src={post.image[currentImageIndex]}
                 alt={`${displayTitle} - image ${currentImageIndex + 1}`}
-                style={{
-                  width: "100%",
-                  height: "500px",
-                  objectFit: "contain",
-                }}
               />
               {post.image.length > 1 && (
                 <>
                   <button
                     onClick={handlePrevImage}
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "12px",
-                      transform: "translateY(-50%)",
-                      background: "rgba(0,0,0,0.5)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "50%",
-                      width: "40px",
-                      height: "40px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    className="carousel-nav-btn prev"
                   >
                     <span className="material-icons">chevron_left</span>
                   </button>
                   <button
                     onClick={handleNextImage}
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      right: "12px",
-                      transform: "translateY(-50%)",
-                      background: "rgba(0,0,0,0.5)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "50%",
-                      width: "40px",
-                      height: "40px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    className="carousel-nav-btn next"
                   >
                     <span className="material-icons">chevron_right</span>
                   </button>
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: "12px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      display: "flex",
-                      gap: "8px",
-                    }}
-                  >
+                  <div className="carousel-indicators">
                     {post.image.map((_: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
-                        style={{
-                          width: "8px",
-                          height: "8px",
-                          borderRadius: "50%",
-                          border: "none",
-                          background:
-                            index === currentImageIndex
-                              ? "white"
-                              : "rgba(255,255,255,0.5)",
-                          cursor: "pointer",
-                        }}
+                        className={`carousel-indicator ${index === currentImageIndex ? 'active' : ''}`}
                       />
                     ))}
                   </div>
@@ -708,25 +528,11 @@ const ReportPostPreview = () => {
 
         {/* Tags */}
         {displayTags && displayTags.length > 0 && (
-          <div
-            style={{
-              marginBottom: "16px",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "8px",
-            }}
-          >
+          <div className="tags-container">
             {displayTags.map((tag: string, index: number) => (
               <span
                 key={index}
-                style={{
-                  background: "transparent",
-                  color: "var(--theme-text)",
-                  padding: "4px 12px",
-                  borderRadius: "16px",
-                  fontSize: "12px",
-                  border: "1px solid var(--theme-text)",
-                }}
+                className="tag-pill"
               >
                 #{tag}
               </span>
@@ -735,16 +541,8 @@ const ReportPostPreview = () => {
         )}
 
         {/* Description */}
-        <div style={{ marginBottom: "32px" }}>
-          <p
-            style={{
-              fontFamily: "Poppins, sans-serif",
-              fontSize: "14px",
-              color: "var(--theme-text)",
-              lineHeight: 1.7,
-              margin: 0,
-            }}
-          >
+        <div className="mb-32">
+          <p className="description-text">
             {displayContent}
           </p>
         </div>
@@ -768,8 +566,8 @@ const ReportPostPreview = () => {
 
     if (!comment) {
       return (
-        <div className="admin-page">
-          <div className="admin-loading">{t("somethingWentWrong")}</div>
+        <div>
+          <div className="loading">{t("somethingWentWrong")}</div>
         </div>
       );
     }
@@ -782,85 +580,32 @@ const ReportPostPreview = () => {
       : comment.text;
 
     return (
-      <div className="admin-page">
-        <div style={{ marginBottom: "24px" }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 16px",
-              border: "2px solid var(--theme-text)",
-              borderRadius: "12px",
-              background: "transparent",
-              color: "var(--theme-text)",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: 500,
-            }}
-          >
-            <span className="material-icons" style={{ fontSize: "18px" }}>
-              arrow_back
-            </span>
-            {t("goBack") || "Go Back"}
-          </button>
+      <div>
+        <div className="mb-24">
+          <GoBackButton />
         </div>
 
         {/* Comment Content */}
-        <div style={{ marginBottom: "24px" }}>
-          <div
-            style={{
-              marginBottom: "16px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div className="mb-24">
+          <div className="comment-header">
+            <div className="flex items-center gap-12">
               {/* Comment Author Avatar */}
               {comment.userId?.profileImage ? (
                 <img
                   src={comment.userId.profileImage}
                   alt={comment.userId.username}
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                  }}
+                  className="comment-author-avatar"
                 />
               ) : (
-                <div
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    background: "var(--theme-accent)",
-                    border: "2px solid var(--theme-text)",
-                    boxSizing: "border-box",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--theme-text)",
-                    fontWeight: 600,
-                    fontSize: "18px",
-                  }}
-                >
+                <div className="comment-author-avatar-fallback">
                   {comment.userId?.username?.charAt(0).toUpperCase()}
                 </div>
               )}
               <div>
-                <p
-                  style={{
-                    fontSize: "16px",
-                    opacity: 0.8,
-                    margin: "0 0 8px 0",
-                  }}
-                >
+                <p className="comment-username">
                   @{comment.userId?.username}
                 </p>
-                <p style={{ fontSize: "14px", opacity: 0.6, margin: 0 }}>
+                <p className="comment-time">
                   {formatCommentTime(comment.createdAt)}
                 </p>
               </div>
@@ -869,30 +614,14 @@ const ReportPostPreview = () => {
             <button
               onClick={() => handleTranslateComment(comment._id)}
               disabled={commentTranslating}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "6px 12px",
-                border: "2px solid var(--theme-accent)",
-                background: "var(--theme-accent)",
-                color: "var(--theme-text)",
-                borderRadius: "8px",
-                cursor: commentTranslating ? "not-allowed" : "pointer",
-                fontSize: "12px",
-                fontWeight: 500,
-                opacity: commentTranslating ? 0.7 : 1,
-              }}
+              className="btn-translate"
             >
               {commentTranslating ? (
-                <span
-                  className="material-icons spin"
-                  style={{ fontSize: "14px" }}
-                >
+                <span className="material-icons spin icon-sm">
                   refresh
                 </span>
               ) : (
-                <span className="material-icons" style={{ fontSize: "14px" }}>
+                <span className="material-icons icon-sm">
                   {commentShowTranslation ? "translate" : "language"}
                 </span>
               )}
@@ -901,16 +630,7 @@ const ReportPostPreview = () => {
               </span>
             </button>
           </div>
-          <p
-            style={{
-              fontFamily: "Poppins, sans-serif",
-              fontSize: "14px",
-              color: "var(--theme-text)",
-              lineHeight: 1.7,
-              margin: 0,
-              whiteSpace: "pre-wrap",
-            }}
-          >
+          <p className="comment-text">
             {displayCommentText}
           </p>
         </div>
@@ -930,8 +650,8 @@ const ReportPostPreview = () => {
   if (report.targetType === "user") {
     if (!user) {
       return (
-        <div className="admin-page">
-          <div className="admin-loading">{t("somethingWentWrong")}</div>
+        <div>
+          <div className="loading">{t("somethingWentWrong")}</div>
         </div>
       );
     }
@@ -948,76 +668,21 @@ const ReportPostPreview = () => {
     };
 
     return (
-      <div className="admin-page">
-        <div style={{ marginBottom: "24px" }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 16px",
-              border: "2px solid var(--theme-text)",
-              borderRadius: "12px",
-              background: "transparent",
-              color: "var(--theme-text)",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: 500,
-            }}
-          >
-            <span className="material-icons" style={{ fontSize: "18px" }}>
-              arrow_back
-            </span>
-            {t("goBack") || "Go Back"}
-          </button>
+      <div>
+        <div className="mb-24">
+          <GoBackButton />
         </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "24px",
-            marginBottom: "24px",
-          }}
-        >
+        <div className="preview-header">
           {/* Profile Picture */}
-          <div style={{ position: "relative" }}>
-            <div
-              style={{
-                width: "120px",
-                height: "120px",
-                borderRadius: "50%",
-                overflow: "hidden",
-                border: "4px solid var(--theme-accent)",
-                background: "#ccc",
-              }}
-            >
+          <div className="relative">
+            <div className="preview-avatar">
               {user.profileImage ? (
                 <img
                   src={user.profileImage}
                   alt={user.username}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
                 />
               ) : (
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "48px",
-                    fontWeight: 600,
-                    color: "var(--theme-text)",
-                    background: "var(--theme-accent)",
-                    border: "2px solid var(--theme-text)",
-                    boxSizing: "border-box",
-                  }}
-                >
+                <div className="preview-avatar-placeholder">
                   {user.username.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -1025,87 +690,37 @@ const ReportPostPreview = () => {
           </div>
 
           {/* User Info */}
-          <div style={{ flex: 1 }}>
-            <h1
-              style={{
-                fontSize: "28px",
-                fontWeight: 700,
-                margin: 0,
-                color: "var(--theme-text)",
-              }}
-            >
+          <div className="flex-1">
+            <h1 className="preview-username">
               @{user.username}
             </h1>
-            <p
-              style={{
-                fontSize: "14px",
-                opacity: 0.7,
-                margin: "8px 0 16px 0",
-                color: "var(--theme-text)",
-              }}
-            >
+            <p className="preview-member-since">
               {t("memberSince")}: {formatDate(user.createdAt)}
             </p>
 
             {/* Stats */}
-            <div style={{ display: "flex", gap: "32px" }}>
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    fontSize: "24px",
-                    fontWeight: 600,
-                    color: "var(--theme-text)",
-                  }}
-                >
+            <div className="preview-stats">
+              <div className="preview-stat-item">
+                <div className="preview-stat-value">
                   {userPosts.length}
                 </div>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--theme-text)",
-                    opacity: 0.8,
-                  }}
-                >
+                <div className="preview-stat-label">
                   {t("posts")}
                 </div>
               </div>
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    fontSize: "24px",
-                    fontWeight: 600,
-                    color: "var(--theme-text)",
-                  }}
-                >
+              <div className="preview-stat-item">
+                <div className="preview-stat-value">
                   {user.followers?.length || 0}
                 </div>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--theme-text)",
-                    opacity: 0.8,
-                  }}
-                >
+                <div className="preview-stat-label">
                   {t("followers")}
                 </div>
               </div>
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    fontSize: "24px",
-                    fontWeight: 600,
-                    color: "var(--theme-text)",
-                  }}
-                >
+              <div className="preview-stat-item">
+                <div className="preview-stat-value">
                   {user.following?.length || 0}
                 </div>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--theme-text)",
-                    opacity: 0.8,
-                  }}
-                >
+                <div className="preview-stat-label">
                   {t("following")}
                 </div>
               </div>
@@ -1115,65 +730,28 @@ const ReportPostPreview = () => {
 
         {/* Bio */}
         {user.bio && (
-          <div style={{ marginBottom: "24px" }}>
-            <h3
-              style={{
-                margin: "0 0 12px 0",
-                fontSize: "18px",
-                color: "var(--theme-text)",
-              }}
-            >
+          <div className="mb-24">
+            <h3 className="preview-bio-title">
               {t("bio")}
             </h3>
-            <p
-              style={{
-                background: "var(--theme-bg)",
-                padding: "20px",
-                borderRadius: "12px",
-                margin: 0,
-                lineHeight: 1.7,
-                color: "var(--theme-text)",
-              }}
-            >
+            <p className="preview-bio-content">
               {user.bio}
             </p>
           </div>
         )}
 
         {/* Divider */}
-        <hr
-          style={{
-            border: 0,
-            borderTop: "1px solid var(--theme-text)",
-            opacity: 0.2,
-            margin: "32px 0",
-          }}
-        />
+        <hr className="preview-divider" />
 
         {/* Category Tabs */}
         {userCategories.length > 0 && (
-          <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+          <div className="preview-category-tabs">
             {/* All Button */}
             <button
               onClick={() => setSelectedUserCategoryId(null)}
-              style={{
-                flex: 1,
-                padding: "12px 16px",
-                border:
-                  selectedUserCategoryId === null
-                    ? "2px solid var(--theme-text)"
-                    : "none",
-                borderRadius: "8px",
-                background: "transparent",
-                color: "var(--theme-text)",
-                fontSize: "16px",
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                opacity: selectedUserCategoryId === null ? 1 : 0.6,
-              }}
+              className={`preview-category-tab ${selectedUserCategoryId === null ? 'active' : ''}`}
             >
-              {t("all") || "All"}
+              {t("all")}
             </button>
             {specialCategories
               .filter((category) => category._id)
@@ -1181,22 +759,7 @@ const ReportPostPreview = () => {
                 <button
                   key={category._id}
                   onClick={() => setSelectedUserCategoryId(category._id)}
-                  style={{
-                    flex: 1,
-                    padding: "12px 16px",
-                    border:
-                      selectedUserCategoryId === category._id
-                        ? "2px solid var(--theme-text)"
-                        : "none",
-                    borderRadius: "8px",
-                    background: "transparent",
-                    color: "var(--theme-text)",
-                    fontSize: "16px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    opacity: selectedUserCategoryId === category._id ? 1 : 0.6,
-                  }}
+                  className={`preview-category-tab ${selectedUserCategoryId === category._id ? 'active' : ''}`}
                 >
                   {getCategoryDisplayName(category.name)}
                 </button>
@@ -1206,79 +769,31 @@ const ReportPostPreview = () => {
 
         {/* Posts Grid */}
         {filteredPosts.length === 0 ? (
-          <div
-            className="admin-loading"
-            style={{ textAlign: "center", padding: "40px" }}
-          >
+          <div className="loading loading-centered">
             {t("noPostsFound")}
           </div>
         ) : (
-          <div
-            className="admin-cards-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: "16px",
-            }}
-          >
+          <div className="cards-grid">
             {filteredPosts.map((post) => (
               <div
                 key={post._id}
-                className="admin-card"
-                style={{
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
+                className="card preview-post-card"
               >
                 {/* Post Image if exists */}
                 {post.image && post.image.length > 0 && (
-                  <div
-                    style={{
-                      position: "relative",
-                      paddingTop: "56.25%",
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                      background: "#000",
-                    }}
-                  >
+                  <div className="preview-post-image-container">
                     <img
                       src={post.image[0]}
                       alt={post.title}
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
                     />
                   </div>
                 )}
                 {/* Post Title */}
-                <h3
-                  style={{
-                    fontSize: "18px",
-                    fontWeight: 600,
-                    margin: 0,
-                    color: "var(--theme-text)",
-                  }}
-                >
+                <h3 className="preview-post-card-title">
                   {post.title}
                 </h3>
                 {/* Category & Date */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    fontSize: "13px",
-                    color: "var(--theme-text)",
-                    opacity: 0.8,
-                  }}
-                >
+                <div className="preview-post-meta">
                   <span>
                     {post.category
                       ? getCategoryDisplayName(post.category.name)
@@ -1287,17 +802,8 @@ const ReportPostPreview = () => {
                   <span>{formatDate(post.createdAt)}</span>
                 </div>
                 {/* Likes count */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    fontSize: "14px",
-                    color: "var(--theme-text)",
-                    opacity: 0.8,
-                  }}
-                >
-                  <span className="material-icons" style={{ fontSize: "18px" }}>
+                <div className="preview-post-likes">
+                  <span className="material-icons icon-md">
                     favorite
                   </span>
                   {post.likes?.length || 0}
@@ -1320,31 +826,11 @@ const ReportPostPreview = () => {
 
   // Fallback for unknown target type
   return (
-    <div className="admin-page">
-      <div style={{ marginBottom: "24px" }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "8px 16px",
-            border: "2px solid var(--theme-text)",
-            borderRadius: "12px",
-            background: "transparent",
-            color: "var(--theme-text)",
-            cursor: "pointer",
-            fontSize: "14px",
-            fontWeight: 500,
-          }}
-        >
-          <span className="material-icons" style={{ fontSize: "18px" }}>
-            arrow_back
-          </span>
-          {t("goBack") || "Go Back"}
-        </button>
+    <div>
+      <div className="mb-24">
+        <GoBackButton />
       </div>
-      <div className="admin-loading">{t("somethingWentWrong")}</div>
+      <div className="loading">{t("somethingWentWrong")}</div>
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

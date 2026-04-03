@@ -4,11 +4,23 @@ import { getTranslation } from "../utils/translations";
 import "./AdminSidebar.css";
 import logo from "../assets/mangotree-logo.png";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import Snackbar from "./Snackbar";
 import SettingsIcon from "@mui/icons-material/Settings";
+
+/**
+ * @interface TokenPayload
+ * @description Type definition for decoded JWT token payload.
+ * Defines the expected structure of authentication tokens issued by the backend.
+ *
+ * @property {string} userId - Unique user identifier
+ * @property {string} username - Username (may be optional depending on token version)
+ * @property {string} role - User role (e.g., "admin", "user")
+ * @property {number} exp - Token expiration timestamp (Unix epoch seconds)
+ * @property {number} iat - Token issued-at timestamp (Unix epoch seconds)
+ */
 
 interface TokenPayload {
   userId: string;
@@ -18,6 +30,17 @@ interface TokenPayload {
   iat: number;
 }
 
+/**
+ * @interface SidebarItem
+ * @description Interface defining a navigation item in the admin sidebar menu.
+ * Used to configure admin navigation routes with labels and icons.
+ *
+ * @property {string} id - Unique identifier for the menu item (used for active state tracking)
+ * @property {string} label - Display text for the menu item (localized)
+ * @property {JSX.Element} icon - React element (Material UI icon) to display
+ * @property {string} path - Route path to navigate to when clicked
+ */
+
 interface SidebarItem {
   id: string;
   label: string;
@@ -25,33 +48,95 @@ interface SidebarItem {
   path: string;
 }
 
+/**
+ * @file AdminSidebar.tsx
+ * @description Main navigation sidebar for admin users.
+ * Collapsible sidebar with responsive mobile support and theme awareness.
+ * Provides navigation to all admin dashboard pages and logout functionality.
+ *
+ * Features:
+ * - Collapsible/expandable sidebar (desktop and mobile)
+ * - Responsive design (auto-collapses on viewports < 768px)
+ * - Active route detection with highlighting
+ * - Username display from JWT token or API fallback
+ * - Mango theme support with special gradient styling
+ * - Mobile overlay and close button
+ * - Logout with confirmation snackbar
+ *
+ * Navigation Items:
+ * - To Review: AI-flagged content needing human review
+ * - Reports: User-submitted reports
+ * - Users: User management
+ * - Admins: Admin account management
+ * - Banned Users: List of banned accounts
+ * - Tags: Content tag management
+ * - Categories: Category management
+ * - Settings: Admin application settings
+ *
+ * @component
+ * @requires useState - React hook for sidebar state (collapsed, mobile, username, snackbar)
+ * @requires useEffect - React hook for initializing username, resize listener
+ * @requires useNavigate - React Router navigation hook
+ * @requires useLocation - React Router location hook for active route detection
+ * @requires useThemeLanguage - Context for language and theme settings
+ * @requires jwtDecode - Library for decoding JWT tokens without verification
+ * @requires Snackbar - Toast notification component for logout feedback
+ * @requires SettingsIcon - Material UI icon for settings menu item
+ */
+
 const AdminSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language, theme } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  /**
+   * State: controls sidebar collapsed/expanded state.
+   * On mobile: defaults to collapsed (60px wide, side-by-side with content)
+   * On desktop: defaults to expanded (280px wide)
+   */
+  const [isCollapsed, setIsCollapsed] = useState(() => window.innerWidth < 768);
+
+  /**
+   * State: tracks if current viewport is mobile size (< 768px width)
+   * Initialized based on current window.innerWidth
+   * Triggers auto-collapse when true
+   */
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  /**
+   * Ref: reference to the sidebar DOM element for measuring its width
+   */
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * State: admin username displayed in sidebar header
+   * Initially empty; populated from JWT token or fetched via API if token lacks username
+   */
   const [username, setUsername] = useState<string>("");
+
+  /**
+   * State: controls snackbar notifications (e.g., logout success)
+   */
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     type: "success" | "error";
   }>({ open: false, message: "", type: "success" });
 
+  /**
+   * Effect: On mount, extract username from JWT token.
+   * If username is not in token, fetch user info from API.
+   */
   useEffect(() => {
-    // Get username from token or API
     const token = localStorage.getItem("token");
     if (token) {
       try {
         const decoded = jwtDecode<TokenPayload>(token);
-        // Username might not be in token, fetch from API if needed
-        // For now, we'll try to get it from token or use a placeholder
         if (decoded.username) {
           setUsername(decoded.username);
         } else {
-          // Fetch user info from API
+          // Username not in token, fetch from API
           fetchUserInfo();
         }
       } catch (error) {
@@ -60,6 +145,10 @@ const AdminSidebar = () => {
     }
   }, []);
 
+  /**
+   * Fetches current user's info from /users/me endpoint.
+   * Used when username is not available in the JWT token.
+   */
   const fetchUserInfo = async () => {
     try {
       const api = (await import("../services/api")).default;
@@ -72,6 +161,35 @@ const AdminSidebar = () => {
     }
   };
 
+  /**
+   * Computes the target sidebar width for a given state and viewport width.
+   * Uses the same breakpoints as CSS media queries.
+   */
+  const getSidebarTargetWidth = (collapsed: boolean, windowWidth: number): number => {
+    // Mobile (handled separately, but return values for completeness)
+    if (windowWidth < 768) {
+      return collapsed ? 60 : 0; // expanded mobile not used for offset
+    }
+    // Tablet: 768px - 1023px
+    if (windowWidth < 1024) {
+      return collapsed ? 70 : 260;
+    }
+    // Laptop: 1024px - 1279px
+    if (windowWidth < 1280) {
+      return collapsed ? 80 : 240;
+    }
+    // Large Desktop: 1280px - 1439px
+    if (windowWidth < 1440) {
+      return collapsed ? 80 : 300;
+    }
+    // X-Large Desktop: >= 1440px
+    return collapsed ? 80 : 280;
+  };
+
+  /**
+   * Effect: Listen for window resize events to detect mobile viewport.
+   * Auto-collapses sidebar on mobile screens (<768px).
+   */
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
@@ -85,12 +203,71 @@ const AdminSidebar = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    if (isMobile) {
-      setIsCollapsed(true);
-    }
-  }, [isMobile]);
+  /**
+   * Effect: Update CSS custom property for sidebar offset.
+   * Computes offset based on sidebar position and width.
+   * On mobile expanded: offset = 0 (full overlay)
+   * On all other cases: offset = sidebarLeft + sidebarWidth + gap
+   * Uses useLayoutEffect to set before paint.
+   */
+  useLayoutEffect(() => {
+    const updateSidebarOffset = () => {
+      if (!sidebarRef.current) {
+        document.documentElement.style.removeProperty('--sidebar-offset');
+        return;
+      }
 
+      // Mobile expanded: full overlay, offset 0
+      if (isMobile && !isCollapsed) {
+        document.documentElement.style.setProperty('--sidebar-offset', '0px');
+        return;
+      }
+
+      const windowWidth = window.innerWidth;
+      const sidebarLeft = parseInt(window.getComputedStyle(document.documentElement).getPropertyValue('--sidebar-left')) || 0;
+      const gap = parseInt(window.getComputedStyle(document.documentElement).getPropertyValue('--sidebar-gap')) || 0;
+      const targetWidth = getSidebarTargetWidth(isCollapsed, windowWidth);
+      const offset = sidebarLeft + targetWidth + gap;
+      document.documentElement.style.setProperty('--sidebar-offset', `${offset}px`);
+    };
+
+    const rafId = requestAnimationFrame(updateSidebarOffset);
+    return () => {
+      cancelAnimationFrame(rafId);
+      document.documentElement.style.removeProperty('--sidebar-offset');
+    };
+  }, [isMobile, isCollapsed]);
+
+  /**
+   * Effect: Listen for window resize to update the offset.
+   * Handles sidebar width changes due to CSS media queries.
+   */
+  useEffect(() => {
+    const handleResize = () => {
+      requestAnimationFrame(() => {
+        const mobile = window.innerWidth < 768;
+        if (mobile && !isCollapsed) {
+          document.documentElement.style.setProperty('--sidebar-offset', '0px');
+        } else {
+          const windowWidth = window.innerWidth;
+          const sidebarLeft = parseInt(window.getComputedStyle(document.documentElement).getPropertyValue('--sidebar-left')) || 0;
+          const gap = parseInt(window.getComputedStyle(document.documentElement).getPropertyValue('--sidebar-gap')) || 0;
+          const targetWidth = getSidebarTargetWidth(isCollapsed, windowWidth);
+          const offset = sidebarLeft + targetWidth + gap;
+          document.documentElement.style.setProperty('--sidebar-offset', `${offset}px`);
+        }
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isCollapsed]); // isMobile derived from window.width inside handler, but we need isCollapsed
+
+  /**
+   * Admin navigation menu configuration.
+   * Labels are translated using the translation function.
+   * Icons are Material UI SVG icons.
+   */
   const menuItems: SidebarItem[] = [
     {
       id: "review",
@@ -159,7 +336,7 @@ const AdminSidebar = () => {
     },
     {
       id: "admins",
-      label: t("admins") || "Admins",
+      label: t("admins"),
       icon: (
         <svg
           width="20"
@@ -179,7 +356,7 @@ const AdminSidebar = () => {
       path: "/admin/dashboard/admins",
     },
     {
-      id: "banned-users", // New item for banned users
+      id: "banned-users",
       label: t("bannedUsers"),
       icon: (
         <svg
@@ -243,18 +420,30 @@ const AdminSidebar = () => {
     {
       id: "settings",
       label: t("settings"),
-      icon: <SettingsIcon style={{ fontSize: 20 }} />,
+      icon: <SettingsIcon />,
       path: "/admin/dashboard/settings",
     },
   ];
 
-  const handleItemClick = (path: string) => {
-    navigate(path);
+  /**
+   * Handles click on a navigation menu item.
+   * Saves the item as last active (for state persistence), updates state, and navigates.
+   * On mobile, collapses the sidebar after navigation.
+   *
+   * @param {SidebarItem} item - The clicked navigation item
+   */
+  const handleItemClick = (item: SidebarItem) => {
+    localStorage.setItem("lastActiveMenuItem", item.id);
+    navigate(item.path);
     if (isMobile) {
       setIsCollapsed(true);
     }
   };
 
+  /**
+   * Handles admin logout.
+   * Clears all authentication tokens, shows success snackbar, then redirects to login.
+   */
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
@@ -269,6 +458,7 @@ const AdminSidebar = () => {
     }, 1500);
   };
 
+  // Determine which menu item is currently active based on route
   const activeItem = menuItems.find((item) =>
     location.pathname.startsWith(item.path),
   );
@@ -279,7 +469,8 @@ const AdminSidebar = () => {
         <div className="sidebar-overlay" onClick={() => setIsCollapsed(true)} />
       )}
       <div
-        className={`admin-sidebar ${isCollapsed ? "collapsed" : ""} ${isMobile ? "mobile" : ""} ${theme === 'mango' ? 'mango-theme' : ''}`}
+        ref={sidebarRef}
+        className={`sidebar ${isCollapsed ? "collapsed" : ""} ${isMobile ? "mobile" : ""} ${theme === 'mango' ? 'mango-theme' : ''}`}
       >
         <div className="sidebar-header">
           {!isCollapsed && (
@@ -323,7 +514,7 @@ const AdminSidebar = () => {
             <button
               key={item.id}
               className={`sidebar-item ${activeItem?.id === item.id ? "active" : ""}`}
-              onClick={() => handleItemClick(item.path)}
+              onClick={() => handleItemClick(item)}
               title={isCollapsed ? item.label : undefined}
             >
               <span className="sidebar-icon">{item.icon}</span>
@@ -355,7 +546,7 @@ const AdminSidebar = () => {
             </svg>
           </span>
           {!isCollapsed && (
-            <span style={{ color: "#A50104" }}>{t("logout")}</span>
+            <span>{t("logout")}</span>
           )}
         </button>
         {isMobile && isCollapsed && (

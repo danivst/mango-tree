@@ -5,7 +5,32 @@ import Snackbar from '../components/Snackbar'
 import { useThemeLanguage } from '../context/ThemeLanguageContext'
 import { getTranslation } from '../utils/translations'
 import './Login.css'
+import './SetupPassword.css'
 import logo from '../assets/mangotree-logo.png'
+
+/**
+ * @file SetupPassword.tsx
+ * @description Page for setting a new password after account creation or invitation.
+ * Users arrive via email link with a temporary token. They must set a permanent password.
+ *
+ * Features:
+ * - Token validation from URL query param
+ * - Password complexity requirements (8+ chars, uppercase, lowercase, number, special)
+ * - Password confirmation field
+ * - Show/hide password toggles
+ * - Real-time validation with error messages
+ * - Success redirects to login page
+ *
+ * Route: /setup-password?token=...
+ * Access: Public (but requires valid token)
+ * Redirects to /login if token missing/invalid
+ *
+ * @page
+ * @requires useSearchParams - Access token from URL
+ * @requires useNavigate - Redirect after success
+ * @requires useThemeLanguage - Translations
+ * @requires api - POST /auth/setup-password
+ */
 
 const SetupPassword = () => {
   const [searchParams] = useSearchParams()
@@ -38,13 +63,31 @@ const SetupPassword = () => {
     }
   }, [token, navigate])
 
+  /**
+   * Handles password setup form submission.
+   * Validates password complexity and confirmation match.
+   * Calls /auth/setup-password endpoint with token and new password.
+   *
+   * Validations:
+   * - Minimum 8 characters
+   * - At least one uppercase letter
+   * - At least one lowercase letter
+   * - At least one number
+   * - At least one special character (!@#$%^&*(),.?":{}|<>)
+   * - Password and confirmPassword must match
+   *
+   * On success: shows success snackbar, redirects to login after 2s
+   * On error: field errors go to form, other errors to snackbar
+   *
+   * @param {React.FormEvent} e - Form submission event
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setErrors({})
 
     if (!password || password.length < 8) {
-      setErrors({ password: 'Password must be at least 8 characters long, and must contain at least one of each: capital letter, lower case letter, number and special character.' })
+      setErrors({ password: t('passwordComplexityRequirement') })
       setLoading(false)
       return
     }
@@ -56,13 +99,13 @@ const SetupPassword = () => {
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
 
     if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
-      setErrors({ password: 'Password must be at least 8 characters long, and must contain at least one of each: capital letter, lower case letter, number and special character.' })
+      setErrors({ password: t('passwordComplexityRequirement') })
       setLoading(false)
       return
     }
 
     if (password !== confirmPassword) {
-      setErrors({ confirmPassword: 'Passwords do not match.' })
+      setErrors({ confirmPassword: t('passwordsDoNotMatch') })
       setLoading(false)
       return
     }
@@ -105,17 +148,17 @@ const SetupPassword = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
-          <h2 className="modal-title" style={{ marginBottom: '24px' }}>Set Your Password</h2>
+          <h2 className="modal-title setup-password-title">Set Your Password</h2>
           
           <div className="form-group">
             <label htmlFor="password" className={`form-label ${errors.password ? 'label-error' : ''}`}>
               Password
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className="password-input-wrapper">
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                className={`form-input ${errors.password ? 'input-error' : ''}`}
+                className={`form-input ${errors.password ? 'input-error' : ''} password-input`}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value)
@@ -124,29 +167,11 @@ const SetupPassword = () => {
                   }
                 }}
                 placeholder="Enter your password"
-                style={{ paddingRight: '40px' }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#333',
-                  opacity: 0.6,
-                  transition: 'opacity 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+                className="password-toggle-button"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
@@ -169,11 +194,11 @@ const SetupPassword = () => {
             <label htmlFor="confirmPassword" className={`form-label ${errors.confirmPassword ? 'label-error' : ''}`}>
               Confirm Password
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className="password-input-wrapper">
               <input
                 id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
-                className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
+                className={`form-input ${errors.confirmPassword ? 'input-error' : ''} password-input`}
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value)
@@ -182,29 +207,11 @@ const SetupPassword = () => {
                   }
                 }}
                 placeholder="Confirm your password"
-                style={{ paddingRight: '40px' }}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#333',
-                  opacity: 0.6,
-                  transition: 'opacity 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+                className="password-toggle-button"
                 aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
               >
                 {showConfirmPassword ? (
@@ -226,7 +233,7 @@ const SetupPassword = () => {
           <div className="form-actions">
             <button
               type="button"
-              style={{ visibility: 'hidden' }}
+              className="hidden-placeholder"
             >
               Placeholder
             </button>

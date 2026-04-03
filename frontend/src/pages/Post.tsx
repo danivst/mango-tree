@@ -4,11 +4,62 @@ import UserSidebar from "../components/UserSidebar";
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
 import api, { postsAPI, usersAPI, Post as PostType, Comment } from "../services/api";
-import "./admin/AdminPages.css";
+import "../styles/shared.css";
+import "./Post.css";
 import Snackbar from "../components/Snackbar";
 import GoBackButton from "../components/GoBackButton";
 import { getToken } from "../utils/auth";
 import ReactMarkdown from "react-markdown";
+
+/**
+ * @file Post.tsx
+ * @description Single post detail page with full content view and threaded comments.
+ * Displays a post with title, content (markdown), images, tags, author info, and interactive comments.
+ *
+ * Features:
+ * - Full post display with markdown rendering
+ * - Image gallery with preview
+ * - Like/unlike post with instant UI feedback
+ * - Comment section with nested replies (unlimited depth)
+ * - Comment actions: like, reply, delete (own), report
+ * - Real-time translation for post and comments (EN/BG)
+ * - Translation caching to avoid repeated API calls
+ * - Comment collapse/expand for nested threads
+ * - Pagination for comments (load more)
+ * - AI moderation status display (flagged, rejected)
+ * - Responsive design with GoBackButton
+ *
+ * Architecture:
+ * - CommentItem: Recursive component for nested comment rendering
+ * - State management: translation caching, reply toggles, comment pagination, loading states
+ * - Markdown rendering using react-markdown (sanitization handled by library)
+ * - Language detection via Cyrillic character check
+ *
+ * Translation System:
+ * - Post-level: Uses post.translations if available, otherwise fetches from API
+ * - Comment-level: Similar caching + fetch pattern
+ * - Button shows "Translate" or "View Original" based on current state
+ *
+ * Comment Threading:
+ * - Comments stored flat with parentId field
+ * - Recursive CommentItem builds tree structure in render
+ * - Nested replies indented with margin-left
+ * - Toggle to show/hide deep reply threads
+ * - Replies count shown on parent comment
+ *
+ * @page
+ * @requires useState - Post data, comments, UI states (translation, replies, etc.)
+ * @requires useEffect - Fetch post and initial comments on mount
+ * @requires useParams - Get post ID from route /posts/:id
+ * @requires useNavigate - Navigate to author profile, back navigation
+ * @requires useThemeLanguage - Current UI language for translations and content display
+ * @requires postsAPI - Fetch post, like/unlike, comments, translation, delete comment
+ * @requires usersAPI - Fetch user profile for author link
+ * @requires api - General API for report actions
+ * @requires Snackbar - Feedback (delete, report, error)
+ * @requires GoBackButton - Navigate back to previous page
+ * @requires UserSidebar - Navigation sidebar
+ */
 
 // Simple language detection based on Cyrillic characters
 const detectLanguage = (text: string): 'en' | 'bg' => {
@@ -92,50 +143,28 @@ const CommentItem: React.FC<CommentItemProps> = ({
     <div style={{ marginLeft: isNested ? '20px' : 0 }}>
       <div
         key={comment._id}
-        style={{
-          background: "var(--theme-bg)",
-          borderRadius: "12px",
-          padding: "16px",
-          border: "1px solid rgba(0,0,0,0.05)",
-        }}
+        className="comment-item"
       >
-        <div style={{ display: "flex", gap: "12px" }}>
+        <div className="comment-body">
           {/* Comment Author Avatar */}
           <div
             onClick={() => navigate(`/users/${comment.userId?._id}`)}
+            className="comment-avatar-container"
             style={{
               width: isNested ? "32px" : "40px",
               height: isNested ? "32px" : "40px",
-              borderRadius: "50%",
-              objectFit: "cover",
-              cursor: "pointer",
-              flexShrink: 0,
-              overflow: "hidden",
             }}
           >
             {comment.userId?.profileImage ? (
               <img
                 src={comment.userId.profileImage}
                 alt={comment.userId.username}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
+                className="comment-avatar-image"
               />
             ) : (
               <div
+                className="avatar-placeholder"
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  background: "var(--theme-accent)",
-                  border: "2px solid var(--theme-text)",
-                  boxSizing: "border-box",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--theme-text)",
-                  fontWeight: 600,
                   fontSize: isNested ? "12px" : "16px",
                 }}
               >
@@ -144,48 +173,40 @@ const CommentItem: React.FC<CommentItemProps> = ({
             )}
           </div>
 
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="comment-main">
             {/* Comment Header */}
-            <div style={{ display: "flex", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+            <div className="comment-header">
               <span
+                className="comment-author"
                 style={{
                   fontSize: isNested ? "12px" : "14px",
-                  fontWeight: 600,
-                  color: "var(--theme-text)",
-                  cursor: "pointer",
                 }}
                 onClick={() => navigate(`/users/${comment.userId?._id}`)}
               >
                 @{comment.userId?.username}
               </span>
               <span
+                className="comment-time"
                 style={{
                   fontSize: isNested ? "11px" : "12px",
-                  color: "var(--theme-text)",
-                  opacity: 0.6,
                 }}
               >
                 {formatCommentTime(comment.createdAt)}
               </span>
 
               {/* Action Buttons */}
-              <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
+              <div className="comment-actions">
                 {/* Like Button */}
                 <button
+                  className="btn-comment-action btn-like"
                   onClick={() => onLike(comment._id)}
                   disabled={!currentUserId || likingComment[comment._id]}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    padding: "4px 12px",
-                    minWidth: "auto",
                     border: currentUserId ? "1px solid" : "none",
                     borderColor: isLiked ? "#e0245e" : "rgba(0,0,0,0.1)",
                     color: isLiked ? "#e0245e" : "var(--theme-text)",
                     background: isLiked ? "rgba(224, 36, 94, 0.1)" : "transparent",
                     cursor: currentUserId && !likingComment[comment._id] ? "pointer" : "not-allowed",
-                    borderRadius: "8px",
                     fontSize: isNested ? "10px" : "12px",
                     opacity: likingComment[comment._id] ? 0.7 : 1,
                   }}
@@ -204,19 +225,12 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 {/* Reply Button */}
                 {currentUserId && (
                   <button
+                    className="btn-comment-action btn-reply"
                     onClick={() => onStartReply(comment._id)}
                     disabled={replyingToCommentId === comment._id}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      padding: "4px 12px",
-                      minWidth: "auto",
-                      border: "1px solid rgba(0,0,0,0.1)",
-                      color: "var(--theme-text)",
                       background: replyingToCommentId === comment._id ? "rgba(0,0,0,0.05)" : "transparent",
                       cursor: replyingToCommentId === comment._id ? "not-allowed" : "pointer",
-                      borderRadius: "8px",
                       fontSize: isNested ? "10px" : "12px",
                     }}
                     title={t("reply")}
@@ -231,18 +245,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 {/* Toggle Replies Button - only if there are replies */}
                 {comment.replies && comment.replies.length > 0 && (
                   <button
+                    className="btn-comment-action btn-toggle"
                     onClick={() => toggleRepliesVisibility(comment._id)}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      padding: "4px 12px",
-                      minWidth: "auto",
-                      border: "1px solid rgba(0,0,0,0.1)",
-                      color: "var(--theme-text)",
-                      background: "transparent",
-                      cursor: "pointer",
-                      borderRadius: "8px",
                       fontSize: isNested ? "10px" : "12px",
                     }}
                     title={isRepliesHidden ? t("showReplies") : t("hideReplies")}
@@ -261,18 +266,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 {/* Report Button */}
                 {currentUserId && !isCurrentUserOwner && (
                   <button
+                    className="btn-comment-action btn-report"
                     onClick={() => onReport(comment._id)}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "4px 12px",
-                      minWidth: "auto",
-                      border: "1px solid #ff9800",
-                      color: "#ff9800",
-                      background: "rgba(255, 152, 0, 0.1)",
-                      cursor: "pointer",
-                      borderRadius: "8px",
                       fontSize: isNested ? "10px" : "12px",
                     }}
                     title={t("report")}
@@ -284,17 +280,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 {/* Delete Button */}
                 {isCurrentUserOwner && (
                   <button
+                    className="btn-comment-action btn-delete"
                     onClick={() => onDelete(comment._id)}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      padding: "4px 12px",
-                      minWidth: "auto",
-                      border: "1px solid #a50104",
-                      color: "#a50104",
-                      background: "rgba(165, 1, 4, 0.1)",
-                      borderRadius: "8px",
                       fontSize: isNested ? "10px" : "12px",
                     }}
                     title={t("delete")}
@@ -306,15 +294,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
             </div>
 
             {/* Comment Text */}
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-              <p style={{
-                fontFamily: "Poppins, sans-serif",
-                fontSize: isNested ? "13px" : "14px",
-                color: "var(--theme-text)",
-                lineHeight: 1.5,
-                margin: 0,
-                flex: 1
-              }}>
+            <div className="comment-content">
+              <p className="comment-text" style={{ fontSize: isNested ? "13px" : "14px" }}>
                 {translatedCommentId === comment._id
                   ? commentTranslationCache[comment._id] || comment.text
                   : comment.text}
@@ -348,10 +329,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     }}
                     title={translatedCommentId === comment._id ? t("viewOriginal") : t("translate")}
                   >
-                    <span className="material-icons" style={{ fontSize: "12px" }}>
+                    <span className="material-icons text-xs">
                       {translatedCommentId === comment._id ? "translate" : "language"}
                     </span>
-                    <span style={{ fontSize: "10px" }}>
+                    <span className="text-10">
                       {translatedCommentId === comment._id ? t("viewOriginal") : t("translate")}
                     </span>
                   </button>
@@ -361,55 +342,33 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
             {/* Reply Form */}
             {replyingToCommentId === comment._id && (
-              <form onSubmit={handleSubmitReply} style={{ marginTop: '12px' }}>
+              <form onSubmit={handleSubmitReply} className="mt-3">
                 <textarea
                   value={replyTexts[comment._id] || ''}
                   onChange={(e) => onReplyTextChange(comment._id, e.target.value)}
-                  placeholder={t("writeReply") || "Write a reply..."}
+                  placeholder={t("writeReply")}
                   rows={3}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid rgba(0,0,0,0.1)',
-                    borderRadius: '8px',
-                    fontFamily: 'Poppins, sans-serif',
-                    fontSize: '14px',
-                    resize: 'vertical',
-                    minHeight: '60px',
-                    boxSizing: 'border-box',
-                  }}
+                  className="reply-textarea"
                   autoFocus
                 />
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
+                <div className="reply-buttons-container">
                   <button
                     type="button"
+                    className="btn-cancel"
                     onClick={onCancelReply}
                     disabled={submittingReply[comment._id]}
                     style={{
-                      padding: '6px 16px',
-                      border: '1px solid rgba(0,0,0,0.1)',
-                      background: 'transparent',
-                      borderRadius: '8px',
                       cursor: submittingReply[comment._id] ? 'not-allowed' : 'pointer',
-                      fontFamily: 'Poppins, sans-serif',
-                      fontSize: '13px',
                     }}
                   >
                     {t("cancel")}
                   </button>
                   <button
                     type="submit"
+                    className="btn-submit-reply"
                     disabled={submittingReply[comment._id] || !replyTexts[comment._id]?.trim()}
                     style={{
-                      padding: '6px 16px',
-                      border: 'none',
-                      background: 'var(--theme-accent)',
-                      color: 'var(--theme-text)',
-                      borderRadius: '8px',
                       cursor: submittingReply[comment._id] || !replyTexts[comment._id]?.trim() ? 'not-allowed' : 'pointer',
-                      fontFamily: 'Poppins, sans-serif',
-                      fontSize: '13px',
-                      fontWeight: 500,
                     }}
                   >
                     {submittingReply[comment._id] ? (
@@ -427,7 +386,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
       {/* Render Replies */}
       {comment.replies && comment.replies.length > 0 && !isRepliesHidden && (
-        <div style={{ marginTop: '12px' }}>
+        <div className="mt-3">
           {comment.replies.map((reply: Comment) => (
             <CommentItem
               key={reply._id}
@@ -573,7 +532,7 @@ const Post = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("somethingWentWrong"),
+        message: t("somethingWentWrong"),
         type: "error",
       });
       setTimeout(() => navigate("/home"), 1500);
@@ -639,18 +598,18 @@ const Post = () => {
     const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
-      return t("justNow") || "Just now";
+      return t("justNow");
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      const unit = minutes === 1 ? (t("minute") || "minute") : (t("minutes") || "minutes");
+      const unit = minutes === 1 ? t("minute") : t("minutes");
       return language === "bg" ? `${t("ago")} ${minutes} ${unit}` : `${minutes} ${unit} ago`;
     } else if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      const unit = hours === 1 ? (t("hour") || "hour") : (t("hours") || "hours");
+      const unit = hours === 1 ? t("hour") : t("hours");
       return language === "bg" ? `${t("ago")} ${hours} ${unit}` : `${hours} ${unit} ago`;
     } else if (diffInSeconds < 604800) {
       const days = Math.floor(diffInSeconds / 86400);
-      const unit = days === 1 ? (t("day") || "day") : (t("days") || "days");
+      const unit = days === 1 ? t("day") : t("days");
       return language === "bg" ? `${t("ago")} ${days} ${unit}` : `${days} ${unit} ago`;
     } else {
       return dateObj.toLocaleDateString(language === "bg" ? "bg-BG" : "en-US", {
@@ -665,7 +624,7 @@ const Post = () => {
     if (!currentUserId) {
       setSnackbar({
         open: true,
-        message: t("mustBeLoggedIn") || "You must be logged in to like posts",
+        message: t("mustBeLoggedIn"),
         type: "error",
       });
       return;
@@ -684,7 +643,7 @@ const Post = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     } finally {
@@ -737,7 +696,7 @@ const Post = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to translate content",
+        message: t("failedToTranslateContent"),
         type: "error",
       });
     } finally {
@@ -769,7 +728,7 @@ const Post = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to translate comment",
+        message: t("failedToTranslateComment"),
         type: "error",
       });
     } finally {
@@ -781,7 +740,7 @@ const Post = () => {
     if (!currentUserId) {
       setSnackbar({
         open: true,
-        message: t("mustBeLoggedIn") || "You must be logged in to follow users",
+        message: t("mustBeLoggedIn"),
         type: "error",
       });
       return;
@@ -803,7 +762,7 @@ const Post = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     } finally {
@@ -815,7 +774,7 @@ const Post = () => {
     if (!currentUserId) {
       setSnackbar({
         open: true,
-        message: t("mustBeLoggedIn") || "You must be logged in to like comments",
+        message: t("mustBeLoggedIn"),
         type: "error",
       });
       return;
@@ -847,7 +806,7 @@ const Post = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     } finally {
@@ -930,7 +889,7 @@ const Post = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     } finally {
@@ -963,13 +922,13 @@ const Post = () => {
       setComments(prev => deleteCommentFromTree(prev, deleteCommentId));
       setSnackbar({
         open: true,
-        message: t("commentDeleted") || "Comment deleted successfully",
+        message: t("commentDeleted"),
         type: "success",
       });
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     } finally {
@@ -992,7 +951,7 @@ const Post = () => {
       await api.delete(`/posts/${deletePostId}`);
       setSnackbar({
         open: true,
-        message: t("postDeleted") || "Post deleted successfully",
+        message: t("postDeleted"),
         type: "success",
       });
       // Redirect to account page after successful deletion
@@ -1000,7 +959,7 @@ const Post = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     } finally {
@@ -1017,7 +976,7 @@ const Post = () => {
     if (!currentUserId) {
       setSnackbar({
         open: true,
-        message: t("mustBeLoggedIn") || "You must be logged in to comment",
+        message: t("mustBeLoggedIn"),
         type: "error",
       });
       return;
@@ -1026,7 +985,7 @@ const Post = () => {
     if (!newComment.trim()) {
       setSnackbar({
         open: true,
-        message: t("commentCannotBeEmpty") || "Comment cannot be empty",
+        message: t("commentCannotBeEmpty"),
         type: "error",
       });
       return;
@@ -1046,7 +1005,7 @@ const Post = () => {
       if (response.data.flagged || response.data.error) {
         // Comment was rejected by moderation
         const reasonKey = response.data.error;
-        const errorMessage = response.data.reason || t(reasonKey) || t("commentRejected");
+        const errorMessage = t(reasonKey);
 
         setSnackbar({
           open: true,
@@ -1059,7 +1018,7 @@ const Post = () => {
         setNewComment("");
         setSnackbar({
           open: true,
-          message: t("commentAdded") || "Comment added successfully",
+          message: t("commentAdded"),
           type: "success",
         });
       }
@@ -1138,7 +1097,7 @@ const Post = () => {
     if (!currentUserId) {
       setSnackbar({
         open: true,
-        message: t("mustBeLoggedIn") || "You must be logged in to reply",
+        message: t("mustBeLoggedIn"),
         type: "error",
       });
       return;
@@ -1159,7 +1118,7 @@ const Post = () => {
       if (response.data.flagged || response.data.error) {
         // Reply was rejected
         const reasonKey = response.data.error;
-        const errorMessage = response.data.reason || t(reasonKey) || t("commentRejected");
+        const errorMessage = t(reasonKey);
 
         setSnackbar({
           open: true,
@@ -1180,7 +1139,7 @@ const Post = () => {
 
         setSnackbar({
           open: true,
-          message: t("replyAdded") || "Reply added",
+          message: t("replyAdded"),
           type: "success",
         });
 
@@ -1196,7 +1155,7 @@ const Post = () => {
       console.error('Failed to post reply:', error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     } finally {
@@ -1206,10 +1165,10 @@ const Post = () => {
 
   if (loading) {
     return (
-      <div style={{ display: "flex" }}>
+      <div className="post-container">
         <UserSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-loading">{t("loading")}</div>
+        <div className="page-container">
+          <div className="loading">{t("loading")}</div>
         </div>
       </div>
     );
@@ -1217,10 +1176,10 @@ const Post = () => {
 
   if (!post) {
     return (
-      <div style={{ display: "flex" }}>
+      <div className="post-container">
         <UserSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-loading">{t("somethingWentWrong")}</div>
+        <div className="page-container">
+          <div className="loading">{t("somethingWentWrong")}</div>
         </div>
       </div>
     );
@@ -1243,38 +1202,29 @@ const Post = () => {
     : post.tags;
 
   return (
-    <div style={{ display: "flex" }}>
+    <div className="post-container">
       <UserSidebar />
-      <div className="admin-page" style={{ flex: 1 }}>
+      <div className="page-container">
         <div style={{ marginBottom: "24px" }}>
           <GoBackButton />
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "16px", flexWrap: "wrap" }}>
-            <h1 className="admin-page-title" style={{ margin: 0 }}>{displayTitle}</h1>
+          <div className="post-header">
+            <h1 className="page-title page-title-no-margin">{displayTitle}</h1>
             {/* Translate Toggle Button */}
             {!isPostInUserLanguage && (
               <button
                 onClick={handleTranslate}
                 disabled={translating || actionLoading.report}
+                className="post-translate-btn"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  padding: "6px 12px",
-                  border: "2px solid var(--theme-accent)",
-                  background: "var(--theme-accent)",
-                  color: "var(--theme-text)",
-                  borderRadius: "8px",
                   cursor: translating || actionLoading.report ? "not-allowed" : "pointer",
-                  fontSize: "12px",
-                  fontWeight: 500,
                   opacity: translating || actionLoading.report ? 0.7 : 1,
                 }}
                 title={showTranslation ? t("viewOriginal") : t("translate")}
               >
                 {translating ? (
-                  <span className="material-icons spin" style={{ fontSize: "14px" }}>refresh</span>
+                  <span className="material-icons spin text-sm">refresh</span>
                 ) : (
-                  <span className="material-icons" style={{ fontSize: "14px" }}>
+                  <span className="material-icons text-sm">
                     {showTranslation ? "translate" : "language"}
                   </span>
                 )}
@@ -1282,62 +1232,33 @@ const Post = () => {
               </button>
             )}
             {isWaitingForApproval && (
-              <div style={{
-                display: "inline-block",
-                padding: "6px 16px",
-                background: "rgba(255, 193, 7, 0.2)",
-                color: "#ffc107",
-                borderRadius: "12px",
-                fontSize: "12px",
-                fontWeight: 500,
-                border: "1px solid rgba(255, 193, 7, 0.5)",
-              }}>
-                {t("waitingForApproval") || "Waiting for approval"}
+              <div className="approval-badge">
+                {t("waitingForApproval")}
               </div>
             )}
           </div>
         </div>
 
         {/* Author, Follow, Like, and Category */}
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap", marginBottom: "8px" }}>
+        <div className="mb-6">
+          <div className="author-container">
             {/* Author Profile Link */}
             <div
-              style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+              className="author-link"
               onClick={() => navigate(`/users/${post.authorId._id}`)}
             >
               {post.authorId.profileImage ? (
                 <img
                   src={post.authorId.profileImage}
                   alt={post.authorId.username}
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                  }}
+                  className="author-avatar"
                 />
               ) : (
-                <div
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    background: "var(--theme-accent)",
-                    border: "2px solid var(--theme-text)",
-                    boxSizing: "border-box",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--theme-text)",
-                    fontWeight: 600,
-                    fontSize: "18px",
-                  }}
-                >
+                <div className="author-avatar-placeholder">
                   {post.authorId.username.charAt(0).toUpperCase()}
                 </div>
               )}
-              <span style={{ fontSize: "16px", fontWeight: 500, color: "var(--theme-text)" }}>
+              <span className="author-username">
                 @{post.authorId.username}
               </span>
             </div>
@@ -1345,16 +1266,10 @@ const Post = () => {
             {/* Follow/Unfollow Button */}
             {currentUserId && currentUserId !== post.authorId._id && (
               <button
-                className={`admin-button-secondary ${isFollowing ? "unfollow" : ""}`}
+                className={`btn-secondary post-action-btn ${isFollowing ? "unfollow" : ""}`}
                 onClick={handleFollow}
                 disabled={actionLoading.follow}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 16px",
-                  minWidth: "auto",
-                  flexShrink: 0,
                   borderColor: isFollowing ? "#a50104" : undefined,
                   color: isFollowing ? "#a50104" : undefined,
                   background: isFollowing ? "rgba(165, 1, 4, 0.1)" : undefined,
@@ -1364,13 +1279,13 @@ const Post = () => {
                 title={isFollowing ? t("unfollow") : t("follow")}
               >
                 {actionLoading.follow ? (
-                  <span className="material-icons spin" style={{ fontSize: "16px" }}>refresh</span>
+                  <span className="material-icons spin text-base">refresh</span>
                 ) : (
                   <>
-                    <span className="material-icons" style={{ fontSize: "18px" }}>
+                    <span className="material-icons text-lg">
                       {isFollowing ? "person_remove" : "person_add"}
                     </span>
-                    {isFollowing ? (t("unfollow") || "Unfollow") : (t("follow") || "Follow")}
+                    {isFollowing ? t("unfollow") : t("follow")}
                   </>
                 )}
               </button>
@@ -1380,14 +1295,8 @@ const Post = () => {
             <button
               onClick={handleLike}
               disabled={actionLoading.like}
-              className={`admin-button-secondary ${isLiked ? "liked" : ""}`}
+              className={`btn-secondary post-action-btn ${isLiked ? "liked" : ""}`}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 16px",
-                minWidth: "auto",
-                flexShrink: 0,
                 borderColor: isLiked ? "#e0245e" : undefined,
                 color: isLiked ? "#e0245e" : undefined,
                 background: isLiked ? "rgba(224, 36, 94, 0.1)" : undefined,
@@ -1397,13 +1306,13 @@ const Post = () => {
               title={isLiked ? t("unlike") : t("like")}
             >
               {actionLoading.like ? (
-                <span className="material-icons spin" style={{ fontSize: "16px" }}>refresh</span>
+                <span className="material-icons spin text-base">refresh</span>
               ) : (
-                <span className="material-icons" style={{ fontSize: "18px" }}>
+                <span className="material-icons text-lg">
                   {isLiked ? "favorite" : "favorite_border"}
                 </span>
               )}
-              <span>{likesCount} {likesCount === 1 ? (t("like") || "Like") : (t("likes") || " Likes")}</span>
+              <span>{likesCount} {likesCount === 1 ? t("like") : t("likes")}</span>
             </button>
 
             {/* Delete Button - only show if user owns the post */}
@@ -1411,26 +1320,17 @@ const Post = () => {
               <button
                 onClick={handleDeletePostClick}
                 disabled={actionLoading.delete}
-                className="admin-button-secondary"
+                className="btn-secondary post-action-btn btn-delete"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 16px",
-                  minWidth: "auto",
-                  flexShrink: 0,
-                  border: "2px solid #a50104",
-                  color: "#a50104",
-                  background: "rgba(165, 1, 4, 0.1)",
                   opacity: actionLoading.delete ? 0.7 : 1,
                   cursor: actionLoading.delete ? "wait" : "pointer",
                 }}
                 title={t("deletePost")}
               >
                 {actionLoading.delete ? (
-                  <span className="material-icons spin" style={{ fontSize: "16px" }}>refresh</span>
+                  <span className="material-icons spin text-base">refresh</span>
                 ) : (
-                  <span className="material-icons" style={{ fontSize: "16px" }}>delete</span>
+                  <span className="material-icons text-base">delete</span>
                 )}
                 <span>{t("deletePost")}</span>
               </button>
@@ -1441,26 +1341,17 @@ const Post = () => {
               <button
                 onClick={() => setReportModalOpen(true)}
                 disabled={actionLoading.report}
-                className="admin-button-secondary"
+                className="btn-secondary post-action-btn btn-report"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 16px",
-                  minWidth: "auto",
-                  flexShrink: 0,
-                  borderColor: "#ff9800",
-                  color: "#ff9800",
-                  background: "rgba(255, 152, 0, 0.1)",
                   opacity: actionLoading.report ? 0.7 : 1,
                   cursor: actionLoading.report ? "wait" : "pointer",
                 }}
                 title={t("report")}
               >
                 {actionLoading.report ? (
-                  <span className="material-icons spin" style={{ fontSize: "16px" }}>refresh</span>
+                  <span className="material-icons spin text-base">refresh</span>
                 ) : (
-                  <span className="material-icons" style={{ fontSize: "18px" }}>warning</span>
+                  <span className="material-icons text-lg">warning</span>
                 )}
                 <span>{t("report")}</span>
               </button>
@@ -1469,23 +1360,11 @@ const Post = () => {
 
           {/* Category */}
           <span
+            className="category-badge"
             style={{
-              fontSize: "13px",
-              fontWeight: 700,
-              padding: "6px 14px",
-              borderRadius: "8px",
-              display: "inline-block",
-              border: "2px solid",
-              ...(post.category && getCategoryStyle(post.category.name) ? {
-                borderColor: getCategoryStyle(post.category.name)!.borderColor,
-                backgroundColor: getCategoryStyle(post.category.name)!.backgroundColor,
-                color: getCategoryStyle(post.category.name)!.color,
-              } : {
-                // Default style for unknown categories
-                borderColor: "var(--theme-text)",
-                backgroundColor: "transparent",
-                color: "var(--theme-text)",
-              }),
+              borderColor: post.category && getCategoryStyle(post.category.name) ? getCategoryStyle(post.category.name)!.borderColor : "var(--theme-text)",
+              backgroundColor: post.category && getCategoryStyle(post.category.name) ? getCategoryStyle(post.category.name)!.backgroundColor : "transparent",
+              color: post.category && getCategoryStyle(post.category.name) ? getCategoryStyle(post.category.name)!.color : "var(--theme-text)",
             }}
           >
             {getCategoryDisplayName(post.category?.name || "")}
@@ -1494,91 +1373,35 @@ const Post = () => {
 
         {/* Image Carousel */}
         {post.image && post.image.length > 0 && (
-          <div style={{ marginBottom: "24px" }}>
-            <div
-              style={{
-                position: "relative",
-                width: "100%",
-                maxHeight: "500px",
-                borderRadius: "12px",
-                overflow: "hidden",
-                backgroundColor: "var(--theme-bg)",
-              }}
-            >
+          <div className="mb-6">
+            <div className="image-carousel">
               <img
                 src={post.image[currentImageIndex]}
                 alt={`${displayTitle} - image ${currentImageIndex + 1}`}
-                style={{
-                  width: "100%",
-                  height: "500px",
-                  objectFit: "contain",
-                }}
+                className="post-image"
               />
               {post.image.length > 1 && (
                 <>
                   <button
                     onClick={handlePrevImage}
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "12px",
-                      transform: "translateY(-50%)",
-                      background: "rgba(0,0,0,0.5)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "50%",
-                      width: "40px",
-                      height: "40px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    className="carousel-nav-btn carousel-prev"
                   >
                     <span className="material-icons">chevron_left</span>
                   </button>
                   <button
                     onClick={handleNextImage}
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      right: "12px",
-                      transform: "translateY(-50%)",
-                      background: "rgba(0,0,0,0.5)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "50%",
-                      width: "40px",
-                      height: "40px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    className="carousel-nav-btn carousel-next"
                   >
                     <span className="material-icons">chevron_right</span>
                   </button>
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: "12px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      display: "flex",
-                      gap: "8px",
-                    }}
-                  >
+                  <div className="image-indicators">
                     {post.image.map((_: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
+                        className="image-indicator"
                         style={{
-                          width: "8px",
-                          height: "8px",
-                          borderRadius: "50%",
-                          border: "none",
                           background: index === currentImageIndex ? "white" : "rgba(255,255,255,0.5)",
-                          cursor: "pointer",
                         }}
                       />
                     ))}
@@ -1591,18 +1414,11 @@ const Post = () => {
 
         {/* Tags */}
         {displayTags && displayTags.length > 0 && (
-          <div style={{ marginBottom: "16px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          <div className="tags-container">
             {displayTags.map((tag: string, index: number) => (
               <span
                 key={index}
-                style={{
-                  background: "transparent",
-                  color: "var(--theme-text)",
-                  padding: "4px 12px",
-                  borderRadius: "16px",
-                  fontSize: "12px",
-                  border: "1px solid var(--theme-text)",
-                }}
+                className="tag"
               >
                 #{tag}
               </span>
@@ -1611,36 +1427,35 @@ const Post = () => {
         )}
 
         {/* Description */}
-        <div style={{ marginBottom: "32px" }}>
+        <div className="mb-8">
           <ReactMarkdown
             components={{
-              p: ({node, ...props}) => <p style={{ fontFamily: "Poppins, sans-serif", fontSize: "14px", color: "var(--theme-text)", lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }} {...props} />,
-              strong: ({node, ...props}) => <strong style={{ fontWeight: 600 }} {...props} />,
-              em: ({node, ...props}) => <em style={{ fontStyle: 'italic' }} {...props} />,
+              p: ({node, ...props}) => <p className="markdown-paragraph" {...props} />,
+              strong: ({node, ...props}) => <strong className="markdown-strong" {...props} />,
+              em: ({node, ...props}) => <em className="markdown-em" {...props} />,
             }}
           >
             {displayContent}
           </ReactMarkdown>
         </div>
 
-        <hr style={{ border: "none", borderTop: "1px solid var(--theme-text)", opacity: 0.2, marginBottom: "32px" }} />
+        <hr className="divider" />
 
         {/* Comment Form */}
         {currentUserId ? (
-          <form onSubmit={handleSubmitComment} style={{ marginBottom: "32px" }}>
+          <form onSubmit={handleSubmitComment} className="mb-8">
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder={t("writeComment") || "Write a comment..."}
+              placeholder={t("writeComment")}
               rows={3}
-              className="admin-form-textarea"
-              style={{ marginBottom: "12px" }}
+              className="form-textarea mb-3"
             />
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button
                 type="submit"
                 disabled={submittingComment || !newComment.trim()}
-                className="admin-button-primary"
+                className="btn-primary"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -1650,11 +1465,11 @@ const Post = () => {
                 }}
               >
                 {submittingComment ? (
-                  <span className="material-icons spin" style={{ fontSize: "16px" }}>refresh</span>
+                  <span className="material-icons spin text-base">refresh</span>
                 ) : (
-                  <span className="material-icons" style={{ fontSize: "18px" }}>send</span>
+                  <span className="material-icons text-lg">send</span>
                 )}
-                {t("postComment") || "Post Comment"}
+                {t("postComment")}
               </button>
             </div>
           </form>
@@ -1669,22 +1484,22 @@ const Post = () => {
             opacity: 0.8
           }}>
             <p style={{ margin: 0, color: "var(--theme-text)" }}>
-              {t("mustBeLoggedInToComment") || "Please log in to leave a comment"}
+              {t("mustBeLoggedInToComment")}
             </p>
           </div>
         )}
 
         {/* Comments Section */}
-        <h2 style={{ fontFamily: "Poppins, sans-serif", fontSize: "24px", fontWeight: 600, color: "var(--theme-text)", marginBottom: "24px" }}>
+        <h2 className="section-heading">
           {t("comments")} ({totalCommentCount})
         </h2>
 
         {comments.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", opacity: 0.6 }}>
-            {t("noComments") || "No comments yet"}
+          <div className="loading-centered opacity-60">
+            {t("noComments")}
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div className="d-flex flex-column gap-4">
             {comments.map((comment) => (
               <CommentItem
                 key={comment._id}
@@ -1729,29 +1544,28 @@ const Post = () => {
 
         {/* Report Modal */}
         {reportModalOpen && (
-          <div className="admin-modal-overlay" onClick={() => {
+          <div className="modal-overlay" onClick={() => {
             setReportModalOpen(false);
             setReportingCommentId(null);
           }}>
-            <div className="admin-modal admin-modal-warning" onClick={(e) => e.stopPropagation()}>
-              <h2 className="admin-modal-title">
+            <div className="modal modal-warning" onClick={(e) => e.stopPropagation()}>
+              <h2 className="modal-title">
                 {t(reportingCommentId ? "reportComment" : "reportPost")}
               </h2>
-              <p className="admin-modal-text">
+              <p className="modal-text">
                 {t("reasonForReport")}:
               </p>
               <textarea
-                className="admin-form-textarea"
+                className="form-textarea mb-3"
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
                 rows={4}
                 placeholder={t(reportingCommentId ? "enterReportReasonComment" : "enterReportReason")}
-                style={{ marginBottom: "12px" }}
                 autoFocus
               />
-              <div className="admin-modal-actions">
+              <div className="modal-actions">
                 <button
-                  className="admin-button-secondary"
+                  className="btn-secondary"
                   onClick={() => {
                     setReportModalOpen(false);
                     setReportReason("");
@@ -1762,12 +1576,12 @@ const Post = () => {
                   {t("cancel")}
                 </button>
                 <button
-                  className="admin-button-primary"
+                  className="btn-primary"
                   onClick={handleReport}
                   disabled={actionLoading.report}
                 >
                   {actionLoading.report ? (
-                    <span className="material-icons spin" style={{ fontSize: "16px" }}>refresh</span>
+                    <span className="material-icons spin text-base">refresh</span>
                   ) : (
                     t("report")
                   )}
@@ -1779,21 +1593,21 @@ const Post = () => {
 
         {/* Delete Comment Confirmation Modal */}
         {deleteCommentId && (
-          <div className="admin-modal-overlay" onClick={cancelDeleteComment}>
-            <div className="admin-modal admin-modal-danger" onClick={(e) => e.stopPropagation()}>
-              <h2 className="admin-modal-title">{t("delete")}</h2>
-              <p className="admin-modal-text">
-                {t("confirmDeleteComment") || "Are you sure you want to delete this comment?"}
+          <div className="modal-overlay" onClick={cancelDeleteComment}>
+            <div className="modal modal-danger" onClick={(e) => e.stopPropagation()}>
+              <h2 className="modal-title">{t("delete")}</h2>
+              <p className="modal-text">
+                {t("confirmDeleteComment")}
               </p>
-              <div className="admin-modal-actions">
+              <div className="modal-actions">
                 <button
-                  className="admin-button-secondary"
+                  className="btn-secondary"
                   onClick={cancelDeleteComment}
                 >
                   {t("close")}
                 </button>
                 <button
-                  className="admin-button-danger"
+                  className="btn-danger"
                   onClick={confirmDeleteComment}
                 >
                   {t("delete")}
@@ -1805,25 +1619,25 @@ const Post = () => {
 
         {/* Delete Post Confirmation Modal */}
         {deletePostId && (
-          <div className="admin-modal-overlay" onClick={cancelDeletePost}>
-            <div className="admin-modal admin-modal-danger" onClick={(e) => e.stopPropagation()}>
-              <h2 className="admin-modal-title">{t("delete")}</h2>
-              <p className="admin-modal-text">
-                {t("confirmDeletePost") || "Are you sure you want to delete this post?"}
+          <div className="modal-overlay" onClick={cancelDeletePost}>
+            <div className="modal modal-danger" onClick={(e) => e.stopPropagation()}>
+              <h2 className="modal-title">{t("delete")}</h2>
+              <p className="modal-text">
+                {t("confirmDeletePost")}
               </p>
-              <div className="admin-modal-actions">
+              <div className="modal-actions">
                 <button
-                  className="admin-button-secondary"
+                  className="btn-secondary"
                   onClick={cancelDeletePost}
                 >
                   {t("close")}
                 </button>
                 <button
-                  className="admin-button-danger"
+                  className="btn-danger"
                   onClick={confirmDeletePost}
                 >
                   {actionLoading.delete ? (
-                    <span className="material-icons spin" style={{ fontSize: "16px" }}>refresh</span>
+                    <span className="material-icons spin text-base">refresh</span>
                   ) : (
                     t("delete")
                   )}

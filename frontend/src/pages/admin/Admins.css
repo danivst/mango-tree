@@ -1,0 +1,7 @@
+/* Admins page specific styles */
+
+/* Layout container for admin pages with sidebar */
+.admins-container {
+  display: flex;
+  min-height: 100vh;
+}

@@ -7,10 +7,61 @@ import Snackbar from "../components/Snackbar";
 import UserSidebar from "../components/UserSidebar";
 import { getTranslation } from "../utils/translations";
 import { clearAuth } from "../utils/auth";
-import "./admin/AdminPages.css";
-import AdminSidebar from "../components/AdminSidebar";
+import "../styles/shared.css";
+import "./Settings.css";
 
+/**
+ * @type DeleteStep
+ * @description State machine for multi-step account deletion flow.
+ * Controls which modal step is shown during account deletion process.
+ *
+ * @property {"warning"} warning - Initial warning screen (confirm intention to delete)
+ * @property {"reason"} reason - Admin deletion only: reason text input required
+ * @property {"confirm"} confirm - Final confirmation before irreversible deletion
+ * @property {null} null - No deletion modal visible
+ */
 type DeleteStep = "warning" | "reason" | "confirm" | null;
+
+/**
+ * @file Settings.tsx
+ * @description User settings page for account management, preferences, and security.
+ * Allows users to update profile, change password, enable/disable 2FA, and delete account.
+ * Admins see additional controls for account deletion with mandatory reason.
+ *
+ * Features:
+ * - Profile editing: username (with availability check), read-only email
+ * - Password change with current password verification
+ * - Two-Factor Authentication (2FA) enable/disable with email verification
+ * - Theme selector (all 5 themes: dark, purple, cream, light, mango)
+ * - Language selector (English/Bulgarian)
+ * - Account deletion with multi-step confirmation (admins must provide reason)
+ *
+ * Security:
+ * - Password change requires current password
+ * - 2FA verification code sent via email (6-digit, 10-min expiry)
+ * - Username change validates uniqueness via API call
+ * - Account deletion clears auth tokens and localStorage
+ *
+ * Access Control:
+ * - Regular users: can delete own account (no reason required)
+ * - Admins: can delete other users (reason mandatory, logged)
+ *
+ * State Machine (DeleteStep):
+ * 1. warning → user clicks "Delete Account", shows warning
+ * 2. reason → (admin only) enter deletion reason
+ * 3. confirm → final confirmation before execution
+ *
+ * @page
+ * @requires useState - Form state, theme/language state, deletion flow state
+ * @requires useEffect - Fetch user info on mount
+ * @requires useNavigate - Redirect to login after account deletion, to home after password change
+ * @requires useThemeLanguage - Theme and language setters (live preview) + translations
+ * @requires api - General API service (get current user, update username, delete user)
+ * @requires authAPI - Authentication-specific operations (change password, 2FA)
+ * @requires Snackbar - Success/error feedback
+ * @requires UserSidebar / AdminSidebar - Context-appropriate navigation
+ * @requires clearAuth - Utility to clear tokens and localStorage on logout/deletion
+ */
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -55,7 +106,7 @@ const Settings = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to load user info",
+        message: t("failedToLoadUserInfo"),
         type: "error",
       });
     } finally {
@@ -78,7 +129,7 @@ const Settings = () => {
     if (newPassword !== confirmPassword) {
       setSnackbar({
         open: true,
-        message: t("passwordsDoNotMatch") || "Passwords do not match.",
+        message: t("passwordsDoNotMatch"),
         type: "error",
       });
       return;
@@ -105,7 +156,7 @@ const Settings = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("serverError"),
+        message: t("serverError"),
         type: "error",
       });
     } finally {
@@ -121,7 +172,7 @@ const Settings = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("failedToSendVerificationCode"),
         type: "error",
       });
     }
@@ -161,7 +212,7 @@ const Settings = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
       setSettingsTwoFACode("");
@@ -183,7 +234,7 @@ const Settings = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     }
@@ -228,10 +279,7 @@ const Settings = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message:
-          error.response?.data?.message ||
-          t("failedToDeleteUser") ||
-          "Failed to delete account",
+        message: t("failedToDeleteUser"),
         type: "error",
       });
       setDeleting(false);
@@ -240,51 +288,37 @@ const Settings = () => {
 
   if (loading || !user) {
     return (
-      <div className="admin-page">
-        <div className="admin-loading">{t("loading")}</div>
+      <div className="page-container">
+        <div className="loading">{t("loading")}</div>
       </div>
     );
   }
 
   const isAdmin = user.role === "admin";
 
-  return (
-    <div style={{ display: "flex" }}>
-      {isAdmin ? <AdminSidebar /> : <UserSidebar />}
-      <div className="admin-page" style={{ flex: 1 }}>
-        <h1 className="admin-page-title">{t("settings")}</h1>
+  const settingsContent = (
+    <>
+        <h1 className="page-title">{t("settings")}</h1>
         {/* Account Section */}
         <div className="settings-section">
           <h2 className="settings-section-title">{t("account")}</h2>
           <div className="settings-form">
-            <div className="admin-form-group">
-              <label className="admin-form-label">{t("username")}</label>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  alignItems: "flex-start",
-                }}
-              >
+            <div className="form-group">
+              <label className="form-label">{t("username")}</label>
+              <div className="form-row username-row">
                 <input
                   type="text"
-                  className="admin-form-input"
+                  className="form-input"
                   value={user.username}
                   onChange={(e) =>
                     setUser({ ...user, username: e.target.value })
                   }
-                  style={{
-                    flex: 1,
-                    background: isAdmin ? "rgba(0, 0, 0, 0.1)" : undefined,
-                    cursor: isAdmin ? "not-allowed" : undefined,
-                    opacity: isAdmin ? 0.6 : undefined,
-                  }}
                   disabled={isAdmin}
                   title={t("unableToEditUsername")}
                 />
                 {!isAdmin && (
                   <button
-                    className="admin-button-primary"
+                    className="btn-primary"
                     onClick={async () => {
                       if (!user) return;
                       try {
@@ -297,7 +331,7 @@ const Settings = () => {
                           setSnackbar({
                             open: true,
                             message:
-                              t("usernameExists") || "Username already exists!",
+                              t("usernameExists"),
                             type: "error",
                           });
                           return;
@@ -307,14 +341,13 @@ const Settings = () => {
                         });
                         setSnackbar({
                           open: true,
-                          message: t("usernameUpdated") || "Username updated!",
+                          message: t("usernameUpdated"),
                           type: "success",
                         });
                       } catch (error: any) {
                         setSnackbar({
                           open: true,
-                          message:
-                            error.response?.data?.message || t("serverError"),
+                          message: t("serverError"),
                           type: "error",
                         });
                       }
@@ -325,104 +358,78 @@ const Settings = () => {
                 )}
               </div>
             </div>
-            <div className="admin-form-group">
-              <label className="admin-form-label">{t("email")}</label>
-              <div style={{ position: "relative" }}>
+            <div className="form-group">
+              <label className="form-label">{t("email")}</label>
+              <div className="relative">
                 <input
                   type="email"
-                  className="admin-form-input"
+                  className="form-input"
                   value={user.email}
                   disabled
-                  style={{
-                    background: "rgba(0, 0, 0, 0.1)",
-                    cursor: "not-allowed",
-                    opacity: 0.6,
-                  }}
                   title={t("emailCannotBeEdited")}
                 />
               </div>
             </div>
-            <div className="admin-form-group">
-              <label className="admin-form-label">{t("password")}</label>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  alignItems: "flex-start",
-                }}
-              >
+            <div className="form-group">
+              <label className="form-label">{t("password")}</label>
+              <div className="form-row">
                 <input
                   type="password"
-                  className="admin-form-input"
+                  className="form-input"
                   value={"•".repeat(8)}
                   readOnly
                   disabled
-                  style={{
-                    flex: 1,
-                    background: "rgba(0, 0, 0, 0.1)",
-                    cursor: "not-allowed",
-                    opacity: 0.6,
-                  }}
                   title={t("passwordCannotBeEdited")}
                 />
                 <button
-                  className="admin-button-primary"
+                  className="btn-primary text-nowrap"
                   onClick={() => setShowPasswordForm(!showPasswordForm)}
-                  style={{ whiteSpace: "nowrap" }}
                 >
                   {t("changePassword")}
                 </button>
               </div>
               {showPasswordForm && (
-                <form
-                  onSubmit={handleChangePassword}
-                  style={{
-                    marginTop: "16px",
-                    padding: "16px",
-                    background: "rgba(0, 0, 0, 0.05)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div className="admin-form-group">
-                    <label className="admin-form-label">
-                      {t("currentPassword") || "Current Password"}
+                <form className="password-change-form" onSubmit={handleChangePassword}>
+                  <div className="form-group">
+                    <label className="form-label">
+                      {t("currentPassword")}
                     </label>
                     <input
                       type="password"
-                      className="admin-form-input"
+                      className="form-input"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       required
                     />
                   </div>
-                  <div className="admin-form-group">
-                    <label className="admin-form-label">
-                      {t("newPassword") || "New Password"}
+                  <div className="form-group">
+                    <label className="form-label">
+                      {t("newPassword")}
                     </label>
                     <input
                       type="password"
-                      className="admin-form-input"
+                      className="form-input"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
                     />
                   </div>
-                  <div className="admin-form-group">
-                    <label className="admin-form-label">
+                  <div className="form-group">
+                    <label className="form-label">
                       {t("confirmPassword")}
                     </label>
                     <input
                       type="password"
-                      className="admin-form-input"
+                      className="form-input"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                     />
                   </div>
-                  <div style={{ display: "flex", gap: "12px" }}>
+                  <div className="form-actions">
                     <button
                       type="button"
-                      className="admin-button-secondary"
+                      className="btn-secondary"
                       onClick={() => {
                         setShowPasswordForm(false);
                         setCurrentPassword("");
@@ -434,7 +441,7 @@ const Settings = () => {
                     </button>
                     <button
                       type="submit"
-                      className="admin-button-primary"
+                      className="btn-primary"
                       disabled={changingPassword}
                     >
                       {changingPassword ? t("sending") : t("changePassword")}
@@ -444,36 +451,28 @@ const Settings = () => {
               )}
             </div>
             {/* 2FA Section */}
-            <div className="admin-form-group" style={{ marginTop: "24px", borderTop: "1px solid #eee", paddingTop: "24px" }}>
-              <label className="admin-form-label">{t("twoFactorAuth")}</label>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  alignItems: "center",
-                }}
-              >
-                <p style={{ margin: 0, color: "#666", fontSize: "14px", lineHeight: "1.5", flex: 1 }}>
+            <div className="form-group twofa-section">
+              <label className="form-label">{t("twoFactorAuth")}</label>
+              <div className="form-row items-center">
+                <p className="twofa-description">
                   {t("twoFactorDescription")}
                 </p>
                 {user?.twoFactorEnabled ? (
                   <>
-                    <span style={{ color: "#4CAF50", fontWeight: "bold", fontSize: "14px", whiteSpace: "nowrap" }}>
+                    <span className="twofa-status-enabled text-nowrap">
                       {t("twoFAEnabled")}
                     </span>
                     <button
-                      className="admin-button-secondary"
+                      className="btn-secondary btn-sm text-nowrap"
                       onClick={handleDisable2FA}
-                      style={{ fontSize: "14px", padding: "8px 16px", whiteSpace: "nowrap" }}
                     >
                       {t("disable2FA")}
                     </button>
                   </>
                 ) : (
                   <button
-                    className="admin-button-primary"
+                    className="btn-primary btn-sm text-nowrap"
                     onClick={handleEnable2FA}
-                    style={{ fontSize: "14px", padding: "8px 16px", whiteSpace: "nowrap" }}
                   >
                     {t("enable2FA")}
                   </button>
@@ -481,9 +480,9 @@ const Settings = () => {
               </div>
             </div>
             {!isAdmin && (
-              <div className="admin-form-group" style={{ marginTop: "32px" }}>
+              <div className="form-group">
                 <button
-                  className="admin-button-danger"
+                  className="btn-danger"
                   onClick={() => setDeleteStep("warning")}
                 >
                   {t("deleteAccount")}
@@ -493,7 +492,7 @@ const Settings = () => {
           </div>
         </div>
         {/* App Theme Section */}
-        <div className="settings-section" style={{ marginTop: "48px" }}>
+        <div className="settings-section section-spaced">
           <h2 className="settings-section-title">{t("appTheme")}</h2>
           <div className="theme-selector">
             <div
@@ -508,11 +507,9 @@ const Settings = () => {
                 }}
               >
                 <div
+                  className="preview-inner"
                   style={{
                     background: "#1a1a1a",
-                    width: "60%",
-                    height: "60%",
-                    borderRadius: "4px",
                   }}
                 ></div>
               </div>
@@ -531,11 +528,9 @@ const Settings = () => {
                 }}
               >
                 <div
+                  className="preview-inner"
                   style={{
                     background: "#361134",
-                    width: "60%",
-                    height: "60%",
-                    borderRadius: "4px",
                   }}
                 ></div>
               </div>
@@ -554,11 +549,9 @@ const Settings = () => {
                 }}
               >
                 <div
+                  className="preview-inner"
                   style={{
                     background: "#FCFBE4",
-                    width: "60%",
-                    height: "60%",
-                    borderRadius: "4px",
                   }}
                 ></div>
               </div>
@@ -577,16 +570,14 @@ const Settings = () => {
                 }}
               >
                 <div
+                  className="preview-inner"
                   style={{
                     background: "#FFFFFF",
-                    width: "60%",
-                    height: "60%",
-                    borderRadius: "4px",
                     border: theme === "mango" ? "2px solid #ffd151" : "none",
                   }}
                 ></div>
               </div>
-              <span style={{ color: "#E77728" }}>{t("mango")}</span>
+              <span className="text-accent">{t("mango")}</span>
               {theme === "mango" && <span className="theme-check">✓</span>}
             </div>
             <div
@@ -601,11 +592,9 @@ const Settings = () => {
                 }}
               >
                 <div
+                  className="preview-inner"
                   style={{
                     background: "#F5F5F5",
-                    width: "60%",
-                    height: "60%",
-                    borderRadius: "4px",
                   }}
                 ></div>
               </div>
@@ -615,11 +604,10 @@ const Settings = () => {
           </div>
         </div>
         {/* Language Section */}
-        <div className="settings-section" style={{ marginTop: "48px" }}>
+        <div className="settings-section section-spaced">
           <h2 className="settings-section-title">{t("language")}</h2>
           <div
-            className="theme-selector"
-            style={{ gridTemplateColumns: "repeat(2, 1fr)" }}
+            className="theme-selector grid-2"
           >
             <div
               className={`theme-option ${language === "en" ? "active" : ""}`}
@@ -630,12 +618,9 @@ const Settings = () => {
                 style={{
                   background: "#F1F0CC",
                   borderColor: language === "en" ? "#E77728" : "#ddd",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                 }}
               >
-                <span style={{ fontSize: "32px" }}>🇬🇧</span>
+                <span className="flag-icon">🇬🇧</span>
               </div>
               <span>{t("english")}</span>
               {language === "en" && <span className="theme-check">✓</span>}
@@ -649,12 +634,9 @@ const Settings = () => {
                 style={{
                   background: "#F1F0CC",
                   borderColor: language === "bg" ? "#E77728" : "#ddd",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                 }}
               >
-                <span style={{ fontSize: "32px" }}>🇧🇬</span>
+                <span className="flag-icon">🇧🇬</span>
               </div>
               <span>{t("bulgarian")}</span>
               {language === "bg" && <span className="theme-check">✓</span>}
@@ -663,24 +645,24 @@ const Settings = () => {
         </div>
         {/* Delete Account Modal */}
         {deleteStep && (
-          <div className="admin-modal-overlay">
-            <div className="admin-modal admin-modal-danger">
+          <div className="modal-overlay">
+            <div className="modal modal-danger">
               {/* Warning step (shown for both self and admin deletion) */}
               {deleteStep === "warning" && (
                 <>
-                  <h2 className="admin-modal-title">{t("deleteAccount")}</h2>
-                  <p className="admin-modal-text">
+                  <h2 className="modal-title">{t("deleteAccount")}</h2>
+                  <p className="modal-text">
                     {t("deleteAccountWarning")}
                   </p>
-                  <div className="admin-modal-actions">
+                  <div className="modal-actions">
                     <button
-                      className="admin-button-secondary"
+                      className="btn-secondary"
                       onClick={() => setDeleteStep(null)}
                     >
                       {t("cancel")}
                     </button>
                     <button
-                      className="admin-button-danger"
+                      className="btn-danger"
                       onClick={handleDeleteContinue}
                       disabled={deleting}
                     >
@@ -693,7 +675,7 @@ const Settings = () => {
               {/* Reason step (only for admin) */}
               {deleteStep === "reason" && (
                 <>
-                  <h2 className="admin-modal-title">
+                  <h2 className="modal-title">
                     {t("reasonForDeletion")}
                   </h2>
                   <form
@@ -702,12 +684,12 @@ const Settings = () => {
                       handleDeleteTerminate();
                     }}
                   >
-                    <div className="admin-form-group">
-                      <label className="admin-form-label">
+                    <div className="form-group">
+                      <label className="form-label">
                         {t("reasonForDeletion")}
                       </label>
                       <textarea
-                        className="admin-form-textarea"
+                        className="form-textarea"
                         value={deleteReason}
                         onChange={(e) => setDeleteReason(e.target.value)}
                         required
@@ -715,17 +697,17 @@ const Settings = () => {
                         placeholder={t("reasonForDeletionPlaceholder")}
                       />
                     </div>
-                    <div className="admin-modal-actions">
+                    <div className="modal-actions">
                       <button
                         type="button"
-                        className="admin-button-secondary"
+                        className="btn-secondary"
                         onClick={handleDeleteBack}
                       >
                         {t("goBack")}
                       </button>
                       <button
                         type="submit"
-                        className="admin-button-danger"
+                        className="btn-danger"
                         disabled={deleting}
                       >
                         {deleting ? t("loading") : t("terminateAccount")}
@@ -738,15 +720,15 @@ const Settings = () => {
               {/* Final confirmation (shown for both, but reached differently) */}
               {deleteStep === "confirm" && (
                 <>
-                  <h2 className="admin-modal-title">{t("confirmDeletion")}</h2>
-                  <p className="admin-modal-text">
+                  <h2 className="modal-title">{t("confirmDeletion")}</h2>
+                  <p className="modal-text">
                     {isAdmin
                       ? t("confirmDeletionText")
                       : t("deleteAccountWarning")}
                   </p>
-                  <div className="admin-modal-actions">
+                  <div className="modal-actions">
                     <button
-                      className="admin-button-secondary"
+                      className="btn-secondary"
                       onClick={() => {
                         setDeleteStep(null);
                         if (isAdmin) setDeleteReason("");
@@ -755,7 +737,7 @@ const Settings = () => {
                       {t("cancel")}
                     </button>
                     <button
-                      className="admin-button-danger"
+                      className="btn-danger"
                       onClick={handleDeleteConfirm}
                       disabled={deleting}
                     >
@@ -769,20 +751,20 @@ const Settings = () => {
         )}
         {/* Enable 2FA Modal */}
         {showEnable2FAModal && (
-          <div className="admin-modal-overlay">
-            <div className="admin-modal">
-              <h2 className="admin-modal-title">{t("twoFactorAuth")}</h2>
-              <p className="admin-modal-text">
+          <div className="modal-overlay">
+            <div className="modal">
+              <h2 className="modal-title">{t("twoFactorAuth")}</h2>
+              <p className="modal-text">
                 {t("twoFactorDescription")}
               </p>
-              <form onSubmit={handleVerifySettings2FA} style={{ marginTop: "20px" }}>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">{t("twoFACodeLabel")}</label>
+              <form onSubmit={handleVerifySettings2FA} className="mt-5">
+                <div className="form-group">
+                  <label className="form-label">{t("twoFACodeLabel")}</label>
                   <input
                     type="text"
                     inputMode="numeric"
                     maxLength={6}
-                    className="admin-form-input twofa-code-input"
+                    className="form-input twofa-code-input"
                     value={settingsTwoFACode}
                     onChange={(e) => {
                       const value = e.target.value.replace(/\D/g, "").slice(0, 6);
@@ -793,10 +775,10 @@ const Settings = () => {
                     disabled={settingsVerifying2FA}
                   />
                 </div>
-                <div className="admin-modal-actions">
+                <div className="modal-actions">
                   <button
                     type="button"
-                    className="admin-button-secondary"
+                    className="btn-secondary"
                     onClick={() => {
                       setShowEnable2FAModal(false);
                       setSettingsTwoFACode("");
@@ -807,7 +789,7 @@ const Settings = () => {
                   </button>
                   <button
                     type="submit"
-                    className="admin-button-primary"
+                    className="btn-primary"
                     disabled={settingsVerifying2FA || settingsTwoFACode.length !== 6}
                   >
                     {settingsVerifying2FA ? t("verifying2FA") : t("verify")}
@@ -826,6 +808,18 @@ const Settings = () => {
         <footer className="page-footer">
           <p>{t("copyright")}</p>
         </footer>
+    </>
+  );
+
+  if (isAdmin) {
+    return settingsContent;
+  }
+
+  return (
+    <div className="settings-container">
+      <UserSidebar />
+      <div className="page-container">
+        {settingsContent}
       </div>
     </div>
   );

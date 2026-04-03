@@ -1,25 +1,41 @@
+/* Dashboard Layout */
 .dashboard-container {
+  position: relative;
   min-height: 100vh;
   background: var(--theme-bg);
-  display: flex;
-  padding-left: 0;
-  transition: background-color 0.3s ease;
-  overflow: hidden;
-}
-
-.dashboard-main {
-  flex: 1;
-  margin-left: 300px;
-  padding: 40px;
   height: 100vh;
   overflow: hidden;
 }
 
+.dashboard-main {
+  position: absolute;
+  top: 20px;
+  bottom: 20px;
+  left: var(--sidebar-offset, 0);
+  right: 20px;
+  padding: 32px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  background: var(--theme-accent);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Hide scrollbar for dashboard-main but keep scrolling */
+.dashboard-main::-webkit-scrollbar {
+  display: none;
+}
+.dashboard-main {
+  scrollbar-width: none;
+}
+
+/* Mobile: keep same vertical margins, adjust padding */
 @media (max-width: 768px) {
   .dashboard-main {
-    margin-left: 0;
+    top: 20px;
+    bottom: 20px;
+    left: var(--sidebar-offset, 0);
+    right: 20px;
     padding: 20px;
-    padding-top: 80px;
-    height: 100vh;
   }
 }

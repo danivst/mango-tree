@@ -1,12 +1,48 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import api from "../../services/api";
 import { adminAPI } from "../../services/admin-api";
-import "./AdminPages.css";
+import "../../styles/shared.css";
+import "./Admins.css";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
-import AdminSidebar from "../../components/AdminSidebar";
 import Footer from "../../components/Footer";
 import Snackbar from "../../components/Snackbar";
+
+/**
+ * @file Admins.tsx
+ * @description Admin management page - list all admin users and create new admin accounts.
+ * Admins can view the list of all admin users and create new admins by email invitation.
+ *
+ * Features:
+ * - List all admin users with username, email, join date
+ * - Sortable table columns (username, email, createdAt)
+ * - Search filter by username/email
+ * - Pagination (20 items per page)
+ * - Add new admin modal: enter email → backend creates admin account with auto-generated password sent via email
+ * - Responsive layout with AdminSidebar and Footer
+ *
+ * Access Control:
+ * - Route protected by AdminRoute (only accessible to admin users)
+ *
+ * Business Logic:
+ * - Create Admin: POST /api/admin/create-admin with email
+ *   - Backend extracts username from email (before @)
+ *   - Generates default password: username + "123!@#"
+ *   - Sends credentials email to new admin
+ *   - Returns created admin user (id, username, email, role)
+ *
+ * @page
+ * @requires useState - Admins list, loading, error, search, sort, pagination, modal state
+ * @requires useEffect - Fetch admins on mount
+ * @requires useThemeLanguage - Translations
+ * @requires useMemo - Computed filtered/sorted/paginated admins list
+ * @requires useRef - Table container ref for scroll/size management (maybe future use)
+ * @requires api - API instance for GET /users/admins
+ * @requires adminAPI - POST /admin/create-admin
+ * @requires Snackbar - Success/error feedback (create admin)
+ * @requires AdminSidebar - Admin navigation
+ * @requires Footer - Footer component
+ */
 
 type SortDirection = "asc" | "desc" | null;
 
@@ -42,7 +78,7 @@ const Admins = () => {
       setAdmins(response.data);
     } catch (err: any) {
       console.error("Failed to fetch admins:", err);
-      setError(err.response?.data?.message || "Failed to load admins");
+      setError(t("failedToLoadAdmins"));
     } finally {
       setLoading(false);
     }
@@ -73,7 +109,7 @@ const Admins = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("failedToCreateAdmin"),
+        message: t("failedToCreateAdmin"),
         type: "error",
       });
     }
@@ -109,7 +145,7 @@ const Admins = () => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ opacity: 0.3 }}
+          className="sort-icon-inactive"
         >
           <path d="M8 9l4-4 4 4M8 15l4 4 4-4" />
         </svg>
@@ -238,10 +274,9 @@ const Admins = () => {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", minHeight: "100vh" }}>
-        <AdminSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-loading">{t("loading")}</div>
+      <div>
+        <div>
+          <div className="loading">{t("loading")}</div>
         </div>
       </div>
     );
@@ -249,13 +284,12 @@ const Admins = () => {
 
   if (error) {
     return (
-      <div style={{ display: "flex", minHeight: "100vh" }}>
-        <AdminSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-error">
+      <div>
+        <div>
+          <div className="error-box">
             <p>{error}</p>
-            <button className="admin-button-primary" onClick={fetchAdmins}>
-              {t("retry") || "Retry"}
+            <button className="btn-primary" onClick={fetchAdmins}>
+              {t("retry")}
             </button>
           </div>
         </div>
@@ -264,37 +298,30 @@ const Admins = () => {
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      <AdminSidebar />
-      <div className="admin-page" style={{ flex: 1 }}>
-        <div className="admin-page-header">
-          <h1 className="admin-page-title">{t("admins")}</h1>
-          <div className="admin-page-actions">
+    <div>
+      <div>
+        <div className="page-header">
+          <h1 className="page-title">{t("admins")}</h1>
+          <div className="page-actions">
             <button
-              className="admin-button-secondary"
+              className="btn-secondary icon-btn mr-2"
               onClick={fetchAdmins}
               disabled={loading}
-              style={{
-                marginRight: "8px",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-              }}
             >
-              <span className="material-icons" style={{ fontSize: "16px" }}>
+              <span className="material-icons text-base">
                 refresh
               </span>
-              {t("refresh") || "Refresh"}
+              {t("refresh")}
             </button>
             <input
               type="text"
-              className="admin-search-input"
+              className="search-input"
               placeholder={t("search") + "..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button
-              className="admin-add-button"
+              className="btn-primary"
               onClick={() => setShowAddAdmin(true)}
             >
               <svg
@@ -316,7 +343,7 @@ const Admins = () => {
         </div>
 
         {filteredAndSortedAdmins.length === 0 ? (
-          <div className="admin-loading">
+          <div className="loading">
             {searchQuery.trim() !== ""
               ? t("noSearchResults")
               : t("noUsersFound")}
@@ -324,19 +351,17 @@ const Admins = () => {
         ) : (
           <>
             <div
-              className="admin-table-container"
+              className="table-container table-grab"
               ref={tableContainerRef}
               onMouseDown={handleMouseDown}
-              style={{ cursor: "grab" }}
             >
               {/* Click-and-drag scrolling wrapper */}
-              <table className="admin-table">
+              <table className="table">
                 <thead>
                   <tr>
                     <th
-                      className="sortable-header"
+                      className="sortable-header min-w-150"
                       onClick={() => handleSort("username")}
-                      style={{ minWidth: "150px" }}
                     >
                       <div className="header-content">
                         {t("username")}
@@ -344,9 +369,8 @@ const Admins = () => {
                       </div>
                     </th>
                     <th
-                      className="sortable-header"
+                      className="sortable-header min-w-200"
                       onClick={() => handleSort("email")}
-                      style={{ minWidth: "200px" }}
                     >
                       <div className="header-content">
                         {t("email")}
@@ -354,9 +378,8 @@ const Admins = () => {
                       </div>
                     </th>
                     <th
-                      className="sortable-header"
+                      className="sortable-header min-w-150"
                       onClick={() => handleSort("created")}
-                      style={{ minWidth: "150px" }}
                     >
                       <div className="header-content">
                         {t("memberSince")}
@@ -379,9 +402,9 @@ const Admins = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="admin-pagination">
+              <div className="pagination">
                 <button
-                  className="admin-pagination-button"
+                  className="pagination-button"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
@@ -391,7 +414,7 @@ const Admins = () => {
                   (page) => (
                     <button
                       key={page}
-                      className={`admin-pagination-button ${
+                      className={`pagination-button ${
                         currentPage === page ? "active" : ""
                       }`}
                       onClick={() => setCurrentPage(page)}
@@ -401,7 +424,7 @@ const Admins = () => {
                   ),
                 )}
                 <button
-                  className="admin-pagination-button"
+                  className="pagination-button"
                   onClick={() =>
                     setCurrentPage((p) => Math.min(totalPages, p + 1))
                   }
@@ -416,34 +439,28 @@ const Admins = () => {
 
         {/* Add Admin Modal */}
         {showAddAdmin && (
-          <div className="admin-modal-overlay">
-            <div className="admin-modal">
-              <h2 className="admin-modal-title">{t("addAdmin")}</h2>
+          <div className="modal-overlay">
+            <div className="modal">
+              <h2 className="modal-title">{t("addAdmin")}</h2>
               <form onSubmit={handleAddAdmin}>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">{t("email")}</label>
+                <div className="form-group">
+                  <label className="form-label">{t("email")}</label>
                   <input
                     type="email"
-                    className="admin-form-input"
+                    className="form-input"
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     required
                     placeholder={t("enterAdminEmail")}
                   />
-                  <p
-                    style={{
-                      fontSize: "12px",
-                      color: "#666",
-                      marginTop: "4px",
-                    }}
-                  >
+                  <p className="helper-text">
                     {t("adminEmailInfo")}
                   </p>
                 </div>
-                <div className="admin-modal-actions">
+                <div className="modal-actions">
                   <button
                     type="button"
-                    className="admin-button-secondary"
+                    className="btn-secondary"
                     onClick={() => {
                       setShowAddAdmin(false);
                       setAdminEmail("");
@@ -451,7 +468,7 @@ const Admins = () => {
                   >
                     {t("cancel")}
                   </button>
-                  <button type="submit" className="admin-button-primary">
+                  <button type="submit" className="btn-primary">
                     {t("createAdmin")}
                   </button>
                 </div>

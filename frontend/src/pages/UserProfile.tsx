@@ -4,10 +4,51 @@ import UserSidebar from "../components/UserSidebar";
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
 import api, { UserProfile as IUserProfile, Post, reportsAPI } from "../services/api";
-import "./admin/AdminPages.css";
+import "../styles/shared.css";
+import "./UserProfile.css";
 import Snackbar from "../components/Snackbar";
 import GoBackButton from "../components/GoBackButton";
 import { getToken } from "../utils/auth";
+
+/**
+ * @file UserProfile.tsx
+ * @description Public user profile page showing another user's profile and posts.
+ * Displays user info (username, bio, join date, stats) and their published posts.
+ * Authenticated users can follow/unfollow, report posts, and navigate to user's full post list.
+ *
+ * Features:
+ * - View any user's public profile (by user ID in URL)
+ * - Follow/unfollow toggle (if authenticated and not self)
+ * - Report post button with modal
+ * - View user's posts (filterable by category)
+ * - Stats display: posts count, followers, following
+ * - Post approval status badge (if pending)
+ * - Translation support for bio (if stored)
+ *
+ * Access:
+ * - Public: Anyone can view user profiles (even without login)
+ * - Authenticated required for follow/report actions
+ *
+ * State:
+ * - Profile data fetched via GET /users/:id
+ * - Posts fetched via GET /posts/author/:userId
+ * - Follow state managed locally (optimistic UI, synced via context on change)
+ * - Report modal state with reason selection
+ *
+ * @page
+ * @requires useState - Profile data, posts, follow state, report modal, loading, snackbar
+ * @requires useEffect - Fetch profile and posts on mount (when userId param changes)
+ * @requires useParams - Get user ID from route /users/:id
+ * @requires useNavigate - Navigate to full post list, author profile, etc.
+ * @requires useThemeLanguage - Current language for translations
+ * @requires useNotifications - For refreshing unread count after some actions (not currently used)
+ * @requires usersAPI - Fetch user profile data (follow/unfollow, get current user for self check)
+ * @requires postsAPI - Fetch user's posts
+ * @requires reportsAPI - Submit post reports
+ * @requires Snackbar - Feedback (follow, report, error)
+ * @requires GoBackButton - Navigate back to previous page
+ * @requires UserSidebar - Navigation sidebar (only shown if authenticated)
+ */
 
 // Using IUserProfile directly - it already has followers and following as string[]
 
@@ -68,7 +109,7 @@ const UserProfile = () => {
       console.error("Failed to fetch user profile:", error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("userNotFound") || "User not found",
+        message: t("userNotFound"),
         type: "error",
       });
       setTimeout(() => navigate("/search"), 2000);
@@ -118,7 +159,7 @@ const UserProfile = () => {
       console.error("Failed to toggle follow:", error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     }
@@ -143,18 +184,18 @@ const UserProfile = () => {
     setReportSubmitting(true);
     try {
       // Send a generic report reason
-      const defaultReason = t("reportUser") || "Reported user";
+      const defaultReason = t("reportUser");
       await reportsAPI.createReport('user', user._id, defaultReason);
       setSnackbar({
         open: true,
-        message: t("reportSubmitted") || "Report submitted successfully",
+        message: t("reportSubmitted"),
         type: "success",
       });
       setShowReportModal(false);
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("somethingWentWrong"),
+        message: t("somethingWentWrong"),
         type: "error",
       });
     } finally {
@@ -197,10 +238,10 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+      <div className="user-profile-container">
         <UserSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-loading">{t("loading")}</div>
+        <div className="page-container">
+          <div className="loading">{t("loading")}</div>
         </div>
       </div>
     );
@@ -208,63 +249,36 @@ const UserProfile = () => {
 
   if (!user) {
     return (
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+      <div className="user-profile-container">
         <UserSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-loading">{t("userNotFound")}</div>
+        <div className="page-container">
+          <div className="loading">{t("userNotFound")}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div className="user-profile-container">
       <UserSidebar />
-      <div className="admin-page" style={{ flex: 1 }}>
-        <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
-          <div style={{ marginBottom: "24px" }}>
+      <div className="page-container">
+        <div className="profile-content">
+          <div className="mb-6">
             <GoBackButton />
           </div>
           {/* Profile Section */}
-          <div style={{ display: "flex", alignItems: "center", gap: "24px", marginBottom: "24px" }}>
+          <div className="profile-header">
             {/* Profile Picture */}
-            <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  width: "120px",
-                  height: "120px",
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  border: "4px solid var(--theme-accent)",
-                  background: "#ccc",
-                }}
-              >
+            <div className="relative">
+              <div className="profile-pic-container">
                 {user.profileImage ? (
                   <img
                     src={user.profileImage}
                     alt={user.username}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
+                    className="profile-pic-image"
                   />
                 ) : (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "48px",
-                      fontWeight: 600,
-                      color: "var(--theme-text)",
-                      background: "var(--theme-accent)",
-                      border: "2px solid var(--theme-text)",
-                      boxSizing: "border-box",
-                    }}
-                  >
+                  <div className="profile-pic-placeholder">
                     {user.username.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -272,32 +286,19 @@ const UserProfile = () => {
             </div>
 
             {/* User Info */}
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px", flexWrap: "wrap" }}>
-                <h1 style={{ fontSize: "28px", fontWeight: 700, margin: 0, color: "var(--theme-text)" }}>
+            <div className="profile-info">
+              <div className="profile-actions">
+                <h1 className="username-heading">
                   @{user.username}
                 </h1>
                 {/* Follow/Unfollow Button (only if not viewing own profile) */}
                 {currentUserId !== user._id && (
                   <button
                     onClick={handleToggleFollow}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      padding: "6px 12px",
-                      border: isFollowing(user._id) ? "2px solid #a50104" : "2px solid var(--theme-text)",
-                      background: isFollowing(user._id) ? "rgba(165, 1, 4, 0.1)" : undefined,
-                      color: isFollowing(user._id) ? "#a50104" : undefined,
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      borderRadius: "6px",
-                      transition: "all 0.2s",
-                    }}
+                    className={`btn-secondary post-action-btn ${isFollowing(user._id) ? 'btn-following' : ''}`}
                     title={isFollowing(user._id) ? t("unfollow") : t("follow")}
                   >
-                    <span className="material-icons" style={{ fontSize: "14px" }}>
+                    <span className="material-icons icon-sm">
                       {isFollowing(user._id) ? "person_remove" : "person_add"}
                     </span>
                     <span>{isFollowing(user._id) ? t("unfollow") : t("follow")}</span>
@@ -307,54 +308,41 @@ const UserProfile = () => {
                 {currentUserId !== user._id && (
                   <button
                     onClick={() => setShowReportModal(true)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      padding: "6px 12px",
-                      border: "2px solid #ff9800",
-                      background: "rgba(255, 152, 0, 0.1)",
-                      color: "#ff9800",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      borderRadius: "6px",
-                      transition: "all 0.2s",
-                    }}
+                    className="btn-secondary post-action-btn btn-report"
                     title={t("reportUsername")}
                   >
-                    <span className="material-icons" style={{ fontSize: "14px" }}>warning</span>
+                    <span className="material-icons icon-sm">warning</span>
                     <span>{t("reportUser")}</span>
                   </button>
                 )}
               </div>
-              <p style={{ fontSize: "14px", opacity: 0.7, margin: "0 0 16px 0", color: "var(--theme-text)" }}>
+              <p className="member-since">
                 {t("memberSince")}: {formatDate(user.createdAt)}
               </p>
 
               {/* Stats */}
-              <div style={{ display: "flex", gap: "32px" }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
+              <div className="profile-stats">
+                <div className="stat-item">
+                  <div className="stat-value">
                     {posts.filter(p => p.isApproved !== false).length}
                   </div>
-                  <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
+                  <div className="stat-label">
                     {t("posts")}
                   </div>
                 </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
+                <div className="stat-item">
+                  <div className="stat-value">
                     {user.followers?.length || 0}
                   </div>
-                  <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
+                  <div className="stat-label">
                     {t("followers")}
                   </div>
                 </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
+                <div className="stat-item">
+                  <div className="stat-value">
                     {user.following?.length || 0}
                   </div>
-                  <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
+                  <div className="stat-label">
                     {t("following")}
                   </div>
                 </div>
@@ -364,47 +352,26 @@ const UserProfile = () => {
 
           {/* Bio */}
           {user.bio && (
-            <div style={{ marginBottom: "24px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                <h3 style={{ margin: 0, fontSize: "18px", color: "var(--theme-text)" }}>
+            <div className="mb-6">
+              <div className="bio-section-header">
+                <h3 className="bio-section-title">
                   {t("bio")}
                 </h3>
                 {/* Translate Button - show only if bio is in different language than app */}
                 {user?.bio && user.translations?.bio?.[language] && user.translations.bio[language] !== user.bio && (
                   <button
                     onClick={() => setShowBioTranslation(!showBioTranslation)}
-                    style={{
-                      padding: "6px 16px",
-                      border: "none",
-                      background: "var(--theme-accent)",
-                      color: "var(--theme-text)",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                    }}
+                    className="btn-translate"
                     title={showBioTranslation ? t("viewOriginal") : t("translate")}
                   >
-                    <span className="material-icons" style={{ fontSize: "14px" }}>
+                    <span className="material-icons icon-sm">
                       {showBioTranslation ? "translate" : "language"}
                     </span>
                     {showBioTranslation ? t("viewOriginal") : t("translate")}
                   </button>
                 )}
               </div>
-              <p
-                style={{
-                  background: "var(--theme-bg)",
-                  padding: "20px",
-                  borderRadius: "12px",
-                  margin: 0,
-                  lineHeight: 1.7,
-                  color: "var(--theme-text)",
-                }}
-              >
+              <p className="bio-content">
                 {showBioTranslation && user.translations?.bio?.[language]
                   ? user.translations.bio[language]
                   : user.bio}
@@ -413,27 +380,16 @@ const UserProfile = () => {
           )}
 
           {/* Divider */}
-          <hr style={{ border: 0, borderTop: "1px solid var(--theme-text)", opacity: 0.2, margin: "32px 0" }} />
+          <hr className="page-divider" />
 
           {/* Category Tabs */}
           {specialCategories.length > 0 && (
-            <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+            <div className="category-tabs">
               <button
                 onClick={() => setSelectedCategoryId(null)}
-                style={{
-                  flex: 1,
-                  padding: "12px 16px",
-                  border: selectedCategoryId === null ? "2px solid var(--theme-text)" : "none",
-                  borderRadius: "8px",
-                  background: selectedCategoryId === null ? "transparent" : "transparent",
-                  color: "var(--theme-text)",
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                }}
+                className={`category-tab ${selectedCategoryId === null ? 'active' : ''}`}
               >
-                {t("all") || "All"}
+                {t("all")}
               </button>
               {specialCategories
                 .filter((category) => category._id) // Ensure category has an ID
@@ -441,19 +397,7 @@ const UserProfile = () => {
                 <button
                   key={category._id}
                   onClick={() => setSelectedCategoryId(category._id)}
-                  style={{
-                    flex: 1,
-                    padding: "12px 16px",
-                    border: selectedCategoryId === category._id ? "2px solid var(--theme-text)" : "none",
-                    borderRadius: "8px",
-                    background: selectedCategoryId === category._id ? "transparent" : "transparent",
-                    color: "var(--theme-text)",
-                    fontSize: "16px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    opacity: selectedCategoryId === category._id ? 1 : 0.6, // Dim button if category ID is missing
-                  }}
+                  className={`category-tab ${selectedCategoryId === category._id ? 'active' : ''}`}
                 >
                   {getCategoryDisplayName(category)}
                 </button>
@@ -463,44 +407,37 @@ const UserProfile = () => {
 
           {/* Posts Grid */}
           {filteredPosts.length === 0 ? (
-            <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
+            <div className="loading loading-centered">
               {selectedCategoryId
                 ? t("noPostsFound")
                 : t("selectCategory")}
             </div>
           ) : (
-            <div className="admin-cards-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+            <div className="cards-grid posts-grid">
               {filteredPosts.map((post) => (
-                <div key={post._id} className="admin-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div key={post._id} className="card post-card">
                   {/* Post Image if exists */}
                   {post.image && post.image.length > 0 && (
-                    <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: "8px", overflow: "hidden", background: "#000" }}>
+                    <div className="post-card-image-container">
                       <img
                         src={post.image[0]}
                         alt={post.title}
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
+                        className="post-card-image"
                       />
                     </div>
                   )}
                   {/* Post Title */}
-                  <h3 style={{ fontSize: "18px", fontWeight: 600, margin: 0, color: "var(--theme-text)", cursor: "pointer" }} onClick={() => navigate(`/posts/${post._id}`)}>
+                  <h3 className="post-card-title" onClick={() => navigate(`/posts/${post._id}`)}>
                     {post.title}
                   </h3>
                   {/* Category & Date */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px", color: "var(--theme-text)", opacity: 0.8 }}>
+                  <div className="post-card-meta">
                     <span>{post.category ? getCategoryDisplayName(post.category) : '—'}</span>
                     <span>{formatDate(post.createdAt)}</span>
                   </div>
                   {/* Likes count */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
-                    <span className="material-icons" style={{ fontSize: "18px" }}>favorite</span>
+                  <div className="post-likes">
+                    <span className="material-icons icon-md">favorite</span>
                     {post.likes.length}
                   </div>
                 </div>
@@ -511,24 +448,24 @@ const UserProfile = () => {
 
         {/* Report User Confirmation Modal */}
         {showReportModal && (
-          <div className="admin-modal-overlay" onClick={() => setShowReportModal(false)}>
-            <div className="admin-modal admin-modal-warning" onClick={(e) => e.stopPropagation()}>
-              <h2 className="admin-modal-title">
+          <div className="modal-overlay" onClick={() => setShowReportModal(false)}>
+            <div className="modal modal-warning" onClick={(e) => e.stopPropagation()}>
+              <h2 className="modal-title">
                 {t("reportUsername")}
               </h2>
-              <p className="admin-modal-text">
+              <p className="modal-text">
                 {t("confirmReportUser").replace("{username}", `@${user?.username || ''}`)}
               </p>
-              <div className="admin-modal-actions">
+              <div className="modal-actions">
                 <button
-                  className="admin-button-secondary"
+                  className="btn-secondary"
                   onClick={() => setShowReportModal(false)}
                   disabled={reportSubmitting}
                 >
                   {t("no")}
                 </button>
                 <button
-                  className="admin-button-primary"
+                  className="btn-primary"
                   onClick={handleReportUser}
                   disabled={reportSubmitting}
                 >

@@ -6,8 +6,36 @@ import { getToken } from "../utils/auth";
 import { postsAPI, Post } from "../services/api";
 import PostCard from "../components/PostCard";
 import UserSidebar from "../components/UserSidebar";
-import "./admin/AdminPages.css";
+import "../styles/shared.css";
+import "./Home.css";
 import Snackbar from "../components/Snackbar";
+
+/**
+ * @file Home.tsx
+ * @description Main feed page showing posts from followed users and suggested posts.
+ * Dual-mode feed: "Followed" (from users you follow) and "Suggested" (popular/recommended).
+ * Supports infinite scroll, search within feed, and real-time post translation.
+ *
+ * Features:
+ * - Tab switching between Followed and Suggested feeds
+ * - Infinite scroll pagination (20 posts per page)
+ * - Search posts within current feed
+ * - Post translation toggle (via PostCard component)
+ * - Empty state handling
+ * - Error handling with snackbar
+ * - Auto-refresh on route changes
+ *
+ * Route: /home and /home/suggested
+ * Access: Authenticated users only
+ * URL Params: ?search=... for initial search query
+ *
+ * @page
+ * @requires useNavigate - Programmatic navigation
+ * @requires useThemeLanguage - Language detection for translation
+ * @requires postsAPI - Feed fetching, search, translation
+ * @requires PostCard - Post preview component
+ * @requires UserSidebar - Navigation sidebar
+ */
 
 const Home = () => {
   const { language } = useThemeLanguage();
@@ -94,7 +122,7 @@ const Home = () => {
         console.error("[Home] Search failed:", error);
         setSnackbar({
           open: true,
-          message: error.response?.data?.message || t("searchFailed") || "Search failed",
+          message: t("searchFailed"),
           type: "error",
         });
       } finally {
@@ -179,7 +207,7 @@ const Home = () => {
       console.error("Failed to load initial feed:", error);
       setSnackbar({
         open: true,
-        message: t("failedLoadFeed") || "Failed to load feed",
+        message: t("failedLoadFeed"),
         type: "error",
       });
     } finally {
@@ -221,7 +249,7 @@ const Home = () => {
       console.error("Failed to load more posts:", error);
       setSnackbar({
         open: true,
-        message: t("failedLoadMore") || "Failed to load more posts",
+        message: t("failedLoadMore"),
         type: "error",
       });
     } finally {
@@ -253,7 +281,7 @@ const Home = () => {
       console.error("Failed to load more search results:", error);
       setSnackbar({
         open: true,
-        message: t("failedLoadMore") || "Failed to load more results",
+        message: t("failedLoadMore"),
         type: "error",
       });
     } finally {
@@ -352,40 +380,33 @@ const Home = () => {
 
   // Loading spinner
   const LoadingSpinner = () => (
-    <div className="admin-loading" style={{ padding: "20px" }}>
-      <span className="material-icons" style={{ animation: "spin 1s linear infinite", fontSize: "32px" }}>
-        refresh
-      </span>
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    <div className="loading-spinner">
+      <span className="material-icons spin">refresh</span>
     </div>
   );
 
   // No results component
   const NoResults = ({ message }: { message: string }) => (
-    <div className="admin-loading" style={{ padding: "40px", textAlign: "center" }}>
-      <span className="material-icons" style={{ fontSize: "48px", opacity: 0.5, marginBottom: "16px" }}>
-        search_off
-      </span>
-      <p style={{ margin: 0, fontSize: "16px", color: "var(--theme-text)" }}>
-        {message}
-      </p>
+    <div className="no-results">
+      <span className="material-icons">search_off</span>
+      <p className="no-results-message">{message}</p>
     </div>
   );
 
   // Render search results
   if (isSearching) {
     return (
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+      <div className="home-container">
         <UserSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-page-header">
-            <h1 className="admin-page-title">
-              {t("searchResults") || "Search Results"}
+        <div className="page-container">
+          <div className="page-header">
+            <h1 className="page-title">
+              {t("searchResults")}
             </h1>
-            <div className="admin-page-actions">
+            <div className="page-actions">
               <input
                 type="text"
-                className="admin-search-input"
+                className="search-input"
                 placeholder={t("search") + "..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -397,23 +418,21 @@ const Home = () => {
           {searchLoading && searchResults.length === 0 ? (
             <LoadingSpinner />
           ) : searchResults.length === 0 ? (
-            <NoResults message={t("noSearchResults") || "No posts found"} />
+            <NoResults message={t("noSearchResults")} />
           ) : (
             <>
-              <p style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8, marginBottom: "16px" }}>
-                {t("foundPosts") || "Found posts"} {searchResults.length} {t("posts")}
+              <p className="search-results-count">
+                {t("foundPosts")} {searchResults.length} {t("posts")}
               </p>
-              <div className="admin-cards-grid">
+              <div className="cards-grid">
                 {searchResults.map((post) => (
                   <PostCard key={post._id} post={post} />
                 ))}
               </div>
               {searchLoading && <LoadingSpinner />}
-              {!searchLoading && searchHasMore && <div ref={sentinelRef} style={{ height: "20px" }} />}
+              {!searchLoading && searchHasMore && <div ref={sentinelRef} className="sentinel" />}
               {!searchHasMore && searchResults.length > 0 && (
-                <div className="admin-loading" style={{ padding: "20px" }}>
-                  {t("noMorePosts") || "No more posts"}
-                </div>
+                <div className="loading">{t("noMorePosts")}</div>
               )}
             </>
           )}
@@ -431,15 +450,15 @@ const Home = () => {
 
   // Render personalized feed
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div className="home-container">
       <UserSidebar />
-      <div className="admin-page" style={{ flex: 1 }}>
-        <div className="admin-page-header">
-          <h1 className="admin-page-title">{t("home") || "Home"}</h1>
-          <div className="admin-page-actions">
+      <div className="page-container">
+        <div className="page-header">
+          <h1 className="page-title">{t("home")}</h1>
+          <div className="page-actions">
             <input
               type="text"
-              className="admin-search-input"
+              className="search-input"
               placeholder={t("search") + "..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -449,50 +468,18 @@ const Home = () => {
 
         {/* Section Tabs (only show if user has followed posts) */}
         {hasFollowedPosts && (
-          <div
-            style={{
-              display: "flex",
-              gap: "16px",
-              marginBottom: "24px",
-              borderBottom: "2px solid var(--theme-text)",
-              paddingBottom: "12px",
-            }}
-          >
+          <div className="feed-tabs">
             <button
               onClick={() => handleSectionSwitch('followed')}
-              style={{
-                padding: "10px 20px",
-                border: activeSection === 'followed' ? "2px solid var(--theme-text)" : "none",
-                borderRadius: "8px",
-                background: activeSection === 'followed' ? "transparent" : "transparent",
-                color: "var(--theme-text)",
-                fontFamily: "Poppins, sans-serif",
-                fontSize: "14px",
-                fontWeight: activeSection === 'followed' ? 700 : 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                opacity: activeSection === 'followed' ? 1 : 0.6,
-              }}
+              className={`tab-button ${activeSection === 'followed' ? 'active' : ''}`}
             >
-              {t("postsFromFollowed") || "Posts from people you follow"}
+              {t("postsFromFollowed")}
             </button>
             <button
               onClick={() => handleSectionSwitch('suggested')}
-              style={{
-                padding: "10px 20px",
-                border: activeSection === 'suggested' ? "2px solid var(--theme-text)" : "none",
-                borderRadius: "8px",
-                background: activeSection === 'suggested' ? "transparent" : "transparent",
-                color: "var(--theme-text)",
-                fontFamily: "Poppins, sans-serif",
-                fontSize: "14px",
-                fontWeight: activeSection === 'suggested' ? 700 : 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                opacity: activeSection === 'suggested' ? 1 : 0.6,
-              }}
+              className={`tab-button ${activeSection === 'suggested' ? 'active' : ''}`}
             >
-              {t("suggestedForYou") || "Suggested for you"}
+              {t("suggestedForYou")}
             </button>
           </div>
         )}
@@ -504,35 +491,33 @@ const Home = () => {
           <NoResults
             message={
               hasFollowedPosts
-                ? t("noSuggestedPosts") || "No suggested posts available"
-                : t("noFollowedPosts") || "You're not following anyone yet. Follow users to see their posts here."
+                ? t("noSuggestedPosts")
+                : t("noFollowedPosts")
             }
           />
         ) : (
           <>
             {!hasFollowedPosts && (
-              <div style={{ marginBottom: "24px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: 600, color: "var(--theme-text)", marginBottom: "16px" }}>
-                  {t("welcome") || "Welcome to MangoTree!"}
+              <div className="welcome-section">
+                <h2 className="welcome-title">
+                  {t("welcome")}
                 </h2>
-                <p style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8, lineHeight: 1.6 }}>
-                  {t("welcomeMessage") || "Follow users to see their posts here, or browse suggested content below."}
+                <p className="welcome-text">
+                  {t("welcomeMessage")}
                 </p>
               </div>
             )}
 
-            <div className="admin-cards-grid">
+            <div className="cards-grid">
               {feedPosts.map((post) => (
                 <PostCard key={post._id} post={post} />
               ))}
             </div>
 
             {feedLoading && <LoadingSpinner />}
-            {!feedLoading && feedHasMore && <div ref={sentinelRef} style={{ height: "20px" }} />}
+            {!feedLoading && feedHasMore && <div ref={sentinelRef} className="sentinel" />}
             {!feedHasMore && feedPosts.length > 0 && (
-              <div className="admin-loading" style={{ padding: "20px" }}>
-                {t("noMorePosts") || "No more posts"}
-              </div>
+              <div className="loading">{t("noMorePosts")}</div>
             )}
           </>
         )}

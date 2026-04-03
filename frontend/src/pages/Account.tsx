@@ -1,13 +1,61 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api, { usersAPI, UserProfile, Post } from "../services/api";
+import api from "../services/api";
+import { usersAPI, UserProfile, Post } from "../services/api";
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
 import UserSidebar from "../components/UserSidebar";
 import Snackbar from "../components/Snackbar";
 import { getToken } from "../utils/auth";
 import PostCard from "../components/PostCard";
-import "./admin/AdminPages.css";
+import "../styles/shared.css";
+import "./Account.css";
+
+/**
+ * @file Account.tsx
+ * @description User profile management page for viewing and editing personal account information.
+ * Displays user profile details, posts, and provides bio editing functionality.
+ *
+ * Features:
+ * - View current user profile information (username, email, role)
+ * - View and manage user's posts with category filtering
+ * - Edit bio with modal editor
+ * - Search posts by title/content
+ * - Navigate to user's followers/following lists
+ * - Responsive profile image display (with fallback to initials)
+ *
+ * Data Sources:
+ * - User profile: GET /users/me (on mount)
+ * - User posts: GET /posts/author/:userId
+ * - Categories: from posts response (for filtering)
+ *
+ * State Management:
+ * - User profile data (name, email, bio, etc.)
+ * - Posts array with optional category filter
+ * - Profile image upload/preview (stored but not yet implemented upload)
+ * - Bio editing modal state
+ * - Loading and error states with snackbar feedback
+ *
+ * @page
+ * @requires useState - Form state, posts state, UI state
+ * @requires useEffect - Fetch user info and posts on mount
+ * @requires useNavigate - Programmatic navigation (to followers, following, etc.)
+ * @requires useThemeLanguage - Current UI language for translations
+ * @requires useSearchParams - Not currently used but available for URL-based filtering
+ * @requires api - General API service for fetching data
+ * @requires Snackbar - Feedback notifications
+ * @requires UserSidebar - Navigation sidebar
+ */
+
+/**
+ * @interface Category
+ * @description Category type for post categorization.
+ * Includes optional translations for bilingual category names.
+ *
+ * @property {string} _id - Unique category identifier (MongoDB ObjectId)
+ * @property {string} name - Category name (English key for translation)
+ * @property {{ bg: string; en: string }} [translations.name] - Optional pre-translated names in both languages
+ */
 
 interface Category {
   _id: string;
@@ -73,7 +121,7 @@ const Account = () => {
       console.error("Failed to fetch user data:", error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("failedLoadUsers"),
+        message: t("failedLoadUsers"),
         type: "error",
       });
     } finally {
@@ -128,14 +176,14 @@ const Account = () => {
       setProfileImagePreview("");
       setSnackbar({
         open: true,
-        message: t("profilePictureUpdated") || "Profile picture updated successfully!",
+        message: t("profilePictureUpdated"),
         type: "success",
       });
     } catch (error: any) {
       console.error("Failed to update profile picture:", error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to update profile picture",
+        message: t("failedToUpdateProfilePicture"),
         type: "error",
       });
     } finally {
@@ -170,14 +218,14 @@ const Account = () => {
       setUser(updatedUser);
       setSnackbar({
         open: true,
-        message: t("bioUpdated") || "Bio updated successfully!",
+        message: t("bioUpdated"),
         type: "success",
       });
       handleCloseBioModal();
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to update bio",
+        message: t("failedToUpdateBio"),
         type: "error",
       });
     } finally {
@@ -186,7 +234,7 @@ const Account = () => {
   };
 
   // Derive the three special categories from the fetched categories in specific order: recipe, question, flex
-  const specialCategories = useMemo(() => {
+  const specialCategories = (() => {
     const lowerNames = ["recipe", "flex", "question"];
     const filtered = categories.filter((cat) =>
       lowerNames.includes(cat.name.toLowerCase())
@@ -198,15 +246,13 @@ const Account = () => {
       const bName = b.name.toLowerCase();
       return order.indexOf(aName) - order.indexOf(bName);
     });
-  }, [categories]);
-
-  // No default category selection - "All" (null) shows all posts
+  })();
 
   // Filter posts by selected category
-  const filteredPosts = useMemo(() => {
-    if (!selectedCategoryId) return posts; // Show all posts when no category selected (All button)
+  const filteredPosts = (() => {
+    if (!selectedCategoryId) return posts;
     return posts.filter((post) => post.category._id === selectedCategoryId);
-  }, [posts, selectedCategoryId]);
+  })();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(
@@ -221,10 +267,10 @@ const Account = () => {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+      <div className="account-container">
         <UserSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-loading">{t("loading")}</div>
+        <div className="page-container">
+          <div className="loading">{t("loading")}</div>
         </div>
       </div>
     );
@@ -232,100 +278,42 @@ const Account = () => {
 
   if (!user) {
     return (
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+      <div className="account-container">
         <UserSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-loading">{t("noUsersFound")}</div>
+        <div className="page-container">
+          <div className="loading">{t("noUsersFound")}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div className="account-container">
       <UserSidebar />
-      <div className="admin-page" style={{ flex: 1 }}>
-        {/* CSS for profile image hover */}
-        <style>{`
-          .profile-pic-container:hover .profile-image-overlay { opacity: 1; }
-          .profile-pic-container:hover .profile-image-img { filter: brightness(0.5); }
-          .profile-image-overlay { opacity: 0; transition: opacity 0.2s; }
-          .profile-image-img { transition: filter 0.2s; }
-        `}</style>
-
-        <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
+      <div className="page-container">
+        <div className="content-container">
           {/* Profile Section */}
-          <div style={{ display: "flex", alignItems: "center", gap: "24px", marginBottom: "24px" }}>
+          <div className="profile-header">
             {/* Profile Picture */}
-            <div className="profile-pic-container" style={{ position: "relative", cursor: "pointer" }} onClick={handleProfileImageClick}>
+            <div className="profile-pic-container" onClick={handleProfileImageClick}>
               <input
                 type="file"
                 id="profile-image-input"
                 accept=".jpg,.jpeg,.png,.webp"
                 onChange={handleFileChange}
-                style={{ display: "none" }}
+                className="hidden"
               />
-              <div
-                style={{
-                  width: "120px",
-                  height: "120px",
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  position: "relative",
-                  border: "4px solid var(--theme-accent)",
-                  background: "#ccc",
-                }}
-              >
-                {(profileImagePreview || user.profileImage) ? (
-                  <img
-                    src={profileImagePreview || user.profileImage}
-                    alt={user.username}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                    className="profile-image-img"
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "48px",
-                      fontWeight: 600,
-                      color: "var(--theme-text)",
-                      background: "var(--theme-accent)",
-                      border: "2px solid var(--theme-text)",
-                      boxSizing: "border-box",
-                    }}
-                  >
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                {/* Hover overlay with pencil icon */}
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: "rgba(0,0,0,0.5)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  className="profile-image-overlay"
-                >
-                  <span className="material-icons" style={{ fontSize: "32px", color: "white" }}>
-                    edit
-                  </span>
+              {(profileImagePreview || user.profileImage) ? (
+                <img
+                  src={profileImagePreview || user.profileImage}
+                  alt={user.username}
+                  className="profile-pic-image"
+                />
+              ) : (
+                <div className="profile-pic-placeholder">
+                  {user.username.charAt(0).toUpperCase()}
                 </div>
-              </div>
+              )}
               {profileImageFile && (
                 <button
                   onClick={(e) => {
@@ -333,15 +321,7 @@ const Account = () => {
                     handleSaveProfileImage();
                   }}
                   disabled={saving}
-                  style={{
-                    marginTop: "8px",
-                    width: "100%",
-                    padding: "8px",
-                    border: "2px solid var(--theme-text)",
-                    background: "var(--theme-accent)",
-                    color: "var(--theme-text)",
-                    cursor: saving ? "not-allowed" : "pointer",
-                  }}
+                  className="btn-primary btn-sm w-full mt-2"
                 >
                   {saving ? t("loading") : t("saveChanges")}
                 </button>
@@ -349,163 +329,90 @@ const Account = () => {
             </div>
 
             {/* User Info */}
-            <div style={{ flex: 1 }}>
-              <h1 style={{ fontSize: "28px", fontWeight: 700, margin: "0 0 8px 0", color: "var(--theme-text)" }}>
-                @{user.username}
-              </h1>
-              <p style={{ fontSize: "14px", opacity: 0.7, margin: "0 0 16px 0", color: "var(--theme-text)" }}>
+            <div className="flex-1">
+              <h1 className="profile-username">@{user.username}</h1>
+              <p className="profile-meta">
                 {t("memberSince")}: {formatDate(user.createdAt)}
               </p>
 
               {/* Stats */}
-              <div style={{ display: "flex", gap: "32px" }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
-                    {posts.length}
-                  </div>
-                  <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
-                    {t("posts")}
-                  </div>
+              <div className="d-flex gap-12 profile-stats">
+                <div className="text-center">
+                  <div className="text-2xl font-medium">{posts.length}</div>
+                  <div className="stat-label">{t("posts")}</div>
                 </div>
                 <div
-                  style={{ textAlign: "center", cursor: "pointer" }}
+                  className="text-center cursor-pointer"
                   onClick={() => navigate("/account/followers")}
                 >
-                  <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
-                    {user.followers.length}
-                  </div>
-                  <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
-                    {t("followers")}
-                  </div>
+                  <div className="text-2xl font-medium">{user.followers.length}</div>
+                  <div className="stat-label">{t("followers")}</div>
                 </div>
                 <div
-                  style={{ textAlign: "center", cursor: "pointer" }}
+                  className="text-center cursor-pointer"
                   onClick={() => navigate("/account/following")}
                 >
-                  <div style={{ fontSize: "24px", fontWeight: 600, color: "var(--theme-text)" }}>
-                    {user.following.length}
-                  </div>
-                  <div style={{ fontSize: "14px", color: "var(--theme-text)", opacity: 0.8 }}>
-                    {t("following")}
-                  </div>
+                  <div className="text-2xl font-medium">{user.following.length}</div>
+                  <div className="stat-label">{t("following")}</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Bio Section */}
-          <div style={{ marginBottom: "24px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-              <h3 style={{ margin: 0, fontSize: "18px", color: "var(--theme-text)" }}>
-                {t("bio")}
-              </h3>
-              <div style={{ display: "flex", gap: "8px" }}>
+          <div className="mb-6">
+            <div className="d-flex justify-between items-center gap-3 mb-3">
+              <h3 className="text-lg font-bold">{t("bio")}</h3>
+
+              <div className="d-flex gap-3">
                 {/* Translate Button - show only if bio is in different language than app */}
                 {user?.bio && user.translations?.bio?.[language] && user.translations.bio[language] !== user.bio && (
                   <button
                     onClick={() => setShowBioTranslation(!showBioTranslation)}
-                    style={{
-                      padding: "6px 16px",
-                      border: "none",
-                      background: "var(--theme-accent)",
-                      color: "var(--theme-text)",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                    }}
+                    className="translate-btn"
                     title={showBioTranslation ? t("viewOriginal") : t("translate")}
                   >
-                    <span className="material-icons" style={{ fontSize: "14px" }}>
-                      {showBioTranslation ? "translate" : "language"}
-                    </span>
+                    <span className="material-icons">{showBioTranslation ? "translate" : "language"}</span>
                     {showBioTranslation ? t("viewOriginal") : t("translate")}
                   </button>
                 )}
                 <button
                   onClick={handleOpenBioModal}
                   disabled={saving}
-                  style={{
-                    padding: "6px 12px",
-                    border: "1px solid var(--theme-text)",
-                    background: "transparent",
-                    color: "var(--theme-text)",
-                    borderRadius: "6px",
-                    cursor: saving ? "not-allowed" : "pointer",
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                  }}
+                  className="edit-bio-btn"
                 >
-                  <span className="material-icons" style={{ fontSize: "14px" }}>edit</span>
+                  <span className="material-icons text-sm">edit</span>
                   {t("editBio")}
                 </button>
               </div>
             </div>
-            <div
-              style={{
-                background: "var(--theme-bg)",
-                padding: "16px",
-                borderRadius: "8px",
-                lineHeight: 1.7,
-                color: "var(--theme-text)",
-                minHeight: "40px",
-              }}
-            >
+            <div className="bio-content">
               {user?.bio ? (
                 showBioTranslation && user.translations?.bio?.[language]
                   ? user.translations.bio[language]
                   : user.bio
               ) : (
-                <span style={{ opacity: 0.5 }}>{t("noBio")}</span>
+                <span className="bio-empty">{t("noBio")}</span>
               )}
             </div>
           </div>
 
           {/* Divider */}
-          <hr style={{ border: 0, borderTop: "1px solid var(--theme-text)", opacity: 0.2, margin: "32px 0" }} />
+          <hr className="page-divider" />
 
           {/* Category Tabs (3 columns) */}
-          <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+          <div className="category-tabs">
             <button
               onClick={() => setSelectedCategoryId(null)}
-              style={{
-                flex: 1,
-                padding: "12px 16px",
-                border: selectedCategoryId === null ? "2px solid var(--theme-text)" : "none",
-                borderRadius: "8px",
-                background: selectedCategoryId === null ? "transparent" : "transparent",
-                color: "var(--theme-text)",
-                fontSize: "16px",
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
+              className={`category-tab ${selectedCategoryId === null ? 'active' : ''}`}
             >
-              {t("all") || "All"}
+              {t("all")}
             </button>
             {specialCategories.map((category) => (
               <button
                 key={category._id}
                 onClick={() => setSelectedCategoryId(category._id)}
-                style={{
-                  flex: 1,
-                  padding: "12px 16px",
-                  border: selectedCategoryId === category._id ? "2px solid var(--theme-text)" : "none",
-                  borderRadius: "8px",
-                  background: selectedCategoryId === category._id ? "transparent" : "transparent",
-                  color: "var(--theme-text)",
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  opacity: selectedCategoryId === category._id ? 1 : 0.6,
-                }}
+                className={`category-tab ${selectedCategoryId === category._id ? 'active' : ''}`}
               >
                 {getCategoryDisplayName(category)}
               </button>
@@ -514,13 +421,9 @@ const Account = () => {
 
           {/* Posts Grid */}
           {filteredPosts.length === 0 ? (
-            <div className="admin-loading" style={{ textAlign: "center", padding: "40px" }}>
-              {selectedCategoryId
-                ? t("noPostsFound") || "No posts found in this category."
-                : t("selectCategory") || "Select a category to view posts."}
-            </div>
+            <div className="loading">{selectedCategoryId ? t("noPostsFound") : t("selectCategory")}</div>
           ) : (
-            <div className="admin-cards-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+            <div className="account-posts-grid">
               {filteredPosts.map((post) => (
                 <PostCard key={post._id} post={post} />
               ))}
@@ -530,84 +433,29 @@ const Account = () => {
 
         {/* Edit Bio Modal */}
         {showBioModal && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "rgba(0,0,0,0.5)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 1000,
-            }}
-            onClick={handleCloseBioModal}
-          >
-            <div
-              style={{
-                background: "var(--theme-bg)",
-                padding: "24px",
-                borderRadius: "12px",
-                maxWidth: "500px",
-                width: "90%",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 style={{ margin: "0 0 16px 0", color: "var(--theme-text)" }}>
-                {t("editBio")}
-              </h2>
+          <div className="modal-overlay" onClick={handleCloseBioModal}>
+            <div className="edit-bio-modal" onClick={(e) => e.stopPropagation()}>
+              <h2 className="modal-title">{t("editBio")}</h2>
               <textarea
                 value={bioEditText}
                 onChange={(e) => setBioEditText(e.target.value)}
                 rows={5}
                 placeholder={t("noBio")}
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  border: "1px solid var(--theme-text)",
-                  borderRadius: "8px",
-                  background: "var(--theme-bg)",
-                  color: "var(--theme-text)",
-                  fontSize: "14px",
-                  resize: "vertical",
-                  marginBottom: "16px",
-                  boxSizing: "border-box",
-                }}
+                className="bio-textarea"
                 autoFocus
               />
-              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <div className="modal-actions">
                 <button
                   onClick={handleCloseBioModal}
                   disabled={bioSubmitting}
-                  style={{
-                    padding: "8px 16px",
-                    border: "2px solid var(--theme-text)",
-                    background: "transparent",
-                    color: "var(--theme-text)",
-                    borderRadius: "8px",
-                    cursor: bioSubmitting ? "not-allowed" : "pointer",
-                    fontSize: "14px",
-                    fontWeight: 500,
-                  }}
+                  className="btn-secondary"
                 >
                   {t("cancel")}
                 </button>
                 <button
                   onClick={handleSaveBio}
                   disabled={bioSubmitting}
-                  style={{
-                    padding: "8px 16px",
-                    border: "none",
-                    background: bioSubmitting ? "#ccc" : "var(--theme-accent)",
-                    color: "var(--theme-text)",
-                    borderRadius: "8px",
-                    cursor: bioSubmitting ? "not-allowed" : "pointer",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                  }}
+                  className="btn-primary"
                 >
                   {bioSubmitting ? t("loading") : t("saveBio")}
                 </button>

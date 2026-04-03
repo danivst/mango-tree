@@ -1,0 +1,190 @@
+/* Account page specific styles */
+
+.account-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Profile header section - matches UserProfile layout */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Profile picture container - matches UserProfile */
+.profile-pic-container {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #ccc;
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-pic-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-pic-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: 600;
+  color: var(--theme-text);
+  background: var(--theme-accent);
+  border: 2px solid var(--theme-text);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+/* Profile username and meta */
+.profile-username {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: var(--theme-text);
+}
+
+.profile-meta {
+  font-size: 14px;
+  opacity: 0.7;
+  margin: 0 0 16px 0;
+  color: var(--theme-text);
+}
+
+/* Stats label */
+.stat-label {
+  font-size: 14px;
+  color: var(--theme-text);
+  opacity: 0.8;
+}
+
+/* Buttons */
+.translate-btn,
+.edit-bio-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: "Poppins", sans-serif;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.translate-btn {
+  padding: 6px 16px;
+  border: none;
+  background: var(--theme-accent);
+  color: var(--theme-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.edit-bio-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--theme-text);
+  background: transparent;
+  color: var(--theme-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.edit-bio-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Bio content */
+.bio-content {
+  background: var(--theme-bg);
+  padding: 16px;
+  border-radius: 8px;
+  line-height: 1.7;
+  color: var(--theme-text);
+  min-height: 40px;
+}
+
+.bio-empty {
+  opacity: 0.5;
+}
+
+/* Category tabs */
+
+/* Account posts grid */
+.account-posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+/* Bio textarea */
+.bio-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--theme-text);
+  border-radius: 8px;
+  background: var(--theme-bg);
+  color: var(--theme-text);
+  font-size: 14px;
+  resize: vertical;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Edit bio modal */
+.edit-bio-modal {
+  background: var(--theme-bg);
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile responsive styles */
+@media (max-width: 767px) {
+  /* Category tabs: wrap and center */
+  .category-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .category-tab {
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+
+  /* Profile stats: stack vertically */
+  .profile-stats {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* Edit bio button: make smaller */
+  .edit-bio-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  /* Translate button: make smaller to match */
+  .translate-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}

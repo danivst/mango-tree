@@ -5,8 +5,49 @@ import { useNotifications } from "../context/NotificationContext";
 import { getTranslation } from "../utils/translations";
 import { notificationsAPI, Notification } from "../services/api";
 import Snackbar from "../components/Snackbar";
-import "./admin/AdminPages.css";
+import "../styles/shared.css";
 import "./Notifications.css";
+
+/**
+ * @file Notifications.tsx
+ * @description Notifications center where users view and manage all system notifications.
+ * Displays a scrollable list of notifications with color-coded icons based on type.
+ *
+ * Features:
+ * - Real-time notification list with read/unread status
+ * - Color-coded icons: likes (pink), follows/comments (blue), report feedback (green/red/amber), system (amber)
+ * - Click to mark as read and navigate to linked content
+ * - Mark all as read (button visible only when unread notifications exist)
+ * - Delete individual notifications
+ * - Clear all notifications with confirmation modal
+ * - Refresh button to manually reload
+ * - Time formatting: relative times (e.g., "5 minutes ago") for recent, absolute dates for older
+ * - Translation support for notification messages (uses translations.message if available)
+ *
+ * Notification Types & Icon Logic:
+ * - like: favorite (pink)
+ * - follow: person_add (blue)
+ * - comment: comment (blue)
+ * - report_feedback: Depends on message content:
+ *   - AI service warnings/pending admin review → warning (amber)
+ *   - Post rejections/removals → close (red)
+ *   - Resolved reports → check_circle (green)
+ * - system: warning for alerts, info for general (amber/gray)
+ *
+ * Integration:
+ * - Uses NotificationContext for unread count management (decrement, clear, markAllAsRead)
+ * - Clicking a read/unread notification marks it read via API and updates both local state and context badge
+ * - Deleting a notification updates badge if it was unread
+ *
+ * @page
+ * @requires useState - Notifications list, loading, snackbar, modal state
+ * @requires useEffect - Fetch notifications on mount
+ * @requires useThemeLanguage - Language for time formatting and translations
+ * @requires useNotifications - Context for badge management (decrementUnreadCount, clearUnreadCount, markAllAsRead)
+ * @requires notificationsAPI - Fetch, mark read, delete individual, delete all
+ * @requires Snackbar - Success/error feedback (delete, clear all)
+ * @requires UserSidebar - Navigation
+ */
 
 const Notifications = () => {
   const { language } = useThemeLanguage();
@@ -29,7 +70,7 @@ const Notifications = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("somethingWentWrong"),
+        message: t("somethingWentWrong"),
         type: "error",
       });
     } finally {
@@ -144,20 +185,20 @@ const Notifications = () => {
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
-      return t("justNow") || "Just now";
+      return t("justNow");
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      const unit = minutes === 1 ? (t("minute") || "minute") : (t("minutes") || "minutes");
+      const unit = minutes === 1 ? t("minute") : t("minutes");
       const ago = t("ago");
       return language === "bg" ? `${ago} ${minutes} ${unit}` : `${minutes} ${unit} ${ago}`;
     } else if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      const unit = hours === 1 ? (t("hour") || "hour") : (t("hours") || "hours");
+      const unit = hours === 1 ? t("hour") : t("hours");
       const ago = t("ago");
       return language === "bg" ? `${ago} ${hours} ${unit}` : `${hours} ${unit} ${ago}`;
     } else if (diffInSeconds < 604800) {
       const days = Math.floor(diffInSeconds / 86400);
-      const unit = days === 1 ? (t("day") || "day") : (t("days") || "days");
+      const unit = days === 1 ? t("day") : t("days");
       const ago = t("ago");
       return language === "bg" ? `${ago} ${days} ${unit}` : `${days} ${unit} ${ago}`;
     } else {
@@ -199,7 +240,7 @@ const Notifications = () => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: t("somethingWentWrong") || "Failed to mark all as read",
+        message: t("somethingWentWrong"),
         type: "error",
       });
     }
@@ -215,7 +256,7 @@ const Notifications = () => {
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
       setSnackbar({
         open: true,
-        message: t("notificationDeleted") || "Notification deleted",
+        message: t("notificationDeleted"),
         type: "success",
       });
 
@@ -226,7 +267,7 @@ const Notifications = () => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: t("failedToDeleteNotification") || "Failed to delete notification",
+        message: t("failedToDeleteNotification"),
         type: "error",
       });
     }
@@ -244,13 +285,13 @@ const Notifications = () => {
       clearUnreadCount();
       setSnackbar({
         open: true,
-        message: t("allNotificationsCleared") || "All notifications cleared",
+        message: t("allNotificationsCleared"),
         type: "success",
       });
     } catch (error) {
       setSnackbar({
         open: true,
-        message: t("failedToClearNotifications") || "Failed to clear notifications",
+        message: t("failedToClearNotifications"),
         type: "error",
       });
     } finally {
@@ -260,45 +301,31 @@ const Notifications = () => {
 
   return (
     <>
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+      <div className="notifications-container">
         <UserSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-page-header">
-            <h1 className="admin-page-title">{t("notifications")}</h1>
-            <div className="admin-page-actions">
+        <div className="page-container">
+          <div className="page-header">
+            <h1 className="page-title">{t("notifications")}</h1>
+            <div className="page-actions">
               {notifications.some((n) => !n.read) && (
-                <button className="admin-button-secondary" onClick={markAllAsRead}>
+                <button className="btn-secondary" onClick={markAllAsRead}>
                   {t("markAllAsRead")}
                 </button>
               )}
               <button
-                className="admin-button-secondary"
+                className="btn-secondary icon-btn"
                 onClick={fetchNotifications}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
                 title={t("refreshNotifications")}
               >
-                <span className="material-icons" style={{ fontSize: "18px" }}>
-                  refresh
-                </span>
+                <span className="material-icons text-lg">refresh</span>
                 {t("refresh")}
               </button>
               {notifications.length > 0 && (
                 <button
-                  className="admin-delete-button"
+                  className="btn-danger icon-btn"
                   onClick={clearAll}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
                 >
-                  <span className="material-icons" style={{ fontSize: "18px" }}>
-                    delete
-                  </span>
+                  <span className="material-icons text-lg">delete</span>
                   {t("clearAll")}
                 </button>
               )}
@@ -306,9 +333,9 @@ const Notifications = () => {
           </div>
 
           {loading ? (
-            <div className="admin-loading">{t("loading")}</div>
+            <div className="loading">{t("loading")}</div>
           ) : notifications.length === 0 ? (
-            <div className="admin-loading">{t("noNotifications")}</div>
+            <div className="loading">{t("noNotifications")}</div>
           ) : (
             <div className="notifications-list">
 
@@ -336,28 +363,14 @@ const Notifications = () => {
                       </span>
                     </div>
                     <button
-                      className="admin-button-secondary"
+                      className="notification-delete-btn ml-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteNotification(notification._id);
                       }}
-                      style={{
-                        padding: "6px 12px",
-                        minWidth: "auto",
-                        marginLeft: "8px",
-                        flexShrink: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "transparent",
-                        border: "1px solid var(--theme-text)",
-                        opacity: 0.7,
-                      }}
                       title={t("deleteNotification")}
                     >
-                      <span className="material-icons" style={{ fontSize: "18px" }}>
-                        delete
-                      </span>
+                      <span className="material-icons text-lg">delete</span>
                     </button>
                   </div>
                 );
@@ -377,89 +390,20 @@ const Notifications = () => {
         </div>
       </div>
 
-      {/* Custom Confirmation Modal */}
+      {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowConfirmModal(false);
-            }
-          }}
-        >
-          <div
-            style={{
-              background: "var(--theme-bg)",
-              borderRadius: "12px",
-              padding: "24px",
-              maxWidth: "400px",
-              width: "90%",
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-              border: "1px solid var(--theme-text)",
-              opacity: 0.8,
-            }}
-          >
-            <h3
-              style={{
-                margin: "0 0 16px 0",
-                fontSize: "18px",
-                fontWeight: 600,
-                color: "var(--theme-text)",
-              }}
-            >
-              {t("confirmAction") || "Confirm Action"}
-            </h3>
-            <p
-              style={{
-                margin: "0 0 24px 0",
-                fontSize: "14px",
-                color: "var(--theme-text)",
-                lineHeight: 1.5,
-              }}
-            >
-              {t("clearAllConfirm") || "Are you sure you want to delete all notifications?"}
-            </p>
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                style={{
-                  padding: "8px 16px",
-                  border: "2px solid var(--theme-text)",
-                  background: "transparent",
-                  color: "var(--theme-text)",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                }}
-              >
-                {t("cancel") || "Cancel"}
+        <div className="modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget) setShowConfirmModal(false);
+        }}>
+          <div className="modal confirm-dialog">
+            <h3 className="modal-title">{t("confirmAction")}</h3>
+            <p className="modal-text">{t("clearAllConfirm")}</p>
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={() => setShowConfirmModal(false)}>
+                {t("cancel")}
               </button>
-              <button
-                onClick={handleConfirmClearAll}
-                style={{
-                  padding: "8px 16px",
-                  border: "none",
-                  background: "var(--theme-accent)",
-                  color: "var(--theme-text)",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                }}
-              >
-                {t("confirm") || "Confirm"}
+              <button className="btn-primary" onClick={handleConfirmClearAll}>
+                {t("confirm")}
               </button>
             </div>
           </div>

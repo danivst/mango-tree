@@ -9,15 +9,80 @@ import {
   getTotalPages,
   SortState,
 } from "../../utils/table-utils";
-import "./AdminPages.css";
+import "../../styles/shared.css";
+import "./Users.css";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation, Language } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
 import { Category } from "../../services/admin-api";
 import Footer from "../../components/Footer";
 
+/**
+ * @type DeleteStep
+ * @description State machine for admin user deletion flow.
+ * Controls which step of the multi-modal deletion process is active.
+ *
+ * @property {"warning"} warning - Initial warning screen (user acknowledgment)
+ * @property {"reason"} reason - Admin must enter deletion reason (required)
+ * @property {"confirm"} confirm - Final confirmation before irreversible deletion
+ * @property {null} null - No deletion modal visible
+ */
+
 type DeleteStep = "warning" | "reason" | "confirm" | null;
+
+/**
+ * @type BanUnbanStep
+ * @description State machine for admin ban/unban flow.
+ * Manages the multi-step ban/unban process with reason requirement.
+ *
+ * @property {"warning"} warning - Ban warning screen with reason input
+ * @property {"reason"} reason - Enter ban reason (shown after warning for ban)
+ * @property {"confirm"} confirm - Final ban/unban confirmation
+ * @property {"unban_confirm"} unban_confirm - Unban confirmation (simple)
+ * @property {null} null - No ban/unban modal visible
+ */
+
 type BanUnbanStep = "warning" | "reason" | "confirm" | "unban_confirm" | null;
+
+/**
+ * @file Users.tsx
+ * @description Admin user management page - view all users, ban/unban, delete accounts.
+ * Provides comprehensive user administration with filtering, sorting, and bulk actions.
+ *
+ * Features:
+ * - List all users with username, email, role, status, join date
+ * - Sortable columns: username, email, role, isBanned, createdAt
+ * - Search by username/email
+ * - Pagination (20 per page)
+ * - User profile preview modal (click on user)
+ * - Ban user with mandatory reason (modal flow)
+ * - Unban user (instant, no reason required)
+ * - Delete user with multi-step confirmation (admin deletion requires reason)
+ * - View user's posts (navigates to respective page)
+ *
+ * Data Source:
+ * - Uses AdminDataContext.users (merged with ban status) from fetchUsers()
+ *
+ * Access Control:
+ * - Route protected by AdminRoute (admin only)
+ *
+ * State Machines:
+ * - DeleteStep: warning → reason (admin) / confirm → execute
+ * - BanUnbanStep: warning → reason (ban) → confirm / unban_confirm → execute
+ *
+ * @page
+ * @requires useState - Users list, search, sort, modals, loading, selected user preview
+ * @requires useMemo - Filtered/sorted/paginated computed list
+ * @requires useEffect - No direct mount effect; data from AdminDataContext
+ * @requires useThemeLanguage - Translations
+ * @requires useAdminData - Access to users array and usersState
+ * @requires useNavigate - Navigate to user's posts page, profile preview
+ * @requires adminAPI - Get banned users, ban/unban, delete user
+ * @requires api - For GET /users/:id (profile preview) maybe
+ * @requires Snackbar - Success/error feedback
+ * @requires Footer - Footer component
+ * @requires sortData, paginateData, getTotalPages - Table utilities
+ */
 
 const Users = () => {
   const { users, usersState, fetchUsers } = useAdminData();
@@ -236,7 +301,7 @@ const Users = () => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ opacity: 0.3 }}
+          className="sort-icon-inactive"
         >
           <path d="M8 9l4-4 4 4M8 15l4 4 4-4" />
         </svg>
@@ -326,7 +391,7 @@ const Users = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to delete user",
+        message: t("failedToDeleteUser"),
         type: "error",
       });
     }
@@ -359,9 +424,14 @@ const Users = () => {
       setBanReason("");
       await fetchUsers(); // Refresh the user list
     } catch (error: any) {
+      const backendMessage = error.response?.data?.message;
+      let displayMessage = backendMessage || "Failed to ban user";
+      if (backendMessage === "user is already banned.") {
+        displayMessage = t("userAlreadyBanned");
+      }
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to ban user",
+        message: displayMessage,
         type: "error",
       });
     }
@@ -388,7 +458,7 @@ const Users = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to unban user",
+        message: t("failedToUnbanUser"),
         type: "error",
       });
     }
@@ -418,7 +488,7 @@ const Users = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to load user profile",
+        message: t("failedToLoadUserProfile"),
         type: "error",
       });
       setPreviewLoading(false);
@@ -432,29 +502,23 @@ const Users = () => {
     : null;
 
   return (
-    <div className="admin-page">
-      <div className="admin-page-header">
-        <h1 className="admin-page-title">{t("users")}</h1>
-        <div className="admin-page-actions">
+    <div>
+      <div className="page-container-header">
+        <h1 className="page-container-title">{t("users")}</h1>
+        <div className="page-container-actions">
           <button
-            className="admin-button-secondary"
+            className="btn-secondary icon-btn mr-2"
             onClick={handleRefresh}
             disabled={loading}
-            style={{
-              marginRight: "8px",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
           >
-            <span className="material-icons" style={{ fontSize: "16px" }}>
+            <span className="material-icons text-base">
               refresh
             </span>
-            {t("refresh") || "Refresh"}
+            {t("refresh")}
           </button>
           <input
             type="text"
-            className="admin-search-input"
+            className="search-input"
             placeholder={t("search") + "..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -463,93 +527,56 @@ const Users = () => {
       </div>
 
       {error && (
-        <div
-          className="admin-error"
-          style={{
-            color: "#d32f2f",
-            marginBottom: "16px",
-            padding: "12px",
-            background: "#ffebee",
-            borderRadius: "8px",
-          }}
-        >
+        <div className="error-box-colored">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {loading ? (
-        <div className="admin-loading">Loading...</div>
+        <div className="loading">Loading...</div>
       ) : !hasFetched ? (
-        <div
-          className="admin-loading"
-          style={{ textAlign: "center", padding: "40px" }}
-        >
+        <div className="loading">
           No data loaded. Click Refresh to load data.
         </div>
       ) : (
         <div
-          className="admin-table-container"
+          className="table-container table-grab"
           ref={tableContainerRef}
           onMouseDown={handleMouseDown}
-          style={{ cursor: "grab" }}
         >
           {/* Main table with bottom scrollbar */}
-          <table className="admin-table">
+          <table className="table">
             <thead>
               <tr>
                 <th
-                  className="sortable-header"
+                  className="sortable-header min-w-150"
                   onClick={() => handleSort("username")}
-                  style={{ minWidth: "150px" }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="header-content">
                     {t("username")}
                     {getSortIcon("username")}
                   </div>
                 </th>
                 <th
-                  className="sortable-header"
+                  className="sortable-header min-w-200"
                   onClick={() => handleSort("email")}
-                  style={{ minWidth: "200px" }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="header-content">
                     {t("email")}
                     {getSortIcon("email")}
                   </div>
                 </th>
                 <th
-                  className="sortable-header"
+                  className="sortable-header min-w-150"
                   onClick={() => handleSort("created")}
-                  style={{ minWidth: "150px" }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="header-content">
                     {t("created")}
                     {getSortIcon("created")}
                   </div>
                 </th>
-                <th style={{ minWidth: "120px" }}>{t("viewProfile")}</th>
-                <th style={{ minWidth: "180px" }}>{t("actions")}</th>
+                <th className="min-w-120">{t("viewProfile")}</th>
+                <th className="min-w-180">{t("actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -570,17 +597,7 @@ const Users = () => {
                   <td>
                     {user.role !== "admin" && (
                       <button
-                        className="admin-link"
-                        style={{
-                          background: "transparent",
-                          border: "none",
-                          cursor: "pointer",
-                          textDecoration: "underline",
-                          color: "var(--theme-text)",
-                          fontSize: "14px",
-                          fontWeight: 500,
-                          padding: 0,
-                        }}
+                        className="user-profile-link"
                         onClick={() => handleViewProfile(user._id)}
                       >
                         {t("viewProfile")}
@@ -589,31 +606,29 @@ const Users = () => {
                   </td>
                   <td>
                     {user.role !== "admin" && (
-                      <>
+                      <div className="table-actions">
                         <button
-                          className="admin-delete-button"
+                          className="btn-danger"
                           onClick={() => handleDeleteClick(user._id)}
                         >
                           {t("delete")}
                         </button>
                         {user.isBanned ? (
                           <button
-                            className="admin-button-ban"
-                            style={{ marginLeft: "8px" }}
+                            className="btn-admin-action"
                             onClick={() => handleUnbanClick(user._id)}
                           >
                             {t("unban")}
                           </button>
                         ) : (
                           <button
-                            className="admin-button-ban"
-                            style={{ marginLeft: "8px" }}
+                            className="btn-admin-action"
                             onClick={() => handleBanClick(user._id)}
                           >
                             {t("ban")}
                           </button>
                         )}
-                      </>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -623,20 +638,20 @@ const Users = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="admin-pagination">
+            <div className="pagination">
               <button
-                className="admin-pagination-button"
+                className="pagination-button"
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
               >
                 {t("previous")}
               </button>
-              <span className="admin-pagination-info">
+              <span className="pagination-info">
                 {t("page")} {currentPage} {t("of")} {totalPages} (
                 {sortedData.length} {t("total")})
               </span>
               <button
-                className="admin-pagination-button"
+                className="pagination-button"
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
@@ -651,17 +666,17 @@ const Users = () => {
 
       {/* Delete Modal */}
       {deleteStep && userToDelete && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal admin-modal-danger">
+        <div className="modal-overlay">
+          <div className="modal modal-danger">
             {deleteStep === "warning" && (
               <>
-                <h2 className="admin-modal-title">{t("deleteAccount")}</h2>
-                <p className="admin-modal-text">
+                <h2 className="modal-title">{t("deleteAccount")}</h2>
+                <p className="modal-text">
                   {t("adminDeleteAccountWarning")}
                 </p>
-                <div className="admin-modal-actions">
+                <div className="modal-actions">
                   <button
-                    className="admin-button-secondary"
+                    className="btn-secondary"
                     onClick={() => {
                       setDeleteStep(null);
                       setDeleteUserId(null);
@@ -670,7 +685,7 @@ const Users = () => {
                     {t("close")}
                   </button>
                   <button
-                    className="admin-button-primary"
+                    className="btn-primary"
                     onClick={handleDeleteContinue}
                   >
                     {t("continue")}
@@ -681,7 +696,7 @@ const Users = () => {
 
             {deleteStep === "reason" && (
               <>
-                <h2 className="admin-modal-title">
+                <h2 className="modal-title">
                   {t("adminReasonForDeletion")}
                 </h2>
                 <form
@@ -690,12 +705,12 @@ const Users = () => {
                     handleDeleteTerminate();
                   }}
                 >
-                  <div className="admin-form-group">
-                    <label className="admin-form-label">
+                  <div className="form-group">
+                    <label className="form-label">
                       {t("adminReasonForDeletion")}
                     </label>
                     <textarea
-                      className="admin-form-textarea"
+                      className="form-textarea"
                       value={deleteReason}
                       onChange={(e) => setDeleteReason(e.target.value)}
                       required
@@ -703,15 +718,15 @@ const Users = () => {
                       placeholder={t("adminReasonForDeletionPlaceholder")}
                     />
                   </div>
-                  <div className="admin-modal-actions">
+                  <div className="modal-actions">
                     <button
                       type="button"
-                      className="admin-button-secondary"
+                      className="btn-secondary"
                       onClick={handleDeleteBack}
                     >
                       {t("goBack")}
                     </button>
-                    <button type="submit" className="admin-button-primary">
+                    <button type="submit" className="btn-primary">
                       {t("terminateAccount")}
                     </button>
                   </div>
@@ -721,18 +736,18 @@ const Users = () => {
 
             {deleteStep === "confirm" && (
               <>
-                <h2 className="admin-modal-title">
+                <h2 className="modal-title">
                   {t("adminConfirmDeletion")}
                 </h2>
-                <p className="admin-modal-text">
+                <p className="modal-text">
                   {t("adminConfirmDeletionText").replace(
                     "{username}",
                     userToDelete.username,
                   )}
                 </p>
-                <div className="admin-modal-actions">
+                <div className="modal-actions">
                   <button
-                    className="admin-button-secondary"
+                    className="btn-secondary"
                     onClick={() => {
                       setDeleteStep("reason");
                     }}
@@ -740,7 +755,7 @@ const Users = () => {
                     {t("no")}
                   </button>
                   <button
-                    className="admin-button-danger"
+                    className="btn-danger"
                     onClick={handleDeleteConfirm}
                   >
                     {t("yes")}
@@ -754,20 +769,20 @@ const Users = () => {
 
       {/* Ban Modal */}
       {banUnbanStep && banUserId && userToBan && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal admin-modal-danger">
+        <div className="modal-overlay">
+          <div className="modal modal-danger">
             {banUnbanStep === "warning" && (
               <>
-                <h2 className="admin-modal-title">{t("banUser")}</h2>
-                <p className="admin-modal-text">
+                <h2 className="modal-title">{t("banUser")}</h2>
+                <p className="modal-text">
                   {t("banUserWarning").replace(
                     "{username}",
                     userToBan.username,
                   )}
                 </p>
-                <div className="admin-modal-actions">
+                <div className="modal-actions">
                   <button
-                    className="admin-button-secondary"
+                    className="btn-secondary"
                     onClick={() => {
                       setBanUnbanStep(null);
                       setBanUserId(null);
@@ -776,7 +791,7 @@ const Users = () => {
                     {t("close")}
                   </button>
                   <button
-                    className="admin-button-primary"
+                    className="btn-primary"
                     onClick={handleBanContinue}
                   >
                     {t("continue")}
@@ -787,19 +802,19 @@ const Users = () => {
 
             {banUnbanStep === "reason" && (
               <>
-                <h2 className="admin-modal-title">{t("reasonForBan")}</h2>
+                <h2 className="modal-title">{t("reasonForBan")}</h2>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     handleBanTerminate();
                   }}
                 >
-                  <div className="admin-form-group">
-                    <label className="admin-form-label">
+                  <div className="form-group">
+                    <label className="form-label">
                       {t("reasonForBan")}
                     </label>
                     <textarea
-                      className="admin-form-textarea"
+                      className="form-textarea"
                       value={banReason}
                       onChange={(e) => setBanReason(e.target.value)}
                       required
@@ -807,15 +822,15 @@ const Users = () => {
                       placeholder={t("reasonForBanPlaceholder")}
                     />
                   </div>
-                  <div className="admin-modal-actions">
+                  <div className="modal-actions">
                     <button
                       type="button"
-                      className="admin-button-secondary"
+                      className="btn-secondary"
                       onClick={handleBanBack}
                     >
                       {t("goBack")}
                     </button>
-                    <button type="submit" className="admin-button-danger">
+                    <button type="submit" className="btn-danger">
                       {t("banUser")}
                     </button>
                   </div>
@@ -825,16 +840,16 @@ const Users = () => {
 
             {banUnbanStep === "confirm" && (
               <>
-                <h2 className="admin-modal-title">{t("confirmBan")}</h2>
-                <p className="admin-modal-text">
+                <h2 className="modal-title">{t("confirmBan")}</h2>
+                <p className="modal-text">
                   {t("confirmBanText").replace(
                     "{username}",
                     userToBan.username,
                   )}
                 </p>
-                <div className="admin-modal-actions">
+                <div className="modal-actions">
                   <button
-                    className="admin-button-secondary"
+                    className="btn-secondary"
                     onClick={() => {
                       setBanUnbanStep("reason");
                     }}
@@ -842,7 +857,7 @@ const Users = () => {
                     {t("goBack")}
                   </button>
                   <button
-                    className="admin-button-danger"
+                    className="btn-danger"
                     onClick={handleBanConfirm}
                   >
                     {t("banUser")}
@@ -856,18 +871,18 @@ const Users = () => {
 
       {/* Unban Modal */}
       {banUnbanStep === "unban_confirm" && banUserId && userToUnban && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal admin-modal-danger">
-            <h2 className="admin-modal-title">{t("unbanUser")}</h2>
-            <p className="admin-modal-text">
+        <div className="modal-overlay">
+          <div className="modal modal-danger">
+            <h2 className="modal-title">{t("unbanUser")}</h2>
+            <p className="modal-text">
               {t("unbanUserConfirm").replace(
                 "{username}",
                 userToUnban.username,
               )}
             </p>
-            <div className="admin-modal-actions">
+            <div className="modal-actions">
               <button
-                className="admin-button-secondary"
+                className="btn-secondary"
                 onClick={() => {
                   setBanUnbanStep(null);
                   setBanUserId(null);
@@ -876,7 +891,7 @@ const Users = () => {
                 {t("cancel")}
               </button>
               <button
-                className="admin-button-primary"
+                className="btn-primary"
                 onClick={handleUnbanConfirm}
               >
                 {t("unban")}
@@ -888,86 +903,35 @@ const Users = () => {
 
       {/* User Profile Preview Modal */}
       {selectedUser && (
-        <div className="admin-modal-overlay" style={{ zIndex: 2100 }}>
-          <div
-            className="admin-modal"
-            style={{ maxWidth: "900px", maxHeight: "90vh", overflowY: "auto" }}
-          >
+        <div className="modal-overlay z-index-high">
+          <div className="modal modal-preview">
             {previewLoading ? (
-              <div className="admin-loading" style={{ padding: "40px" }}>
+              <div className="loading loading-centered">
                 {t("loading")}
               </div>
             ) : (
               <>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginBottom: "16px",
-                  }}
-                >
+                <div className="modal-close-container">
                   <button
                     onClick={() => setSelectedUser(null)}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "24px",
-                      color: "var(--theme-text)",
-                      padding: 0,
-                      lineHeight: 1,
-                    }}
+                    className="btn-close"
                   >
                     &times;
                   </button>
                 </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "24px",
-                    marginBottom: "24px",
-                  }}
-                >
+                <div className="preview-header">
                   {/* Profile Picture */}
-                  <div style={{ position: "relative" }}>
-                    <div
-                      style={{
-                        width: "120px",
-                        height: "120px",
-                        borderRadius: "50%",
-                        overflow: "hidden",
-                        border: "4px solid var(--theme-accent)",
-                        background: "#ccc",
-                      }}
-                    >
+                  <div className="preview-avatar-container">
+                    <div className="preview-avatar">
                       {selectedUser.profileImage ? (
                         <img
                           src={selectedUser.profileImage}
                           alt={selectedUser.username}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
+                          className="preview-avatar-image"
                         />
                       ) : (
-                        <div
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "48px",
-                            fontWeight: 600,
-                            color: "var(--theme-text)",
-                            background: "var(--theme-accent)",
-                            border: "2px solid var(--theme-text)",
-                            boxSizing: "border-box",
-                          }}
-                        >
+                        <div className="preview-avatar-placeholder">
                           {selectedUser.username.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -975,25 +939,11 @@ const Users = () => {
                   </div>
 
                   {/* User Info */}
-                  <div style={{ flex: 1 }}>
-                    <h1
-                      style={{
-                        fontSize: "28px",
-                        fontWeight: 700,
-                        margin: 0,
-                        color: "var(--theme-text)",
-                      }}
-                    >
+                  <div className="preview-info">
+                    <h1 className="preview-username">
                       @{selectedUser.username}
                     </h1>
-                    <p
-                      style={{
-                        fontSize: "14px",
-                        opacity: 0.7,
-                        margin: "8px 0 16px 0",
-                        color: "var(--theme-text)",
-                      }}
-                    >
+                    <p className="preview-member-since">
                       {t("memberSince")}:{" "}
                       {new Date(selectedUser.createdAt).toLocaleDateString(
                         language === "bg" ? "bg-BG" : "en-US",
@@ -1006,64 +956,28 @@ const Users = () => {
                     </p>
 
                     {/* Stats */}
-                    <div style={{ display: "flex", gap: "32px" }}>
-                      <div style={{ textAlign: "center" }}>
-                        <div
-                          style={{
-                            fontSize: "24px",
-                            fontWeight: 600,
-                            color: "var(--theme-text)",
-                          }}
-                        >
+                    <div className="preview-stats">
+                      <div className="preview-stat-item">
+                        <div className="preview-stat-value">
                           {userPosts.length}
                         </div>
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            color: "var(--theme-text)",
-                            opacity: 0.8,
-                          }}
-                        >
+                        <div className="preview-stat-label">
                           {t("posts")}
                         </div>
                       </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div
-                          style={{
-                            fontSize: "24px",
-                            fontWeight: 600,
-                            color: "var(--theme-text)",
-                          }}
-                        >
+                      <div className="preview-stat-item">
+                        <div className="preview-stat-value">
                           {selectedUser.followers?.length || 0}
                         </div>
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            color: "var(--theme-text)",
-                            opacity: 0.8,
-                          }}
-                        >
+                        <div className="preview-stat-label">
                           {t("followers")}
                         </div>
                       </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div
-                          style={{
-                            fontSize: "24px",
-                            fontWeight: 600,
-                            color: "var(--theme-text)",
-                          }}
-                        >
+                      <div className="preview-stat-item">
+                        <div className="preview-stat-value">
                           {selectedUser.following?.length || 0}
                         </div>
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            color: "var(--theme-text)",
-                            opacity: 0.8,
-                          }}
-                        >
+                        <div className="preview-stat-label">
                           {t("following")}
                         </div>
                       </div>
@@ -1073,71 +987,28 @@ const Users = () => {
 
                 {/* Bio */}
                 {selectedUser.bio && (
-                  <div style={{ marginBottom: "24px" }}>
-                    <h3
-                      style={{
-                        margin: "0 0 12px 0",
-                        fontSize: "18px",
-                        color: "var(--theme-text)",
-                      }}
-                    >
+                  <div className="preview-bio-section">
+                    <h3 className="preview-bio-title">
                       {t("bio")}
                     </h3>
-                    <p
-                      style={{
-                        background: "var(--theme-bg)",
-                        padding: "20px",
-                        borderRadius: "12px",
-                        margin: 0,
-                        lineHeight: 1.7,
-                        color: "var(--theme-text)",
-                      }}
-                    >
+                    <p className="preview-bio-content">
                       {selectedUser.bio}
                     </p>
                   </div>
                 )}
 
                 {/* Divider */}
-                <hr
-                  style={{
-                    border: 0,
-                    borderTop: "1px solid var(--theme-text)",
-                    opacity: 0.2,
-                    margin: "32px 0",
-                  }}
-                />
+                <hr className="preview-divider" />
 
                 {/* Category Tabs */}
                 {userCategories.length > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "16px",
-                      marginBottom: "24px",
-                    }}
-                  >
+                  <div className="preview-category-tabs">
                     {/* All Button */}
                     <button
                       onClick={() => setSelectedUserCategoryId(null)}
-                      style={{
-                        flex: 1,
-                        padding: "12px 16px",
-                        border:
-                          selectedUserCategoryId === null
-                            ? "2px solid var(--theme-text)"
-                            : "none",
-                        borderRadius: "8px",
-                        background: "transparent",
-                        color: "var(--theme-text)",
-                        fontSize: "16px",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                        opacity: selectedUserCategoryId === null ? 1 : 0.6,
-                      }}
+                      className={`preview-category-tab ${selectedUserCategoryId === null ? 'active' : ''}`}
                     >
-                      {t("all") || "All"}
+                      {t("all")}
                     </button>
                     {specialCategories
                       .filter((category) => category._id)
@@ -1147,23 +1018,7 @@ const Users = () => {
                           onClick={() =>
                             setSelectedUserCategoryId(category._id)
                           }
-                          style={{
-                            flex: 1,
-                            padding: "12px 16px",
-                            border:
-                              selectedUserCategoryId === category._id
-                                ? "2px solid var(--theme-text)"
-                                : "none",
-                            borderRadius: "8px",
-                            background: "transparent",
-                            color: "var(--theme-text)",
-                            fontSize: "16px",
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            transition: "all 0.2s",
-                            opacity:
-                              selectedUserCategoryId === category._id ? 1 : 0.6,
-                          }}
+                          className={`preview-category-tab ${selectedUserCategoryId === category._id ? 'active' : ''}`}
                         >
                           {getCategoryDisplayName(category.name)}
                         </button>
@@ -1173,22 +1028,11 @@ const Users = () => {
 
                 {/* Posts Grid */}
                 {userPosts.length === 0 ? (
-                  <div
-                    className="admin-loading"
-                    style={{ textAlign: "center", padding: "40px" }}
-                  >
+                  <div className="loading loading-centered">
                     {t("noPostsFound")}
                   </div>
                 ) : (
-                  <div
-                    className="admin-cards-grid"
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fill, minmax(280px, 1fr))",
-                      gap: "16px",
-                    }}
-                  >
+                  <div className="cards-grid posts-grid">
                     {userPosts
                       .filter(
                         (post) =>
@@ -1199,61 +1043,24 @@ const Users = () => {
                       .map((post) => (
                         <div
                           key={post._id}
-                          className="admin-card"
-                          style={{
-                            padding: "16px",
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "12px",
-                          }}
+                          className="card preview-post-card"
                         >
                           {/* Post Image if exists */}
                           {post.image && post.image.length > 0 && (
-                            <div
-                              style={{
-                                position: "relative",
-                                paddingTop: "56.25%",
-                                borderRadius: "8px",
-                                overflow: "hidden",
-                                background: "#000",
-                              }}
-                            >
+                            <div className="preview-post-image-container">
                               <img
                                 src={post.image[0]}
                                 alt={post.title}
-                                style={{
-                                  position: "absolute",
-                                  top: 0,
-                                  left: 0,
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "cover",
-                                }}
+                                className="preview-post-card-image"
                               />
                             </div>
                           )}
                           {/* Post Title */}
-                          <h3
-                            style={{
-                              fontSize: "18px",
-                              fontWeight: 600,
-                              margin: 0,
-                              color: "var(--theme-text)",
-                            }}
-                          >
+                          <h3 className="preview-post-card-title">
                             {post.title}
                           </h3>
                           {/* Category & Date */}
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              fontSize: "13px",
-                              color: "var(--theme-text)",
-                              opacity: 0.8,
-                            }}
-                          >
+                          <div className="preview-post-meta">
                             <span>
                               {post.category
                                 ? getCategoryDisplayName(post.category.name)
@@ -1271,20 +1078,8 @@ const Users = () => {
                             </span>
                           </div>
                           {/* Likes count */}
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "4px",
-                              fontSize: "14px",
-                              color: "var(--theme-text)",
-                              opacity: 0.8,
-                            }}
-                          >
-                            <span
-                              className="material-icons"
-                              style={{ fontSize: "18px" }}
-                            >
+                          <div className="preview-post-likes">
+                            <span className="material-icons">
                               favorite
                             </span>
                             {post.likes?.length || 0}

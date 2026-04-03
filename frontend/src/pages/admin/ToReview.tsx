@@ -5,8 +5,52 @@ import Snackbar from "../../components/Snackbar";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
-import "./AdminPages.css";
+import "../../styles/shared.css";
+import "./ToReview.css";
 import Footer from "../../components/Footer";
+import GoBackButton from "../../components/GoBackButton";
+
+/**
+ * @file ToReview.tsx
+ * @description Admin content moderation queue - review AI-flagged posts and comments.
+ * Displays content flagged by the AI moderation system for human approval or rejection.
+ *
+ * Features:
+ * - List all flagged content (posts and comments) from AdminDataContext.flaggedContent
+ * - View flagged content details with translation (EN/BG)
+ * - Approve content (removes flagged status, makes it publicly visible)
+ * - Reject content with reason (deletes the content)
+ * - If URL provided in flag message, navigate directly to flagged item
+ * - Live filtering: unread (no admin action yet) vs reviewed (already actioned)
+ *
+ * Workflow:
+ * 1. AI flags post/comment as potentially inappropriate
+ * 2. Post enters this queue (flagged: true, ai_moderation flag set)
+ * 3. Admin reviews content
+ * 4. Admin either:
+ *    - Approve: Content becomes visible (flagged=false, ai_moderation cleared)
+ *    - Reject: Content is deleted with reason
+ *
+ * Data Source:
+ * - Uses AdminDataContext.flaggedContent (fetched by fetchFlaggedContent() or initialize())
+ *
+ * Access Control:
+ * - Route protected by AdminRoute (admin only)
+ *
+ * Integration:
+ * - Backend marks posts as flagged via AI service; flaggedContent endpoint returns those items
+ * - Approve action clears flagged status and ai_moderation flag, making post visible
+ *
+ * @page
+ * @requires useState - Flagged content list, selected content, filter state, loading, snackbar
+ * @requires useEffect - Fetch flagged content on mount via AdminDataContext
+ * @requires useNavigate - Navigate to flagged content's URL if available
+ * @requires useThemeLanguage - Current language for content and translations
+ * @requires useAdminData - Access to flaggedContent array and fetchFlaggedContent()
+ * @requires postsAPI - Approve or reject flagged posts (admin endpoints)
+ * @requires Snackbar - Feedback on approve/reject actions
+ * @requires Footer - Footer component
+ */
 
 const ToReview = () => {
   const navigate = useNavigate();
@@ -85,7 +129,7 @@ const ToReview = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("failedToApproveContent"),
+        message: t("failedToApproveContent"),
         type: "error",
       });
     }
@@ -119,8 +163,7 @@ const ToReview = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message:
-          error.response?.data?.message || t("failedToDisapproveContent"),
+        message: t("failedToDisapproveContent"),
         type: "error",
       });
     }
@@ -137,8 +180,8 @@ const ToReview = () => {
 
   if (loading) {
     return (
-      <div className="admin-page">
-        <div className="admin-loading">{t("loading")}</div>
+      <div>
+        <div className="loading">{t("loading")}</div>
       </div>
     );
   }
@@ -146,33 +189,13 @@ const ToReview = () => {
   if (selectedContent) {
     return (
       <>
-        <div className="admin-page">
-          <div className="admin-content-view">
-            <div style={{ marginBottom: "24px" }}>
-              <button
-                onClick={handleBackToList}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 16px",
-                  border: "2px solid var(--theme-text)",
-                  borderRadius: "12px",
-                  background: "transparent",
-                  color: "var(--theme-text)",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                }}
-              >
-                <span className="material-icons" style={{ fontSize: "18px" }}>
-                  arrow_back
-                </span>
-                {t("goBack") || "Go Back"}
-              </button>
+        <div>
+          <div className="content-view">
+            <div className="mb-6">
+              <GoBackButton onClick={handleBackToList} />
             </div>
-            <div className="admin-content-card">
-              <h2 style={{ marginTop: 0 }}>{t("contentDetails")}</h2>
+            <div className="content-card">
+              <h2 className="m-0">{t("contentDetails")}</h2>
               <p>
                 <strong>{t("type")}:</strong>{" "}
                 {getTypeLabel(selectedContent.type)}
@@ -190,30 +213,23 @@ const ToReview = () => {
               )}
 
               {selectedContent.type === "post" && (
-                <div style={{ marginTop: "20px" }}>
+                <div className="mt-5">
                   {/* 1. Title */}
-                  <h3 style={{ marginTop: 0, marginBottom: "16px" }}>
+                  <h3 className="mt-0 mb-4">
                     {selectedContent.content.title}
                   </h3>
 
                   {/* 2. Images */}
                   {selectedContent.content.image &&
                     selectedContent.content.image.length > 0 && (
-                      <div style={{ marginBottom: "20px" }}>
+                      <div className="mb-5">
                         {selectedContent.content.image.map(
                           (img: string, idx: number) => (
                             <img
                               key={idx}
                               src={img}
                               alt={`Post image ${idx + 1}`}
-                              style={{
-                                maxWidth: "100%",
-                                maxHeight: "400px",
-                                objectFit: "contain",
-                                marginBottom: "8px",
-                                border: "1px solid #ddd",
-                                borderRadius: "4px",
-                              }}
+                              className="post-preview-image"
                             />
                           ),
                         )}
@@ -223,27 +239,14 @@ const ToReview = () => {
                   {/* 3. Tags */}
                   {selectedContent.content.tags &&
                     selectedContent.content.tags.length > 0 && (
-                      <div style={{ marginBottom: "20px" }}>
-                        <strong>{t("tags") || "Tags"}:</strong>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: "8px",
-                            marginTop: "8px",
-                          }}
-                        >
+                      <div className="tags-container">
+                        <strong>{t("tags")}:</strong>
+                        <div className="tags-list">
                           {selectedContent.content.tags.map(
                             (tag: string, idx: number) => (
                               <span
                                 key={idx}
-                                style={{
-                                  background: "var(--theme-accent)",
-                                  color: "var(--theme-text)",
-                                  padding: "4px 12px",
-                                  borderRadius: "16px",
-                                  fontSize: "14px",
-                                }}
+                                className="tag-pill-filled"
                               >
                                 {tag}
                               </span>
@@ -255,14 +258,8 @@ const ToReview = () => {
 
                   {/* 4. Description (content body) */}
                   <div>
-                    <strong>{t("description") || "Description"}:</strong>
-                    <p
-                      style={{
-                        marginTop: "8px",
-                        lineHeight: 1.6,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
+                    <strong>{t("description")}:</strong>
+                    <p className="post-description">
                       {selectedContent.content.content}
                     </p>
                   </div>
@@ -271,8 +268,8 @@ const ToReview = () => {
 
               {/* Comments have simpler view */}
               {selectedContent.type === "comment" && (
-                <div style={{ marginTop: "20px" }}>
-                  <p style={{ whiteSpace: "pre-wrap" }}>
+                <div className="mt-5">
+                  <p className="whitespace-pre-wrap">
                     {selectedContent.content.text ||
                       selectedContent.content.content}
                   </p>
@@ -280,17 +277,16 @@ const ToReview = () => {
               )}
               {!showDisapprove ? (
                 <div
-                  className="admin-modal-actions"
-                  style={{ marginTop: "24px" }}
+                  className="modal-actions mt-6"
                 >
                   <button
-                    className="admin-button-danger"
+                    className="btn-danger"
                     onClick={() => setShowDisapprove(true)}
                   >
                     {t("disapprove")}
                   </button>
                   <button
-                    className="admin-button-primary"
+                    className="btn-primary"
                     onClick={() =>
                       handleApprove(
                         selectedContent._id,
@@ -302,13 +298,13 @@ const ToReview = () => {
                   </button>
                 </div>
               ) : (
-                <div style={{ marginTop: "24px" }}>
-                  <div className="admin-form-group">
-                    <label className="admin-form-label">
+                <div className="mt-6">
+                  <div className="form-group">
+                    <label className="form-label">
                       {t("reasonForNotAllowing")}
                     </label>
                     <textarea
-                      className="admin-form-textarea"
+                      className="form-textarea mb-3"
                       value={disapproveReason}
                       onChange={(e) => setDisapproveReason(e.target.value)}
                       required
@@ -316,9 +312,9 @@ const ToReview = () => {
                       placeholder={t("enterReasonForDisapproval")}
                     />
                   </div>
-                  <div className="admin-modal-actions">
+                  <div className="modal-actions">
                     <button
-                      className="admin-button-secondary"
+                      className="btn-secondary"
                       onClick={() => {
                         setShowDisapprove(false);
                         setDisapproveReason("");
@@ -327,7 +323,7 @@ const ToReview = () => {
                       {t("cancel")}
                     </button>
                     <button
-                      className="admin-button-danger"
+                      className="btn-danger"
                       onClick={handleDisapprove}
                     >
                       {t("submitDisapproval")}
@@ -350,76 +346,56 @@ const ToReview = () => {
   }
 
   return (
-    <div className="admin-page">
-      <div className="admin-page-header">
-        <h1 className="admin-page-title">{t("toReview")}</h1>
-        <div className="admin-page-actions">
+    <div>
+      <div className="page-container-header">
+        <h1 className="page-container-title">{t("toReview")}</h1>
+        <div className="page-container-actions">
           <button
-            className="admin-button-secondary"
+            className="btn-secondary icon-btn"
             onClick={handleRefresh}
             disabled={loading}
-            style={{ display: "flex", alignItems: "center", gap: "4px" }}
           >
-            <span className="material-icons" style={{ fontSize: "16px" }}>
+            <span className="material-icons text-base">
               refresh
             </span>
-            {t("refresh") || "Refresh"}
+            {t("refresh")}
           </button>
         </div>
       </div>
 
       {error && (
-        <div
-          className="admin-error"
-          style={{
-            color: "#d32f2f",
-            marginBottom: "16px",
-            padding: "12px",
-            background: "#ffebee",
-            borderRadius: "8px",
-          }}
-        >
+        <div className="error-box-colored">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {!hasFetched ? (
-        <div
-          className="admin-loading"
-          style={{ textAlign: "center", padding: "40px" }}
-        >
+        <div className="loading">
           No data loaded. Click Refresh to load data.
         </div>
       ) : flaggedContent.length === 0 ? (
-        <div className="admin-loading">{t("noFlaggedContent")}</div>
+        <div className="loading">{t("noFlaggedContent")}</div>
       ) : (
-        <div className="admin-cards-grid">
+        <div className="cards-grid">
           {flaggedContent.map((content) => {
             const post = getContent(content.content);
             return (
-              <div key={content._id} className="admin-card">
-                <div className="admin-card-category">
+              <div key={content._id} className="card">
+                <div className="card-title">
                   {getTypeLabel(content.type)}
                 </div>
                 {/* Title */}
-                <h3 style={{ margin: "12px 0 4px" }}>{post?.title}</h3>
+                <h3 className="section-title-spacing">{post?.title}</h3>
                 {/* Subtitle: Username and Category */}
-                <p
-                  style={{
-                    fontSize: "14px",
-                    opacity: 0.7,
-                    marginBottom: "12px",
-                  }}
-                >
+                <p className="text-sm opacity-70 mb-3">
                   @{content.authorId?.username}
                   {content.content.category && (
                     <> • {t(content.content.category.toLowerCase())}</>
                   )}
                 </p>
                 <button
-                  className="admin-button-secondary"
+                  className="btn-secondary mt-auto w-100"
                   onClick={() => handleView(content)}
-                  style={{ marginTop: "auto", width: "100%" }}
                 >
                   {t("view")}
                 </button>

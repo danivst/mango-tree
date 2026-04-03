@@ -1,0 +1,8 @@
+/* Following page specific styles */
+
+/* Page layout container */
+.following-container {
+  display: flex;
+  min-height: 100vh;
+}
+

@@ -10,8 +10,45 @@ import {
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
-import "./AdminPages.css";
+import "../../styles/shared.css";
+import "./Categories.css";
 import Footer from "../../components/Footer";
+
+/**
+ * @file Categories.tsx
+ * @description Admin page for managing post categories.
+ * View, create, edit, and delete content categories used for post organization.
+ *
+ * Features:
+ * - List all categories with name and post count
+ * - Add new category via inline form
+ * - Edit category name with modal
+ * - Delete category with confirmation
+ * - Sortable columns: name, postCount
+ * - Search filter by category name
+ * - Pagination (20 per page)
+ *
+ * CRUD Operations:
+ * - Create: POST /api/admin/categories { name }
+ * - Update: PUT /api/admin/categories/:id { name }
+ * - Delete: DELETE /api/admin/categories/:id
+ *
+ * Data Source:
+ * - Uses AdminDataContext.categories (fetched by initialize() or fetchCategories())
+ *
+ * Access Control:
+ * - Route protected by AdminRoute (admin only)
+ *
+ * @page
+ * @requires useState - Categories list, form inputs, search, sort, pagination, modal state
+ * @requires useMemo - Filtered/sorted/paginated computed list
+ * @requires useThemeLanguage - Translations and language switcher
+ * @requires useAdminData - Access to categories array and categoriesState
+ * @requires adminAPI - All CRUD operations for categories
+ * @requires Snackbar - Success/error feedback
+ * @requires Footer - Footer component
+ * @requires sortData, paginateData, getTotalPages - Table utilities
+ */
 
 const Categories = () => {
   const { categories, categoriesState, fetchCategories } = useAdminData();
@@ -101,7 +138,7 @@ const Categories = () => {
     } catch (err: any) {
       setSnackbar({
         open: true,
-        message: err.response?.data?.message || "Failed to load categories",
+        message: t("failedToLoadCategories"),
         type: "error",
       });
     }
@@ -109,7 +146,31 @@ const Categories = () => {
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    // ...existing logic for adding a category...
+    if (!categoryName.trim()) {
+      setSnackbar({
+        open: true,
+        message: t("categoryNameRequired"),
+        type: "error",
+      });
+      return;
+    }
+    try {
+      await adminAPI.createCategory(categoryName.trim());
+      setSnackbar({
+        open: true,
+        message: t("categoryCreated"),
+        type: "success",
+      });
+      setShowAddCategory(false);
+      setCategoryName("");
+      await fetchCategories();
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: t("categoryCreateFailed"),
+        type: "error",
+      });
+    }
   };
 
   const handleDeleteCategoryClick = (id: string) => {
@@ -140,7 +201,7 @@ const Categories = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("categoryUpdateFailed"),
+        message: t("categoryUpdateFailed"),
         type: "error",
       });
     }
@@ -159,7 +220,7 @@ const Categories = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("deleteCategoryError"),
+        message: t("deleteCategoryError"),
         type: "error",
       });
     } finally {
@@ -169,29 +230,23 @@ const Categories = () => {
   };
 
   return (
-    <div className="admin-page">
-      <div className="admin-page-header">
-        <h1 className="admin-page-title">{t("categories")}</h1>
-        <div className="admin-page-actions">
+    <div>
+      <div className="page-container-header">
+        <h1 className="page-container-title">{t("categories")}</h1>
+        <div className="page-container-actions">
           <button
-            className="admin-button-secondary"
+            className="btn-secondary icon-btn mr-2"
             onClick={handleRefresh}
             disabled={loading}
-            style={{
-              marginRight: "8px",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
           >
-            <span className="material-icons" style={{ fontSize: "16px" }}>
+            <span className="material-icons text-base">
               refresh
             </span>
-            {t("refresh") || "Refresh"}
+            {t("refresh")}
           </button>
           <input
             type="text"
-            className="admin-search-input"
+            className="search-input"
             placeholder={
               t("search") + " " + t("categories").toLowerCase() + "..."
             }
@@ -199,7 +254,7 @@ const Categories = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <button
-            className="admin-add-button"
+            className="btn-primary"
             onClick={() => setShowAddCategory(true)}
           >
             <svg
@@ -221,46 +276,27 @@ const Categories = () => {
       </div>
 
       {error && (
-        <div
-          className="admin-error"
-          style={{
-            color: "#d32f2f",
-            marginBottom: "16px",
-            padding: "12px",
-            background: "#ffebee",
-            borderRadius: "8px",
-          }}
-        >
+        <div className="error-box-colored">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {loading ? (
-        <div className="admin-loading">{t("loading")}</div>
+        <div className="loading">{t("loading")}</div>
       ) : !hasFetched ? (
-        <div
-          className="admin-loading"
-          style={{ textAlign: "center", padding: "40px" }}
-        >
+        <div className="loading">
           No data loaded. Click Refresh to load data.
         </div>
       ) : (
-        <div className="admin-table-container">
-          <table className="admin-table">
+        <div className="table-container">
+          <table className="table">
             <thead>
               <tr>
                 <th
                   className="sortable-header"
                   onClick={() => handleSort("name")}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="header-content">
                     {t("category")}
                   </div>
                 </th>
@@ -268,14 +304,7 @@ const Categories = () => {
                   className="sortable-header"
                   onClick={() => handleSort("by")}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="header-content">
                     {t("by")}
                   </div>
                 </th>
@@ -293,19 +322,20 @@ const Categories = () => {
                       : t("system")}
                   </td>
                   <td>
-                    <button
-                      className="admin-delete-button"
-                      onClick={() => handleDeleteCategoryClick(category._id)}
-                    >
-                      {t("delete")}
-                    </button>
-                    <button
-                      className="admin-button-edit"
-                      onClick={() => handleEditClick(category)}
-                      style={{ marginLeft: "8px" }}
-                    >
-                      {t("edit")}
-                    </button>
+                    <div className="table-actions">
+                      <button
+                        className="btn-danger"
+                        onClick={() => handleDeleteCategoryClick(category._id)}
+                      >
+                        {t("delete")}
+                      </button>
+                      <button
+                        className="btn-admin-action"
+                        onClick={() => handleEditClick(category)}
+                      >
+                        {t("edit")}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -313,19 +343,19 @@ const Categories = () => {
           </table>
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="admin-pagination">
+            <div className="pagination">
               <button
-                className="admin-pagination-button"
+                className="pagination-button"
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
               >
                 {t("previous")}
               </button>
-              <span className="admin-pagination-info">
+              <span className="pagination-info">
                 {t("page")} {currentPage} {t("of")} {totalPages}
               </span>
               <button
-                className="admin-pagination-button"
+                className="pagination-button"
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
@@ -340,13 +370,13 @@ const Categories = () => {
 
       {/* Delete Category Modal */}
       {showDeleteModal && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal admin-modal-danger">
-            <h2 className="admin-modal-title">{t("deleteCategory")}</h2>
-            <p className="admin-modal-text">{t("deleteCategoryWarning")}</p>
-            <div className="admin-modal-actions">
+        <div className="modal-overlay">
+          <div className="modal modal-danger">
+            <h2 className="modal-title">{t("deleteCategory")}</h2>
+            <p className="modal-text">{t("deleteCategoryWarning")}</p>
+            <div className="modal-actions">
               <button
-                className="admin-button-secondary"
+                className="btn-secondary"
                 onClick={() => {
                   setShowDeleteModal(false);
                   setDeleteCategoryId(null);
@@ -355,7 +385,7 @@ const Categories = () => {
                 {t("cancel")}
               </button>
               <button
-                className="admin-button-danger"
+                className="btn-danger"
                 onClick={handleDeleteCategoryConfirm}
               >
                 {t("delete")}
@@ -367,34 +397,31 @@ const Categories = () => {
 
       {/* Add Category Modal */}
       {showAddCategory && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal">
-            <h2 className="admin-modal-title">{t("addCategory")}</h2>
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2 className="modal-title">{t("addCategory")}</h2>
             <form onSubmit={handleAddCategory}>
-              <div className="admin-form-group">
-                <label className="admin-form-label">{t("category")}</label>
+              <div className="form-group">
+                <label className="form-label">{t("category")}</label>
                 <input
                   type="text"
-                  className="admin-form-input"
+                  className="form-input"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
                   required
                   maxLength={20}
                   placeholder={
-                    t("enterCategoryName") ||
-                    "Enter category name (1-20 characters)"
+                    t("enterCategoryName")
                   }
                 />
-                <p
-                  style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}
-                >
+                <p className="helper-text">
                   {categoryName.length}/20 {t("characters")}
                 </p>
               </div>
-              <div className="admin-modal-actions">
+              <div className="modal-actions">
                 <button
                   type="button"
-                  className="admin-button-secondary"
+                  className="btn-secondary"
                   onClick={() => {
                     setShowAddCategory(false);
                     setCategoryName("");
@@ -402,8 +429,8 @@ const Categories = () => {
                 >
                   {t("cancel")}
                 </button>
-                <button type="submit" className="admin-button-primary">
-                  {t("createCategory") || "Create Category"}
+                <button type="submit" className="btn-primary">
+                  {t("createCategory")}
                 </button>
               </div>
             </form>
@@ -413,34 +440,31 @@ const Categories = () => {
 
       {/* Edit Category Modal */}
       {showEditModal && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal">
-            <h2 className="admin-modal-title">{t("editCategory")}</h2>
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2 className="modal-title">{t("editCategory")}</h2>
             <form onSubmit={handleEditConfirm}>
-              <div className="admin-form-group">
-                <label className="admin-form-label">{t("category")}</label>
+              <div className="form-group">
+                <label className="form-label">{t("category")}</label>
                 <input
                   type="text"
-                  className="admin-form-input"
+                  className="form-input"
                   value={editCategoryName}
                   onChange={(e) => setEditCategoryName(e.target.value)}
                   required
                   maxLength={20}
                   placeholder={
-                    t("enterCategoryName") ||
-                    "Enter category name (1-20 characters)"
+                    t("enterCategoryName")
                   }
                 />
-                <p
-                  style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}
-                >
+                <p className="helper-text">
                   {editCategoryName.length}/20 {t("characters")}
                 </p>
               </div>
-              <div className="admin-modal-actions">
+              <div className="modal-actions">
                 <button
                   type="button"
-                  className="admin-button-secondary"
+                  className="btn-secondary"
                   onClick={() => {
                     setShowEditModal(false);
                     setEditCategoryId(null);
@@ -449,8 +473,8 @@ const Categories = () => {
                 >
                   {t("cancel")}
                 </button>
-                <button type="submit" className="admin-button-primary">
-                  {t("saveChanges") || t("edit")}
+                <button type="submit" className="btn-primary">
+                  {t("saveChanges")}
                 </button>
               </div>
             </form>

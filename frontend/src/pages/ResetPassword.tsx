@@ -3,8 +3,38 @@ import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Snackbar from "../components/Snackbar";
+import "./ResetPassword.css";
 import "./Login.css";
 import logo from "../assets/mangotree-logo.png";
+
+/**
+ * @file ResetPassword.tsx
+ * @description Password reset page for users who forgot their password.
+ * User receives email with reset token link. This page validates token and allows password reset.
+ *
+ * Flow:
+ * 1. Extract token from URL query params
+ * 2. Fetch user's email associated with token via /api/auth/reset-token/:token
+ * 3. If valid, show password reset form
+ * 4. Submit new password to /api/auth/reset-password
+ * 5. On success, show message and redirect to login
+ *
+ * Features:
+ * - Token validation (redirects if missing/invalid)
+ * - Email display (read-only) from token lookup
+ * - Password complexity validation (same as SetupPassword)
+ * - Show/hide password toggles
+ * - Language switcher (EN/BG)
+ *
+ * Route: /reset-password?token=...
+ * Access: Public (requires valid reset token from email)
+ *
+ * @page
+ * @requires useSearchParams - Get reset token from URL
+ * @requires useNavigate - Redirect after completion or on error
+ * @requires useThemeLanguage - Translations and language switching
+ * @requires Snackbar - Feedback messages
+ */
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -31,7 +61,7 @@ const ResetPassword = () => {
 
   // Fetch email from token and check access
   useEffect(() => {
-    console.log("🔄 ResetPassword component mounted");
+    console.log("ResetPassword component mounted");
     console.log(
       "🔑 Token from URL:",
       token ? `${token.substring(0, 10)}...` : "No token",
@@ -39,7 +69,7 @@ const ResetPassword = () => {
 
     // Require reset token for all access
     if (!token) {
-      console.log("❌ No token found in URL, redirecting to login");
+      console.log("No token found in URL, redirecting to login");
       setSnackbar({
         open: true,
         message: t("invalidResetLink"),
@@ -54,12 +84,12 @@ const ResetPassword = () => {
 
     // Fetch email from reset token
     const fetchEmail = async () => {
-      console.log("📧 Fetching email for reset token...");
+      console.log("Fetching email for reset token...");
       try {
         const response = await fetch(`/api/auth/reset-token/${token}`);
-        console.log("📬 Response status:", response.status);
+        console.log("Response status:", response.status);
         const data = await response.json();
-        console.log("📬 Response data:", data);
+        console.log("Response data:", data);
 
         if (!response.ok) {
           throw new Error(data.message || "Invalid token");
@@ -69,11 +99,11 @@ const ResetPassword = () => {
           throw new Error("Email not found for this token");
         }
 
-        console.log("✅ Email fetched successfully:", data.email);
+        console.log("Email fetched successfully:", data.email);
         setEmail(data.email);
         setFetchingEmail(false);
       } catch (error: any) {
-        console.error("❌ Error fetching email:", error);
+        console.error("Error fetching email:", error);
         setSnackbar({
           open: true,
           message: error.message || "Invalid or expired token",
@@ -89,6 +119,16 @@ const ResetPassword = () => {
     fetchEmail();
   }, [token, navigate]);
 
+  /**
+   * Handles password reset form submission.
+   * Validates password meets complexity requirements and matches confirmation.
+   * Sends POST request to /api/auth/reset-password with token and new password.
+   *
+   * On success: shows success snackbar, redirects to login after 2s
+   * On error: displays field-specific errors or general snackbar
+   *
+   * @param {React.FormEvent} e - Form submission event
+   */
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -111,7 +151,7 @@ const ResetPassword = () => {
       return;
     }
 
-    // Password complexity validation
+    // Password complexity validation (same as SetupPassword)
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
@@ -210,22 +250,9 @@ const ResetPassword = () => {
         </div>
 
         {fetchingEmail ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "20px",
-              minHeight: "200px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <div>
-              <p style={{ fontSize: "16px", color: "#333" }}>Loading...</p>
-              <p style={{ fontSize: "14px", color: "#666", marginTop: "10px" }}>
-                Verifying reset token...
-              </p>
-            </div>
+          <div className="loading-state">
+            <p>Loading...</p>
+            <p>Verifying reset token...</p>
           </div>
         ) : email ? (
           <form onSubmit={handleReset} className="login-form">
@@ -236,16 +263,11 @@ const ResetPassword = () => {
               <input
                 id="email"
                 type="email"
-                className="form-input"
+                className="form-input email-disabled"
                 value={email}
                 readOnly
                 disabled
                 title="Email for resetting password cannot be edited"
-                style={{
-                  cursor: "not-allowed",
-                  backgroundColor: "rgba(0, 0, 0, 0.05)",
-                  opacity: 0.7,
-                }}
               />
             </div>
 
@@ -256,7 +278,7 @@ const ResetPassword = () => {
               >
                 {t("password")}
               </label>
-              <div style={{ position: "relative" }}>
+              <div className="password-input-wrapper">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -269,29 +291,11 @@ const ResetPassword = () => {
                     }
                   }}
                   placeholder={t("enterYourPassword")}
-                  style={{ paddingRight: "40px" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#333",
-                    opacity: 0.6,
-                    transition: "opacity 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+                  className="password-toggle"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -335,9 +339,9 @@ const ResetPassword = () => {
                 htmlFor="confirmPassword"
                 className={`form-label ${errors.confirmPassword ? "label-error" : ""}`}
               >
-                {t("confirmPassword") || "Confirm Password"}
+                {t("confirmPassword")}
               </label>
-              <div style={{ position: "relative" }}>
+              <div className="password-input-wrapper">
                 <input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
@@ -349,33 +353,13 @@ const ResetPassword = () => {
                       setErrors({ ...errors, confirmPassword: undefined });
                     }
                   }}
-                  placeholder={t("confirmPassword") || "Confirm new password"}
-                  style={{ paddingRight: "40px" }}
+                  placeholder={t("confirmPassword")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#333",
-                    opacity: 0.6,
-                    transition: "opacity 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
-                  aria-label={
-                    showConfirmPassword ? "Hide password" : "Show password"
-                  }
+                  className="password-toggle"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
                   {showConfirmPassword ? (
                     <svg
@@ -414,29 +398,29 @@ const ResetPassword = () => {
             </div>
 
             <div className="form-actions">
-              <button type="button" style={{ visibility: "hidden" }}>
+              <button type="button" className="invisible">
                 Placeholder
               </button>
               <button type="submit" className="btn-solid" disabled={loading}>
                 {loading
                   ? t("sending")
-                  : t("resetPassword") || "Reset Password"}
+                  : t("resetPassword")}
               </button>
             </div>
           </form>
         ) : (
-          <div style={{ textAlign: "center", padding: "20px" }}>
-            <p style={{ color: "#A50104" }}>{t("unableToLoadResetForm")}</p>
+          <div className="unable-load-message">
+            <p>{t("unableToLoadResetForm")}</p>
           </div>
         )}
-      </div>
 
-      <Snackbar
-        message={snackbar.message}
-        type={snackbar.type}
-        open={snackbar.open}
-        onClose={closeSnackbar}
-      />
+        <Snackbar
+          message={snackbar.message}
+          type={snackbar.type}
+          open={snackbar.open}
+          onClose={closeSnackbar}
+        />
+      </div>
     </div>
   );
 };

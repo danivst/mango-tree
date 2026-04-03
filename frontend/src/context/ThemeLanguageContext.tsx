@@ -1,10 +1,43 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { setCookie, getCookie } from "../utils/cookies"; // Import cookie utilities
+import { setCookie, getCookie } from "../utils/cookies";
 import { usersAPI, UserProfile } from "../services/api";
 import { getToken } from "../utils/auth";
 
+/**
+ * @enum Theme
+ * @description Available color themes for the application.
+ * Themes change the overall color scheme of the UI.
+ *
+ * @property {"dark"} dark - Dark mode: black background, light text
+ * @property {"purple"} purple - Purple theme: dark purple background, light accent
+ * @property {"cream"} cream - Cream theme: light yellow-beige background, dark text
+ * @property {"light"} light - Light mode: white background, dark text
+ * @property {"mango"} mango - Mango theme: white content, orange text, yellow-orange gradient sidebar
+ */
+
 export type Theme = "dark" | "purple" | "cream" | "light" | "mango";
+
+/**
+ * @enum Language
+ * @description Supported languages for the application interface.
+ * Currently supports English and Bulgarian.
+ *
+ * @property {"en"} en - English
+ * @property {"bg"} bg - Bulgarian (Български)
+ */
+
 export type Language = "en" | "bg";
+
+/**
+ * @interface ThemeLanguageContextProps
+ * @description Context API interface for theme and language management.
+ * Provides current theme/language and setter functions with automatic cookie persistence.
+ *
+ * @property {Theme} theme - Current UI color theme
+ * @property {(theme: Theme) => void} setTheme - Function to change theme (persists to cookie and syncs to backend if authenticated)
+ * @property {Language} language - Current UI language
+ * @property {(lang: Language) => void} setLanguage - Function to change language (persists to cookie and syncs to backend if authenticated)
+ */
 
 interface ThemeLanguageContextProps {
   theme: Theme;
@@ -13,24 +46,69 @@ interface ThemeLanguageContextProps {
   setLanguage: (lang: Language) => void;
 }
 
-const ThemeLanguageContext = createContext<
-  ThemeLanguageContextProps | undefined
->(undefined);
+const ThemeLanguageContext = createContext<ThemeLanguageContextProps | undefined>(
+  undefined,
+);
+
+/**
+ * @file ThemeLanguageContext.tsx
+ * @description React Context for managing application-wide theme and language settings.
+ * Provides theme switching and internationalization across the entire app.
+ *
+ * Features:
+ * - Client-side preferences persisted in cookies (1-year expiry)
+ * - Server-side user preferences sync when user logs in (overrides cookie)
+ * - Automatic CSS custom properties (--theme-bg, --theme-accent, --theme-text, etc.) applied to document root
+ * - HTML lang attribute updates for accessibility and localization
+ * - Backend API sync for authenticated users (users.updateProfile)
+ *
+ * Theme System:
+ * Each theme maps to specific CSS variables set on :root:
+ *   --theme-bg: Main background color
+ *   --theme-accent: Secondary background (cards, buttons)
+ *   --theme-text: Primary text color
+ *   --theme-sidebar-bg: Optional sidebar background (overrides main for mango theme)
+ *
+ * Language System:
+ * - Sets <html lang="..."> attribute
+ * - Used by translation utility to determine which language string to return
+ *
+ * Sync Behavior:
+ * - On mount: if user is logged in, fetch saved preferences from backend (overrides cookie)
+ * - On change: setter updates state, writes cookie, and if authenticated, sends PATCH /users/:id to persist
+ *
+ * @component
+ * @requires useState - Theme and language state with lazy initializers (cookie read)
+ * @requires useEffect - Three effects: fetch user prefs, apply theme CSS, apply language attribute
+ * @requires usersAPI - For syncing preferences to backend when authenticated
+ * @requires setCookie/getCookie - Cookie persistence (1 year)
+ */
 
 export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  // Initialize state from cookie as fallback
+  /**
+   * Theme state initialization: check cookie first, fallback to 'cream'
+   * Uses lazy initializer function to only read cookie on initial render (performance).
+   */
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = getCookie("appTheme") as Theme | null;
     return saved || "cream";
   });
+
+  /**
+   * Language state initialization: check cookie first, fallback to 'en'
+   */
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = getCookie("appLanguage") as Language | null;
     return saved || "en";
   });
 
-  // Fetch user preferences from backend on mount (if logged in)
+  /**
+   * Effect: Fetch user preferences from backend on mount.
+   * If user is logged in and has saved theme/language in profile, override cookie preferences.
+   * Silent failure: logs error but continues with cookie/defaults.
+   */
   useEffect(() => {
     const fetchUserPreferences = async () => {
       // Only fetch if there's a token (user might be logged in)
@@ -54,7 +132,11 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchUserPreferences();
   }, []);
 
-  // Apply theme to document
+  /**
+   * Effect: Apply theme CSS variables to document root when theme changes.
+   * Maps each theme to specific color values for CSS custom properties.
+   * These variables are used throughout the app via var(--theme-bg) etc.
+   */
   useEffect(() => {
     setCookie("appTheme", theme, 365); // Persist for 1 year
     const root = document.documentElement;
@@ -92,13 +174,24 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [theme]);
 
-  // Apply language to document
+  /**
+   * Effect: Apply language to document and persist to cookie.
+   * Updates HTML lang attribute for accessibility and localization.
+   */
   useEffect(() => {
     setCookie("appLanguage", language, 365); // Persist for 1 year
     document.documentElement.setAttribute("lang", language);
   }, [language]);
 
-  // Sync preference changes to backend (if logged in)
+  /**
+   * Syncs user preferences to backend API.
+   * Called whenever theme or language changes (if user is authenticated).
+   * Uses 'as any' cast because UserProfile expects different types (backend types differ from frontend).
+   *
+   * @param {Object} updates - Contains theme and/or language to sync
+   * @param {Theme} [updates.theme] - Optional theme to update
+   * @param {Language} [updates.language] - Optional language to update
+   */
   const syncPreferenceToBackend = async (updates: { theme?: Theme; language?: Language }) => {
     try {
       await usersAPI.updateProfile({
@@ -107,9 +200,16 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
       } as any);
     } catch (error) {
       console.error("[ThemeLanguage] Failed to sync preference to backend:", error);
+      // Non-critical: continue; cookie already saved
     }
   };
 
+  /**
+   * Theme setter wrapper that syncs to backend if authenticated.
+   * Updates local state and persists cookie; then async sync to server if logged in.
+   *
+   * @param {Theme} t - New theme value
+   */
   const setTheme = (t: Theme) => {
     setThemeState(t);
     // Sync to backend if user is logged in (has token)
@@ -118,6 +218,12 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  /**
+   * Language setter wrapper that syncs to backend if authenticated.
+   * Updates local state and persists cookie; then async sync to server if logged in.
+   *
+   * @param {Language} l - New language value
+   */
   const setLanguage = (l: Language) => {
     setLanguageState(l);
     // Sync to backend if user is logged in (has token)
@@ -135,6 +241,12 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
+/**
+ * Custom hook for consuming ThemeLanguageContext.
+ * Ensures hook is used within ThemeLanguageProvider, throws error otherwise.
+ *
+ * @returns {ThemeLanguageContextProps} Context value with theme and language
+ */
 export const useThemeLanguage = () => {
   const ctx = useContext(ThemeLanguageContext);
   if (!ctx)

@@ -3,10 +3,27 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
-import "./admin/AdminPages.css";
+import "../styles/shared.css";
+import "./Search.css";
 import Snackbar from "../components/Snackbar";
 import UserSidebar from "../components/UserSidebar";
 import { getToken } from "../utils/auth";
+
+/**
+ * @interface User
+ * @description User data structure for search results display.
+ * Subset of full User model with relationship fields.
+ *
+ * @property {string} _id - User's unique identifier
+ * @property {string} username - Display username (unique)
+ * @property {string} email - Email address
+ * @property {string} role - User role (user, admin)
+ * @property {string} createdAt - Account creation timestamp
+ * @property {string} [profileImage] - Optional profile picture URL
+ * @property {string} [bio] - Optional user biography
+ * @property {string[]} followers - Array of user IDs who follow this user
+ * @property {string[]} following - Array of user IDs this user follows
+ */
 
 interface User {
   _id: string;
@@ -19,6 +36,30 @@ interface User {
   followers: string[];
   following: string[];
 }
+
+/**
+ * @file Search.tsx
+ * @description User search page - search for users by username and follow/unfollow.
+ * Supports real-time search with URL query parameter synchronization.
+ *
+ * Features:
+ * - Search input with debounced API calls
+ * - User results displayed in cards with avatar, username, join date
+ * - Follow/unfollow toggle with instant feedback
+ * - Click to navigate to user profile
+ * - URL query param updates (？q=search)
+ * - No results empty state
+ *
+ * Route: /search?q=...
+ * Access: Authenticated users only
+ * Components: UserSidebar, Snackbar, User cards
+ *
+ * @page
+ * @requires useSearchParams - Sync search query with URL
+ * @requires useNavigate - Navigation to user profiles
+ * @requires useThemeLanguage - Translations and date formatting
+ * @requires api - User search endpoint
+ */
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,7 +99,7 @@ const Search = () => {
       console.error("Failed to fetch users:", error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("failedLoadUsers"),
+        message: t("failedLoadUsers"),
         type: "error",
       });
     } finally {
@@ -80,7 +121,7 @@ const Search = () => {
     if (!currentUserId) {
       setSnackbar({
         open: true,
-        message: t("mustBeLoggedIn") || "You must be logged in to follow users",
+        message: t("mustBeLoggedIn"),
         type: "error",
       });
       return;
@@ -120,7 +161,7 @@ const Search = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("actionFailed"),
+        message: t("actionFailed"),
         type: "error",
       });
     }
@@ -183,25 +224,25 @@ const Search = () => {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+      <div className="search-container">
         <UserSidebar />
-        <div className="admin-page" style={{ flex: 1 }}>
-          <div className="admin-loading">{t("loading")}</div>
+        <div className="page-container">
+          <div className="loading">{t("loading")}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div className="search-container">
       <UserSidebar />
-      <div className="admin-page" style={{ flex: 1 }}>
-        <div className="admin-page-header">
-          <h1 className="admin-page-title">{t("users")}</h1>
-          <div className="admin-page-actions">
+      <div className="page-container">
+        <div className="page-header">
+          <h1 className="page-title">{t("users")}</h1>
+          <div className="page-actions">
             <input
               type="text"
-              className="admin-search-input"
+              className="search-input"
               placeholder={t("search") + "..."}
               value={searchQuery}
               onChange={handleSearchChange}
@@ -211,46 +252,24 @@ const Search = () => {
         </div>
 
         {filteredUsers.length === 0 ? (
-          <div className="admin-loading">
+          <div className="loading">
             {searchQuery.trim() !== "" ? t("noSearchResults") : t("noUsersFound")}
           </div>
         ) : (
-          <div className="admin-cards-grid">
+          <div className="cards-grid">
             {filteredUsers.map((user) => (
-              <div key={user._id} className="admin-card" style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+              <div key={user._id} className="card user-card">
                 {/* Profile Image Circle */}
                 {user.profileImage ? (
                   <img
                     src={user.profileImage}
                     alt={user.username}
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "2px solid var(--theme-accent)",
-                      flexShrink: 0,
-                      cursor: "pointer",
-                    }}
+                    className="avatar avatar-lg"
                     onClick={() => handleUsernameClick(user._id)}
                   />
                 ) : (
                   <div
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "50%",
-                      background: "var(--theme-accent)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "24px",
-                      fontWeight: 600,
-                      color: "var(--theme-text)",
-                      border: "2px solid var(--theme-accent)",
-                      flexShrink: 0,
-                      cursor: "pointer",
-                    }}
+                    className="avatar-fallback avatar-fallback-lg"
                     onClick={() => handleUsernameClick(user._id)}
                   >
                     {user.username.charAt(0).toUpperCase()}
@@ -258,53 +277,28 @@ const Search = () => {
                 )}
 
                 {/* User Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="user-card-info">
                   <h3
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "18px",
-                      fontWeight: 600,
-                      color: "var(--theme-text)",
-                      cursor: "pointer",
-                    }}
+                    className="user-card-username"
                     onClick={() => handleUsernameClick(user._id)}
                   >
                     @{user.username}
                   </h3>
 
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      opacity: 0.7,
-                      marginBottom: "8px",
-                      color: "var(--theme-text)",
-                    }}
-                  >
+                  <p className="user-card-meta">
                     {t("memberSince")}: {formatDate(user.createdAt)}
                   </p>
                 </div>
 
                 {/* Follow/Unfollow Button */}
                 <button
-                  className={`admin-button-secondary ${isFollowing(user) ? "unfollow" : ""}`}
+                  className={`btn-secondary btn-sm icon-btn ${isFollowing(user) ? "btn-following" : "btn-follow"}`}
                   onClick={() => toggleFollow(user._id)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "8px 16px",
-                    minWidth: "auto",
-                    flexShrink: 0,
-                    borderColor: isFollowing(user) ? "#a50104" : undefined,
-                    color: isFollowing(user) ? "#a50104" : undefined,
-                    background: isFollowing(user) ? "rgba(165, 1, 4, 0.1)" : undefined,
-                  }}
                   title={isFollowing(user) ? t("unfollow") : t("follow")}
                 >
-                  <span className="material-icons" style={{ fontSize: "18px" }}>
+                  <span className="material-icons">
                     {isFollowing(user) ? "person_remove" : "person_add"}
                   </span>
-                  {isFollowing(user) ? t("unfollow") : t("follow")}
                 </button>
               </div>
             ))}

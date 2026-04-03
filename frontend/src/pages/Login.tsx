@@ -1,12 +1,51 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { authAPI, usersAPI, UserProfile } from "../services/api";
-import Snackbar from "../components/Snackbar";
-import { Language, getTranslation } from "../utils/translations";
-import { useThemeLanguage, Theme } from "../context/ThemeLanguageContext";
+import { useThemeLanguage } from "../context/ThemeLanguageContext";
+import { getTranslation } from "../utils/translations";
 import { useNotifications } from "../context/NotificationContext";
+import { Theme, Language } from "../utils/types";
+import Snackbar from "../components/Snackbar";
 import "./Login.css";
 import logo from "../assets/mangotree-logo.png";
+
+/**
+ * @file Login.tsx
+ * @description Unified authentication page combining login and signup (register) flows.
+ * Supports:
+ * - User login with username/password
+ * - User registration (signin) with username/email/password
+ * - Two-factor authentication (2FA) verification
+ * - Password reset via email ("Forgot Password")
+ * - Account suspension notifications
+ * - Session expiry handling
+ *
+ * Features:
+ * - Tabbed interface (Login / Signup)
+ * - Real-time form validation
+ * - 2FA modal for accounts with 2FA enabled
+ * - Suspension modal with reason display
+ * - Forgot password modal with email verification
+ * - Route-based tab sync (URL determines active tab)
+ * - Automatic theme/language preference loading
+ *
+ * Routes:
+ * - /login → Login tab active
+ * - /signin → Signup tab active
+ *
+ * Session flags checked on mount (sessionStorage):
+ * - accountDeleted: Shows success message
+ * - sessionExpired: Shows error message
+ * - accountSuspended: Shows suspension modal with reason
+ *
+ * @page
+ * @requires useNavigate - Navigation on auth success, tab switching
+ * @requires useLocation - Path-based tab syncing, return redirect
+ * @requires useThemeLanguage - Preferences and translations
+ * @requires useNotifications - Refresh unread count on login
+ * @requires authAPI - Login, register, 2FA verification
+ * @requires usersAPI - Preference loading, username check
+ */
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,12 +55,10 @@ const Login = () => {
   const t = (key: string) => getTranslation(language, key);
 
   const [activeTab, setActiveTab] = useState<"login" | "signin">(() => {
-    // Initialize tab based on path
     if (location.pathname === "/signin") return "signin";
     return "login";
   });
 
-  // 2FA state
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [twoFAUserId, setTwoFAUserId] = useState<string | null>(null);
   const [twoFACode, setTwoFACode] = useState("");
@@ -37,7 +74,6 @@ const Login = () => {
         type: "success",
       });
       sessionStorage.removeItem("accountDeleted");
-      // Clear any sessionExpired that might be set
       sessionStorage.removeItem("sessionExpired");
     }
 
@@ -54,7 +90,6 @@ const Login = () => {
     const accountSuspended = sessionStorage.getItem("accountSuspended");
     const suspensionReason = sessionStorage.getItem("suspensionReason");
     if (accountSuspended === "true" && suspensionReason) {
-      // Show suspension modal
       setShowSuspensionModal(true);
       setSuspensionReason(suspensionReason);
       sessionStorage.removeItem("accountSuspended");
@@ -65,14 +100,22 @@ const Login = () => {
   const [showSuspensionModal, setShowSuspensionModal] = useState(false);
   const [suspensionReason, setSuspensionReason] = useState("");
 
+  /**
+   * Handles acknowledgment of account suspension.
+   * Closes suspension modal, clears reason, and redirects to login page.
+   * Used when suspended user tries to access app and sees suspension notice.
+   */
   const handleSuspensionOK = () => {
     setShowSuspensionModal(false);
     setSuspensionReason("");
-    // Auth will be cleared by the interceptor
     window.location.href = "/login";
   };
 
-  // Load user preferences from backend and apply to theme/language context
+  /**
+   * Fetches user preferences from backend and applies them to UI.
+   * Used after successful authentication to sync theme and language.
+   * If not logged in or request fails, silently ignores (defaults used).
+   */
   const loadUserPreferences = async () => {
     try {
       const user: UserProfile = await usersAPI.getCurrentUser();
@@ -86,6 +129,7 @@ const Login = () => {
       console.log("No user preferences loaded (not logged in)");
     }
   };
+
   const [loginUsername, setLoginUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -131,12 +175,27 @@ const Login = () => {
     }
   }, [location.pathname]);
 
+  /**
+   * Handles login form submission.
+   * Validates username (min 3 chars) and password presence.
+   * Attempts authentication via authAPI.login.
+   *
+   * Flow:
+   * 1. If 2FA required → show 2FA modal, don't navigate yet
+   * 2. If success → save tokens, load preferences, refresh notifications, redirect after 1s
+   * 3. If rememberMe checked → set 30-day token expiration
+   * 4. Error handling:
+   *    - Account banned → show suspension modal via sessionStorage
+   *    - Field errors → map to appropriate error messages
+   *    - Generic errors → snackbar
+   *
+   * @param {React.FormEvent} e - Form submission event
+   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrors({});
 
-    // Frontend validation
     const trimmedUsername = loginUsername.trim();
     if (!trimmedUsername || trimmedUsername.length < 3) {
       setErrors({ username: t("usernameMinLength") });
@@ -153,7 +212,6 @@ const Login = () => {
     try {
       const response = await authAPI.login(trimmedUsername, password);
 
-      // Check if 2FA is required
       if (response.twoFactorRequired) {
         setTwoFAUserId(response.userId ?? null);
         setShow2FAModal(true);
@@ -166,18 +224,16 @@ const Login = () => {
         return;
       }
 
-      // Normal login flow (no 2FA)
       setSnackbar({
         open: true,
         message: t("successfullyLoggedIn"),
         type: "success",
       });
-      // Store tokens if needed
+
       if (response.token && response.refreshToken) {
         localStorage.setItem("token", response.token);
         localStorage.setItem("refreshToken", response.refreshToken);
 
-        // If remember me is checked, extend token expiration to 30 days
         if (rememberMe) {
           const expirationDate = new Date();
           expirationDate.setDate(expirationDate.getDate() + 30);
@@ -185,34 +241,27 @@ const Login = () => {
         }
       }
 
-      // Load user preferences (theme, language) from backend
       await loadUserPreferences();
-
-      // Refresh notification unread count after login
       await refreshUnreadCount();
 
-      // Redirect based on role
       const redirectTo = response.redirectTo || "/home";
       setTimeout(() => {
         navigate(redirectTo);
       }, 1000);
     } catch (error: any) {
       const errorData = error.response?.data;
-      let errorMessage = errorData?.message || t("serverError");
+      let errorMessage = t("serverError");
       const errorField = errorData?.field;
 
-      // Handle account banned message (translation key + reason)
       if (errorMessage === "accountBanned" && errorData?.reason) {
         const reason = errorData.reason;
         const template = t("accountBannedMessage");
         errorMessage = template.replace(/{reason}/g, reason);
       }
 
-      // Map error to specific field, translate common password errors
       if (errorField === "username") {
         setErrors({ username: errorMessage });
       } else if (errorField === "password") {
-        // Try to match common backend error messages for password
         if (errorMessage.toLowerCase().includes("incorrect")) {
           errorMessage = t("incorrectPassword");
         } else if (
@@ -223,7 +272,6 @@ const Login = () => {
         }
         setErrors({ password: errorMessage });
       } else {
-        // Fallback to snackbar for general errors
         setSnackbar({
           open: true,
           message: errorMessage,
@@ -235,13 +283,22 @@ const Login = () => {
     }
   };
 
+  /**
+   * Handles "Forgot Password" form submission.
+   * Validates email format, then calls forgotPassword API.
+   *
+   * On success: closes modal, clears email field, shows success snackbar.
+   * On error: distinguishes between "email not found" and other errors;
+   *           field error goes in forgotEmail error, else snackbar.
+   *
+   * @param {React.FormEvent} e - Form submission event
+   */
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent triggering login form
+    e.stopPropagation();
     setSendingEmail(true);
     setErrors({ ...errors, forgotEmail: undefined });
 
-    // Frontend validation
     const trimmedEmail = forgotEmail.trim();
     if (!trimmedEmail || !trimmedEmail.includes("@")) {
       setErrors({ ...errors, forgotEmail: t("emailMustContain") });
@@ -260,9 +317,7 @@ const Login = () => {
       setForgotEmail("");
       setErrors({ ...errors, forgotEmail: undefined });
     } catch (error: any) {
-      const errorData = error.response?.data;
-      let errorMessage = errorData?.message || t("serverError");
-      // Translate common server errors for email not found
+      let errorMessage = t("serverError");
       const lowerMsg = errorMessage.toLowerCase();
       if (
         lowerMsg.includes("not found") ||
@@ -285,6 +340,15 @@ const Login = () => {
     }
   };
 
+  /**
+   * Handles 2FA code verification after initial login.
+   * Validates 6-digit numeric code, then calls verify2FA API.
+   *
+   * On success: saves tokens, loads preferences, closes modal, redirects.
+   * On error: shows snackbar, clears code field for retry.
+   *
+   * @param {React.FormEvent} e - Form submission event
+   */
   const handleVerify2FA = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!twoFAUserId) return;
@@ -308,47 +372,50 @@ const Login = () => {
         type: "success",
       });
 
-      // Store tokens
       if (response.token && response.refreshToken) {
         localStorage.setItem("token", response.token);
         localStorage.setItem("refreshToken", response.refreshToken);
       }
 
-      // Load user preferences
       await loadUserPreferences();
       await refreshUnreadCount();
 
-      // Close modal and reset state
       setShow2FAModal(false);
       setTwoFAUserId(null);
       setTwoFACode("");
 
-      // Redirect
       const redirectTo = response.redirectTo || "/home";
       setTimeout(() => {
         navigate(redirectTo);
       }, 1000);
     } catch (error: any) {
-      const errorData = error.response?.data;
-      let errorMessage = errorData?.message || t("serverError");
+      let errorMessage = t("serverError");
       setSnackbar({
         open: true,
         message: errorMessage,
         type: "error",
       });
-      // Clear the code input on error
       setTwoFACode("");
     } finally {
       setVerifying2FA(false);
     }
   };
 
+  /**
+   * Handles user registration (signup) form submission.
+   * Validates username (>=3 chars), email (contains @), and password.
+   * Calls authAPI.register to create new account.
+   *
+   * On success: saves tokens, loads preferences, clears form, redirects to home after 1s.
+   * On error: maps field-level errors to appropriate form error states or snackbar.
+   *
+   * @param {React.FormEvent} e - Form submission event
+   */
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setSigningIn(true);
     setErrors({});
 
-    // Frontend validation
     const trimmedUsername = username.trim();
     if (!trimmedUsername || trimmedUsername.length < 3) {
       setErrors({ username: t("usernameMinLength") });
@@ -382,33 +449,26 @@ const Login = () => {
         type: "success",
       });
 
-      // Store tokens and auto-login
       if (response.token && response.refreshToken) {
         localStorage.setItem("token", response.token);
         localStorage.setItem("refreshToken", response.refreshToken);
       }
 
-      // Load user preferences (theme, language) from backend
       await loadUserPreferences();
-
-      // Refresh notification unread count after signin
       await refreshUnreadCount();
 
-      // Clear form
       setUsername("");
       setSigninEmail("");
       setSigninPassword("");
 
-      // Redirect to home after a short delay to show success message
       setTimeout(() => {
         navigate("/home");
       }, 1000);
     } catch (error: any) {
       const errorData = error.response?.data;
-      let errorMessage = errorData?.message || t("couldntCreateAccount");
+      let errorMessage = t("couldntCreateAccount");
       const errorField = errorData?.field;
 
-      // Map error to specific field, translate common password errors
       if (errorField === "username") {
         setErrors({ username: errorMessage });
       } else if (errorField === "email") {
@@ -424,7 +484,6 @@ const Login = () => {
         }
         setErrors({ signinPassword: errorMessage });
       } else {
-        // Fallback to snackbar for general errors
         setSnackbar({
           open: true,
           message: errorMessage,
@@ -463,16 +522,6 @@ const Login = () => {
           <button
             onClick={() => navigate("/")}
             className="logo-button"
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              display: "inline-flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "8px",
-            }}
           >
             <img src={logo} alt="MangoTree" className="logo-placeholder" />
             <h1 className="login-title">MangoTree</h1>
@@ -483,7 +532,7 @@ const Login = () => {
         <div className="tabs-container">
           <button
             type="button"
-            className={`tab-button ${activeTab === "login" ? "tab-active" : ""}`}
+            className={`login-tab-button ${activeTab === "login" ? "login-tab-active" : ""}`}
             onClick={() => {
               setActiveTab("login");
               setErrors({});
@@ -494,7 +543,7 @@ const Login = () => {
           </button>
           <button
             type="button"
-            className={`tab-button ${activeTab === "signin" ? "tab-active" : ""}`}
+            className={`login-tab-button ${activeTab === "signin" ? "login-tab-active" : ""}`}
             onClick={() => {
               setActiveTab("signin");
               setErrors({});
@@ -514,17 +563,17 @@ const Login = () => {
             }}
             className="login-form"
           >
-            <div className="form-group">
+            <div className="login-form-group">
               <label
                 htmlFor="username"
-                className={`form-label ${errors.username ? "label-error" : ""}`}
+                className={`login-form-label ${errors.username ? "login-label-error" : ""}`}
               >
                 {t("username")}
               </label>
               <input
                 id="username"
                 type="text"
-                className={`form-input ${errors.username ? "input-error" : ""}`}
+                className={`login-form-input ${errors.username ? "login-input-error" : ""}`}
                 value={loginUsername}
                 onChange={(e) => {
                   setLoginUsername(e.target.value);
@@ -535,22 +584,22 @@ const Login = () => {
                 placeholder={t("enterYourUsername")}
               />
               {errors.username && (
-                <span className="error-message">{errors.username}</span>
+                <span className="login-error-message">{errors.username}</span>
               )}
             </div>
 
-            <div className="form-group">
+            <div className="login-form-group">
               <label
                 htmlFor="password"
-                className={`form-label ${errors.password ? "label-error" : ""}`}
+                className={`login-form-label ${errors.password ? "login-label-error" : ""}`}
               >
                 {t("password")}
               </label>
-              <div style={{ position: "relative" }}>
+              <div className="password-input-wrapper">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  className={`form-input ${errors.password ? "input-error" : ""}`}
+                  className={`login-form-input password-input ${errors.password ? "login-input-error" : ""}`}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -559,29 +608,11 @@ const Login = () => {
                     }
                   }}
                   placeholder={t("enterYourPassword")}
-                  style={{ paddingRight: "40px" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#333",
-                    opacity: 0.6,
-                    transition: "opacity 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+                  className="password-toggle"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -616,7 +647,7 @@ const Login = () => {
                 </button>
               </div>
               {errors.password && (
-                <span className="error-message">{errors.password}</span>
+                <span className="login-error-message">{errors.password}</span>
               )}
             </div>
 
@@ -633,7 +664,7 @@ const Login = () => {
               />
             </div>
 
-            <div className="form-actions">
+            <div className="login-form-actions">
               <button
                 type="button"
                 className="btn-text"
@@ -660,17 +691,17 @@ const Login = () => {
         {/* Sign In Form */}
         {activeTab === "signin" && (
           <form onSubmit={handleSignIn} className="login-form">
-            <div className="form-group">
+            <div className="login-form-group">
               <label
                 htmlFor="username"
-                className={`form-label ${errors.username ? "label-error" : ""}`}
+                className={`login-form-label ${errors.username ? "login-label-error" : ""}`}
               >
                 {t("username")}
               </label>
               <input
                 id="username"
                 type="text"
-                className={`form-input ${errors.username ? "input-error" : ""}`}
+                className={`login-form-input ${errors.username ? "login-input-error" : ""}`}
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);
@@ -681,21 +712,21 @@ const Login = () => {
                 placeholder={t("enterYourUsername")}
               />
               {errors.username && (
-                <span className="error-message">{errors.username}</span>
+                <span className="login-error-message">{errors.username}</span>
               )}
             </div>
 
-            <div className="form-group">
+            <div className="login-form-group">
               <label
                 htmlFor="signin-email"
-                className={`form-label ${errors.signinEmail ? "label-error" : ""}`}
+                className={`login-form-label ${errors.signinEmail ? "login-label-error" : ""}`}
               >
                 {t("email")}
               </label>
               <input
                 id="signin-email"
                 type="email"
-                className={`form-input ${errors.signinEmail ? "input-error" : ""}`}
+                className={`login-form-input ${errors.signinEmail ? "login-input-error" : ""}`}
                 value={signinEmail}
                 onChange={(e) => {
                   setSigninEmail(e.target.value);
@@ -706,22 +737,22 @@ const Login = () => {
                 placeholder={t("enterYourEmail")}
               />
               {errors.signinEmail && (
-                <span className="error-message">{errors.signinEmail}</span>
+                <span className="login-error-message">{errors.signinEmail}</span>
               )}
             </div>
 
-            <div className="form-group">
+            <div className="login-form-group">
               <label
                 htmlFor="signin-password"
-                className={`form-label ${errors.signinPassword ? "label-error" : ""}`}
+                className={`login-form-label ${errors.signinPassword ? "login-label-error" : ""}`}
               >
                 {t("password")}
               </label>
-              <div style={{ position: "relative" }}>
+              <div className="password-input-wrapper">
                 <input
                   id="signin-password"
                   type={showSigninPassword ? "text" : "password"}
-                  className={`form-input ${errors.signinPassword ? "input-error" : ""}`}
+                  className={`login-form-input password-input ${errors.signinPassword ? "login-input-error" : ""}`}
                   value={signinPassword}
                   onChange={(e) => {
                     setSigninPassword(e.target.value);
@@ -730,32 +761,12 @@ const Login = () => {
                     }
                   }}
                   placeholder={t("enterYourPassword")}
-                  style={{ paddingRight: "40px" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowSigninPassword(!showSigninPassword)}
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#333",
-                    opacity: 0.6,
-                    transition: "opacity 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
-                  aria-label={
-                    showSigninPassword ? "Hide password" : "Show password"
-                  }
+                  className="password-toggle"
+                  aria-label={showSigninPassword ? "Hide password" : "Show password"}
                 >
                   {showSigninPassword ? (
                     <svg
@@ -789,12 +800,12 @@ const Login = () => {
                 </button>
               </div>
               {errors.signinPassword && (
-                <span className="error-message">{errors.signinPassword}</span>
+                <span className="login-error-message">{errors.signinPassword}</span>
               )}
             </div>
 
-            <div className="form-actions">
-              <button type="button" style={{ visibility: "hidden" }}>
+            <div className="login-form-actions">
+              <button type="button" className="invisible">
                 Placeholder
               </button>
               <button
@@ -815,24 +826,24 @@ const Login = () => {
 
       {showForgotModal && (
         <div
-          className="modal-overlay"
+          className="login-modal-overlay"
           onClick={() => setShowForgotModal(false)}
         >
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2 className="modal-title">{t("forgotPasswordTitle")}</h2>
-            <p className="modal-subtitle">{t("forgotPasswordSubtitle")}</p>
-            <form onSubmit={handleForgotPassword} className="modal-form">
-              <div className="form-group">
+          <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2 className="login-modal-title">{t("forgotPasswordTitle")}</h2>
+            <p className="login-modal-subtitle">{t("forgotPasswordSubtitle")}</p>
+            <form onSubmit={handleForgotPassword} className="login-modal-form">
+              <div className="login-form-group">
                 <label
                   htmlFor="forgot-email"
-                  className={`form-label ${errors.forgotEmail ? "label-error" : ""}`}
+                  className={`login-form-label ${errors.forgotEmail ? "login-label-error" : ""}`}
                 >
                   {t("email")}
                 </label>
                 <input
                   id="forgot-email"
                   type="email"
-                  className={`form-input ${errors.forgotEmail ? "input-error" : ""}`}
+                  className={`login-form-input ${errors.forgotEmail ? "login-input-error" : ""}`}
                   value={forgotEmail}
                   onChange={(e) => {
                     setForgotEmail(e.target.value);
@@ -843,10 +854,10 @@ const Login = () => {
                   placeholder={t("enterYourEmail")}
                 />
                 {errors.forgotEmail && (
-                  <span className="error-message">{errors.forgotEmail}</span>
+                  <span className="login-error-message">{errors.forgotEmail}</span>
                 )}
               </div>
-              <div className="form-actions">
+              <div className="login-form-actions">
                 <button
                   type="button"
                   className="btn-text"
@@ -869,18 +880,18 @@ const Login = () => {
 
       {/* 2FA Verification Modal */}
       {show2FAModal && (
-        <div className="modal-overlay">
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2 className="modal-title">{t("twoFactorAuth")}</h2>
-            <p className="modal-subtitle">
+        <div className="login-modal-overlay">
+          <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2 className="login-modal-title">{t("twoFactorAuth")}</h2>
+            <p className="login-modal-subtitle">
               {t("twoFactorDescription")}
             </p>
-            <form onSubmit={handleVerify2FA} className="modal-form">
-              <div className="form-group">
+            <form onSubmit={handleVerify2FA} className="login-modal-form">
+              <div className="login-form-group">
                 <label
                   htmlFor="twofa-code"
-                  className={`form-label ${
-                    errors.twofaCode ? "label-error" : ""
+                  className={`login-form-label ${
+                    errors.twofaCode ? "login-label-error" : ""
                   }`}
                 >
                   {t("twoFACodeLabel")}
@@ -890,12 +901,11 @@ const Login = () => {
                   type="text"
                   inputMode="numeric"
                   maxLength={6}
-                  className={`form-input twofa-code-input ${
-                    errors.twofaCode ? "input-error" : ""
+                  className={`login-form-input login-twofa-code-input ${
+                    errors.twofaCode ? "login-input-error" : ""
                   }`}
                   value={twoFACode}
                   onChange={(e) => {
-                    // Only allow numeric input, max 6 digits
                     const value = e.target.value.replace(/\D/g, "").slice(0, 6);
                     setTwoFACode(value);
                     if (errors.twofaCode) {
@@ -907,7 +917,7 @@ const Login = () => {
                   disabled={verifying2FA}
                 />
               </div>
-              <div className="form-actions">
+              <div className="login-form-actions">
                 <button
                   type="button"
                   className="btn-text"
@@ -935,22 +945,16 @@ const Login = () => {
 
       {/* Account Suspension Modal */}
       {showSuspensionModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 className="modal-title">{t("accountSuspended")}</h2>
-            <p
-              className="modal-subtitle"
-              style={{ marginBottom: "24px", textAlign: "left" }}
-            >
+        <div className="login-modal-overlay">
+          <div className="login-modal-content">
+            <h2 className="login-modal-title">{t("accountSuspended")}</h2>
+            <p className="login-modal-subtitle mb-6 text-left">
               {t("suspensionMessage")} <strong>{suspensionReason}</strong>
             </p>
-            <p
-              className="modal-subtitle"
-              style={{ marginBottom: "24px", textAlign: "left" }}
-            >
+            <p className="login-modal-subtitle mb-6 text-left">
               {t("contactSupport")}
             </p>
-            <div className="form-actions" style={{ justifyContent: "center" }}>
+            <div className="login-form-actions modal-actions-center">
               <button className="btn-solid" onClick={handleSuspensionOK}>
                 {t("ok")}
               </button>

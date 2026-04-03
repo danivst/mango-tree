@@ -10,8 +10,47 @@ import {
   getTotalPages,
   SortState,
 } from "../../utils/table-utils";
-import "./AdminPages.css";
+import "../../styles/shared.css";
+import "./Tags.css";
 import Footer from "../../components/Footer";
+
+/**
+ * @file Tags.tsx
+ * @description Admin page for managing system tags.
+ * View all user-submitted tags, create new system tags, edit, and delete tags.
+ *
+ * Features:
+ * - List all tags with name, creator, and usage count
+ * - Filter by creator: all, system-generated, admin-created
+ * - Date range filter (created from/to) - UI present but not fully implemented
+ * - Add new tag (system tags)
+ * - Edit tag name
+ * - Delete tag with confirmation
+ * - Sortable columns: name, createdAt, createdBy, usageCount
+ * - Search by tag name
+ * - Pagination (20 per page)
+ *
+ * CRUD Operations:
+ * - Create: POST /api/admin/tags { name } (creates system tag)
+ * - Update: PUT /api/admin/tags/:id { name }
+ * - Delete: DELETE /api/admin/tags/:id
+ *
+ * Data Source:
+ * - Uses AdminDataContext.tags (fetched by initialize() or fetchTags())
+ *
+ * Access Control:
+ * - Route protected by AdminRoute (admin only)
+ *
+ * @page
+ * @requires useState - Tags list, filters, modals, loading state
+ * @requires useMemo - Filtered/sorted/paginated computed list
+ * @requires useThemeLanguage - Translations
+ * @requires useAdminData - Access to tags array and tagsState
+ * @requires adminAPI - CRUD operations for tags
+ * @requires Snackbar - Success/error feedback
+ * @requires Footer - Footer component
+ * @requires sortData, paginateData, getTotalPages - Table utilities
+ */
 
 const Tags = () => {
   const { tags, tagsState, fetchTags } = useAdminData();
@@ -142,7 +181,7 @@ const Tags = () => {
     } catch (err: any) {
       setSnackbar({
         open: true,
-        message: err.response?.data?.message || "Failed to load tags",
+        message: t("failedToLoadTags"),
         type: "error",
       });
     }
@@ -160,7 +199,7 @@ const Tags = () => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ opacity: 0.3 }}
+          className="sort-icon-inactive"
         >
           <path d="M8 9l4-4 4 4M8 15l4 4 4-4" />
         </svg>
@@ -232,7 +271,7 @@ const Tags = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to create tag",
+        message: t("tagCreatedFailed"),
         type: "error",
       });
     }
@@ -257,7 +296,7 @@ const Tags = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || t("tagDeleteFailed"),
+        message: t("tagDeleteFailed"),
         type: "error",
       });
     } finally {
@@ -279,7 +318,7 @@ const Tags = () => {
       await adminAPI.updateTag(editTagId, editTagName.trim());
       setSnackbar({
         open: true,
-        message: t("tagUpdatedSuccess") || "Tag updated successfully!",
+        message: t("tagUpdatedSuccess"),
         type: "success",
       });
       setShowEditModal(false);
@@ -289,45 +328,36 @@ const Tags = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message:
-          error.response?.data?.message ||
-          t("tagUpdateFailed") ||
-          "Failed to update tag.",
+        message: t("tagUpdateFailed"),
         type: "error",
       });
     }
   };
 
   return (
-    <div className="admin-page">
-      <div className="admin-page-header">
-        <h1 className="admin-page-title">{t("tags")}</h1>
-        <div className="admin-page-actions">
+    <>
+      <div className="page-container-header">
+        <h1 className="page-container-title">{t("tags")}</h1>
+        <div className="page-container-actions">
           <button
-            className="admin-button-secondary"
+            className="btn-secondary btn-refresh"
             onClick={handleRefresh}
             disabled={loading}
-            style={{
-              marginRight: "8px",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
           >
-            <span className="material-icons" style={{ fontSize: "16px" }}>
+            <span className="material-icons icon-base">
               refresh
             </span>
-            {t("refresh") || "Refresh"}
+            {t("refresh")}
           </button>
           <input
             type="text"
-            className="admin-search-input"
+            className="search-input"
             placeholder={t("search") + "..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <button
-            className="admin-add-button"
+            className="btn-primary"
             onClick={() => setShowAddTag(true)}
           >
             <svg
@@ -349,46 +379,27 @@ const Tags = () => {
       </div>
 
       {error && (
-        <div
-          className="admin-error"
-          style={{
-            color: "#d32f2f",
-            marginBottom: "16px",
-            padding: "12px",
-            background: "#ffebee",
-            borderRadius: "8px",
-          }}
-        >
+        <div className="error-box">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {loading ? (
-        <div className="admin-loading">{t("loading")}</div>
+        <div className="loading">{t("loading")}</div>
       ) : !hasFetched ? (
-        <div
-          className="admin-loading"
-          style={{ textAlign: "center", padding: "40px" }}
-        >
+        <div className="loading loading-padded">
           No data loaded. Click Refresh to load data.
         </div>
       ) : (
-        <div className="admin-table-container">
-          <table className="admin-table">
+        <div className="table-container">
+          <table className="table">
             <thead>
               <tr>
                 <th
                   className="sortable-header"
                   onClick={() => handleSort("name")}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="sort-header-content">
                     {t("tag")}
                     {getSortIcon("name")}
                   </div>
@@ -398,14 +409,7 @@ const Tags = () => {
                   className="sortable-header"
                   onClick={() => handleSort("by")}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <div className="sort-header-content">
                     {t("by")}
                     {getSortIcon("by")}
                   </div>
@@ -428,19 +432,20 @@ const Tags = () => {
                       : t("system")}
                   </td>
                   <td>
-                    <button
-                      className="admin-delete-button"
-                      onClick={() => handleDeleteTagClick(tag._id)}
-                    >
-                      {t("delete")}
-                    </button>
-                    <button
-                      className="admin-button-edit"
-                      onClick={() => handleEditClick(tag)}
-                      style={{ marginLeft: "8px" }}
-                    >
-                      {t("edit")}
-                    </button>
+                    <div className="table-actions">
+                      <button
+                        className="btn-danger"
+                        onClick={() => handleDeleteTagClick(tag._id)}
+                      >
+                        {t("delete")}
+                      </button>
+                      <button
+                        className="btn-admin-action"
+                        onClick={() => handleEditClick(tag)}
+                      >
+                        {t("edit")}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -449,20 +454,20 @@ const Tags = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="admin-pagination">
+            <div className="pagination">
               <button
-                className="admin-pagination-button"
+                className="pagination-button"
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
               >
                 {t("previous")}
               </button>
-              <span className="admin-pagination-info">
+              <span className="pagination-info">
                 {t("page")} {currentPage} {t("of")} {totalPages} (
                 {sortedData.length} {t("total")})
               </span>
               <button
-                className="admin-pagination-button"
+                className="pagination-button"
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
@@ -477,13 +482,13 @@ const Tags = () => {
 
       {/* Delete Tag Modal (moved outside table) */}
       {showDeleteModal && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal admin-modal-danger">
-            <h2 className="admin-modal-title">{t("deleteTag")}</h2>
-            <p className="admin-modal-text">{t("deleteTagWarning")}</p>
-            <div className="admin-modal-actions">
+        <div className="modal-overlay">
+          <div className="modal modal-danger">
+            <h2 className="modal-title">{t("deleteTag")}</h2>
+            <p className="modal-text">{t("deleteTagWarning")}</p>
+            <div className="modal-actions">
               <button
-                className="admin-button-secondary"
+                className="btn-secondary"
                 onClick={() => {
                   setShowDeleteModal(false);
                   setDeleteTagId(null);
@@ -492,7 +497,7 @@ const Tags = () => {
                 {t("cancel")}
               </button>
               <button
-                className="admin-button-danger"
+                className="btn-danger"
                 onClick={handleDeleteTagConfirm}
               >
                 {t("delete")}
@@ -504,33 +509,31 @@ const Tags = () => {
 
       {/* Add Tag Modal */}
       {showAddTag && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal">
-            <h2 className="admin-modal-title">{t("addTag")}</h2>
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2 className="modal-title">{t("addTag")}</h2>
             <form onSubmit={handleAddTag}>
-              <div className="admin-form-group">
-                <label className="admin-form-label">{t("tag")}</label>
+              <div className="form-group">
+                <label className="form-label">{t("tag")}</label>
                 <input
                   type="text"
-                  className="admin-form-input"
+                  className="form-input"
                   value={tagName}
                   onChange={(e) => setTagName(e.target.value)}
                   required
                   maxLength={20}
                   placeholder={
-                    t("enterTagName") || "Enter tag name (1-20 characters)"
+                    t("enterTagName")
                   }
                 />
-                <p
-                  style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}
-                >
-                  {tagName.length}/20 characters
+                <p className="char-counter">
+                  {tagName.length}/20 {t("characters")}
                 </p>
               </div>
-              <div className="admin-modal-actions">
+              <div className="modal-actions">
                 <button
                   type="button"
-                  className="admin-button-secondary"
+                  className="btn-secondary"
                   onClick={() => {
                     setShowAddTag(false);
                     setTagName("");
@@ -538,8 +541,8 @@ const Tags = () => {
                 >
                   {t("cancel")}
                 </button>
-                <button type="submit" className="admin-button-primary">
-                  {t("createTag") || t("addTag")}
+                <button type="submit" className="btn-primary">
+                  {t("createTag")}
                 </button>
               </div>
             </form>
@@ -549,33 +552,29 @@ const Tags = () => {
 
       {/* Edit Tag Modal */}
       {showEditModal && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal">
-            <h2 className="admin-modal-title">{t("editTag")}</h2>
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2 className="modal-title">{t("editTag")}</h2>
             <form onSubmit={handleEditConfirm}>
-              <div className="admin-form-group">
-                <label className="admin-form-label">{t("tag")}</label>
+              <div className="form-group">
+                <label className="form-label">{t("tag")}</label>
                 <input
                   type="text"
-                  className="admin-form-input"
+                  className="form-input"
                   value={editTagName}
                   onChange={(e) => setEditTagName(e.target.value)}
                   required
                   maxLength={20}
-                  placeholder={
-                    t("enterTagName") || "Enter tag name (1-20 characters)"
-                  }
+                  placeholder={t("enterTagName")}
                 />
-                <p
-                  style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}
-                >
+                <p className="char-counter">
                   {editTagName.length}/20 {t("characters")}
                 </p>
               </div>
-              <div className="admin-modal-actions">
+              <div className="modal-actions">
                 <button
                   type="button"
-                  className="admin-button-secondary"
+                  className="btn-secondary"
                   onClick={() => {
                     setShowEditModal(false);
                     setEditTagId(null);
@@ -584,8 +583,8 @@ const Tags = () => {
                 >
                   {t("cancel")}
                 </button>
-                <button type="submit" className="admin-button-primary">
-                  {t("saveChanges") || t("edit")}
+                <button type="submit" className="btn-primary">
+                  {t("saveChanges")}
                 </button>
               </div>
             </form>
@@ -600,7 +599,7 @@ const Tags = () => {
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       />
       <Footer />
-    </div>
+    </>
   );
 };
 

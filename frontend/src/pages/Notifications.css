@@ -1,3 +1,8 @@
+.notifications-container {
+  display: flex;
+  min-height: 100vh;
+}
+
 .notifications-list {
   flex: 1;
   overflow-y: auto;
@@ -105,4 +110,31 @@
   .notification-message {
     font-size: 12px;
   }
+}
+
+/* Confirm dialog modal overrides */
+
+/* Delete notification button */
+.notification-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  min-width: auto;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--theme-text);
+  border-radius: 8px;
+  opacity: 0.7;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.notification-delete-btn:hover {
+  opacity: 1;
+}
+
+.notification-delete-btn .material-icons {
+  font-size: 18px;
 }
