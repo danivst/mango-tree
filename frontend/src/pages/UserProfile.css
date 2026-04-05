@@ -4,12 +4,6 @@
   min-height: 100vh;
 }
 
-/* Content wrapper */
-.profile-content {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
 
 /* Profile header section */
 .profile-header {
@@ -131,76 +125,4 @@
   gap: 16px;
 }
 
-
-.post-image-container {
-  position: relative;
-  padding-top: 56.25%;
-  border-radius: 8px;
-  overflow: hidden;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.post-card-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  color: var(--theme-text);
-  opacity: 0.8;
-}
-
-.post-likes {
-  display: flex;
-.icon-sm {
-  font-size: 14px;
-}
-
-/* Icon with medium size */
-.icon-md {
-  font-size: 18px;
-}
-
-/* Action buttons in profile */
-.btn-action-follow {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border: 2px solid var(--theme-text);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--theme-text);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Poppins', sans-serif;
-}
-
-.btn-action-follow.following {
-  border-color: #a50104;
-  background: rgba(165, 1, 4, 0.1);
-  color: #a50104;
-}
-
-.btn-action-report {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border: 2px solid #ff9800;
-  border-radius: 6px;
-  background: rgba(255, 152, 0, 0.1);
-  color: #ff9800;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Poppins', sans-serif;
-}
 }

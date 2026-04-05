@@ -10,6 +10,7 @@ import { getToken } from "../utils/auth";
 import PostCard from "../components/PostCard";
 import "../styles/shared.css";
 import "./Account.css";
+import Footer from "../components/Footer";
 
 /**
  * @file Account.tsx
@@ -291,8 +292,7 @@ const Account = () => {
     <div className="account-container">
       <UserSidebar />
       <div className="page-container">
-        <div className="content-container">
-          {/* Profile Section */}
+        {/* Profile Section */}
           <div className="profile-header">
             {/* Profile Picture */}
             <div className="profile-pic-container" onClick={handleProfileImageClick}>
@@ -429,7 +429,6 @@ const Account = () => {
               ))}
             </div>
           )}
-        </div>
 
         {/* Edit Bio Modal */}
         {showBioModal && (
@@ -470,9 +469,7 @@ const Account = () => {
           open={snackbar.open}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
-        <footer className="page-footer">
-          <p>{t("copyright")}</p>
-        </footer>
+        <Footer />
       </div>
     </div>
   );

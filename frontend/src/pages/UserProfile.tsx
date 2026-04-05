@@ -9,6 +9,7 @@ import "./UserProfile.css";
 import Snackbar from "../components/Snackbar";
 import GoBackButton from "../components/GoBackButton";
 import { getToken } from "../utils/auth";
+import PostCard from "../components/PostCard";
 
 /**
  * @file UserProfile.tsx
@@ -262,11 +263,10 @@ const UserProfile = () => {
     <div className="user-profile-container">
       <UserSidebar />
       <div className="page-container">
-        <div className="profile-content">
-          <div className="mb-6">
-            <GoBackButton />
-          </div>
-          {/* Profile Section */}
+        <div className="mb-6">
+          <GoBackButton />
+        </div>
+        {/* Profile Section */}
           <div className="profile-header">
             {/* Profile Picture */}
             <div className="relative">
@@ -415,32 +415,7 @@ const UserProfile = () => {
           ) : (
             <div className="cards-grid posts-grid">
               {filteredPosts.map((post) => (
-                <div key={post._id} className="card post-card">
-                  {/* Post Image if exists */}
-                  {post.image && post.image.length > 0 && (
-                    <div className="post-card-image-container">
-                      <img
-                        src={post.image[0]}
-                        alt={post.title}
-                        className="post-card-image"
-                      />
-                    </div>
-                  )}
-                  {/* Post Title */}
-                  <h3 className="post-card-title" onClick={() => navigate(`/posts/${post._id}`)}>
-                    {post.title}
-                  </h3>
-                  {/* Category & Date */}
-                  <div className="post-card-meta">
-                    <span>{post.category ? getCategoryDisplayName(post.category) : '—'}</span>
-                    <span>{formatDate(post.createdAt)}</span>
-                  </div>
-                  {/* Likes count */}
-                  <div className="post-likes">
-                    <span className="material-icons icon-md">favorite</span>
-                    {post.likes.length}
-                  </div>
-                </div>
+                <PostCard key={post._id} post={post} />
               ))}
             </div>
           )}
