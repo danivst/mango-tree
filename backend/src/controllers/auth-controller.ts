@@ -4,11 +4,14 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import User from "../models/user";
 import BannedUser from "../models/banned-user";
+import Notification from "../models/notification";
+import NotificationType from "../enums/notification-type";
 import { sendEmail } from "../utils/email";
 import { JWT_SECRET, JWT_REFRESH_SECRET, CLIENT_URL } from "../config/env";
 import RoleTypeValue from "../enums/role-type";
 import { getDualTranslation } from "../utils/translation";
 import { getLocalizedText } from "../utils/get-translation";
+import { getLocationFromIP } from "../utils/geolocation";
 import { AuthRequest } from "../interfaces/auth";
 import {
   getWelcomeEmailTemplate,
@@ -16,6 +19,7 @@ import {
   getPasswordResetEmailTemplate,
   get2FAEmailTemplate
 } from "../utils/email-templates";
+import { logActivity } from "../utils/activity-logger";
 
 /**
  * @file auth-controller.ts
@@ -305,6 +309,53 @@ export const loginUser = async (
   const refreshToken = jwt.sign({ userId: user._id }, JWT_REFRESH_SECRET, {
     expiresIn: "7d",
   });
+
+  // Log successful login (explicit userId since auth middleware not used)
+  await logActivity(req, 'LOGIN', { userId: user._id.toString() });
+
+  // Create a security notification for the user about this login
+  try {
+    const userLang = user.language || "en";
+
+    // Get IP address
+    const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+
+    // Get location (city, country) from IP using geolocation service
+    const location = await getLocationFromIP(ipAddress);
+
+    // Get current time in user's locale
+    const loginTime = new Date().toLocaleString(userLang === 'bg' ? 'bg-BG' : 'en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
+    // Directly create English and Bulgarian messages
+    const messageEn = `New login detected at ${loginTime} from ${location}. If this wasn't you, please secure your account immediately.`;
+    const messageBg = `Открито ново влизане на ${loginTime} от ${location}. Ако това не сте вие, моля незабавно защитете акаунта си.`;
+
+    await Notification.create({
+      userId: user._id,
+      type: NotificationType.NEW_LOGIN,
+      message: getLocalizedText(userLang, {
+        en: messageEn,
+        bg: messageBg,
+      }),
+      translations: {
+        message: {
+          en: messageEn,
+          bg: messageBg,
+        },
+      },
+      link: '/settings',
+    });
+  } catch (notifErr) {
+    console.error("Failed to create login notification:", notifErr);
+    // Don't fail the login if notification fails
+  }
 
   return res.json({
     message: "Successfully logged in!",
@@ -707,9 +758,72 @@ export const changePassword = async (
     user.passwordHash = await bcrypt.hash(newPassword, 10);
     await user.save();
 
+    // Create notification for password change
+    const userLang = user.language || 'en';
+    const messageEn = "Your password has been changed successfully.";
+    const messageBg = "Вашата парола беше променена успешно.";
+
+    let titleTrans, bodyTrans;
+    try {
+      [titleTrans, bodyTrans] = await Promise.all([
+        getDualTranslation("Password Changed"),
+        getDualTranslation(messageEn),
+      ]);
+    } catch (translationError) {
+      console.error("Translation failed, using fallback:", translationError);
+      titleTrans = { en: "Password Changed", bg: "Паролата променена" };
+      bodyTrans = { en: messageEn, bg: messageBg };
+    }
+
+    try {
+      await Notification.create({
+        userId: userId,
+        type: NotificationType.SYSTEM,
+        message: getLocalizedText(userLang, bodyTrans), // Use body as message
+        translations: {
+          message: {
+            en: bodyTrans.en,
+            bg: bodyTrans.bg,
+          },
+        },
+        link: '/settings',
+      });
+    } catch (notifErr) {
+      console.error("Failed to create password change notification:", notifErr);
+      // Do not fail the request because of notification error
+    }
+
+    // Log the password change for audit
+    await logActivity(req, 'PASSWORD_CHANGE', { description: 'Changed password' });
+
     return res.json({ message: "Password changed successfully." });
   } catch (error: any) {
     console.error("Change password error:", error);
     return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+/* ---------- LOGOUT ---------- */
+/**
+ * Logs out an authenticated user by recording the activity.
+ * Does not invalidate tokens on server (client will clear them).
+ * Future: could add token blacklist for refresh tokens.
+ *
+ * @param req - AuthRequest with authenticated user
+ * @param res - Response with success message
+ * @returns 200 on success
+ */
+export const logoutUser = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<Response> => {
+  try {
+    // Log the logout event for audit
+    await logActivity(req, 'LOGOUT');
+    return res.json({ message: "Logged out successfully." });
+  } catch (error: any) {
+    console.error("Logout error:", error);
+    // Still return success to client; logout should not fail due to logging issues
+    return res.json({ message: "Logged out." });
   }
 };

@@ -8,8 +8,14 @@ import "../styles/shared.css";
 import "./Post.css";
 import Snackbar from "../components/Snackbar";
 import GoBackButton from "../components/GoBackButton";
-import { getToken } from "../utils/auth";
+import ShareButton from "../components/ShareButton";
+import { getCurrentUserId } from "../utils/auth";
+import { useSnackbar } from "../utils/snackbar";
+import { detectLanguage } from "../utils/language";
+import { getCategoryDisplayName, getCategoryStyle, formatTimeAgo } from "../utils/display";
+import { updateInTree, countAllInTree, removeFromTree } from "../utils/tree";
 import ReactMarkdown from "react-markdown";
+import Footer from "../components/Footer";
 
 /**
  * @file Post.tsx
@@ -61,366 +67,8 @@ import ReactMarkdown from "react-markdown";
  * @requires UserSidebar - Navigation sidebar
  */
 
-// Simple language detection based on Cyrillic characters
-const detectLanguage = (text: string): 'en' | 'bg' => {
-  if (!text) return 'en';
-  // Check for Cyrillic characters (Bulgarian)
-  if (/[а-яА-Я]/.test(text)) {
-    return 'bg';
-  }
-  return 'en';
-};
-
-// Recursive Comment Item Component
-interface CommentItemProps {
-  comment: Comment;
-  currentUserId: string | null;
-  depth?: number;
-  onLike: (commentId: string) => void;
-  onDelete: (commentId: string) => void;
-  onReport: (commentId: string) => void;
-  onTranslate: (commentId: string) => void;
-  onReply: (parentCommentId: string, text: string) => Promise<void>;
-  translatedCommentId: string | null;
-  commentTranslationCache: Record<string, string>;
-  translatingComment: string | null;
-  replyingToCommentId: string | null;
-  replyTexts: Record<string, string>;
-  submittingReply: Record<string, boolean>;
-  likingComment: Record<string, boolean>;
-  onStartReply: (commentId: string) => void;
-  onCancelReply: () => void;
-  onReplyTextChange: (commentId: string, text: string) => void;
-  hiddenReplies: Record<string, boolean>;
-  toggleRepliesVisibility: (commentId: string) => void;
-  t: (key: string) => string;
-  language: string;
-  formatCommentTime: (date: Date | string) => string;
-  navigate: any;
-}
-
-const CommentItem: React.FC<CommentItemProps> = ({
-  comment,
-  currentUserId,
-  depth = 0,
-  onLike,
-  onDelete,
-  onReport,
-  onTranslate,
-  onReply,
-  translatedCommentId,
-  commentTranslationCache,
-  translatingComment,
-  replyingToCommentId,
-  replyTexts,
-  submittingReply,
-  likingComment,
-  onStartReply,
-  onCancelReply,
-  onReplyTextChange,
-  hiddenReplies,
-  toggleRepliesVisibility,
-  t,
-  language,
-  formatCommentTime,
-  navigate,
-}) => {
-  const commentLikesCount = comment.likes?.length || 0;
-  const isLiked = currentUserId && comment.likes?.includes(currentUserId);
-  const isCurrentUserOwner = currentUserId && comment.userId?._id === currentUserId;
-  const isRepliesHidden = !!hiddenReplies[comment._id];
-
-  const handleSubmitReply = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const replyText = replyTexts[comment._id]?.trim();
-    if (!replyText) return;
-    await onReply(comment._id, replyText);
-  };
-
-  const isNested = depth > 0;
-
-  return (
-    <div style={{ marginLeft: isNested ? '20px' : 0 }}>
-      <div
-        key={comment._id}
-        className="comment-item"
-      >
-        <div className="comment-body">
-          {/* Comment Author Avatar */}
-          <div
-            onClick={() => navigate(`/users/${comment.userId?._id}`)}
-            className="comment-avatar-container"
-            style={{
-              width: isNested ? "32px" : "40px",
-              height: isNested ? "32px" : "40px",
-            }}
-          >
-            {comment.userId?.profileImage ? (
-              <img
-                src={comment.userId.profileImage}
-                alt={comment.userId.username}
-                className="comment-avatar-image"
-              />
-            ) : (
-              <div
-                className="avatar-placeholder"
-                style={{
-                  fontSize: isNested ? "12px" : "16px",
-                }}
-              >
-                {comment.userId?.username?.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-
-          <div className="comment-main">
-            {/* Comment Header */}
-            <div className="comment-header">
-              <span
-                className="comment-author"
-                style={{
-                  fontSize: isNested ? "12px" : "14px",
-                }}
-                onClick={() => navigate(`/users/${comment.userId?._id}`)}
-              >
-                @{comment.userId?.username}
-              </span>
-              <span
-                className="comment-time"
-                style={{
-                  fontSize: isNested ? "11px" : "12px",
-                }}
-              >
-                {formatCommentTime(comment.createdAt)}
-              </span>
-
-              {/* Action Buttons */}
-              <div className="comment-actions">
-                {/* Like Button */}
-                <button
-                  className="btn-comment-action btn-like"
-                  onClick={() => onLike(comment._id)}
-                  disabled={!currentUserId || likingComment[comment._id]}
-                  style={{
-                    border: currentUserId ? "1px solid" : "none",
-                    borderColor: isLiked ? "#e0245e" : "rgba(0,0,0,0.1)",
-                    color: isLiked ? "#e0245e" : "var(--theme-text)",
-                    background: isLiked ? "rgba(224, 36, 94, 0.1)" : "transparent",
-                    cursor: currentUserId && !likingComment[comment._id] ? "pointer" : "not-allowed",
-                    fontSize: isNested ? "10px" : "12px",
-                    opacity: likingComment[comment._id] ? 0.7 : 1,
-                  }}
-                  title={isLiked ? t("unlike") : t("like")}
-                >
-                  {likingComment[comment._id] ? (
-                    <span className="material-icons spin" style={{ fontSize: isNested ? "12px" : "16px" }}>refresh</span>
-                  ) : (
-                    <span className="material-icons" style={{ fontSize: isNested ? "12px" : "16px" }}>
-                      {isLiked ? "favorite" : "favorite_border"}
-                    </span>
-                  )}
-                  <span>{commentLikesCount}</span>
-                </button>
-
-                {/* Reply Button */}
-                {currentUserId && (
-                  <button
-                    className="btn-comment-action btn-reply"
-                    onClick={() => onStartReply(comment._id)}
-                    disabled={replyingToCommentId === comment._id}
-                    style={{
-                      background: replyingToCommentId === comment._id ? "rgba(0,0,0,0.05)" : "transparent",
-                      cursor: replyingToCommentId === comment._id ? "not-allowed" : "pointer",
-                      fontSize: isNested ? "10px" : "12px",
-                    }}
-                    title={t("reply")}
-                  >
-                    <span className="material-icons" style={{ fontSize: isNested ? "12px" : "16px" }}>
-                      {replyingToCommentId === comment._id ? "send" : "reply"}
-                    </span>
-                    <span>{replyingToCommentId === comment._id ? t("reply") : t("reply")}</span>
-                  </button>
-                )}
-
-                {/* Toggle Replies Button - only if there are replies */}
-                {comment.replies && comment.replies.length > 0 && (
-                  <button
-                    className="btn-comment-action btn-toggle"
-                    onClick={() => toggleRepliesVisibility(comment._id)}
-                    style={{
-                      fontSize: isNested ? "10px" : "12px",
-                    }}
-                    title={isRepliesHidden ? t("showReplies") : t("hideReplies")}
-                  >
-                    <span className="material-icons" style={{ fontSize: isNested ? "12px" : "16px" }}>
-                      {isRepliesHidden ? "expand_more" : "expand_less"}
-                    </span>
-                    <span>
-                      {isRepliesHidden
-                        ? t("showReplies")
-                        : t("hideReplies")}
-                    </span>
-                  </button>
-                )}
-
-                {/* Report Button */}
-                {currentUserId && !isCurrentUserOwner && (
-                  <button
-                    className="btn-comment-action btn-report"
-                    onClick={() => onReport(comment._id)}
-                    style={{
-                      fontSize: isNested ? "10px" : "12px",
-                    }}
-                    title={t("report")}
-                  >
-                    <span className="material-icons" style={{ fontSize: isNested ? "12px" : "16px" }}>warning</span>
-                  </button>
-                )}
-
-                {/* Delete Button */}
-                {isCurrentUserOwner && (
-                  <button
-                    className="btn-comment-action btn-delete"
-                    onClick={() => onDelete(comment._id)}
-                    style={{
-                      fontSize: isNested ? "10px" : "12px",
-                    }}
-                    title={t("delete")}
-                  >
-                    <span className="material-icons" style={{ fontSize: isNested ? "12px" : "16px" }}>delete</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Comment Text */}
-            <div className="comment-content">
-              <p className="comment-text" style={{ fontSize: isNested ? "13px" : "14px" }}>
-                {translatedCommentId === comment._id
-                  ? commentTranslationCache[comment._id] || comment.text
-                  : comment.text}
-              </p>
-
-              {/* Translate Button */}
-              {(() => {
-                const commentLang = detectLanguage(comment.text);
-                const isCommentInUserLanguage = commentLang === language;
-                if (isCommentInUserLanguage) return null;
-                return (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onTranslate(comment._id);
-                    }}
-                    disabled={false}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      padding: "6px 10px",
-                      border: "2px solid var(--theme-accent)",
-                      background: "var(--theme-accent)",
-                      color: "var(--theme-text)",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      fontSize: isNested ? "10px" : "12px",
-                      fontWeight: 500,
-                      flexShrink: 0,
-                    }}
-                    title={translatedCommentId === comment._id ? t("viewOriginal") : t("translate")}
-                  >
-                    <span className="material-icons text-xs">
-                      {translatedCommentId === comment._id ? "translate" : "language"}
-                    </span>
-                    <span className="text-10">
-                      {translatedCommentId === comment._id ? t("viewOriginal") : t("translate")}
-                    </span>
-                  </button>
-                );
-              })()}
-            </div>
-
-            {/* Reply Form */}
-            {replyingToCommentId === comment._id && (
-              <form onSubmit={handleSubmitReply} className="mt-3">
-                <textarea
-                  value={replyTexts[comment._id] || ''}
-                  onChange={(e) => onReplyTextChange(comment._id, e.target.value)}
-                  placeholder={t("writeReply")}
-                  rows={3}
-                  className="reply-textarea"
-                  autoFocus
-                />
-                <div className="reply-buttons-container">
-                  <button
-                    type="button"
-                    className="btn-cancel"
-                    onClick={onCancelReply}
-                    disabled={submittingReply[comment._id]}
-                    style={{
-                      cursor: submittingReply[comment._id] ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    {t("cancel")}
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-submit-reply"
-                    disabled={submittingReply[comment._id] || !replyTexts[comment._id]?.trim()}
-                    style={{
-                      cursor: submittingReply[comment._id] || !replyTexts[comment._id]?.trim() ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    {submittingReply[comment._id] ? (
-                      <span className="material-icons spin" style={{ fontSize: '14px' }}>refresh</span>
-                    ) : (
-                      t("reply")
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Render Replies */}
-      {comment.replies && comment.replies.length > 0 && !isRepliesHidden && (
-        <div className="mt-3">
-          {comment.replies.map((reply: Comment) => (
-            <CommentItem
-              key={reply._id}
-              comment={reply}
-              currentUserId={currentUserId}
-              depth={depth + 1}
-              onLike={onLike}
-              onDelete={onDelete}
-              onReport={onReport}
-              onTranslate={onTranslate}
-              onReply={onReply}
-              translatedCommentId={translatedCommentId}
-              commentTranslationCache={commentTranslationCache}
-              translatingComment={translatingComment}
-              replyingToCommentId={replyingToCommentId}
-              replyTexts={replyTexts}
-              submittingReply={submittingReply}
-              likingComment={likingComment}
-              onStartReply={onStartReply}
-              onCancelReply={onCancelReply}
-              onReplyTextChange={onReplyTextChange}
-              hiddenReplies={hiddenReplies}
-              toggleRepliesVisibility={toggleRepliesVisibility}
-              t={t}
-              language={language}
-              formatCommentTime={formatCommentTime}
-              navigate={navigate}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+import CommentItem from './Post/CommentItem';
+import ReportModal from './Post/ReportModal';
 
 const Post = () => {
   const { id } = useParams<{ id: string }>();
@@ -428,26 +76,79 @@ const Post = () => {
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
 
-  const currentUserId = useMemo(() => {
-    const token = getToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId || null;
-    } catch {
-      return null;
-    }
-  }, []);
+  const currentUserId = useMemo(() => getCurrentUserId(), []);
 
   const [post, setPost] = useState<PostType | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, showWarning, closeSnackbar } = useSnackbar();
+
+  // Scroll to comment if hash is present
+  useEffect(() => {
+    const scrollToComment = () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#comment-')) {
+        const element = document.getElementById(hash.substring(1));
+        if (element) {
+          // Remove highlight from any previously highlighted comment
+          document.querySelectorAll('.comment-item.highlighted-comment').forEach(el => {
+            el.classList.remove('highlighted-comment');
+          });
+
+          // Add highlight class to target comment
+          element.classList.add('highlighted-comment');
+
+          // Find the scrollable page container
+          const pageContainer = document.querySelector('.page-container') as HTMLElement;
+          if (pageContainer) {
+            // Calculate position relative to page container using getBoundingClientRect
+            const elementRect = element.getBoundingClientRect();
+            const containerRect = pageContainer.getBoundingClientRect();
+            const scrollTop = pageContainer.scrollTop + (elementRect.top - containerRect.top);
+            pageContainer.scrollTo({
+              top: scrollTop,
+              behavior: 'smooth'
+            });
+          } else {
+            // Fallback to window scrolling
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+
+          // Remove highlight after 2 seconds
+          setTimeout(() => {
+            element.classList.remove('highlighted-comment');
+          }, 2000);
+        }
+      }
+    };
+
+    // Check on initial load with a small delay to ensure DOM is ready
+    const timer = setTimeout(scrollToComment, 100);
+
+    // Listen for hash changes (in case user clicks a link within the page)
+    window.addEventListener('hashchange', scrollToComment);
+    return () => {
+      window.removeEventListener('hashchange', scrollToComment);
+      clearTimeout(timer);
+    };
+  }, [comments]); // Re-run when comments change (to ensure DOM is ready)
+
+  // Compatibility wrapper for old setSnackbar calls (to be gradually removed)
+  const setSnackbar = (config: { open: boolean; message?: string; type?: 'success' | 'error' | 'warning' }) => {
+    if (!config.open) {
+      closeSnackbar();
+    } else if (config.type === 'success') {
+      showSuccess(config.message || '');
+    } else if (config.type === 'error') {
+      showError(config.message || '');
+    } else if (config.type === 'warning') {
+      showWarning(config.message || '');
+    } else {
+      // Default to success if no type specified
+      showSuccess(config.message || '');
+    }
+  };
   const [newComment, setNewComment] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
@@ -471,15 +172,7 @@ const Post = () => {
   const [submittingReply, setSubmittingReply] = useState<Record<string, boolean>>({});
 
   // Compute total comment count including nested replies
-  const totalCommentCount = useMemo(() => {
-    const countAll = (cmts: Comment[]): number => {
-      return cmts.reduce((acc, cmt) => {
-        const replyCount = cmt.replies ? countAll(cmt.replies) : 0;
-        return acc + 1 + replyCount;
-      }, 0);
-    };
-    return countAll(comments);
-  }, [comments]);
+  const totalCommentCount = useMemo(() => countAllInTree(comments), [comments]);
 
   const [actionLoading, setActionLoading] = useState<{
     like: boolean;
@@ -551,35 +244,6 @@ const Post = () => {
     }
   };
 
-  const getCategoryDisplayName = (categoryName: string) => {
-    const translated = t(categoryName.toLowerCase());
-    if (translated && translated !== categoryName.toLowerCase()) {
-      return translated;
-    }
-    return categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-  };
-
-  const getCategoryStyle = (categoryName: string) => {
-    const styles: Record<string, { borderColor: string; backgroundColor: string; color: string }> = {
-      flex: {
-        borderColor: "#2196F3",
-        backgroundColor: "rgba(33, 150, 243, 0.15)", // Light blue
-        color: "#1976D2" // Darker blue for text
-      },
-      recipe: {
-        borderColor: "#4CAF50",
-        backgroundColor: "rgba(76, 175, 80, 0.15)", // Light green
-        color: "#388E3C" // Darker green for text
-      },
-      question: {
-        borderColor: "#9C27B0",
-        backgroundColor: "rgba(156, 39, 176, 0.15)", // Light purple
-        color: "#7B1FA2" // Darker purple for text
-      },
-    };
-    return styles[categoryName.toLowerCase()] || null;
-  };
-
   const handleNextImage = () => {
     if (post?.image && post.image.length > 0) {
       setCurrentImageIndex((prev) => (prev + 1) % post.image.length);
@@ -592,33 +256,7 @@ const Post = () => {
     }
   };
 
-  const formatCommentTime = (date: Date | string) => {
-    const dateObj = new Date(date);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
-
-    if (diffInSeconds < 60) {
-      return t("justNow");
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      const unit = minutes === 1 ? t("minute") : t("minutes");
-      return language === "bg" ? `${t("ago")} ${minutes} ${unit}` : `${minutes} ${unit} ago`;
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      const unit = hours === 1 ? t("hour") : t("hours");
-      return language === "bg" ? `${t("ago")} ${hours} ${unit}` : `${hours} ${unit} ago`;
-    } else if (diffInSeconds < 604800) {
-      const days = Math.floor(diffInSeconds / 86400);
-      const unit = days === 1 ? t("day") : t("days");
-      return language === "bg" ? `${t("ago")} ${days} ${unit}` : `${days} ${unit} ago`;
-    } else {
-      return dateObj.toLocaleDateString(language === "bg" ? "bg-BG" : "en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    }
-  };
+  const formatCommentTime = (date: Date | string) => formatTimeAgo(date, language, t);
 
   const handleLike = async () => {
     if (!currentUserId) {
@@ -799,7 +437,7 @@ const Post = () => {
       }
 
       // Update the comment in the tree with the fresh likes count
-      setComments(prev => updateCommentInTree(prev, commentId, (c) => ({
+      setComments(prev => updateInTree(prev, commentId, (c) => ({
         ...c,
         likes: response.likes || newLikes
       })));
@@ -919,7 +557,7 @@ const Post = () => {
 
     try {
       await api.delete(`/comments/${deleteCommentId}`);
-      setComments(prev => deleteCommentFromTree(prev, deleteCommentId));
+      setComments(prev => removeFromTree(prev, deleteCommentId));
       setSnackbar({
         open: true,
         message: t("commentDeleted"),
@@ -954,15 +592,19 @@ const Post = () => {
         message: t("postDeleted"),
         type: "success",
       });
-      // Redirect to account page after successful deletion
-      navigate("/account");
+      // Delay closing modal and navigation so snackbar is visible
+      setTimeout(() => {
+        setDeletePostId(null);
+        setTimeout(() => {
+          navigate("/account");
+        }, 500);
+      }, 2000);
     } catch (error: any) {
       setSnackbar({
         open: true,
         message: t("actionFailed"),
         type: "error",
       });
-    } finally {
       setDeletePostId(null);
     }
   };
@@ -1048,37 +690,6 @@ const Post = () => {
     }
   };
 
-  // Tree manipulation helpers for nested comments
-  const updateCommentInTree = (commentsTree: Comment[], commentId: string, updater: (comment: Comment) => Comment): Comment[] => {
-    return commentsTree.map(comment => {
-      if (comment._id === commentId) {
-        return updater(comment);
-      }
-      if (comment.replies && comment.replies.length > 0) {
-        return {
-          ...comment,
-          replies: updateCommentInTree(comment.replies, commentId, updater)
-        };
-      }
-      return comment;
-    });
-  };
-
-  const deleteCommentFromTree = (commentsTree: Comment[], commentId: string): Comment[] => {
-    return commentsTree.filter(comment => {
-      if (comment._id === commentId) {
-        return false;
-      }
-      if (comment.replies && comment.replies.length > 0) {
-        return {
-          ...comment,
-          replies: deleteCommentFromTree(comment.replies, commentId)
-        };
-      }
-      return true;
-    });
-  };
-
   // Reply handlers
   const handleStartReply = (commentId: string) => {
     setReplyingToCommentId(commentId);
@@ -1130,7 +741,7 @@ const Post = () => {
 
         // Optimistically add reply to the tree
         setComments(prev => {
-          const updatedTree = updateCommentInTree(prev, parentCommentId, (parent) => ({
+          const updatedTree = updateInTree(prev, parentCommentId, (parent) => ({
             ...parent,
             replies: [...(parent.replies || []), newReply]
           }));
@@ -1209,28 +820,36 @@ const Post = () => {
           <GoBackButton />
           <div className="post-header">
             <h1 className="page-title page-title-no-margin">{displayTitle}</h1>
-            {/* Translate Toggle Button */}
-            {!isPostInUserLanguage && (
-              <button
-                onClick={handleTranslate}
-                disabled={translating || actionLoading.report}
-                className="post-translate-btn"
-                style={{
-                  cursor: translating || actionLoading.report ? "not-allowed" : "pointer",
-                  opacity: translating || actionLoading.report ? 0.7 : 1,
-                }}
-                title={showTranslation ? t("viewOriginal") : t("translate")}
-              >
-                {translating ? (
-                  <span className="material-icons spin text-sm">refresh</span>
-                ) : (
-                  <span className="material-icons text-sm">
-                    {showTranslation ? "translate" : "language"}
-                  </span>
-                )}
-                <span>{showTranslation ? t("viewOriginal") : t("translate")}</span>
-              </button>
-            )}
+            <div className="post-header-actions">
+              {/* Translate Toggle Button */}
+              {!isPostInUserLanguage && (
+                <button
+                  onClick={handleTranslate}
+                  disabled={translating || actionLoading.report}
+                  className="post-translate-btn"
+                  style={{
+                    cursor: translating || actionLoading.report ? "not-allowed" : "pointer",
+                    opacity: translating || actionLoading.report ? 0.7 : 1,
+                  }}
+                  title={showTranslation ? t("viewOriginal") : t("translate")}
+                >
+                  {translating ? (
+                    <span className="material-icons spin text-sm">refresh</span>
+                  ) : (
+                    <span className="material-icons text-sm">
+                      {showTranslation ? "translate" : "language"}
+                    </span>
+                  )}
+                  <span>{showTranslation ? t("viewOriginal") : t("translate")}</span>
+                </button>
+              )}
+              {/* Share Button */}
+              <ShareButton
+                url={`${window.location.origin}/posts/${post._id}`}
+                title={post.title}
+                description={post.content}
+              />
+            </div>
             {isWaitingForApproval && (
               <div className="approval-badge">
                 {t("waitingForApproval")}
@@ -1312,7 +931,7 @@ const Post = () => {
                   {isLiked ? "favorite" : "favorite_border"}
                 </span>
               )}
-              <span>{likesCount} {likesCount === 1 ? t("like") : t("likes")}</span>
+              <span>{likesCount} {likesCount === 1 ? t("likeCount") : t("likes")}</span>
             </button>
 
             {/* Delete Button - only show if user owns the post */}
@@ -1362,12 +981,12 @@ const Post = () => {
           <span
             className="category-badge"
             style={{
-              borderColor: post.category && getCategoryStyle(post.category.name) ? getCategoryStyle(post.category.name)!.borderColor : "var(--theme-text)",
-              backgroundColor: post.category && getCategoryStyle(post.category.name) ? getCategoryStyle(post.category.name)!.backgroundColor : "transparent",
-              color: post.category && getCategoryStyle(post.category.name) ? getCategoryStyle(post.category.name)!.color : "var(--theme-text)",
+              borderColor: getCategoryStyle(post.category?.name)?.borderColor || "var(--theme-text)",
+              backgroundColor: getCategoryStyle(post.category?.name)?.backgroundColor || "transparent",
+              color: getCategoryStyle(post.category?.name)?.color || "var(--theme-text)",
             }}
           >
-            {getCategoryDisplayName(post.category?.name || "")}
+            {getCategoryDisplayName(post.category?.name || "", t)}
           </span>
         </div>
 
@@ -1495,8 +1114,9 @@ const Post = () => {
         </h2>
 
         {comments.length === 0 ? (
-          <div className="loading-centered opacity-60">
-            {t("noComments")}
+          <div className="empty-state">
+            <span className="material-icons">chat_bubble_outline</span>
+            <h3 className="empty-state-title">{t("noComments")}</h3>
           </div>
         ) : (
           <div className="d-flex flex-column gap-4">
@@ -1527,6 +1147,7 @@ const Post = () => {
                 language={language}
                 formatCommentTime={formatCommentTime}
                 navigate={navigate}
+                postId={post._id}
               />
             ))}
           </div>
@@ -1538,58 +1159,23 @@ const Post = () => {
           open={snackbar.open}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         />
-        <footer className="page-footer">
-          <p>{t("copyright")}</p>
-        </footer>
+        <Footer />
 
         {/* Report Modal */}
-        {reportModalOpen && (
-          <div className="modal-overlay" onClick={() => {
+        <ReportModal
+          open={reportModalOpen}
+          reason={reportReason}
+          onReasonChange={setReportReason}
+          reportingCommentId={reportingCommentId}
+          loading={actionLoading.report}
+          onReport={handleReport}
+          onCancel={() => {
             setReportModalOpen(false);
+            setReportReason("");
             setReportingCommentId(null);
-          }}>
-            <div className="modal modal-warning" onClick={(e) => e.stopPropagation()}>
-              <h2 className="modal-title">
-                {t(reportingCommentId ? "reportComment" : "reportPost")}
-              </h2>
-              <p className="modal-text">
-                {t("reasonForReport")}:
-              </p>
-              <textarea
-                className="form-textarea mb-3"
-                value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-                rows={4}
-                placeholder={t(reportingCommentId ? "enterReportReasonComment" : "enterReportReason")}
-                autoFocus
-              />
-              <div className="modal-actions">
-                <button
-                  className="btn-secondary"
-                  onClick={() => {
-                    setReportModalOpen(false);
-                    setReportReason("");
-                    setReportingCommentId(null);
-                  }}
-                  disabled={actionLoading.report}
-                >
-                  {t("cancel")}
-                </button>
-                <button
-                  className="btn-primary"
-                  onClick={handleReport}
-                  disabled={actionLoading.report}
-                >
-                  {actionLoading.report ? (
-                    <span className="material-icons spin text-base">refresh</span>
-                  ) : (
-                    t("report")
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+          }}
+          t={t}
+        />
 
         {/* Delete Comment Confirmation Modal */}
         {deleteCommentId && (

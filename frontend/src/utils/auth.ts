@@ -84,9 +84,54 @@ export const getToken = (): string | null => {
 };
 
 /**
+ * Get the current user's ID from the JWT token.
+ * More convenient than manually decoding in every component.
+ *
+ * @function getCurrentUserId
+ * @returns {string | null} The user's MongoDB ObjectId if authenticated, otherwise null
+ */
+export const getCurrentUserId = (): string | null => {
+  const token = getToken();
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.userId || null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Set authentication tokens in localStorage after successful login/registration.
+ * Handles both standard token storage and "Remember Me" extended expiration.
+ *
+ * @function setAuthTokens
+ * @param {string} token - JWT access token
+ * @param {string} refreshToken - Refresh token for obtaining new access tokens
+ * @param {boolean} [rememberMe=false] - If true, sets 30-day token expiration
+ * @returns {void}
+ */
+export const setAuthTokens = (
+  token: string,
+  refreshToken: string,
+  rememberMe: boolean = false
+): void => {
+  localStorage.setItem("token", token);
+  localStorage.setItem("refreshToken", refreshToken);
+
+  if (rememberMe) {
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 30);
+    localStorage.setItem("tokenExpiration", expirationDate.toISOString());
+  }
+};
+
+/**
  * Clear all authentication-related data from storage.
  * Removes token, refresh token, and extended expiration.
- * Also clears theme and language cookies used for preferences.
+ * Note: Theme and language preferences are NOT cleared here; they are
+ * user preferences that should persist across logout.
  *
  * @function clearAuth
  * @returns {void}
@@ -95,9 +140,6 @@ export const clearAuth = (): void => {
   localStorage.removeItem("token");
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("tokenExpiration");
-  // Clear theme and language preferences on logout
-  clearCookie("appTheme");
-  clearCookie("appLanguage");
 };
 
 /**

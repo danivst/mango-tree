@@ -9,6 +9,7 @@ import "../../styles/shared.css";
 import "./ToReview.css";
 import Footer from "../../components/Footer";
 import GoBackButton from "../../components/GoBackButton";
+import { useSnackbar } from "../../utils/snackbar";
 
 /**
  * @file ToReview.tsx
@@ -65,11 +66,7 @@ const ToReview = () => {
   );
   const [showDisapprove, setShowDisapprove] = useState(false);
   const [disapproveReason, setDisapproveReason] = useState("");
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
   // Helper to display content type with proper pluralization
   const getTypeLabel = (type: string) => {
@@ -93,11 +90,7 @@ const ToReview = () => {
     try {
       await fetchFlaggedContent();
     } catch (err: any) {
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || t("somethingWentWrong"),
-        type: "error",
-      });
+      showError(err.response?.data?.message || t("somethingWentWrong"));
     }
   };
 
@@ -119,29 +112,17 @@ const ToReview = () => {
   const handleApprove = async (contentId: string, type: "post" | "comment") => {
     try {
       await adminAPI.approveContent(contentId, type);
-      setSnackbar({
-        open: true,
-        message: t("contentApprovedSuccess"),
-        type: "success",
-      });
+      showSuccess(t("contentApprovedSuccess"));
       setSelectedContent(null);
       await fetchFlaggedContent();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToApproveContent"),
-        type: "error",
-      });
+      showError(t("failedToApproveContent"));
     }
   };
 
   const handleDisapprove = async () => {
     if (!selectedContent || !disapproveReason.trim()) {
-      setSnackbar({
-        open: true,
-        message: t("pleaseProvideDisapprovalReason"),
-        type: "error",
-      });
+      showError(t("pleaseProvideDisapprovalReason"));
       return;
     }
 
@@ -151,21 +132,13 @@ const ToReview = () => {
         selectedContent.type as "post" | "comment",
         disapproveReason,
       );
-      setSnackbar({
-        open: true,
-        message: t("contentDisapprovedSuccess"),
-        type: "success",
-      });
+      showSuccess(t("contentDisapprovedSuccess"));
       setSelectedContent(null);
       setShowDisapprove(false);
       setDisapproveReason("");
       await fetchFlaggedContent();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToDisapproveContent"),
-        type: "error",
-      });
+      showError(t("failedToDisapproveContent"));
     }
   };
 
@@ -337,13 +310,30 @@ const ToReview = () => {
             message={snackbar.message}
             type={snackbar.type}
             open={snackbar.open}
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            onClose={closeSnackbar}
           />
           <Footer />
         </div>
       </>
     );
   }
+
+  // Local EmptyState component for no data
+  const EmptyState = ({
+    icon,
+    title,
+    message
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    message?: string;
+  }) => (
+    <div className="empty-state">
+      <div className="empty-state-icon">{icon}</div>
+      <h3 className="empty-state-title">{title}</h3>
+      {message && <p className="empty-state-message">{message}</p>}
+    </div>
+  );
 
   return (
     <div>
@@ -374,7 +364,10 @@ const ToReview = () => {
           No data loaded. Click Refresh to load data.
         </div>
       ) : flaggedContent.length === 0 ? (
-        <div className="loading">{t("noFlaggedContent")}</div>
+        <EmptyState
+          icon={<span className="material-icons">flag</span>}
+          title={t("noFlaggedContent")}
+        />
       ) : (
         <div className="cards-grid">
           {flaggedContent.map((content) => {
@@ -408,7 +401,7 @@ const ToReview = () => {
         message={snackbar.message}
         type={snackbar.type}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={closeSnackbar}
       />
       <Footer />
     </div>

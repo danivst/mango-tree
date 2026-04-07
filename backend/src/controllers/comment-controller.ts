@@ -9,6 +9,7 @@ import RoleTypeValue from "../enums/role-type";
 import { AuthRequest } from "../interfaces/auth";
 import { getDualTranslation } from "../utils/translation";
 import { moderateText } from "../utils/ai";
+import { logActivity } from "../utils/activity-logger";
 
 /**
  * @file comment-controller.ts
@@ -118,6 +119,13 @@ export const createComment = async (
     const populatedComment = await Comment.findById(comment._id)
       .populate("userId", "username profileImage");
 
+    // Log comment creation
+    await logActivity(req, 'COMMENT_CREATE', {
+      targetId: comment._id.toString(),
+      targetType: 'comment',
+      description: `Created comment on post ${postId}`,
+    });
+
     if (!post.authorId.equals(userIdObj)) {
       // Localize the post title for the notification if available
       const postTitleEn = post.translations?.title?.en || post.title;
@@ -216,6 +224,13 @@ export const toggleLikeComment = async (
     }
 
     await comment.save();
+
+    // Log like/unlike action
+    await logActivity(req, hasLiked ? 'UNLIKE' : 'LIKE', {
+      targetId: id,
+      targetType: 'comment',
+      description: `${hasLiked ? 'Unliked' : 'Liked'} comment ${id}`,
+    });
 
     if (!hasLiked && !comment.userId.equals(userIdObj)) {
       // Fallback: if JWT lacks username, fetch from DB
@@ -359,6 +374,13 @@ export const updateComment = async (
 
     await comment.save();
 
+    // Log comment update
+    await logActivity(req, 'COMMENT_EDIT', {
+      targetId: id,
+      targetType: 'comment',
+      description: `Updated comment ${id}`,
+    });
+
     return res.json(comment);
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -408,6 +430,14 @@ export const deleteComment = async (
 
     // Delete the comment and all its replies recursively
     await deleteCommentTree(comment._id as Types.ObjectId);
+
+    // Log comment deletion
+    await logActivity(req, 'COMMENT_DELETE', {
+      targetId: id,
+      targetType: 'comment',
+      description: `Deleted comment ${id}`,
+    });
+
     return res.json({ message: "Comment deleted" });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });

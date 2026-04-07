@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
+import { useSnackbar } from '../utils/snackbar'
 import Snackbar from '../components/Snackbar'
 import { useThemeLanguage } from '../context/ThemeLanguageContext'
 import { getTranslation } from '../utils/translations'
@@ -43,20 +44,12 @@ const SetupPassword = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar()
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({})
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean
-    message: string
-    type: 'success' | 'error'
-  }>({ open: false, message: '', type: 'success' })
 
   useEffect(() => {
     if (!token) {
-      setSnackbar({
-        open: true,
-        message: t('invalidOrMissingToken'),
-        type: 'error',
-      })
+      showError(t('invalidOrMissingToken'));
       setTimeout(() => {
         navigate('/login')
       }, 2000)
@@ -112,11 +105,7 @@ const SetupPassword = () => {
 
     try {
       await api.post('/auth/setup-password', { token, password })
-      setSnackbar({
-        open: true,
-        message: t('passwordSetSuccess'),
-        type: 'success',
-      })
+      showSuccess(t('passwordSetSuccess'));
       setTimeout(() => {
         navigate('/login')
       }, 2000)
@@ -128,11 +117,7 @@ const SetupPassword = () => {
       if (errorField === 'password') {
         setErrors({ password: errorMessage })
       } else {
-        setSnackbar({
-          open: true,
-          message: errorMessage,
-          type: 'error',
-        })
+        showError(errorMessage);
       }
     } finally {
       setLoading(false)
@@ -252,7 +237,7 @@ const SetupPassword = () => {
         message={snackbar.message}
         type={snackbar.type}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={closeSnackbar}
       />
     </div>
   )

@@ -10,6 +10,7 @@ import RoleTypeValue from "../enums/role-type";
 import moderateContent from "../utils/ai";
 import { AuthRequest } from "../interfaces/auth";
 import { getDualTranslation } from "../utils/translation";
+import { logActivity } from "../utils/activity-logger";
 
 /**
  * Creates a new post with title, content, optional image, category, and tags.
@@ -57,14 +58,18 @@ export const createPost = async (
 
     // Convert tag IDs to tag names
     if (tagsArray.length > 0) {
-      const validTagIds = tagsArray.filter(tag => Types.ObjectId.isValid(tag));
+      const validTagIds = tagsArray.filter((tag) =>
+        Types.ObjectId.isValid(tag),
+      );
       if (validTagIds.length > 0) {
         const tagDocs = await Tag.find({ _id: { $in: validTagIds } }).lean();
-        const idToNameMap = new Map(tagDocs.map((t: any) => [t._id.toString(), t.name]));
-        tagsArray = tagsArray.map(tag =>
+        const idToNameMap = new Map(
+          tagDocs.map((t: any) => [t._id.toString(), t.name]),
+        );
+        tagsArray = tagsArray.map((tag) =>
           Types.ObjectId.isValid(tag) && idToNameMap.has(tag)
             ? idToNameMap.get(tag)!
-            : tag
+            : tag,
         );
       }
     }
@@ -76,7 +81,10 @@ export const createPost = async (
     try {
       moderationResult = await moderateContent(title, content, image);
     } catch (moderationErr: any) {
-      console.error("[createPost] Moderation service error:", moderationErr.message);
+      console.error(
+        "[createPost] Moderation service error:",
+        moderationErr.message,
+      );
       moderationError = true;
       moderationResult = { flagged: false }; // We'll still create the post but flag for admin review
     }
@@ -103,8 +111,8 @@ export const createPost = async (
         moderationResult.isCookingRelated === false
           ? "Публикацията не е свързана с готвене."
           : moderationResult.isAppropriate === false
-          ? "Съдържанието е неуместно."
-          : "Съдържанието е неподходящо.";
+            ? "Съдържанието е неуместно."
+            : "Съдържанието е неподходящо.";
       const messageEn = prefixEn + reasonEn;
       const messageBg = prefixBg + reasonBg;
 
@@ -146,10 +154,12 @@ export const createPost = async (
     let tagsTranslations: { bg: string[]; en: string[] } = { bg: [], en: [] };
     if (tagsArray.length > 0) {
       try {
-        const tagTranslationPromises = tagsArray.map(tag => getDualTranslation(tag));
+        const tagTranslationPromises = tagsArray.map((tag) =>
+          getDualTranslation(tag),
+        );
         const tagTranslations = await Promise.all(tagTranslationPromises);
-        tagsTranslations.en = tagTranslations.map(t => t.en);
-        tagsTranslations.bg = tagTranslations.map(t => t.bg);
+        tagsTranslations.en = tagTranslations.map((t) => t.en);
+        tagsTranslations.bg = tagTranslations.map((t) => t.bg);
       } catch (err) {
         // If translation fails, use original tags for both languages
         tagsTranslations.en = tagsArray;
@@ -167,8 +177,10 @@ export const createPost = async (
 
     // If moderation failed, optionally notify user that post needs review
     if (moderationError) {
-      const messageEn = "Your post has been submitted and is pending admin review due to AI service limitations.";
-      const messageBg = "Публикацията ви беше изпратена и чака одобрение от администратор поради ограничения в AI услугата.";
+      const messageEn =
+        "Your post has been submitted and is pending admin review due to AI service limitations.";
+      const messageBg =
+        "Публикацията ви беше изпратена и чака одобрение от администратор поради ограничения в AI услугата.";
 
       try {
         await Notification.create({
@@ -184,7 +196,10 @@ export const createPost = async (
           link: null,
         });
       } catch (notifErr) {
-        console.error("[createPost] Failed to send moderation error notification:", notifErr);
+        console.error(
+          "[createPost] Failed to send moderation error notification:",
+          notifErr,
+        );
       }
     }
 
@@ -205,6 +220,13 @@ export const createPost = async (
       likes: [],
     });
 
+    // Log post creation for audit
+    await logActivity(req, "POST_CREATE", {
+      targetId: post._id.toString(),
+      targetType: "post",
+      description: `Created post: ${post.title}`,
+    });
+
     // Send success notification for successfully published posts (not pending review)
     if (isApproved) {
       try {
@@ -221,7 +243,10 @@ export const createPost = async (
           link: `/posts/${post._id}`,
         });
       } catch (notifErr) {
-        console.error("[createPost] Failed to send success notification:", notifErr);
+        console.error(
+          "[createPost] Failed to send success notification:",
+          notifErr,
+        );
         // Don't fail the request if notification fails
       }
     }
@@ -362,14 +387,18 @@ export const updatePost = async (
 
     // Convert tag IDs to tag names if tags are being updated
     if (updateData.tags && Array.isArray(updateData.tags)) {
-      const tagIds = updateData.tags.filter((tag: string) => Types.ObjectId.isValid(tag));
+      const tagIds = updateData.tags.filter((tag: string) =>
+        Types.ObjectId.isValid(tag),
+      );
       if (tagIds.length > 0) {
         const tagDocs = await Tag.find({ _id: { $in: tagIds } }).lean();
-        const idToNameMap = new Map(tagDocs.map((t: any) => [t._id.toString(), t.name]));
+        const idToNameMap = new Map(
+          tagDocs.map((t: any) => [t._id.toString(), t.name]),
+        );
         updateData.tags = updateData.tags.map((tag: string) =>
           Types.ObjectId.isValid(tag) && idToNameMap.has(tag)
             ? idToNameMap.get(tag)!
-            : tag
+            : tag,
         );
       }
     }
@@ -378,10 +407,17 @@ export const updatePost = async (
       const [newTitleTrans, newContentTrans] = await Promise.all([
         title
           ? getDualTranslation(title)
-          : Promise.resolve(post.translations?.title || { en: post.title, bg: post.title }),
+          : Promise.resolve(
+              post.translations?.title || { en: post.title, bg: post.title },
+            ),
         content
           ? getDualTranslation(content)
-          : Promise.resolve(post.translations?.content || { en: post.content, bg: post.content }),
+          : Promise.resolve(
+              post.translations?.content || {
+                en: post.content,
+                bg: post.content,
+              },
+            ),
       ]);
 
       updateData.title = newTitleTrans.en;
@@ -402,11 +438,11 @@ export const updatePost = async (
       let tagsTrans: { bg: string[]; en: string[] };
       try {
         const tagTranslations = await Promise.all(
-          tagsToTranslate.map((tag: string) => getDualTranslation(tag))
+          tagsToTranslate.map((tag: string) => getDualTranslation(tag)),
         );
         tagsTrans = {
-          en: tagTranslations.map(t => t.en),
-          bg: tagTranslations.map(t => t.bg),
+          en: tagTranslations.map((t) => t.en),
+          bg: tagTranslations.map((t) => t.bg),
         };
       } catch (err) {
         tagsTrans = { en: tagsToTranslate, bg: tagsToTranslate };
@@ -417,7 +453,10 @@ export const updatePost = async (
         // Preserve existing title/content translations if not already being updated
         updateData.translations = {
           title: post.translations?.title || { en: post.title, bg: post.title },
-          content: post.translations?.content || { en: post.content, bg: post.content },
+          content: post.translations?.content || {
+            en: post.content,
+            bg: post.content,
+          },
         };
       }
       // Set/override tags translations
@@ -454,16 +493,18 @@ export const getAllPosts = async (
       .lean();
 
     // Get comment counts for posts
-    const postIds = posts.map(post => post._id);
+    const postIds = posts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
-      { $group: { _id: '$postId', count: { $sum: 1 } } }
+      { $group: { _id: "$postId", count: { $sum: 1 } } },
     ]);
 
-    const countsMap = new Map(commentCounts.map(c => [c._id.toString(), c.count]));
-    const postsWithCounts = posts.map(post => ({
+    const countsMap = new Map(
+      commentCounts.map((c) => [c._id.toString(), c.count]),
+    );
+    const postsWithCounts = posts.map((post) => ({
       ...post,
-      commentCount: countsMap.get(post._id.toString()) || 0
+      commentCount: countsMap.get(post._id.toString()) || 0,
     }));
 
     return res.json(postsWithCounts);
@@ -494,12 +535,12 @@ export const getPostById = async (
     // Get comment count
     const commentCount = await Comment.countDocuments({
       postId: post._id,
-      isVisible: { $ne: false }
+      isVisible: { $ne: false },
     });
 
     const postWithCount = {
       ...post.toObject(),
-      commentCount
+      commentCount,
     };
 
     return res.json(postWithCount);
@@ -525,8 +566,10 @@ export const translatePost = async (
     const { targetLang } = req.query;
 
     // Validate target language
-    if (!targetLang || !['en', 'bg'].includes(targetLang as string)) {
-      return res.status(400).json({ message: "Invalid target language. Use 'en' or 'bg'." });
+    if (!targetLang || !["en", "bg"].includes(targetLang as string)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid target language. Use 'en' or 'bg'." });
     }
 
     const post = await Post.findById(id)
@@ -550,14 +593,14 @@ export const translatePost = async (
     let translatedTags: string[] = [];
     if (post.tags && post.tags.length > 0) {
       const tagsTranslations = await Promise.all(
-        post.tags.map(tag => getDualTranslation(tag))
+        post.tags.map((tag) => getDualTranslation(tag)),
       );
-      const isBg = targetLang === 'bg';
-      translatedTags = tagsTranslations.map(t => (isBg ? t.bg : t.en));
+      const isBg = targetLang === "bg";
+      translatedTags = tagsTranslations.map((t) => (isBg ? t.bg : t.en));
     }
 
     // Return the requested language
-    const isBg = targetLang === 'bg';
+    const isBg = targetLang === "bg";
     const translatedTitle = isBg ? titleTrans.bg : titleTrans.en;
     const translatedContent = isBg ? contentTrans.bg : contentTrans.en;
 
@@ -565,7 +608,7 @@ export const translatePost = async (
       title: translatedTitle,
       content: translatedContent,
       tags: translatedTags,
-      sourceLang: isBg ? 'en' : 'bg',
+      sourceLang: isBg ? "en" : "bg",
       targetLang: targetLang,
     });
   } catch (err: any) {
@@ -623,7 +666,10 @@ export const deletePost = async (
           link: "/account",
         });
       } catch (notifErr) {
-        console.error("[deletePost] Failed to send self-deletion notification:", notifErr);
+        console.error(
+          "[deletePost] Failed to send self-deletion notification:",
+          notifErr,
+        );
       }
     } else if (req.user!.role === RoleTypeValue.ADMIN) {
       // Admin deleted someone else's post: notify the author
@@ -644,9 +690,19 @@ export const deletePost = async (
           link: "/account",
         });
       } catch (notifErr) {
-        console.error("[deletePost] Failed to send admin-deletion notification:", notifErr);
+        console.error(
+          "[deletePost] Failed to send admin-deletion notification:",
+          notifErr,
+        );
       }
     }
+
+    // Log post deletion for audit
+    await logActivity(req, "POST_DELETE", {
+      targetId: req.params.id,
+      targetType: "post",
+      description: `Deleted post: ${postTitle}`,
+    });
 
     return res.json({ message: "Post deleted successfully" });
   } catch (err: any) {
@@ -685,18 +741,20 @@ export const getHomeFeed = async (
       .lean();
 
     // Get comment counts for all posts
-    const postIds = allPosts.map(post => post._id);
+    const postIds = allPosts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
-      { $group: { _id: '$postId', count: { $sum: 1 } } }
+      { $group: { _id: "$postId", count: { $sum: 1 } } },
     ]);
 
-    const countsMap = new Map(commentCounts.map(c => [c._id.toString(), c.count]));
+    const countsMap = new Map(
+      commentCounts.map((c) => [c._id.toString(), c.count]),
+    );
 
     // Add commentCount to each post
-    const postsWithCounts = allPosts.map(post => ({
+    const postsWithCounts = allPosts.map((post) => ({
       ...post,
-      commentCount: countsMap.get(post._id.toString()) || 0
+      commentCount: countsMap.get(post._id.toString()) || 0,
     }));
 
     const paginatedPosts = postsWithCounts.slice(skip, skip + limit);
@@ -734,16 +792,18 @@ export const getPostsByAuthor = async (
       .lean();
 
     // Get comment counts for posts
-    const postIds = posts.map(post => post._id);
+    const postIds = posts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
-      { $group: { _id: '$postId', count: { $sum: 1 } } }
+      { $group: { _id: "$postId", count: { $sum: 1 } } },
     ]);
 
-    const countsMap = new Map(commentCounts.map(c => [c._id.toString(), c.count]));
-    const postsWithCounts = posts.map(post => ({
+    const countsMap = new Map(
+      commentCounts.map((c) => [c._id.toString(), c.count]),
+    );
+    const postsWithCounts = posts.map((post) => ({
       ...post,
-      commentCount: countsMap.get(post._id.toString()) || 0
+      commentCount: countsMap.get(post._id.toString()) || 0,
     }));
 
     return res.json(postsWithCounts);
@@ -771,15 +831,14 @@ export const searchPosts = async (
     const { q, limit = 50, skip = 0 } = req.query;
     const query = (q as string)?.trim();
 
-
     if (!query) {
       return res.status(400).json({ message: "Search query is required" });
     }
 
     // Prevent caching of search results
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
+    res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
 
     // First, try $text search
     let posts = await Post.find(
@@ -787,7 +846,7 @@ export const searchPosts = async (
         $text: { $search: query },
         isVisible: true,
       },
-      { score: { $meta: "textScore" } }
+      { score: { $meta: "textScore" } },
     )
       .populate("authorId", "username profileImage")
       .populate("category", "name translations")
@@ -796,16 +855,15 @@ export const searchPosts = async (
       .limit(parseInt(limit as string) || 50)
       .lean();
 
-
     // If $text search returned nothing, try a fallback regex search (case insensitive)
     if (posts.length === 0) {
       const regexQuery = {
         $or: [
-          { title: { $regex: query, $options: 'i' } },
-          { content: { $regex: query, $options: 'i' } },
-          { tags: { $in: [new RegExp(query, 'i')] } }
+          { title: { $regex: query, $options: "i" } },
+          { content: { $regex: query, $options: "i" } },
+          { tags: { $in: [new RegExp(query, "i")] } },
         ],
-        isVisible: true
+        isVisible: true,
       };
 
       posts = await Post.find(regexQuery)
@@ -815,7 +873,6 @@ export const searchPosts = async (
         .skip(parseInt(skip as string) || 0)
         .limit(parseInt(limit as string) || 50)
         .lean();
-
     }
 
     // Get total count for pagination
@@ -825,18 +882,19 @@ export const searchPosts = async (
     });
 
     // Get comment counts for posts
-    const postIds = posts.map(post => post._id);
+    const postIds = posts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
-      { $group: { _id: '$postId', count: { $sum: 1 } } }
+      { $group: { _id: "$postId", count: { $sum: 1 } } },
     ]);
 
-    const countsMap = new Map(commentCounts.map(c => [c._id.toString(), c.count]));
-    const postsWithCounts = posts.map(post => ({
+    const countsMap = new Map(
+      commentCounts.map((c) => [c._id.toString(), c.count]),
+    );
+    const postsWithCounts = posts.map((post) => ({
       ...post,
-      commentCount: countsMap.get(post._id.toString()) || 0
+      commentCount: countsMap.get(post._id.toString()) || 0,
     }));
-
 
     return res.json({
       posts: postsWithCounts,
@@ -914,7 +972,12 @@ export const getFollowedPosts = async (
         .lean();
     } catch (queryErr) {
       console.error("getFollowedPosts: Error fetching posts:", queryErr);
-      console.error("Query details:", { followingIds, userIdObj, skip, limit: limit + 1 });
+      console.error("Query details:", {
+        followingIds,
+        userIdObj,
+        skip,
+        limit: limit + 1,
+      });
       throw queryErr; // Re-throw to be caught by outer catch
     }
 
@@ -934,16 +997,18 @@ export const getFollowedPosts = async (
     }
 
     // Get comment counts for posts
-    const postIds = paginatedPosts.map(post => post._id);
+    const postIds = paginatedPosts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
-      { $group: { _id: '$postId', count: { $sum: 1 } } }
+      { $group: { _id: "$postId", count: { $sum: 1 } } },
     ]);
 
-    const countsMap = new Map(commentCounts.map(c => [c._id.toString(), c.count]));
-    const postsWithCounts = paginatedPosts.map(post => ({
+    const countsMap = new Map(
+      commentCounts.map((c) => [c._id.toString(), c.count]),
+    );
+    const postsWithCounts = paginatedPosts.map((post) => ({
       ...post,
-      commentCount: countsMap.get(post._id.toString()) || 0
+      commentCount: countsMap.get(post._id.toString()) || 0,
     }));
 
     return res.json({
@@ -954,7 +1019,9 @@ export const getFollowedPosts = async (
   } catch (err: any) {
     console.error("Get Followed Posts Error:", err);
     console.error("Error details:", err.stack);
-    return res.status(500).json({ message: "Failed to fetch followed posts", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch followed posts", error: err.message });
   }
 };
 
@@ -988,9 +1055,7 @@ export const getSuggestedPosts = async (
       Post.find({ likes: userIdObj, isVisible: true })
         .select("_id category tags")
         .lean(),
-      Comment.find({ userId: userIdObj })
-        .select("postId")
-        .lean(),
+      Comment.find({ userId: userIdObj }).select("postId").lean(),
     ]);
 
     if (!user) {
@@ -999,12 +1064,12 @@ export const getSuggestedPosts = async (
 
     // Extract data for scoring
     const followingIds = user.following.map((id) =>
-      Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id
+      Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id,
     );
 
     const likedPostIds = likedPosts.map((p) => p._id);
     const commentedPostIdsSet = new Set(
-      commentedPostIds.map((c) => c.postId).filter(Boolean)
+      commentedPostIds.map((c) => c.postId).filter(Boolean),
     );
 
     // Build category affinity map (categories user has liked)
@@ -1031,7 +1096,10 @@ export const getSuggestedPosts = async (
     if (followingIds.length > 0) {
       candidateQuery.authorId = { $nin: followingIds };
     }
-    candidateQuery.authorId = { ...(candidateQuery.authorId || {}), $ne: userIdObj };
+    candidateQuery.authorId = {
+      ...(candidateQuery.authorId || {}),
+      $ne: userIdObj,
+    };
 
     // Exclude posts user has already liked (optional, keeps feed fresh)
     if (likedPostIds.length > 0) {
@@ -1056,10 +1124,13 @@ export const getSuggestedPosts = async (
 
       // Safely get category ID
       const categoryDoc = post.category as any;
-      const postCategory = categoryDoc?._id?.toString() || categoryDoc?.toString();
+      const postCategory =
+        categoryDoc?._id?.toString() || categoryDoc?.toString();
 
       // Safely get tags
-      const postTags = Array.isArray(post.tags) ? post.tags.map((t: string) => t.toLowerCase()) : [];
+      const postTags = Array.isArray(post.tags)
+        ? post.tags.map((t: string) => t.toLowerCase())
+        : [];
 
       // Date calculations
       const postDate = new Date(post.createdAt);
@@ -1072,7 +1143,9 @@ export const getSuggestedPosts = async (
       }
 
       // Tag overlap: +2 per matching tag
-      const matchingTags = postTags.filter((tag: string) => tagAffinity.has(tag)).length;
+      const matchingTags = postTags.filter((tag: string) =>
+        tagAffinity.has(tag),
+      ).length;
       score += matchingTags * 2;
 
       // Recency: +1 per day newer (max +30)
@@ -1083,7 +1156,7 @@ export const getSuggestedPosts = async (
       score += Math.log(likesCount + 1);
 
       // Randomness: -5 to +5
-      score += (Math.random() * 10) - 5;
+      score += Math.random() * 10 - 5;
 
       return { ...post, score };
     });
@@ -1119,22 +1192,27 @@ export const getSuggestedPosts = async (
         .lean();
 
       // Add score property to fallback posts to keep consistent type
-      const fallbackPostsWithScore = fallbackPosts.map((p: any) => ({ ...p, score: 0 }));
+      const fallbackPostsWithScore = fallbackPosts.map((p: any) => ({
+        ...p,
+        score: 0,
+      }));
       scoredPosts.push(...fallbackPostsWithScore);
     }
 
     // Get comment counts for posts
     const allReturnedPosts = [...scoredPosts];
-    const postIds = allReturnedPosts.map(post => post._id);
+    const postIds = allReturnedPosts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
-      { $group: { _id: '$postId', count: { $sum: 1 } } }
+      { $group: { _id: "$postId", count: { $sum: 1 } } },
     ]);
 
-    const countsMap = new Map(commentCounts.map(c => [c._id.toString(), c.count]));
-    const postsWithCounts = allReturnedPosts.map(post => ({
+    const countsMap = new Map(
+      commentCounts.map((c) => [c._id.toString(), c.count]),
+    );
+    const postsWithCounts = allReturnedPosts.map((post) => ({
       ...post,
-      commentCount: countsMap.get(post._id.toString()) || 0
+      commentCount: countsMap.get(post._id.toString()) || 0,
     }));
 
     return res.json({

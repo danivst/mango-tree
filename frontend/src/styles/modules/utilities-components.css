@@ -1,0 +1,163 @@
+/* ============================================
+   COMPONENT UTILITIES
+   ============================================ */
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-family: "Poppins", sans-serif;
+  color: var(--theme-text);
+}
+
+.loading-centered {
+  text-align: center;
+  padding: 40px;
+}
+
+/* Empty State - centered icon with text */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-state .material-icons {
+  font-size: 64px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.empty-state-message {
+  font-family: "Poppins", sans-serif;
+  font-size: 16px;
+  color: var(--theme-text);
+  opacity: 0.8;
+  margin: 0;
+}
+
+/* Error box with specific styling (admin pages) */
+.error-box-colored {
+  color: #d32f2f;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #ffebee;
+  border-radius: 8px;
+}
+
+/* Two-Factor Auth section (used in Settings and UserProfileForm) */
+.twofa-section {
+  margin-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 24px;
+}
+
+.twofa-description {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 0;
+  color: var(--theme-text);
+  opacity: 0.8;
+  font-size: 14px;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.twofa-status-enabled {
+  color: #4CAF50;
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Icon size utilities */
+.icon-sm {
+  font-size: 14px !important;
+}
+
+.icon-md {
+  font-size: 18px !important;
+}
+
+/* Animation for loading spinner */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Tab button (for Home page tabs) */
+.tab-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--theme-text);
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.tab-button.active {
+  font-weight: 700;
+  opacity: 1;
+  border: 2px solid var(--theme-text);
+}
+
+.tab-button:hover {
+  opacity: 0.8;
+}
+
+/* Flag/emoji icon */
+.flag-icon {
+  font-size: 32px;
+}
+
+/* Preview inner (theme preview) */
+.preview-inner {
+  width: 60%;
+  height: 60%;
+  border-radius: 4px;
+}
+
+/* Post likes indicator */
+.post-likes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--theme-text);
+  opacity: 0.8;
+}
+
+.post-likes .material-icons {
+  font-size: 18px;
+}
+
+/* Empty State Title - non-bold */
+.empty-state-title {
+  font-weight: normal;
+  font-family: "Poppins", sans-serif;
+  font-size: 16px;
+  color: var(--theme-text);
+  opacity: 0.8;
+  margin: 0;
+}
+
+/* Page Divider */
+.page-divider {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 0 0 16px 0;
+}
+

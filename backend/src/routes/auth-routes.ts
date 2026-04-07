@@ -16,6 +16,7 @@ import {
   getResetTokenInfo,
   setupPassword,
   changePassword,
+  logoutUser,
 } from "../controllers/auth-controller";
 import { auth } from "../utils/auth";
 import RoleTypeValue from "../enums/role-type";
@@ -77,6 +78,13 @@ router.post(
  * @access Authenticated
  */
 router.post("/change-password", auth, changePassword);
+
+/**
+ * @route POST /logout
+ * @description Log out authenticated user and record activity
+ * @access Authenticated
+ */
+router.post("/logout", auth, logoutUser);
 
 /**
  * @route POST /forgot-password

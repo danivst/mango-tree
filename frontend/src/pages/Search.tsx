@@ -7,7 +7,9 @@ import "../styles/shared.css";
 import "./Search.css";
 import Snackbar from "../components/Snackbar";
 import UserSidebar from "../components/UserSidebar";
-import { getToken } from "../utils/auth";
+import { getCurrentUserId } from "../utils/auth";
+import { useSnackbar } from "../utils/snackbar";
+import Footer from "../components/Footer";
 
 /**
  * @interface User
@@ -67,24 +69,11 @@ const Search = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [loading, setLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
 
-  const currentUserId = (() => {
-    const token = getToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId || null;
-    } catch {
-      return null;
-    }
-  })();
+  const currentUserId = getCurrentUserId();
 
   useEffect(() => {
     fetchUsers();
@@ -97,11 +86,7 @@ const Search = () => {
       setUsers(response.data);
     } catch (error: any) {
       console.error("Failed to fetch users:", error);
-      setSnackbar({
-        open: true,
-        message: t("failedLoadUsers"),
-        type: "error",
-      });
+      showError(t("failedLoadUsers"));
     } finally {
       setLoading(false);
     }
@@ -119,11 +104,7 @@ const Search = () => {
 
   const toggleFollow = async (userId: string) => {
     if (!currentUserId) {
-      setSnackbar({
-        open: true,
-        message: t("mustBeLoggedIn"),
-        type: "error",
-      });
+      showError(t("mustBeLoggedIn"));
       return;
     }
     try {
@@ -153,17 +134,9 @@ const Search = () => {
       );
       const targetUser = users.find(u => u._id === userId);
       const isCurrentlyFollowing = targetUser?.followers.includes(currentUserId);
-      setSnackbar({
-        open: true,
-        message: isCurrentlyFollowing ? t("successfullyUnfollowedUser") : t("successfullyFollowedUser"),
-        type: "success",
-      });
+      showSuccess(isCurrentlyFollowing ? t("successfullyUnfollowedUser") : t("successfullyFollowedUser"));
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("actionFailed"),
-        type: "error",
-      });
+      showError(t("actionFailed"));
     }
   };
 
@@ -252,8 +225,11 @@ const Search = () => {
         </div>
 
         {filteredUsers.length === 0 ? (
-          <div className="loading">
-            {searchQuery.trim() !== "" ? t("noSearchResults") : t("noUsersFound")}
+          <div className="empty-state">
+            <span className="material-icons">person_off</span>
+            <p className="empty-state-message">
+              {searchQuery.trim() !== "" ? t("noSearchResults") : t("noUsersFound")}
+            </p>
           </div>
         ) : (
           <div className="cards-grid">
@@ -309,11 +285,9 @@ const Search = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
-        <footer className="page-footer">
-          <p>{t("copyright")}</p>
-        </footer>
+        <Footer />
       </div>
     </div>
   );

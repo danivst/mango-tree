@@ -1,12 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
+import { RefreshProvider } from './context/RefreshContext'
 import './styles/globals.css'
 
 // Initialize theme on app load
 const initializeTheme = () => {
   const savedTheme = localStorage.getItem('appTheme') as 'dark' | 'purple' | 'cream' | 'light'
-  const theme = savedTheme && ['dark', 'purple', 'cream', 'light'].includes(savedTheme) ? savedTheme : 'cream'
+  const theme = savedTheme && ['dark', 'purple', 'cream', 'light', 'mango'].includes(savedTheme) ? savedTheme : 'mango'
   const root = document.documentElement
 
   switch (theme) {
@@ -30,6 +31,12 @@ const initializeTheme = () => {
       root.style.setProperty('--theme-accent', '#F5F5F5')
       root.style.setProperty('--theme-text', '#000000')
       break
+    case 'mango':
+      root.style.setProperty('--theme-bg', '#FFFFFF')
+      root.style.setProperty('--theme-accent', '#FFFFFF')
+      root.style.setProperty('--theme-text', '#E77728')
+      root.style.setProperty('--theme-sidebar-bg', 'linear-gradient(to bottom, #ffd151, #ffbc40)')
+      break
   }
 }
 
@@ -46,6 +53,8 @@ initializeLanguage()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <RefreshProvider>
+      <App />
+    </RefreshProvider>
   </React.StrictMode>,
 )

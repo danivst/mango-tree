@@ -12,6 +12,7 @@ import {
   getAccountDeletedEmailTemplate,
   getSuspensionEmailTemplate,
 } from "../utils/email-templates";
+import { logActivity } from "../utils/activity-logger";
 
 /**
  * @file user-controller.ts
@@ -87,6 +88,7 @@ export const updateProfile = async (
   req: AuthRequest,
   res: Response,
 ): Promise<Response> => {
+  console.log(123);
   try {
     // Support both /users/:id and /users/me
     const paramId = req.params.id;
@@ -99,49 +101,143 @@ export const updateProfile = async (
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    // 1. Check Username uniqueness if being changed
-    if (username) {
+    // Fetch the existing user to track past usernames and apply updates
+    const existingUser = await User.findById(userId);
+    if (!existingUser)
+      return res.status(404).json({ message: "User not found" });
+
+    // Capture the old username before any updates
+    const oldUsername = existingUser.username;
+
+    // Check Username uniqueness if being changed
+    if (username && username !== oldUsername) {
       const exists = await User.findOne({ username, _id: { $ne: userId } });
       if (exists) {
         return res.status(400).json({ message: "Username already taken." });
       }
     }
 
-    const updates: any = {};
-    if (username) updates.username = username;
-    if (profileImage) updates.profileImage = profileImage;
-
+    // Apply updates to the user document
+    if (username && username !== oldUsername) {
+      // Push the old username to pastUsernames before updating
+      existingUser.pastUsernames.push({
+        username: oldUsername,
+        changedAt: new Date(),
+      });
+      console.log("opa");
+      existingUser.username = username;
+    }
+    if (profileImage) existingUser.profileImage = profileImage;
     if (bio) {
       const bioTranslations = await getDualTranslation(bio);
-      updates.bio = bio;
-      updates.translations = { bio: bioTranslations };
+      existingUser.bio = bio;
+      existingUser.translations = { bio: bioTranslations };
     }
-
-    // Update theme if provided
     if (theme) {
       const validThemes = ["dark", "purple", "cream", "light", "mango"];
       if (!validThemes.includes(theme)) {
         return res.status(400).json({ message: "Invalid theme" });
       }
-      updates.theme = theme;
+      existingUser.theme = theme;
     }
-
-    // Update language if provided
     if (language) {
       const validLanguages = ["en", "bg"];
       if (!validLanguages.includes(language)) {
         return res.status(400).json({ message: "Invalid language" });
       }
-      updates.language = language;
+      existingUser.language = language;
     }
 
-    const user = await User.findByIdAndUpdate(userId, updates, {
-      new: true,
-      runValidators: true,
-    }).select("-passwordHash");
+    // Save all changes
+    await existingUser.save();
 
-    if (!user) return res.status(404).json({ message: "User not found" });
-    return res.json(user);
+    // Log profile updates (non-username, which is logged separately)
+    if (profileImage) {
+      await logActivity(req, "PROFILE_IMAGE_CHANGE", {
+        targetId: userId,
+        targetType: "user",
+        description: "Updated profile image",
+      });
+    }
+    if (theme) {
+      await logActivity(req, "THEME_CHANGE", {
+        targetId: userId,
+        targetType: "user",
+        description: `Changed theme to ${theme}`,
+      });
+    }
+    if (language) {
+      await logActivity(req, "LANGUAGE_CHANGE", {
+        targetId: userId,
+        targetType: "user",
+        description: `Changed language to ${language}`,
+      });
+    }
+    if (bio) {
+      await logActivity(req, "BIO_UPDATE", {
+        targetId: userId,
+        targetType: "user",
+        description: "Updated bio",
+      });
+    }
+
+    // Return the updated user without passwordHash
+    const updatedUser = await User.findById(userId).select("-passwordHash");
+    if (!updatedUser)
+      return res.status(404).json({ message: "User not found" });
+
+    // If username was changed, create a notification
+    if (username && username !== oldUsername) {
+      const userLang = updatedUser.language || "en";
+      const messageEn = `Your username has been changed to "${username}".`;
+      const messageBg = `Вашието потребителско име беше променено на "${username}".`;
+
+      // Wrap translation in try/catch to avoid failures
+      let titleTrans, bodyTrans;
+      try {
+        [titleTrans, bodyTrans] = await Promise.all([
+          getDualTranslation("Username Updated"),
+          getDualTranslation(messageEn),
+        ]);
+      } catch (translationError) {
+        console.error("Translation failed, using fallback:", translationError);
+        titleTrans = {
+          en: "Username Updated",
+          bg: "Потребителското име променено",
+        };
+        bodyTrans = { en: messageEn, bg: messageBg };
+      }
+
+      try {
+        await Notification.create({
+          userId: userId,
+          type: NotificationType.SYSTEM,
+          message: getLocalizedText(userLang, bodyTrans),
+          translations: {
+            message: {
+              en: bodyTrans.en,
+              bg: bodyTrans.bg,
+            },
+          },
+          link: "/settings",
+        });
+      } catch (notifErr) {
+        console.error(
+          "Failed to create username change notification:",
+          notifErr,
+        );
+        // Do not fail the request because of notification error
+      }
+
+      // Log username change for audit
+      await logActivity(req, "USERNAME_CHANGE", {
+        targetId: userId,
+        targetType: "user",
+        description: `Changed username to ${username}`,
+      });
+    }
+
+    return res.json(updatedUser);
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
@@ -219,6 +315,13 @@ export const toggleFollow = async (
     await user.save();
     await target.save();
 
+    // Log follow/unfollow action for audit
+    await logActivity(req, isFollowing ? "UNFOLLOW" : "FOLLOW", {
+      targetId: targetId,
+      targetType: "user",
+      description: `${isFollowing ? "Unfollowed" : "Followed"} user ${targetId}`,
+    });
+
     return res.json({ message: isFollowing ? "Unfollowed" : "Followed" });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -262,15 +365,29 @@ export const updateNotificationPreferences = async (
     const { notificationPreferences } = req.body;
 
     if (!notificationPreferences) {
-      return res.status(400).json({ message: "Notification preferences are required." });
+      return res
+        .status(400)
+        .json({ message: "Notification preferences are required." });
     }
 
     // Basic validation for the structure of notificationPreferences
     const validPreferences = {
-      emailReports: typeof notificationPreferences.emailReports === 'boolean' ? notificationPreferences.emailReports : true,
-      emailComments: typeof notificationPreferences.emailComments === 'boolean' ? notificationPreferences.emailComments : true,
-      inAppReports: typeof notificationPreferences.inAppReports === 'boolean' ? notificationPreferences.inAppReports : true,
-      inAppComments: typeof notificationPreferences.inAppComments === 'boolean' ? notificationPreferences.inAppComments : true,
+      emailReports:
+        typeof notificationPreferences.emailReports === "boolean"
+          ? notificationPreferences.emailReports
+          : true,
+      emailComments:
+        typeof notificationPreferences.emailComments === "boolean"
+          ? notificationPreferences.emailComments
+          : true,
+      inAppReports:
+        typeof notificationPreferences.inAppReports === "boolean"
+          ? notificationPreferences.inAppReports
+          : true,
+      inAppComments:
+        typeof notificationPreferences.inAppComments === "boolean"
+          ? notificationPreferences.inAppComments
+          : true,
     };
 
     const user = await User.findByIdAndUpdate(
@@ -283,7 +400,10 @@ export const updateNotificationPreferences = async (
       return res.status(404).json({ message: "User not found." });
     }
 
-    return res.json({ message: "Notification preferences updated successfully.", user });
+    return res.json({
+      message: "Notification preferences updated successfully.",
+      user,
+    });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
@@ -329,6 +449,13 @@ export const updateEmail = async (
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
+
+    // Log email change for audit
+    await logActivity(req, "EMAIL_CHANGE", {
+      targetId: userId,
+      targetType: "user",
+      description: `Changed email to ${email}`,
+    });
 
     return res.json({ message: "Email updated successfully.", user });
   } catch (err: any) {
@@ -479,7 +606,7 @@ export const deleteUser = async (
 
     // Determine if this is a self-deletion or admin deletion
     const isSelfDeletion = req.user!.userId === id;
-    const userLang = user.language || 'en';
+    const userLang = user.language || "en";
 
     let titleKey: string;
     let bodyKey: string;
@@ -487,11 +614,13 @@ export const deleteUser = async (
     if (isSelfDeletion) {
       // User deleted their own account
       titleKey = "Account Deleted";
-      bodyKey = "Your account has been permanently deleted from MangoTree. You requested this deletion, and your data has been removed. We're sorry to see you go.";
+      bodyKey =
+        "Your account has been permanently deleted from MangoTree. You requested this deletion, and your data has been removed. We're sorry to see you go.";
     } else {
       // Admin deleted the user's account
       titleKey = "Account Deleted by Administrator";
-      bodyKey = "Your account has been permanently deleted from MangoTree by an administrator. This action was taken due to a violation of our terms of service or community guidelines.";
+      bodyKey =
+        "Your account has been permanently deleted from MangoTree by an administrator. This action was taken due to a violation of our terms of service or community guidelines.";
     }
 
     const [titleTrans, bodyTrans, signatureTrans] = await Promise.all([
@@ -518,10 +647,27 @@ export const deleteUser = async (
     // Import models for cleanup
     const PostModel = (await import("../models/post")).default;
     const CommentModel = (await import("../models/comment")).default;
+    const ReportModel = (await import("../models/report")).default;
+    const NotificationModel = (await import("../models/notification")).default;
+    const BannedUserModel = (await import("../models/banned-user")).default;
 
     // Delete user's posts and comments first
     await PostModel.deleteMany({ authorId: id });
     await CommentModel.deleteMany({ userId: id });
+
+    // Delete reports where:
+    // 1. The user is the reporter (reportedBy = id)
+    // 2. The user is the target (targetId = id AND targetType = 'user')
+    await ReportModel.deleteMany({
+      $or: [{ reportedBy: id }, { targetId: id, targetType: "user" }],
+    });
+
+    // Delete all notifications for the user
+    await NotificationModel.deleteMany({ userId: id });
+
+    // Remove user's likes from all posts and comments
+    await PostModel.updateMany({ likes: id }, { $pull: { likes: id } });
+    await CommentModel.updateMany({ likes: id }, { $pull: { likes: id } });
 
     // Clean up follow relationships before deleting the user
     try {
@@ -529,24 +675,27 @@ export const deleteUser = async (
         await Promise.all(
           user.following.map((followedId: Types.ObjectId) =>
             User.findByIdAndUpdate(followedId, {
-              $pull: { followers: user._id }
-            })
-          )
+              $pull: { followers: user._id },
+            }),
+          ),
         );
       }
       if (user.followers && user.followers.length > 0) {
         await Promise.all(
           user.followers.map((followerId: Types.ObjectId) =>
             User.findByIdAndUpdate(followerId, {
-              $pull: { following: user._id }
-            })
-          )
+              $pull: { following: user._id },
+            }),
+          ),
         );
       }
     } catch (cleanupErr) {
       console.error("Error cleaning up follow relationships:", cleanupErr);
       // Continue with deletion even if cleanup fails
     }
+
+    // Delete ban record if user was banned
+    await BannedUserModel.deleteOne({ original_user_id: id });
 
     // Finally delete the user account
     await User.findByIdAndDelete(id);
@@ -671,7 +820,7 @@ export const removeFollower = async (
 
     // Check if the follower is indeed following the current user
     const isFollowing = currentUser.followers.some(
-      (id) => id.toString() === followerId
+      (id) => id.toString() === followerId,
     );
     if (!isFollowing) {
       return res
@@ -681,13 +830,13 @@ export const removeFollower = async (
 
     // Remove currentUser from follower's following list
     follower.following = follower.following.filter(
-      (id) => id.toString() !== userId
+      (id) => id.toString() !== userId,
     );
     await follower.save();
 
     // Remove follower from currentUser's followers list
     currentUser.followers = currentUser.followers.filter(
-      (id) => id.toString() !== followerId
+      (id) => id.toString() !== followerId,
     );
     await currentUser.save();
 

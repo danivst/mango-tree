@@ -1,4 +1,6 @@
-/* Account page specific styles */
+/* ============================================
+   ACCOUNT PAGE
+   ============================================ */
 
 .account-container {
   display: flex;
@@ -13,13 +15,11 @@
   margin-bottom: 24px;
 }
 
-/* Profile picture container - matches UserProfile */
+/* Profile picture container */
 .profile-pic-container {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  overflow: hidden;
-  background: #ccc;
   flex-shrink: 0;
   position: relative;
   cursor: pointer;
@@ -31,6 +31,7 @@
 .profile-pic-image {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   object-fit: cover;
 }
 
@@ -122,12 +123,48 @@
 
 /* Category tabs */
 
-/* Account posts grid */
-.account-posts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 24px;
+/* Past Usernames section */
+.profile-section-title {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  color: var(--theme-text);
+}
+
+.past-usernames-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--theme-bg);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.past-usernames-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.past-usernames-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.past-usernames-list::-webkit-scrollbar-thumb {
+  background: var(--theme-text);
+  border-radius: 3px;
+  opacity: 0.5;
+}
+
+.past-usernames-list li {
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--theme-text);
+  opacity: 0.9;
 }
 
 /* Bio textarea */

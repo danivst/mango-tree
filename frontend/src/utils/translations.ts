@@ -74,8 +74,9 @@ export const translations: Record<Language, Record<string, string>> = {
     usernameMinLength: "Username must be at least 3 characters long",
     emailMustContain: "Email must contain @ symbol",
     emailNotFound: "No account with this email exists",
+    emailExists: "Email already in use",
     incorrectPassword: "Incorrect password",
-    invalidPassword: "Password must meet the requirements",
+    invalidPassword: "Password must be at least 8 characters long, and must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     passwordsDoNotMatch: "Passwords do not match",
     emailCannotBeEdited: "Email cannot be edited",
     passwordCannotBeEdited: "Password cannot be edited directly. Use change password button.",
@@ -88,8 +89,13 @@ export const translations: Record<Language, Record<string, string>> = {
     following: "Following",
     admins: "Admins",
     noPostsFound: "No posts found in this category",
+    noPostsAvailable: "No posts available",
+    pageNotFound: "Page not found",
+    goHome: "Go Home",
+    pageNotFoundMessage: "The page you're looking for doesn't exist.",
     noFollowersFound: "No followers yet",
     noFollowingFound: "You are not following anyone",
+    previousUsernames: "Previous Usernames",
     waitingForApproval: "Waiting for approval",
     bio: "Bio",
     editBio: "Edit Bio",
@@ -112,6 +118,7 @@ export const translations: Record<Language, Record<string, string>> = {
     category: "Category",
     tag: "Tag",
     addCategory: "Add Category",
+    noCategoriesFound: "No categories found",
     createCategory: "Create Category",
     editCategory: "Edit Category",
     deleteCategory: "Delete Category",
@@ -209,6 +216,64 @@ export const translations: Record<Language, Record<string, string>> = {
     users: "Users",
     tags: "Tags",
     categories: "Categories",
+    activityLog: "Activity Log",
+
+    // Activity Log
+    date: "Date",
+    action: "Action",
+    target: "Target",
+    ipAddress: "IP Address",
+    searchLogs: "Search logs...",
+    filterByAction: "Filter by action",
+    allActions: "All",
+    startDate: "Start Date",
+    endDate: "End Date",
+    clearFilters: "Clear Filters",
+    noLogsFound: "No logs found",
+
+    // Activity Log Descriptions
+    activityLogin: "User logged in",
+    activityLogout: "User logged out",
+    activityUsernameChange: "Changed username to {username}",
+    activityEmailChange: "Changed email to {email}",
+    activityProfileImageChange: "Updated profile image",
+    activityThemeChange: "Changed theme to {theme}",
+    activityLanguageChange: "Changed language to {language}",
+    activityBioUpdate: "Updated bio",
+    activityPasswordChange: "Changed password",
+    activityFollow: "Followed user {username}",
+    activityUnfollow: "Unfollowed user {username}",
+    activityPostCreate: "Created post: {title}",
+    activityPostEdit: "Edited post: {title}",
+    activityPostDelete: "Deleted post: {title}",
+    activityCommentCreate: "Added comment to post",
+    activityCommentEdit: "Edited comment",
+    activityCommentDelete: "Deleted comment",
+    activityLikePost: "Liked post {id}",
+    activityUnlikePost: "Unliked post {id}",
+    activityLikeComment: "Liked comment {id}",
+    activityUnlikeComment: "Unliked comment {id}",
+    activityReportSubmit: "Reported {targetType} {targetId}. Reason: {reason}",
+    activityReportResolve: "Report resolved by admin",
+    activityContentApprove: "Approved {type} {id}",
+    activityContentReject: "Rejected {type} {id}. Reason: {reason}",
+    activityBanUser: "Banned user {username}. Reason: {reason}",
+    activityUnbanUser: "Unbanned user {username}",
+    activity2faEnable: "Enabled two-factor authentication",
+    activity2faDisable: "Disabled two-factor authentication",
+    activityCategoryCreate: "Created category \"{name}\"",
+    activityCategoryUpdate: "Updated category \"{name}\"",
+    activityCategoryDelete: "Deleted category \"{name}\"",
+    activityTagCreate: "Created tag \"{name}\"",
+    activityTagUpdate: "Updated tag \"{name}\"",
+    activityTagDelete: "Deleted tag \"{name}\"",
+    activityReportStatusUpdate: "Updated report {id} status to {status}",
+    activityReportItemDelete: "Deleted reported {targetType} {targetId}",
+
+    // Security Notifications
+    newLoginTitle: "New login detected",
+    newLoginMessage: "New login at {time} from {location}",
+    newLoginWarning: "If this wasn't you, please secure your account immediately.",
 
     // Reports
     report: "Report",
@@ -296,9 +361,18 @@ export const translations: Record<Language, Record<string, string>> = {
     days: "days",
     ago: "ago",
 
+    // Sharing
+    share: "Share",
+    shareNative: "Native Share",
+    copyLink: "Copy Link",
+    copied: "Copied!",
+    linkCopiedSuccess: "Link copied to clipboard!",
+    failedToCopyLink: "Failed to copy link",
+    shareEmail: "Share via Email",
+
     // User Search
     noUsersFound: "No users found",
-    noSearchResults: "No users match your search",
+    noSearchResults: "No content found",
 
     // Follow System
     follow: "Follow",
@@ -428,6 +502,7 @@ export const translations: Record<Language, Record<string, string>> = {
     like: "Like",
     unlike: "Unlike",
     likes: "Likes",
+    likeCount: "like", // singular count (e.g., "1 like")
     role: "Role",
     created: "Created",
     actions: "Actions",
@@ -452,6 +527,7 @@ export const translations: Record<Language, Record<string, string>> = {
     failedLoadFeed: "Failed to load feed",
     failedLoadMore: "Failed to load more",
     noMorePosts: "No more posts",
+    loadMore: "Load More",
     postsFromFollowed: "Posts from people you follow",
     suggestedForYou: "Suggested for you",
     noSuggestedPosts: "No suggested posts available",
@@ -588,8 +664,9 @@ export const translations: Record<Language, Record<string, string>> = {
     usernameMinLength: "Потребителското име трябва да е поне 3 символа",
     emailMustContain: "Имейлът трябва да съдържа @ символ",
     emailNotFound: "Не съществува акаунт с този имейл",
+    emailExists: "Имейлът вече се използва",
     incorrectPassword: "Грешна парола",
-    invalidPassword: "Паролата трябва да отговаря на изискванията",
+    invalidPassword: "Паролата трябва да е поне 8 символа и да съдържа поне една главна буква, една малка буква, една цифра и един специален символ",
     passwordMinLength:
       "Паролата трябва да е поне 8 символа и да съдържа поне една главна буква, една малка буква, едно число и един специален символ",
     passwordsDoNotMatch: "Паролите не съвпадат",
@@ -604,8 +681,13 @@ export const translations: Record<Language, Record<string, string>> = {
     following: "Следвани",
     admins: "Администратори",
     noPostsFound: "Няма публикации в тази категория",
+    noPostsAvailable: "Няма публикации",
+    pageNotFound: "Страницата не е намерена",
+    goHome: "Към началната страница",
+    pageNotFoundMessage: "Страницата, която търсите, не съществува.",
     noFollowersFound: "Все още няма последователи",
     noFollowingFound: "Не следвате никого",
+    previousUsernames: "Предишни потребителски имена",
     waitingForApproval: "Чака за одобрение",
     bio: "Биография",
     editBio: "Редактиране на биография",
@@ -629,6 +711,7 @@ export const translations: Record<Language, Record<string, string>> = {
     category: "Категория",
     tag: "Таг",
     addCategory: "Добави категория",
+    noCategoriesFound: "Няма намерени категории",
     createCategory: "Създай категория",
     editCategory: "Редактирай категория",
     deleteCategory: "Изтрий категория",
@@ -729,6 +812,64 @@ export const translations: Record<Language, Record<string, string>> = {
     users: "Потребители",
     tags: "Тагове",
     categories: "Категории",
+    activityLog: "Журнал на дейности",
+
+    // Activity Log
+    date: "Дата",
+    action: "Действие",
+    target: "Цел",
+    ipAddress: "IP адрес",
+    searchLogs: "Търсене в журнала...",
+    filterByAction: "Филтриране по действие",
+    allActions: "Всички",
+    startDate: "Начална дата",
+    endDate: "Крайна дата",
+    clearFilters: "Изчисти филтри",
+    noLogsFound: "Няма намерени записи",
+
+    // Activity Log Descriptions
+    activityLogin: "Потребителят влезе в системата",
+    activityLogout: "Потребителят излезе от системата",
+    activityUsernameChange: "Променено потребителско име на {username}",
+    activityEmailChange: "Променен имейл на {email}",
+    activityProfileImageChange: "Обновена профилна снимка",
+    activityThemeChange: "Променена тема на {theme}",
+    activityLanguageChange: "Променен език на {language}",
+    activityBioUpdate: "Обновена биография",
+    activityPasswordChange: "Променена парола",
+    activityFollow: "Започна да следва потребител {username}",
+    activityUnfollow: "спря да последовател на потребител {username}",
+    activityPostCreate: "Създадена публикация: {title}",
+    activityPostEdit: "Редактирана публикация: {title}",
+    activityPostDelete: "Изтрита публикация: {title}",
+    activityCommentCreate: "Добавен коментар към публикация",
+    activityCommentEdit: "Редактиран коментар",
+    activityCommentDelete: "Изтрит коментар",
+    activityLikePost: "Хареса публикация {id}",
+    activityUnlikePost: "Премахнато харесване на публикация {id}",
+    activityLikeComment: "Хареса коментар {id}",
+    activityUnlikeComment: "Премахнато харесване на коментар {id}",
+    activityReportSubmit: "Докладвано {targetType} {targetId}. Причина: {reason}",
+    activityReportResolve: "Докладът беше разрешен от администратор",
+    activityContentApprove: "Одобрен {type} {id}",
+    activityContentReject: "Отхвърлен {type} {id}. Причина: {reason}",
+    activityBanUser: "Блокиран потребител {username}. Причина: {reason}",
+    activityUnbanUser: "Разблокиран потребител {username}",
+    activity2faEnable: "Включена двуфакторна автентикация",
+    activity2faDisable: "Изключена двуфакторна автентикация",
+    activityCategoryCreate: "Създадена категория \"{name}\"",
+    activityCategoryUpdate: "Обновена категория \"{name}\"",
+    activityCategoryDelete: "Изтрита категория \"{name}\"",
+    activityTagCreate: "Създаден таг \"{name}\"",
+    activityTagUpdate: "Обновен таг \"{name}\"",
+    activityTagDelete: "Изтрит таг \"{name}\"",
+    activityReportStatusUpdate: "Обновен статус на доклад {id} на {status}",
+    activityReportItemDelete: "Изтрит докобан {targetType} {targetId}",
+
+    // Security Notifications
+    newLoginTitle: "Открито ново влизане",
+    newLoginMessage: "Ново влизане в {time} от {location}",
+    newLoginWarning: "Ако това не сте вие, моля незабавно защитете акаунта си.",
 
     // Reports
     report: "Доклад",
@@ -816,9 +957,18 @@ export const translations: Record<Language, Record<string, string>> = {
     days: "дни",
     ago: "преди",
 
+    // Sharing
+    share: "Споделяне",
+    shareNative: "Сподели",
+    copyLink: "Копирай линк",
+    copied: "Копирано!",
+    linkCopiedSuccess: "Линкът е копиран в клипборда!",
+    failedToCopyLink: "Неуспешно копиране на линк",
+    shareEmail: "Сподели чрез имейл",
+
     // User Search
     noUsersFound: "Няма намерени потребители",
-    noSearchResults: "Няма потребители, отговарящи на търсенето",
+    noSearchResults: "Няма намерено съдържание",
 
     // Follow System
     follow: "Следвай",
@@ -944,9 +1094,10 @@ export const translations: Record<Language, Record<string, string>> = {
     hideReplies: "Скрий отговорите",
     showReplies: "Покажи отговорите",
     hide: "скрий",
-    like: "Отхаресай",
-    unlike: "Харесай",
+    like: "Харесай",
+    unlike: "Отхаресай",
     likes: "Харесвания",
+    likeCount: "харесване", // singular count
     role: "Роля",
     created: "Създаден на",
     actions: "Действия",
@@ -971,6 +1122,7 @@ export const translations: Record<Language, Record<string, string>> = {
     failedLoadFeed: "Неуспешно зареждане на съдържание",
     failedLoadMore: "Неуспешно зареждане на още",
     noMorePosts: "Няма повече публикации",
+    loadMore: "Зареди още",
     postsFromFollowed: "Публикации от хора, които следваш",
     suggestedForYou: "Препоръчани за теб",
     noSuggestedPosts: "Няма препоръчани публикации",
@@ -1044,8 +1196,16 @@ export const translations: Record<Language, Record<string, string>> = {
  * @function getTranslation
  * @param {Language} language - Target language ('en' or 'bg')
  * @param {string} key - Translation key (must exist in the dictionary)
- * @returns {string} The translated string or the key if not found
+ * @param {Record<string, string>} params - Optional parameters for interpolation
+ * @returns {string} The translated string with parameters replaced, or the key if not found
  */
-export const getTranslation = (language: Language, key: string): string => {
-  return translations[language][key] || key;
+export const getTranslation = (language: Language, key: string, params?: Record<string, string>): string => {
+  const translation = translations[language][key] || key;
+
+  if (!params) return translation;
+
+  // Replace placeholders like {paramName} with their values
+  return translation.replace(/\{(\w+)\}/g, (match, paramName) => {
+    return params[paramName] !== undefined ? params[paramName] : match;
+  });
 };

@@ -5,8 +5,10 @@ import { useNotifications } from "../context/NotificationContext";
 import { getTranslation } from "../utils/translations";
 import { notificationsAPI, Notification } from "../services/api";
 import Snackbar from "../components/Snackbar";
+import { useSnackbar } from "../utils/snackbar";
 import "../styles/shared.css";
 import "./Notifications.css";
+import Footer from "../components/Footer";
 
 /**
  * @file Notifications.tsx
@@ -55,11 +57,7 @@ const Notifications = () => {
   const t = (key: string) => getTranslation(language, key);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const fetchNotifications = async () => {
@@ -68,11 +66,7 @@ const Notifications = () => {
       const data = await notificationsAPI.getNotifications();
       setNotifications(data);
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("somethingWentWrong"),
-        type: "error",
-      });
+      showError(t("somethingWentWrong"));
     } finally {
       setLoading(false);
     }
@@ -103,15 +97,16 @@ const Notifications = () => {
         ) {
           return "warning";
         }
-        // Check for post rejection - any message starting with "Post rejected" or Bulgarian equivalent
+        // Check for rejection messages (post, comment, report)
         if (
           message.startsWith("Post rejected.") ||
-          message.startsWith("Публикацията е отхвърлена.")
-        ) {
-          return "close";
-        }
-        // Also check for keywords indicating rejection
-        if (
+          message.startsWith("Публикацията е отхвърлена.") ||
+          message.startsWith("Your report was reviewed") ||
+          message.startsWith("Вашият сигнал беше прегледан") ||
+          message.startsWith("Comment rejected.") ||
+          message.startsWith("Коментарът е отхвърлен.") ||
+          lowerMessage.includes("rejected") ||
+          lowerMessage.includes("отхвърлен") ||
           lowerMessage.includes("removed") ||
           lowerMessage.includes("inappropriate") ||
           lowerMessage.includes("violated") ||
@@ -125,11 +120,23 @@ const Notifications = () => {
         }
         // Success/Resolved notifications
         return "check_circle";
+      case "post_deleted":
+        // Admin deletion: error (red X)
+        if (
+          lowerMessage.includes("removed by an administrator") ||
+          lowerMessage.includes("премахната от администратор")
+        ) {
+          return "close";
+        }
+        // Self-deletion: neutral notification
+        return "notifications";
       case "system":
         if (lowerMessage.includes("warning") || lowerMessage.includes("alert")) {
           return "warning";
         }
         return "info";
+      case "new_login":
+        return "warning";
       default:
         return "notifications";
     }
@@ -155,10 +162,16 @@ const Notifications = () => {
       ) {
         return "#FF9800";
       }
-      // Post rejections = error (red)
+      // Rejections = error (red)
       if (
         message.startsWith("Post rejected.") ||
         message.startsWith("Публикацията е отхвърлена.") ||
+        message.startsWith("Your report was reviewed") ||
+        message.startsWith("Вашият сигнал беше прегледан") ||
+        message.startsWith("Comment rejected.") ||
+        message.startsWith("Коментарът е отхвърлен.") ||
+        lowerMessage.includes("rejected") ||
+        lowerMessage.includes("отхвърлен") ||
         lowerMessage.includes("removed") ||
         lowerMessage.includes("inappropriate") ||
         lowerMessage.includes("violated") ||
@@ -173,8 +186,22 @@ const Notifications = () => {
       // Success/resolved = green
       return "#4CAF50";
     }
+    if (type === "post_deleted") {
+      // Admin deletion: error red
+      if (
+        lowerMessage.includes("removed by an administrator") ||
+        lowerMessage.includes("премахната от администратор")
+      ) {
+        return "#F44336";
+      }
+      // Self-deletion: neutral gray
+      return "#757575";
+    }
     if (type === "system") {
       return "#FF9800";
+    }
+    if (type === "new_login") {
+      return "#FF9800"; // Orange warning color
     }
     return "#757575";
   };
@@ -225,10 +252,7 @@ const Notifications = () => {
         console.error("Failed to mark notification as read:", error);
       }
     }
-
-    if (notification.link) {
-      window.location.href = notification.link;
-    }
+    // No navigation: unread notifications just become read, read notifications do nothing
   };
 
   const markAllAsRead = async () => {
@@ -238,11 +262,7 @@ const Notifications = () => {
       // Update local state
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (error) {
-      setSnackbar({
-        open: true,
-        message: t("somethingWentWrong"),
-        type: "error",
-      });
+      showError(t("somethingWentWrong"));
     }
   };
 
@@ -254,22 +274,14 @@ const Notifications = () => {
 
       await notificationsAPI.deleteNotification(notificationId);
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
-      setSnackbar({
-        open: true,
-        message: t("notificationDeleted"),
-        type: "success",
-      });
+      showSuccess(t("notificationDeleted"));
 
       // If it was unread, decrement the badge count
       if (wasUnread) {
         decrementUnreadCount();
       }
     } catch (error) {
-      setSnackbar({
-        open: true,
-        message: t("failedToDeleteNotification"),
-        type: "error",
-      });
+      showError(t("failedToDeleteNotification"));
     }
   };
 
@@ -283,17 +295,9 @@ const Notifications = () => {
       setNotifications([]);
       // All notifications deleted, clear the badge count immediately
       clearUnreadCount();
-      setSnackbar({
-        open: true,
-        message: t("allNotificationsCleared"),
-        type: "success",
-      });
+      showSuccess(t("allNotificationsCleared"));
     } catch (error) {
-      setSnackbar({
-        open: true,
-        message: t("failedToClearNotifications"),
-        type: "error",
-      });
+      showError(t("failedToClearNotifications"));
     } finally {
       setShowConfirmModal(false);
     }
@@ -335,7 +339,10 @@ const Notifications = () => {
           {loading ? (
             <div className="loading">{t("loading")}</div>
           ) : notifications.length === 0 ? (
-            <div className="loading">{t("noNotifications")}</div>
+            <div className="empty-state">
+              <span className="material-icons">notifications_off</span>
+              <h3 className="empty-state-title">{t("noNotifications")}</h3>
+            </div>
           ) : (
             <div className="notifications-list">
 
@@ -382,11 +389,9 @@ const Notifications = () => {
             message={snackbar.message}
             type={snackbar.type}
             open={snackbar.open}
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            onClose={closeSnackbar}
           />
-          <footer className="page-footer">
-            <p>{t("copyright")}</p>
-          </footer>
+          <Footer />
         </div>
       </div>
 

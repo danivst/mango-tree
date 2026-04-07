@@ -1,8 +1,9 @@
-/* UserSidebar uses admin-sidebar layout from AdminSidebar.css */
-/* Only need to define the logout text color override */
+/* ============================================
+   USER SIDEBAR COMPONENT
+   ============================================ */
 
-/* Sidebar Layout - extends AdminSidebar.css */
-/* UserSidebar uses the .sidebar, .sidebar-header, .sidebar-nav, etc. from AdminSidebar.css */
+/* Note: Uses .sidebar, .sidebar-header, .sidebar-nav, etc. from AdminSidebar.css */
+/* Only defines the .sidebar-logout-text color override */
 
 /* Logout text color */
 .sidebar-logout-text {

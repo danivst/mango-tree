@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSnackbar } from "../utils/snackbar";
 import Snackbar from "../components/Snackbar";
 import "./ResetPassword.css";
 import "./Login.css";
@@ -49,11 +50,7 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingEmail, setFetchingEmail] = useState(true);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const [errors, setErrors] = useState<{
     password?: string;
     confirmPassword?: string;
@@ -70,11 +67,7 @@ const ResetPassword = () => {
     // Require reset token for all access
     if (!token) {
       console.log("No token found in URL, redirecting to login");
-      setSnackbar({
-        open: true,
-        message: t("invalidResetLink"),
-        type: "error",
-      });
+      showError(t("invalidResetLink"));
       setTimeout(() => {
         navigate("/login");
       }, 2000);
@@ -104,11 +97,7 @@ const ResetPassword = () => {
         setFetchingEmail(false);
       } catch (error: any) {
         console.error("Error fetching email:", error);
-        setSnackbar({
-          open: true,
-          message: error.message || "Invalid or expired token",
-          type: "error",
-        });
+        showError(error.message || "Invalid or expired token");
         setFetchingEmail(false);
         setTimeout(() => {
           navigate("/login");
@@ -191,38 +180,22 @@ const ResetPassword = () => {
         if (errorField === "password") {
           setErrors({ password: data.message });
         } else {
-          setSnackbar({
-            open: true,
-            message: data.message || "Failed to reset password",
-            type: "error",
-          });
+          showError(data.message || "Failed to reset password");
         }
         setLoading(false);
         return;
       }
 
-      setSnackbar({
-        open: true,
-        message: t("passwordResetSuccess"),
-        type: "success",
-      });
+      showSuccess(t("passwordResetSuccess"));
 
       setTimeout(() => {
         navigate("/login");
       }, 2000);
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: error.message || "Failed to reset password",
-        type: "error",
-      });
+      showError(error.message || "Failed to reset password");
     } finally {
       setLoading(false);
     }
-  };
-
-  const closeSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
   };
 
   return (

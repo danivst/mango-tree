@@ -1,5 +1,9 @@
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
+import { useSnackbar } from "../utils/snackbar";
+import { useRefresh } from "../context/RefreshContext";
+import { authAPI } from "../services/api";
+import { clearAuth } from "../utils/auth";
 
 import "./AdminSidebar.css";
 import logo from "../assets/mangotree-logo.png";
@@ -9,6 +13,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import Snackbar from "./Snackbar";
 import SettingsIcon from "@mui/icons-material/Settings";
+import HistoryIcon from "@mui/icons-material/History";
 
 /**
  * @interface TokenPayload
@@ -89,6 +94,7 @@ const AdminSidebar = () => {
   const location = useLocation();
   const { language, theme } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
+  const { triggerRefresh } = useRefresh();
 
   /**
    * State: controls sidebar collapsed/expanded state.
@@ -116,13 +122,9 @@ const AdminSidebar = () => {
   const [username, setUsername] = useState<string>("");
 
   /**
-   * State: controls snackbar notifications (e.g., logout success)
+   * Hook: manage snackbar notifications using centralized hook
    */
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, closeSnackbar } = useSnackbar();
 
   /**
    * Effect: On mount, extract username from JWT token.
@@ -313,6 +315,12 @@ const AdminSidebar = () => {
       path: "/admin/dashboard/reports",
     },
     {
+      id: "logs",
+      label: t("activityLog"),
+      icon: <HistoryIcon />,
+      path: "/admin/dashboard/logs",
+    },
+    {
       id: "users",
       label: t("users"),
       icon: (
@@ -429,11 +437,14 @@ const AdminSidebar = () => {
    * Handles click on a navigation menu item.
    * Saves the item as last active (for state persistence), updates state, and navigates.
    * On mobile, collapses the sidebar after navigation.
+   * If clicking the current page, triggers a content refresh via the refresh context.
    *
    * @param {SidebarItem} item - The clicked navigation item
    */
   const handleItemClick = (item: SidebarItem) => {
     localStorage.setItem("lastActiveMenuItem", item.id);
+    // Always trigger refresh before navigation to ensure fresh content
+    triggerRefresh();
     navigate(item.path);
     if (isMobile) {
       setIsCollapsed(true);
@@ -442,20 +453,22 @@ const AdminSidebar = () => {
 
   /**
    * Handles admin logout.
-   * Clears all authentication tokens, shows success snackbar, then redirects to login.
+   * Calls backend logout endpoint to record activity, clears auth data,
+   * shows success snackbar, then redirects to login after a short delay.
    */
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("tokenExpiration");
-    setSnackbar({
-      open: true,
-      message: t("successfullyLoggedOut"),
-      type: "success",
-    });
-    setTimeout(() => {
-      navigate("/login");
-    }, 1500);
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      console.error("Logout API call failed:", error);
+      // Continue with logout even if API fails
+    } finally {
+      clearAuth();
+      showSuccess(t("successfullyLoggedOut"));
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    }
   };
 
   // Determine which menu item is currently active based on route
@@ -576,7 +589,7 @@ const AdminSidebar = () => {
         message={snackbar.message}
         type={snackbar.type}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={closeSnackbar}
       />
     </>
   );

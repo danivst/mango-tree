@@ -6,9 +6,11 @@ import { getTranslation } from "../../utils/translations";
 import UserSidebar from "../../components/UserSidebar";
 import Snackbar from "../../components/Snackbar";
 import GoBackButton from "../../components/GoBackButton";
-import { getToken } from "../../utils/auth";
+import { getCurrentUserId } from "../../utils/auth";
+import { useSnackbar } from "../../utils/snackbar";
 import "../../styles/shared.css";
 import "./Followers.css";
+import Footer from "../../components/Footer";
 
 /**
  * @interface User
@@ -66,31 +68,12 @@ const Followers = () => {
   const navigate = useNavigate();
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
-
-  /**
-   * Extracts current user's ID from JWT token.
-   * Uses lazy initialization to parse token only once on mount.
-   * Returns null if no token or parsing fails.
-   */
-  const currentUserId = (() => {
-    const token = getToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId || null;
-    } catch {
-      return null;
-    }
-  })();
+  const currentUserId = getCurrentUserId();
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
   const [followers, setFollowers] = useState<User[]>([]);
   const [currentUserFollowing, setCurrentUserFollowing] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [userToRemove, setUserToRemove] = useState<User | null>(null);
 
@@ -136,11 +119,7 @@ const Followers = () => {
       setFollowers(sorted);
     } catch (error: any) {
       console.error("Failed to fetch followers:", error);
-      setSnackbar({
-        open: true,
-        message: t("failedLoadUsers"),
-        type: "error",
-      });
+      showError(t("failedLoadUsers"));
     } finally {
       setLoading(false);
     }
@@ -164,18 +143,10 @@ const Followers = () => {
       } else {
         setCurrentUserFollowing(prev => [...prev, targetId]);
       }
-      setSnackbar({
-        open: true,
-        message: wasFollowing ? t("unfollowed") : t("followed"),
-        type: "success",
-      });
+      showSuccess(wasFollowing ? t("unfollowed") : t("followed"));
     } catch (error: any) {
       console.error("Failed to toggle follow:", error);
-      setSnackbar({
-        open: true,
-        message: t("actionFailed"),
-        type: "error",
-      });
+      showError(t("actionFailed"));
     }
   };
 
@@ -202,20 +173,12 @@ const Followers = () => {
     try {
       await api.delete(`/users/followers/${userToRemove._id}`);
       setFollowers((prev) => prev.filter((f) => f._id !== userToRemove._id));
-      setSnackbar({
-        open: true,
-        message: t("followerRemoved"),
-        type: "success",
-      });
+      showSuccess(t("followerRemoved"));
       setShowRemoveModal(false);
       setUserToRemove(null);
     } catch (error: any) {
       console.error("Failed to remove follower:", error);
-      setSnackbar({
-        open: true,
-        message: t("actionFailed"),
-        type: "error",
-      });
+      showError(t("actionFailed"));
       setShowRemoveModal(false);
       setUserToRemove(null);
     }
@@ -291,7 +254,10 @@ const Followers = () => {
 
         {/* Empty state: no followers */}
         {followers.length === 0 ? (
-          <div className="loading">{t("noFollowersFound")}</div>
+          <div className="empty-state">
+            <span className="material-icons">person_off</span>
+            <p className="empty-state-message">{t("noFollowersFound")}</p>
+          </div>
         ) : (
           // Grid of follower cards
           <div className="cards-grid">
@@ -356,11 +322,9 @@ const Followers = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
-        <footer className="page-footer">
-          <p>{t("copyright")}</p>
-        </footer>
+        <Footer />
       </div>
 
       {/* Custom Remove Follower Confirmation Modal */}

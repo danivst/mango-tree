@@ -1,3 +1,7 @@
+/* ============================================
+   SNACKBAR COMPONENT
+   ============================================ */
+
 .snackbar {
   position: fixed;
   bottom: 24px;
@@ -25,7 +29,7 @@
 }
 
 .snackbar-error {
-  background-color: #F06164;
+  background-color: #FF8A80;
   color: #8a0000;
 }
 

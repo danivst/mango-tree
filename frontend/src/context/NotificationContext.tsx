@@ -165,8 +165,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Initial fetch
     fetch();
 
-    // Polling every 30 seconds
-    const intervalId = setInterval(fetch, 30000);
+    // Polling every 10 seconds for faster updates
+    const intervalId = setInterval(fetch, 10000);
 
     // Refresh on window focus (user switches back to app)
     const handleFocus = () => {

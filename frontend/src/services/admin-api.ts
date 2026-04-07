@@ -322,6 +322,30 @@ export const adminAPI = {
     });
     return response.data;
   },
+
+  // ============================================================================
+  // Activity Logs
+  // ============================================================================
+
+  /**
+   * Get activity logs with optional filters.
+   *
+   * @async
+   * @param params - Optional filters (page, limit, userId, actionType, startDate, endDate, search)
+   * @returns {Promise<{ logs: any[], total: number, page: number, totalPages: number }>} Paginated logs
+   */
+  getActivityLogs: async (params?: {
+    page?: number;
+    limit?: number;
+    userId?: string;
+    actionType?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+  }) => {
+    const response = await api.get("/admin/logs", { params });
+    return response.data;
+  },
 };
 
 // Re-export types for other modules to import consistently

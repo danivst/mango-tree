@@ -11,8 +11,8 @@ import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
 import "../../styles/shared.css";
-import "./Categories.css";
 import Footer from "../../components/Footer";
+import { useSnackbar } from "../../utils/snackbar";
 
 /**
  * @file Categories.tsx
@@ -64,11 +64,7 @@ const Categories = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -136,40 +132,24 @@ const Categories = () => {
     try {
       await fetchCategories();
     } catch (err: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToLoadCategories"),
-        type: "error",
-      });
+      showError(t("failedToLoadCategories"));
     }
   };
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!categoryName.trim()) {
-      setSnackbar({
-        open: true,
-        message: t("categoryNameRequired"),
-        type: "error",
-      });
+      showError(t("categoryNameRequired"));
       return;
     }
     try {
       await adminAPI.createCategory(categoryName.trim());
-      setSnackbar({
-        open: true,
-        message: t("categoryCreated"),
-        type: "success",
-      });
+      showSuccess(t("categoryCreated"));
       setShowAddCategory(false);
       setCategoryName("");
       await fetchCategories();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("categoryCreateFailed"),
-        type: "error",
-      });
+      showError(t("categoryCreateFailed"));
     }
   };
 
@@ -189,21 +169,13 @@ const Categories = () => {
     if (!editCategoryId) return;
     try {
       await adminAPI.updateCategory(editCategoryId, editCategoryName.trim());
-      setSnackbar({
-        open: true,
-        message: t("categoryUpdated"),
-        type: "success",
-      });
+      showSuccess(t("categoryUpdated"));
       setShowEditModal(false);
       setEditCategoryId(null);
       setEditCategoryName("");
       await fetchCategories();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("categoryUpdateFailed"),
-        type: "error",
-      });
+      showError(t("categoryUpdateFailed"));
     }
   };
 
@@ -211,23 +183,32 @@ const Categories = () => {
     if (!deleteCategoryId) return;
     try {
       await adminAPI.deleteCategory(deleteCategoryId);
-      setSnackbar({
-        open: true,
-        message: t("categoryDeleted"),
-        type: "success",
-      });
+      showSuccess(t("categoryDeleted"));
       await fetchCategories();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("deleteCategoryError"),
-        type: "error",
-      });
+      showError(t("deleteCategoryError"));
     } finally {
       setShowDeleteModal(false);
       setDeleteCategoryId(null);
     }
   };
+
+  // Local EmptyState component for no data
+  const EmptyState = ({
+    icon,
+    title,
+    message
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    message?: string;
+  }) => (
+    <div className="empty-state">
+      <div className="empty-state-icon">{icon}</div>
+      <h3 className="empty-state-title">{title}</h3>
+      {message && <p className="empty-state-message">{message}</p>}
+    </div>
+  );
 
   return (
     <div>
@@ -287,6 +268,11 @@ const Categories = () => {
         <div className="loading">
           No data loaded. Click Refresh to load data.
         </div>
+      ) : filteredData.length === 0 ? (
+        <EmptyState
+          icon={<span className="material-icons">category</span>}
+          title={t("noCategoriesFound")}
+        />
       ) : (
         <div className="table-container">
           <table className="table">
@@ -486,7 +472,7 @@ const Categories = () => {
         message={snackbar.message}
         type={snackbar.type}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={closeSnackbar}
       />
       <Footer />
     </div>

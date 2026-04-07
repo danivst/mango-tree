@@ -2,12 +2,12 @@
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "seed:categories": "ts-node src/scripts/seed-categories.ts",
     "seed:tags": "ts-node src/scripts/seed-tags.ts",
+    "seed:activity-logs": "ts-node src/scripts/seed-activity-logs.ts",
     "create-user": "ts-node src/scripts/create-user.ts",
     "create-admin": "ts-node src/scripts/create-admin.ts"
   },

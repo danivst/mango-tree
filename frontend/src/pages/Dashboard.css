@@ -1,4 +1,7 @@
-/* Dashboard Layout */
+/* ============================================
+   DASHBOARD PAGE
+   ============================================ */
+
 .dashboard-container {
   position: relative;
   min-height: 100vh;
@@ -21,12 +24,28 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Hide scrollbar for dashboard-main but keep scrolling */
-.dashboard-main::-webkit-scrollbar {
-  display: none;
-}
 .dashboard-main {
-  scrollbar-width: none;
+  /* Scrollbar styling - Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-text) var(--theme-accent);
+}
+
+.dashboard-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dashboard-main::-webkit-scrollbar-track {
+  background: var(--theme-accent);
+}
+
+.dashboard-main::-webkit-scrollbar-thumb {
+  background-color: var(--theme-text);
+  border-radius: 4px;
+  border: 2px solid var(--theme-accent);
+}
+
+.dashboard-main::-webkit-scrollbar-thumb:hover {
+  background-color: #3a0e36;
 }
 
 /* Mobile: keep same vertical margins, adjust padding */

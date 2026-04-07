@@ -21,7 +21,9 @@ const NotificationType = {
   /** Post was deleted by moderation */
   POST_DELETED: 'post_deleted' as const,
   /** System announcement or alert */
-  SYSTEM: 'system' as const
+  SYSTEM: 'system' as const,
+  /** New login to account detected */
+  NEW_LOGIN: 'new_login' as const
 };
 
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];

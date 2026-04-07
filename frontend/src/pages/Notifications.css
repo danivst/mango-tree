@@ -1,3 +1,7 @@
+/* ============================================
+   NOTIFICATIONS PAGE
+   ============================================ */
+
 .notifications-container {
   display: flex;
   min-height: 100vh;
@@ -10,12 +14,27 @@
   flex-direction: column;
   gap: 12px;
   padding-right: 4px;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  /* Scrollbar styling - Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-text) var(--theme-accent);
 }
 
 .notifications-list::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  width: 8px;
+}
+
+.notifications-list::-webkit-scrollbar-track {
+  background: var(--theme-accent);
+}
+
+.notifications-list::-webkit-scrollbar-thumb {
+  background-color: var(--theme-text);
+  border-radius: 4px;
+  border: 2px solid var(--theme-accent);
+}
+
+.notifications-list::-webkit-scrollbar-thumb:hover {
+  background-color: #3a0e36;
 }
 
 .notification-item {
@@ -114,7 +133,7 @@
 
 /* Confirm dialog modal overrides */
 
-/* Delete notification button */
+/* Delete notification button - matches comment delete style */
 .notification-delete-btn {
   display: flex;
   align-items: center;
@@ -123,18 +142,20 @@
   padding: 6px 12px;
   min-width: auto;
   flex-shrink: 0;
-  background: transparent;
-  border: 1px solid var(--theme-text);
+  background: rgba(165, 1, 4, 0.1);
+  border: 1px solid #a50104;
   border-radius: 8px;
-  opacity: 0.7;
+  color: #a50104;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
+  font-size: 12px;
 }
 
 .notification-delete-btn:hover {
+  background: rgba(165, 1, 4, 0.2);
   opacity: 1;
 }
 
 .notification-delete-btn .material-icons {
-  font-size: 18px;
+  font-size: 16px;
 }

@@ -1,14 +1,16 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
-import { getToken } from "../utils/auth";
+import { getCurrentUserId } from "../utils/auth";
 import { postsAPI, Post } from "../services/api";
 import PostCard from "../components/PostCard";
 import UserSidebar from "../components/UserSidebar";
 import "../styles/shared.css";
 import "./Home.css";
 import Snackbar from "../components/Snackbar";
+import Footer from "../components/Footer";
+import { useSnackbar } from "../utils/snackbar";
 
 /**
  * @file Home.tsx
@@ -44,17 +46,8 @@ const Home = () => {
   // Memoize translations function
   const t = useCallback((key: string) => getTranslation(language, key), [language]);
 
-  // Get current user ID from token (memoized)
-  const currentUserId = useMemo(() => {
-    const token = getToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId || null;
-    } catch {
-      return null;
-    }
-  }, []);
+  // Get current user ID from token
+  const currentUserId = getCurrentUserId();
 
   // Feed state
   const [feedPosts, setFeedPosts] = useState<Post[]>([]);
@@ -77,17 +70,13 @@ const Home = () => {
   const [isSearching, setIsSearching] = useState(false);
 
   // Snackbar
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showError, closeSnackbar } = useSnackbar();
 
-  // Debounce search input
+  // Debounce search input (500ms for better performance)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 300);
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -120,11 +109,7 @@ const Home = () => {
         setSearchHasMore(response.hasMore);
       } catch (error: any) {
         console.error("[Home] Search failed:", error);
-        setSnackbar({
-          open: true,
-          message: t("searchFailed"),
-          type: "error",
-        });
+        showError(t("searchFailed"));
       } finally {
         setSearchLoading(false);
       }
@@ -205,11 +190,7 @@ const Home = () => {
       setFeedPage(0);
     } catch (error) {
       console.error("Failed to load initial feed:", error);
-      setSnackbar({
-        open: true,
-        message: t("failedLoadFeed"),
-        type: "error",
-      });
+      showError(t("failedLoadFeed"));
     } finally {
       setFeedLoading(false);
       console.log('[Home] loadInitialFeed: Finished');
@@ -247,11 +228,7 @@ const Home = () => {
       setFeedPage(nextPage);
     } catch (error) {
       console.error("Failed to load more posts:", error);
-      setSnackbar({
-        open: true,
-        message: t("failedLoadMore"),
-        type: "error",
-      });
+      showError(t("failedLoadMore"));
     } finally {
       setFeedLoading(false);
     }
@@ -279,11 +256,7 @@ const Home = () => {
       setSearchPage(nextPage);
     } catch (error) {
       console.error("Failed to load more search results:", error);
-      setSnackbar({
-        open: true,
-        message: t("failedLoadMore"),
-        type: "error",
-      });
+      showError(t("failedLoadMore"));
     } finally {
       setSearchLoading(false);
     }
@@ -330,52 +303,7 @@ const Home = () => {
   const searchHasMoreRef = useRef(searchHasMore);
   const isSearchingRef = useRef(isSearching);
 
-  // Update refs when state/function changes
-  useEffect(() => { loadMoreFeedRef.current = loadMoreFeed; }, [loadMoreFeed]);
-  useEffect(() => { loadMoreSearchRef.current = loadMoreSearch; }, [loadMoreSearch]);
-  useEffect(() => { feedLoadingRef.current = feedLoading; }, [feedLoading]);
-  useEffect(() => { feedHasMoreRef.current = feedHasMore; }, [feedHasMore]);
-  useEffect(() => { searchLoadingRef.current = searchLoading; }, [searchLoading]);
-  useEffect(() => { searchHasMoreRef.current = searchHasMore; }, [searchHasMore]);
-  useEffect(() => { isSearchingRef.current = isSearching; }, [isSearching]);
-
-  // Stable sentinel ref and observer
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-
-  useEffect(() => {
-    const node = sentinelRef.current;
-    if (!node) return;
-
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          if (isSearchingRef.current) {
-            if (!searchLoadingRef.current && searchHasMoreRef.current) {
-              loadMoreSearchRef.current();
-            }
-          } else {
-            if (!feedLoadingRef.current && feedHasMoreRef.current) {
-              loadMoreFeedRef.current();
-            }
-          }
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    observerRef.current.observe(node);
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, []); // Run once on mount
+  // Note: Using explicit "Load More" button instead of infinite scroll sentinel
 
 
   // Loading spinner
@@ -429,10 +357,18 @@ const Home = () => {
                   <PostCard key={post._id} post={post} />
                 ))}
               </div>
-              {searchLoading && <LoadingSpinner />}
-              {!searchLoading && searchHasMore && <div ref={sentinelRef} className="sentinel" />}
+              {searchLoading && searchResults.length > 0 && <LoadingSpinner />}
+              {!searchLoading && searchHasMore && (
+                <button
+                  className="load-more-button"
+                  onClick={loadMoreSearch}
+                  disabled={searchLoading}
+                >
+                  {t("loadMore")}
+                </button>
+              )}
               {!searchHasMore && searchResults.length > 0 && (
-                <div className="loading">{t("noMorePosts")}</div>
+                <div className="no-more-posts">{t("noMorePosts")}</div>
               )}
             </>
           )}
@@ -441,8 +377,9 @@ const Home = () => {
             message={snackbar.message}
             type={snackbar.type}
             open={snackbar.open}
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            onClose={closeSnackbar}
           />
+          <Footer />
         </div>
       </div>
     );
@@ -514,10 +451,18 @@ const Home = () => {
               ))}
             </div>
 
-            {feedLoading && <LoadingSpinner />}
-            {!feedLoading && feedHasMore && <div ref={sentinelRef} className="sentinel" />}
+            {feedLoading && feedPosts.length > 0 && <LoadingSpinner />}
+            {!feedLoading && feedHasMore && (
+              <button
+                className="load-more-button"
+                onClick={loadMoreFeed}
+                disabled={feedLoading}
+              >
+                {t("loadMore")}
+              </button>
+            )}
             {!feedHasMore && feedPosts.length > 0 && (
-              <div className="loading">{t("noMorePosts")}</div>
+              <div className="no-more-posts">{t("noMorePosts")}</div>
             )}
           </>
         )}
@@ -526,11 +471,9 @@ const Home = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
-        <footer className="page-footer">
-          <p>{t("copyright")}</p>
-        </footer>
+        <Footer />
       </div>
     </div>
   );

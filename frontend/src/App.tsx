@@ -7,7 +7,8 @@ import {
 import { ThemeLanguageProvider } from "./context/ThemeLanguageContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { AdminDataProvider } from "./context/AdminDataContext";
-import Login from "./pages/Login";
+import { useRefresh } from "./context/RefreshContext";
+import Login from "./pages/Login/Login";
 import ResetPassword from "./pages/ResetPassword";
 import SetupPassword from "./pages/SetupPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -31,11 +32,15 @@ import ReportPostPreview from "./pages/admin/ReportPostPreview"; // Import Repor
 import Search from "./pages/Search"; // Import user-facing Search page
 import UserProfile from "./pages/UserProfile"; // Import UserProfile page
 import Account from "./pages/Account"; // Import Account page
+import ActivityLog from "./pages/admin/ActivityLog"; // Import ActivityLog page
 import Followers from "./pages/account/Followers"; // Import Followers page
 import Following from "./pages/account/Following"; // Import Following page
 import LandingPage from "./pages/LandingPage"; // Import LandingPage
+import NotFound from "./pages/NotFound"; // Import 404 page
 
 function App() {
+  const { refreshTrigger } = useRefresh();
+
   return (
     <ThemeLanguageProvider>
       <NotificationProvider>
@@ -45,7 +50,7 @@ function App() {
           <Route
             path="/"
             element={
-              <PublicRoute>
+              <PublicRoute key={refreshTrigger}>
                 <LandingPage />
               </PublicRoute>
             }
@@ -53,7 +58,7 @@ function App() {
           <Route
             path="/login"
             element={
-              <PublicRoute>
+              <PublicRoute key={refreshTrigger}>
                 <Login />
               </PublicRoute>
             }
@@ -61,17 +66,17 @@ function App() {
           <Route
             path="/signin"
             element={
-              <PublicRoute>
+              <PublicRoute key={refreshTrigger}>
                 <Login />
               </PublicRoute>
             }
           />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/setup-password" element={<SetupPassword />} />
+          <Route path="/reset-password" element={<ResetPassword key={refreshTrigger} />} />
+          <Route path="/setup-password" element={<SetupPassword key={refreshTrigger} />} />
           <Route
             path="/home"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <Home />
                 </UserRoute>
@@ -81,7 +86,7 @@ function App() {
           <Route
             path="/home/suggested"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <Home />
                 </UserRoute>
@@ -91,7 +96,7 @@ function App() {
           <Route
             path="/upload"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <Upload />
                 </UserRoute>
@@ -101,7 +106,7 @@ function App() {
           <Route
             path="/settings"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <Settings />
                 </UserRoute>
@@ -111,7 +116,7 @@ function App() {
           <Route
             path="/notifications"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <Notifications />
                 </UserRoute>
@@ -121,7 +126,7 @@ function App() {
           <Route
             path="/search"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <Search />
                 </UserRoute>
@@ -131,7 +136,7 @@ function App() {
           <Route
             path="/posts/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <Post />
                 </UserRoute>
@@ -141,7 +146,7 @@ function App() {
           <Route
             path="/users/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <UserProfile />
                 </UserRoute>
@@ -151,7 +156,7 @@ function App() {
           <Route
             path="/account"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <Account />
                 </UserRoute>
@@ -161,26 +166,26 @@ function App() {
           <Route
             path="/account/followers"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <Followers />
                 </UserRoute>
               </ProtectedRoute>
             }
           >
-            <Route path=":userId" element={<Followers />} />
+            <Route path=":userId" element={<Followers key={refreshTrigger} />} />
           </Route>
           <Route
             path="/account/following"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute key={refreshTrigger}>
                 <UserRoute>
                   <Following />
                 </UserRoute>
               </ProtectedRoute>
             }
           >
-            <Route path=":userId" element={<Following />} />
+            <Route path=":userId" element={<Following key={refreshTrigger} />} />
           </Route>
           <Route
             path="/admin/dashboard"
@@ -192,23 +197,26 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="users" element={<Users />} />
-            <Route path="admins" element={<Admins />} />
-            <Route path="banned-users" element={<BannedUsers />} />{" "}
+            <Route path="users" element={<Users key={refreshTrigger} />} />
+            <Route path="admins" element={<Admins key={refreshTrigger} />} />
+            <Route path="banned-users" element={<BannedUsers key={refreshTrigger} />} />{" "}
             {/* New route for BannedUsers */}
-            <Route path="tags" element={<Tags />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="review" element={<ToReview />} />
-            <Route path="review/:contentId" element={<ToReview />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="reports/:reportId" element={<Reports />} />
-            <Route path="reports/:reportId/preview" element={<ReportPostPreview />} />
-            <Route path="settings" element={<Settings />} />
+            <Route path="tags" element={<Tags key={refreshTrigger} />} />
+            <Route path="categories" element={<Categories key={refreshTrigger} />} />
+            <Route path="review" element={<ToReview key={refreshTrigger} />} />
+            <Route path="review/:contentId" element={<ToReview key={refreshTrigger} />} />
+            <Route path="reports" element={<Reports key={refreshTrigger} />} />
+            <Route path="reports/:reportId" element={<Reports key={refreshTrigger} />} />
+            <Route path="reports/:reportId/preview" element={<ReportPostPreview key={refreshTrigger} />} />
+            <Route path="settings" element={<Settings key={refreshTrigger} />} />
+            <Route path="logs" element={<ActivityLog key={refreshTrigger} />} />
             <Route
               index
               element={<Navigate to="/admin/dashboard/users" replace />}
             />
           </Route>
+          {/* 404 catch-all route - redirect to login if not authenticated */}
+          <Route path="*" element={<ProtectedRoute key={refreshTrigger}><NotFound /></ProtectedRoute>} />
         </Routes>
       </Router>
       </AdminDataProvider>

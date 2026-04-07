@@ -6,8 +6,10 @@ import UserSidebar from "../components/UserSidebar";
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { useNotifications } from "../context/NotificationContext";
 import { getTranslation } from "../utils/translations";
+import { useSnackbar } from "../utils/snackbar";
 import "../styles/shared.css";
 import "./Upload.css";
+import Footer from "../components/Footer";
 
 /**
  * @interface Category
@@ -110,11 +112,7 @@ const Upload = () => {
     title: "",
     description: "",
   });
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error" | "warning";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, showWarning, closeSnackbar } = useSnackbar();
 
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -176,11 +174,7 @@ const Upload = () => {
     );
 
     if (validFiles.length !== selectedFiles.length) {
-      setSnackbar({
-        open: true,
-        message: t("filesSkippedError"),
-        type: "error",
-      });
+      showError(t("filesSkippedError"));
     }
 
     // Append new files instead of replacing
@@ -264,11 +258,7 @@ const Upload = () => {
         const reasonKey = response.data.error;
         const errorMessage = t(reasonKey);
 
-        setSnackbar({
-          open: true,
-          message: errorMessage,
-          type: "error",
-        });
+        showError(errorMessage);
       } else {
         // Content was accepted - either published or pending admin review
         let successMessage: string;
@@ -286,11 +276,11 @@ const Upload = () => {
         const snackbarType: "success" | "error" | "warning" =
           response.status === 202 ? "warning" : "success";
 
-        setSnackbar({
-          open: true,
-          message: successMessage,
-          type: snackbarType,
-        });
+        if (snackbarType === "warning") {
+          showWarning(successMessage);
+        } else {
+          showSuccess(successMessage);
+        }
 
         // Refresh notifications to show the new notification immediately
         await refreshUnreadCount();
@@ -322,11 +312,7 @@ const Upload = () => {
         errorMessage = t("somethingWentWrong");
       }
 
-      setSnackbar({
-        open: true,
-        message: errorMessage,
-        type: "error",
-      });
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -588,11 +574,9 @@ const Upload = () => {
           open={snackbar.open}
           message={snackbar.message}
           type={snackbar.type}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
-        <footer className="page-footer">
-          <p>{t("copyright")}</p>
-        </footer>
+        <Footer />
       </div>
     </div>
   );

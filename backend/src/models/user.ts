@@ -109,6 +109,19 @@ const userSchema: Schema<IUser> = new Schema(
       ],
       default: [],
     },
+    // History of previous usernames with timestamps
+    pastUsernames: {
+      type: [
+        {
+          username: String,
+          changedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true,

@@ -3,6 +3,7 @@ import RoleTypeValue from "../enums/role-type";
 import Tag from "../models/tag";
 import { AuthRequest } from "../interfaces/auth";
 import { getDualTranslation } from "../utils/translation";
+import { logActivity } from "../utils/activity-logger";
 
 /**
  * @file tag-controller.ts
@@ -71,6 +72,13 @@ export const createTag = async (
       createdBy,
     });
 
+    // Log tag creation
+    await logActivity(req, 'TAG_CREATE', {
+      targetId: tag._id.toString(),
+      targetType: 'tag',
+      description: `Created tag "${name}"`,
+    });
+
     return res.status(201).json({
       message: "Tag created",
       tag: {
@@ -117,6 +125,13 @@ export const updateTag = async (
 
     if (!tag) return res.status(404).json({ message: "Tag not found." });
 
+    // Log tag update
+    await logActivity(req, 'TAG_UPDATE', {
+      targetId: id,
+      targetType: 'tag',
+      description: `Updated tag "${name}"`,
+    });
+
     return res.json({ message: "Tag updated", tag });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -143,6 +158,13 @@ export const deleteTag = async (
     const { id } = req.params;
     const tag = await Tag.findByIdAndDelete(id);
     if (!tag) return res.status(404).json({ message: "Tag not found." });
+
+    // Log tag deletion
+    await logActivity(req, 'TAG_DELETE', {
+      targetId: id,
+      targetType: 'tag',
+      description: `Deleted tag "${tag.name}"`,
+    });
 
     return res.json({ message: "Tag deleted" });
   } catch (err: any) {

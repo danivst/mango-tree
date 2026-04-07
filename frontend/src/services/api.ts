@@ -249,6 +249,18 @@ export const authAPI = {
   },
 
   /**
+   * Log out the authenticated user and record activity on the server.
+   * Client should still clear tokens and local storage after calling this.
+   *
+   * @async
+   * @returns {Promise<{ message: string }>} Response with confirmation message
+   */
+  logout: async (): Promise<{ message: string }> => {
+    const response = await api.post<{ message: string }>("/auth/logout");
+    return response.data;
+  },
+
+  /**
    * Enable two-factor authentication for the current user.
    *
    * @async

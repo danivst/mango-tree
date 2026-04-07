@@ -3,13 +3,19 @@ import { useParams, useNavigate } from "react-router-dom";
 import UserSidebar from "../components/UserSidebar";
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
+import { getCurrentUserId } from "../utils/auth";
+
 import api, { UserProfile as IUserProfile, Post, reportsAPI } from "../services/api";
 import "../styles/shared.css";
 import "./UserProfile.css";
 import Snackbar from "../components/Snackbar";
+import { useSnackbar } from "../utils/snackbar";
 import GoBackButton from "../components/GoBackButton";
-import { getToken } from "../utils/auth";
+
 import PostCard from "../components/PostCard";
+import ShareButton from "../components/ShareButton";
+import PastUsernames from "../components/PastUsernames";
+import Footer from "../components/Footer";
 
 /**
  * @file UserProfile.tsx
@@ -58,16 +64,88 @@ const UserProfile = () => {
   const navigate = useNavigate();
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
-  const currentUserId = (() => {
-    const token = getToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId || null;
-    } catch {
-      return null;
-    }
-  })();
+
+  // Get current user ID from token
+  const currentUserId = getCurrentUserId();
+
+  // Local LoadingSpinner component
+  const LoadingSpinner = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => (
+    <div className={`loading-spinner loading-spinner-${size}`}>
+      <span className="material-icons spin">refresh</span>
+    </div>
+  );
+
+  // Local EmptyState component
+  const EmptyState = ({
+    icon,
+    title,
+    message
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    message?: string
+  }) => (
+    <div className="empty-state">
+      <div className="empty-state-icon">{icon}</div>
+      <h3 className="empty-state-title">{title}</h3>
+      {message && <p className="empty-state-message">{message}</p>}
+    </div>
+  );
+
+  // Local ConfirmationModal component
+  const ConfirmationModal = ({
+    isOpen,
+    type,
+    title,
+    message,
+    confirmText,
+    cancelText,
+    onConfirm,
+    onCancel,
+    isLoading
+  }: {
+    isOpen: boolean;
+    type: "warning" | "danger";
+    title: string;
+    message: string;
+    confirmText: string;
+    cancelText: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+    isLoading?: boolean;
+  }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="modal-overlay" onClick={onCancel}>
+        <div className={`modal modal-${type}`} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-close-container">
+            <button className="btn-close" onClick={onCancel} aria-label="Close">
+              &times;
+            </button>
+          </div>
+          <h2 className="modal-title">{title}</h2>
+          <p className="modal-text">{message}</p>
+          <div className="modal-actions">
+            <button
+              className="btn-secondary"
+              onClick={onCancel}
+              disabled={isLoading}
+            >
+              {cancelText}
+            </button>
+            <button
+              className={`btn-${type === 'danger' ? 'danger' : 'primary'}`}
+              onClick={onConfirm}
+              disabled={isLoading}
+            >
+              {confirmText}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const [user, setUser] = useState<IUserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -75,11 +153,7 @@ const UserProfile = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [currentUserFollowing, setCurrentUserFollowing] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [showBioTranslation, setShowBioTranslation] = useState(false);
@@ -108,11 +182,7 @@ const UserProfile = () => {
       setUser(response.data);
     } catch (error: any) {
       console.error("Failed to fetch user profile:", error);
-      setSnackbar({
-        open: true,
-        message: t("userNotFound"),
-        type: "error",
-      });
+      showError(t("userNotFound"));
       setTimeout(() => navigate("/search"), 2000);
     } finally {
       setLoading(false);
@@ -151,18 +221,10 @@ const UserProfile = () => {
       } else {
         setCurrentUserFollowing(prev => [...prev, id]);
       }
-      setSnackbar({
-        open: true,
-        message: wasFollowing ? t("unfollowed") : t("followed"),
-        type: "success",
-      });
+      showSuccess(wasFollowing ? t("unfollowed") : t("followed"));
     } catch (error: any) {
       console.error("Failed to toggle follow:", error);
-      setSnackbar({
-        open: true,
-        message: t("actionFailed"),
-        type: "error",
-      });
+      showError(t("actionFailed"));
     }
   };
 
@@ -187,18 +249,10 @@ const UserProfile = () => {
       // Send a generic report reason
       const defaultReason = t("reportUser");
       await reportsAPI.createReport('user', user._id, defaultReason);
-      setSnackbar({
-        open: true,
-        message: t("reportSubmitted"),
-        type: "success",
-      });
+      showSuccess(t("reportSubmitted"));
       setShowReportModal(false);
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("somethingWentWrong"),
-        type: "error",
-      });
+      showError(t("somethingWentWrong"));
     } finally {
       setReportSubmitting(false);
     }
@@ -242,7 +296,9 @@ const UserProfile = () => {
       <div className="user-profile-container">
         <UserSidebar />
         <div className="page-container">
-          <div className="loading">{t("loading")}</div>
+          <div className="loading-centered">
+            <LoadingSpinner size="lg" />
+          </div>
         </div>
       </div>
     );
@@ -253,7 +309,10 @@ const UserProfile = () => {
       <div className="user-profile-container">
         <UserSidebar />
         <div className="page-container">
-          <div className="loading">{t("userNotFound")}</div>
+          <EmptyState
+            icon={<span className="material-icons">error</span>}
+            title={t("userNotFound")}
+          />
         </div>
       </div>
     );
@@ -263,10 +322,11 @@ const UserProfile = () => {
     <div className="user-profile-container">
       <UserSidebar />
       <div className="page-container">
-        <div className="mb-6">
-          <GoBackButton />
-        </div>
-        {/* Profile Section */}
+        <div className="profile-content">
+          <div className="mb-6">
+            <GoBackButton />
+          </div>
+          {/* Profile Section */}
           <div className="profile-header">
             {/* Profile Picture */}
             <div className="relative">
@@ -279,7 +339,7 @@ const UserProfile = () => {
                   />
                 ) : (
                   <div className="profile-pic-placeholder">
-                    {user.username.charAt(0).toUpperCase()}
+                    {user.username.startsWith('@') ? user.username[1].toUpperCase() : user.username[0].toUpperCase()}
                   </div>
                 )}
               </div>
@@ -291,6 +351,12 @@ const UserProfile = () => {
                 <h1 className="username-heading">
                   @{user.username}
                 </h1>
+                {/* Share Button */}
+                <ShareButton
+                  url={`${window.location.origin}/users/${user._id}`}
+                  title={`@${user.username} - MangoTree Profile`}
+                  description={user.bio || ""}
+                />
                 {/* Follow/Unfollow Button (only if not viewing own profile) */}
                 {currentUserId !== user._id && (
                   <button
@@ -360,14 +426,13 @@ const UserProfile = () => {
                 {/* Translate Button - show only if bio is in different language than app */}
                 {user?.bio && user.translations?.bio?.[language] && user.translations.bio[language] !== user.bio && (
                   <button
+                    className="btn-translate btn-sm"
                     onClick={() => setShowBioTranslation(!showBioTranslation)}
-                    className="btn-translate"
-                    title={showBioTranslation ? t("viewOriginal") : t("translate")}
                   >
                     <span className="material-icons icon-sm">
                       {showBioTranslation ? "translate" : "language"}
                     </span>
-                    {showBioTranslation ? t("viewOriginal") : t("translate")}
+                    <span>{showBioTranslation ? t("viewOriginal") : t("translate")}</span>
                   </button>
                 )}
               </div>
@@ -377,6 +442,11 @@ const UserProfile = () => {
                   : user.bio}
               </p>
             </div>
+          )}
+
+          {/* Past Usernames */}
+          {user.pastUsernames && user.pastUsernames.length > 0 && (
+            <PastUsernames pastUsernames={user.pastUsernames} className="mb-6" />
           )}
 
           {/* Divider */}
@@ -407,11 +477,14 @@ const UserProfile = () => {
 
           {/* Posts Grid */}
           {filteredPosts.length === 0 ? (
-            <div className="loading loading-centered">
-              {selectedCategoryId
-                ? t("noPostsFound")
-                : t("selectCategory")}
-            </div>
+            <EmptyState
+              icon={<span className="material-icons">article</span>}
+              title={
+                selectedCategoryId
+                  ? t("noPostsFound")
+                  : t("noPostsAvailable")
+              }
+            />
           ) : (
             <div className="cards-grid posts-grid">
               {filteredPosts.map((post) => (
@@ -422,44 +495,25 @@ const UserProfile = () => {
         </div>
 
         {/* Report User Confirmation Modal */}
-        {showReportModal && (
-          <div className="modal-overlay" onClick={() => setShowReportModal(false)}>
-            <div className="modal modal-warning" onClick={(e) => e.stopPropagation()}>
-              <h2 className="modal-title">
-                {t("reportUsername")}
-              </h2>
-              <p className="modal-text">
-                {t("confirmReportUser").replace("{username}", `@${user?.username || ''}`)}
-              </p>
-              <div className="modal-actions">
-                <button
-                  className="btn-secondary"
-                  onClick={() => setShowReportModal(false)}
-                  disabled={reportSubmitting}
-                >
-                  {t("no")}
-                </button>
-                <button
-                  className="btn-primary"
-                  onClick={handleReportUser}
-                  disabled={reportSubmitting}
-                >
-                  {reportSubmitting ? t("loading") : t("yes")}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ConfirmationModal
+          isOpen={showReportModal}
+          type="warning"
+          title={t("reportUsername")}
+          message={t("confirmReportUser").replace("{username}", `@${user?.username || ''}`)}
+          confirmText={reportSubmitting ? t("loading") : t("yes")}
+          cancelText={t("no")}
+          onConfirm={handleReportUser}
+          onCancel={() => setShowReportModal(false)}
+          isLoading={reportSubmitting}
+        />
 
         <Snackbar
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
-        <footer className="page-footer">
-          <p>{t("copyright")}</p>
-        </footer>
+        <Footer />
       </div>
     </div>
   );

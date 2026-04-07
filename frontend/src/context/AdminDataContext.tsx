@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import {
   adminAPI,
   Category,
@@ -10,6 +10,8 @@ import {
 } from "../services/admin-api";
 import { useThemeLanguage } from "./ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
+import { useRefresh } from "./RefreshContext";
+import { jwtDecode } from "jwt-decode";
 
 /**
  * @template T
@@ -342,6 +344,23 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchReports,
     fetchFlaggedContent,
   ]);
+
+  // ========== AUTO-REFRESH ON SIDEBAR CLICK ==========
+  const { refreshTrigger } = useRefresh();
+
+  useEffect(() => {
+    if (refreshTrigger === 0) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const decoded = jwtDecode<any>(token);
+      if (decoded.role === 'admin') {
+        initialize().catch(err => console.error('Failed to refresh admin data:', err));
+      }
+    } catch (e) {
+      console.error('Failed to decode token for admin refresh:', e);
+    }
+  }, [refreshTrigger, initialize]);
 
   // ========== CONTEXT VALUE ==========
   /**

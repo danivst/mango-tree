@@ -1,0 +1,127 @@
+/* ============================================
+   MODAL COMPONENTS
+   ============================================ */
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--theme-accent);
+  border-radius: 16px;
+  padding: 32px;
+  width: 400px;
+  max-width: 400px;
+  box-shadow: none;
+}
+
+.modal.modal-danger {
+  background: var(--theme-accent);
+}
+
+.modal.modal-danger .modal-title {
+  color: var(--theme-text);
+}
+
+.modal.modal-danger .modal-text {
+  color: var(--theme-text);
+}
+
+.modal.modal-danger .modal-actions button:last-child {
+  background: #a50104;
+  color: var(--theme-text);
+}
+
+.modal.modal-danger .modal-actions button:last-child:hover {
+  background: #8a0103;
+}
+
+.modal.modal-warning {
+  background: var(--theme-accent);
+}
+
+.modal.modal-warning .modal-title {
+  color: var(--theme-text);
+}
+
+.modal.modal-warning .modal-text {
+  color: var(--theme-text);
+}
+
+.modal.modal-warning .modal-actions button:last-child {
+  background: #ff9800;
+  color: white;
+}
+
+.modal.modal-warning .modal-actions button:last-child:hover {
+  background: #f57c00;
+}
+
+.modal-title {
+  font-family: "Poppins", sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0 0 16px 0;
+}
+
+.modal-text {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  color: var(--theme-text);
+  margin: 0 0 24px 0;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+/* Modal Variants */
+.modal.confirm-dialog {
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  border: 1px solid var(--theme-text);
+  opacity: 1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-preview {
+  width: 90vw;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-close-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: var(--theme-text);
+  padding: 0;
+  line-height: 1;
+  font-family: 'Poppins', sans-serif;
+}
+

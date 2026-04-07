@@ -35,8 +35,9 @@ export type Language = "en" | "bg";
  *
  * @property {Theme} theme - Current UI color theme
  * @property {(theme: Theme) => void} setTheme - Function to change theme (persists to cookie and syncs to backend if authenticated)
- * @property {Language} language - Current UI language
  * @property {(lang: Language) => void} setLanguage - Function to change language (persists to cookie and syncs to backend if authenticated)
+ * @property {(theme: Theme) => void} setThemeImmediate - Set theme without syncing to backend (for initial load)
+ * @property {(lang: Language) => void} setLanguageImmediate - Set language without syncing to backend (for initial load)
  */
 
 interface ThemeLanguageContextProps {
@@ -44,6 +45,8 @@ interface ThemeLanguageContextProps {
   setTheme: (theme: Theme) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
+  setThemeImmediate: (theme: Theme) => void;
+  setLanguageImmediate: (lang: Language) => void;
 }
 
 const ThemeLanguageContext = createContext<ThemeLanguageContextProps | undefined>(
@@ -93,7 +96,7 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = getCookie("appTheme") as Theme | null;
-    return saved || "cream";
+    return saved || "mango";
   });
 
   /**
@@ -219,6 +222,17 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   /**
+   * Theme setter that does NOT sync to backend.
+   * Used for initial preference loading after login to avoid logging spurious changes.
+   *
+   * @param {Theme} t - New theme value
+   */
+  const setThemeImmediate = (t: Theme) => {
+    setThemeState(t);
+    // Note: Cookie is still set by the effect hook listening to theme changes
+  };
+
+  /**
    * Language setter wrapper that syncs to backend if authenticated.
    * Updates local state and persists cookie; then async sync to server if logged in.
    *
@@ -232,9 +246,20 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  /**
+   * Language setter that does NOT sync to backend.
+   * Used for initial preference loading after login to avoid logging spurious changes.
+   *
+   * @param {Language} l - New language value
+   */
+  const setLanguageImmediate = (l: Language) => {
+    setLanguageState(l);
+    // Note: Cookie is still set by the effect hook listening to language changes
+  };
+
   return (
     <ThemeLanguageContext.Provider
-      value={{ theme, setTheme, language, setLanguage }}
+      value={{ theme, setTheme, language, setLanguage, setThemeImmediate, setLanguageImmediate }}
     >
       {children}
     </ThemeLanguageContext.Provider>

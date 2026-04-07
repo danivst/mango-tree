@@ -1,11 +1,17 @@
 import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { useNotifications } from "../context/NotificationContext";
+import { useRefresh } from "../context/RefreshContext";
 import { getTranslation } from "../utils/translations";
+import { useSnackbar } from "../utils/snackbar";
+import { authAPI } from "../services/api";
+import { clearAuth } from "../utils/auth";
+
 import "./UserSidebar.css";
+import logo from "../assets/mangotree-logo.png";
+
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Snackbar from "./Snackbar";
-import logo from "../assets/mangotree-logo.png";
 import HomeIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadIcon from "@mui/icons-material/Upload";
@@ -73,30 +79,37 @@ interface SidebarItem {
  */
 
 const UserSidebar = () => {
-  /**
-   * Handles user logout process.
-   * Clears all authentication tokens from localStorage, shows success snackbar,
-   * then redirects to login page after a short delay.
-   */
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("tokenExpiration");
-    localStorage.removeItem("lastActiveMenuItem");
-    setSnackbar({
-      open: true,
-      message: t("successfullyLoggedOut"),
-      type: "success",
-    });
-    setTimeout(() => {
-      navigate("/login");
-    }, 1500);
-  };
-
   const navigate = useNavigate();
   const location = useLocation();
   const { language, theme } = useThemeLanguage();
+  const { triggerRefresh } = useRefresh();
   const t = (key: string) => getTranslation(language, key);
+
+  /**
+   * Hook: manage snackbar notifications using centralized hook
+   */
+  const { snackbar, showSuccess, closeSnackbar } = useSnackbar();
+
+  /**
+   * Handles user logout process.
+   * Calls backend logout endpoint to record activity, clears auth data,
+   * shows success snackbar, then redirects to login page after a short delay.
+   */
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      console.error("Logout API call failed:", error);
+      // Continue with logout even if API fails
+    } finally {
+      clearAuth();
+      localStorage.removeItem("lastActiveMenuItem");
+      showSuccess(t("successfullyLoggedOut"));
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    }
+  };
 
   /**
    * State: sidebar collapsed/expanded.
@@ -126,16 +139,6 @@ const UserSidebar = () => {
     // Lazy initializer reads from localStorage only once on mount
     return localStorage.getItem("lastActiveMenuItem");
   });
-
-  /**
-   * State: controls snackbar notifications.
-   * Used primarily for logout confirmation; could be extended for other user feedback.
-   */
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
 
   /**
    * Get unread notification count from NotificationContext.
@@ -317,12 +320,15 @@ const UserSidebar = () => {
    * Saves the item's ID to localStorage (for active state persistence across reloads),
    * updates the lastActiveItemId state, navigates to the item's path,
    * and collapses the sidebar if on mobile.
+   * If clicking the current page, triggers a content refresh via the refresh context.
    *
    * @param {SidebarItem} item - The clicked navigation item containing id, path, etc.
    */
   const handleItemClick = (item: SidebarItem) => {
     localStorage.setItem("lastActiveMenuItem", item.id);
     setLastActiveItemId(item.id);
+    // Always trigger refresh before navigation to ensure fresh content
+    triggerRefresh();
     navigate(item.path);
     if (isMobile) {
       setIsCollapsed(true);
@@ -438,7 +444,7 @@ const UserSidebar = () => {
         message={snackbar.message}
         type={snackbar.type}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={closeSnackbar}
       />
     </>
   );

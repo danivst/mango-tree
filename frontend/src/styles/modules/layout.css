@@ -1,0 +1,131 @@
+/* ============================================
+   LAYOUT COMPONENTS
+   ============================================ */
+
+/* Page Layout */
+.page-container {
+  background: var(--theme-accent);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 20px;
+  bottom: 20px;
+  left: var(--sidebar-offset, 0);
+  right: 20px;
+  height: calc(100vh - 40px);
+  overflow-y: scroll;
+  color: var(--theme-text);
+  transition: left 0.3s ease;
+  will-change: left;
+  /* Scrollbar styling - Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-text) var(--theme-accent);
+}
+
+.page-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.page-container::-webkit-scrollbar-track {
+  background: var(--theme-accent);
+}
+
+.page-container::-webkit-scrollbar-thumb {
+  background-color: var(--theme-text);
+  border-radius: 5px;
+  border: 2px solid var(--theme-accent);
+}
+
+.page-container::-webkit-scrollbar-thumb:hover {
+  background-color: #3a0e36;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.page-title {
+  font-family: "Poppins", sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0;
+}
+
+/* Username heading (used in UserProfile and account-related pages) */
+.username-heading {
+  font-family: "Poppins", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--theme-text);
+  margin: 0;
+}
+
+.page-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+/* Page container header - used by admin pages */
+.page-container-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.page-container-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.page-container-title {
+  font-family: "Poppins", sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0;
+}
+
+.page-footer {
+  text-align: center;
+  padding: 20px 0;
+  margin-top: 40px;
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  color: var(--theme-text);
+  opacity: 0.8;
+  border-top: 1px solid var(--theme-text);
+  opacity: 0.3;
+}
+
+/* Content View */
+.content-view {
+  width: 100%;
+}
+
+.content-card {
+  background: linear-gradient(180deg, var(--theme-bg), var(--theme-accent));
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Posts Grid */
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+

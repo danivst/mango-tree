@@ -235,30 +235,28 @@ const PostCard = ({ post }: PostCardProps) => {
       )}
 
       {/* Action Buttons Row */}
-      {shouldShowTranslateButton && (
-        <div className="post-card-actions">
-          {/* Translate Button */}
-          {shouldShowTranslateButton && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleTranslate();
-              }}
-              disabled={translating}
-              className="post-card-translate-button"
-            >
-              {translating ? (
-                <span className="material-icons spin">refresh</span>
-              ) : (
-                <span className="material-icons">
-                  {showTranslation ? "translate" : "language"}
-                </span>
-              )}
-              <span>{showTranslation ? t("viewOriginal") : t("translate")}</span>
-            </button>
-          )}
-        </div>
-      )}
+      <div className="post-card-actions">
+        {/* Translate Button (only if needed) */}
+        {shouldShowTranslateButton && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTranslate();
+            }}
+            disabled={translating}
+            className="post-card-translate-button"
+          >
+            {translating ? (
+              <span className="material-icons spin">refresh</span>
+            ) : (
+              <span className="material-icons">
+                {showTranslation ? "translate" : "language"}
+              </span>
+            )}
+            <span>{showTranslation ? t("viewOriginal") : t("translate")}</span>
+          </button>
+        )}
+      </div>
 
       {/* Author & Category & Date Row */}
       <div className="post-card-meta">

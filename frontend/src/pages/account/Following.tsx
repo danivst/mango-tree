@@ -6,9 +6,11 @@ import { getTranslation } from "../../utils/translations";
 import UserSidebar from "../../components/UserSidebar";
 import Snackbar from "../../components/Snackbar";
 import GoBackButton from "../../components/GoBackButton";
-import { getToken } from "../../utils/auth";
+import { getCurrentUserId } from "../../utils/auth";
+import { useSnackbar } from "../../utils/snackbar";
 import "../../styles/shared.css";
 import "./Following.css";
+import Footer from "../../components/Footer";
 
 /**
  * @interface User
@@ -58,30 +60,11 @@ const Following = () => {
   const navigate = useNavigate();
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
-
-  /**
-   * Extracts current user's ID from JWT token.
-   * Uses lazy initialization to parse token only once on mount.
-   * Returns null if no token or parsing fails.
-   */
-  const currentUserId = (() => {
-    const token = getToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId || null;
-    } catch {
-      return null;
-    }
-  })();
+  const currentUserId = getCurrentUserId();
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
   const [following, setFollowing] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
 
   /**
    * Effect: fetch following list when currentUserId becomes available.
@@ -108,11 +91,7 @@ const Following = () => {
       setFollowing(sorted);
     } catch (error: any) {
       console.error("Failed to fetch following:", error);
-      setSnackbar({
-        open: true,
-        message: t("failedLoadUsers"),
-        type: "error",
-      });
+      showError(t("failedLoadUsers"));
     } finally {
       setLoading(false);
     }
@@ -132,18 +111,10 @@ const Following = () => {
       await api.post("/users/follow", { targetId });
       // Refresh the list to reflect changes
       await fetchFollowing();
-      setSnackbar({
-        open: true,
-        message: wasFollowing ? t("unfollowed") : t("followed"),
-        type: "success",
-      });
+      showSuccess(wasFollowing ? t("unfollowed") : t("followed"));
     } catch (error: any) {
       console.error("Failed to toggle follow:", error);
-      setSnackbar({
-        open: true,
-        message: t("actionFailed"),
-        type: "error",
-      });
+      showError(t("actionFailed"));
     }
   };
 
@@ -209,7 +180,10 @@ const Following = () => {
 
         {/* Empty state: no users followed */}
         {following.length === 0 ? (
-          <div className="loading">{t("noFollowingFound")}</div>
+          <div className="empty-state">
+            <span className="material-icons">person_off</span>
+            <p className="empty-state-message">{t("noFollowingFound")}</p>
+          </div>
         ) : (
           // Grid of followed users
           <div className="cards-grid">
@@ -264,11 +238,9 @@ const Following = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
-        <footer className="page-footer">
-          <p>{t("copyright")}</p>
-        </footer>
+        <Footer />
       </div>
     </div>
   );

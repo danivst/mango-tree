@@ -1,7 +1,23 @@
-/* Layout */
+/* ============================================
+   SETTINGS PAGE
+   ============================================ */
+
 .settings-container {
   display: flex;
   min-height: 100vh;
+}
+
+/* Settings sections with gradient background */
+.settings-section {
+  background: linear-gradient(180deg, var(--theme-bg), var(--theme-accent));
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.settings-section-title {
+  margin: 0 0 24px 0;
 }
 
 /* Password change form */
@@ -12,44 +28,12 @@
   border-radius: 8px;
 }
 
-/* 2FA Section */
-.twofa-section {
-  margin-top: 24px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  padding-top: 24px;
-}
-
-.twofa-description {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin: 0;
-  color: var(--theme-text);
-  opacity: 0.8;
-  font-size: 14px;
-  line-height: 1.5;
-  flex: 1;
-}
-
-.twofa-status-enabled {
-  color: #4CAF50;
-  font-weight: bold;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
 .twofa-actions {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
-/* Button adjustments */
-.btn-sm {
-  font-size: 14px;
-  padding: 8px 16px;
-  white-space: nowrap;
-}
 
 /* Username row: stack vertically on mobile */
 @media (max-width: 767px) {
@@ -75,25 +59,6 @@
     padding: 8px 12px;
     font-size: 13px;
   }
-}
-
-/* Form layout for horizontal groups */
-.form-horizontal-group {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.form-horizontal-group .form-input {
-  flex: 1;
-}
-
-/* Disabled input styling */
-.form-input:disabled,
-.form-input.disabled {
-  background: rgba(0, 0, 0, 0.1) !important;
-  cursor: not-allowed !important;
-  opacity: 0.6 !important;
 }
 
 /* Spacing modifier for sections */

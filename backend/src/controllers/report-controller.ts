@@ -10,6 +10,7 @@ import ReportStatusTypeValue, { ReportStatusType } from "../enums/report-status-
 import RoleTypeValue from "../enums/role-type";
 import { AuthRequest } from "../interfaces/auth";
 import { getDualTranslation } from "../utils/translation";
+import { logActivity } from "../utils/activity-logger";
 
 /**
  * Submits a report against a post, comment, or user.
@@ -58,6 +59,13 @@ export const createReport = async (
       reason,
       status: ReportStatusTypeValue.PENDING,
       createdAt: new Date(),
+    });
+
+    // Log report submission
+    await logActivity(req, 'REPORT_SUBMIT', {
+      targetId,
+      targetType: targetType as any,
+      description: `Reported ${targetType} ${targetId}. Reason: ${reason}`,
     });
 
     return res
@@ -133,10 +141,10 @@ export const updateReportStatus = async (
         (report.reportedBy as any)._id?.toString() ||
         report.reportedBy.toString();
 
-      // Translate the rejection reason
+      // Use raw admin reason for English, translate only for Bulgarian
       const translated = await getDualTranslation(reason);
 
-      const rejectMessageEn = `Your report was reviewed and not marked as disruptive. Reason: ${translated.en}`;
+      const rejectMessageEn = `Your report was reviewed and not marked as disruptive. Reason: ${reason}`;
       const rejectMessageBg = `Вашият сигнал беше прегледан и не беше отбелязан като нарушаващ правилата. Причина: ${translated.bg}`;
 
       await Notification.create({
@@ -152,6 +160,13 @@ export const updateReportStatus = async (
         link: null,
       });
     }
+
+    // Log report status update
+    await logActivity(req, 'REPORT_STATUS_UPDATE', {
+      targetId: id,
+      targetType: 'report',
+      description: `Updated report ${id} status to ${status}`,
+    });
 
     return res.json({ message: "Report updated", report: updatedReport });
   } catch (err: any) {
@@ -195,7 +210,7 @@ export const deleteReportedItem = async (
           (post.authorId as any)._id?.toString() || post.authorId.toString();
         await Post.findByIdAndDelete(report.targetId);
 
-        const postRemoveMessageEn = `Your post has been removed. Reason: ${translatedReason.en}`;
+        const postRemoveMessageEn = `Your post has been removed. Reason: ${reason}`;
         const postRemoveMessageBg = `Вашата публикация беше премахната. Причина: ${translatedReason.bg}`;
 
         await Notification.create({
@@ -220,7 +235,7 @@ export const deleteReportedItem = async (
           (comment.userId as any)._id?.toString() || comment.userId.toString();
         await Comment.findByIdAndDelete(report.targetId);
 
-        const commentRemoveMessageEn = `Your comment has been removed. Reason: ${translatedReason.en}`;
+        const commentRemoveMessageEn = `Your comment has been removed. Reason: ${reason}`;
         const commentRemoveMessageBg = `Вашият коментар беше премахнат. Причина: ${translatedReason.bg}`;
 
         await Notification.create({
@@ -261,6 +276,13 @@ export const deleteReportedItem = async (
 
     await Report.findByIdAndUpdate(id, {
       status: ReportStatusTypeValue.ACTION_TAKEN,
+    });
+
+    // Log reported item deletion
+    await logActivity(req, 'REPORT_ITEM_DELETE', {
+      targetId: report.targetId.toString(),
+      targetType: report.targetType as any,
+      description: `Deleted reported ${report.targetType} ${report.targetId}`,
     });
 
     return res.json({ message: "Item deleted and notifications sent." });

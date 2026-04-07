@@ -1,0 +1,124 @@
+/**
+ * @file NotFound.css
+ * @description Styles for the 404 page.
+ */
+
+.not-found-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  text-align: center;
+}
+
+.not-found-content {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  background: #fff;
+  padding: 3rem 2rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--theme-border, #ddd);
+}
+
+.not-found-content > .page-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+  color: #333;
+  opacity: 0.8;
+}
+
+.logo-container {
+  animation: float 3s ease-in-out infinite;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.not-found-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #E77728;
+  margin: 0;
+  opacity: 0.9;
+  font-family: "Poppins", sans-serif;
+  -webkit-text-stroke: 1px #000;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.not-found-code {
+  font-size: 7rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--theme-accent, #FF9800), #FF5722);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0.9;
+}
+
+.not-found-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+}
+
+.not-found-message {
+  font-size: 1rem;
+  color:#333;
+  opacity: 0.8;
+  margin: 0;
+  max-width: 400px;
+}
+
+.not-found-button {
+  margin-top: 0.5rem;
+  min-width: 160px;
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .not-found-content {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+  }
+
+  .mango-icon-large {
+    font-size: 4rem;
+  }
+
+  .not-found-code {
+    font-size: 5rem;
+  }
+
+  .not-found-title {
+    font-size: 1.5rem;
+  }
+
+  .not-found-message {
+    font-size: 0.95rem;
+  }
+}

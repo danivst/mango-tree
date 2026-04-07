@@ -7,8 +7,10 @@ import Snackbar from "../components/Snackbar";
 import UserSidebar from "../components/UserSidebar";
 import { getTranslation } from "../utils/translations";
 import { clearAuth } from "../utils/auth";
+import { useSnackbar } from "../utils/snackbar";
 import "../styles/shared.css";
 import "./Settings.css";
+import Footer from "../components/Footer";
 
 /**
  * @type DeleteStep
@@ -84,16 +86,16 @@ const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const { theme, setTheme, language, setLanguage } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const [deleting, setDeleting] = useState(false);
   // 2FA states
   const [showEnable2FAModal, setShowEnable2FAModal] = useState(false);
   const [settingsTwoFACode, setSettingsTwoFACode] = useState("");
   const [settingsVerifying2FA, setSettingsVerifying2FA] = useState(false);
+  // Password visibility toggles
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     fetchUserInfo();
@@ -104,11 +106,7 @@ const Settings = () => {
       const response = await api.get("/users/me");
       setUser(response.data);
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToLoadUserInfo"),
-        type: "error",
-      });
+      showError(t("failedToLoadUserInfo"));
     } finally {
       setLoading(false);
     }
@@ -118,20 +116,12 @@ const Settings = () => {
     e.preventDefault();
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setSnackbar({
-        open: true,
-        message: t("fillAllPasswordFields"),
-        type: "error",
-      });
+      showError(t("fillAllPasswordFields"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setSnackbar({
-        open: true,
-        message: t("passwordsDoNotMatch"),
-        type: "error",
-      });
+      showError(t("passwordsDoNotMatch"));
       return;
     }
 
@@ -140,11 +130,7 @@ const Settings = () => {
       await authAPI.changePassword(currentPassword, newPassword);
       // Clear the mustChangePassword flag from localStorage if it exists
       localStorage.removeItem("mustChangePassword");
-      setSnackbar({
-        open: true,
-        message: t("passwordChangedSuccess"),
-        type: "success",
-      });
+      showSuccess(t("passwordChangedSuccess"));
       setShowPasswordForm(false);
       setCurrentPassword("");
       setNewPassword("");
@@ -154,11 +140,15 @@ const Settings = () => {
         navigate("/home");
       }, 1500);
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("serverError"),
-        type: "error",
-      });
+      const errorData = error.response?.data;
+      const serverMessage = errorData?.message || "";
+      if (errorData?.field === "currentPassword" || serverMessage.toLowerCase().includes("incorrect")) {
+        showError(t("incorrectPassword"));
+      } else if (errorData?.field === "newPassword" || serverMessage.toLowerCase().includes("must contain") || serverMessage.toLowerCase().includes("requirements")) {
+        showError(t("invalidPassword"));
+      } else {
+        showError(serverMessage || t("serverError"));
+      }
     } finally {
       setChangingPassword(false);
     }
@@ -170,11 +160,7 @@ const Settings = () => {
       await authAPI.enable2FA();
       setShowEnable2FAModal(true);
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToSendVerificationCode"),
-        type: "error",
-      });
+      showError(t("failedToSendVerificationCode"));
     }
   };
 
@@ -183,11 +169,7 @@ const Settings = () => {
     if (!user) return;
 
     if (!settingsTwoFACode || settingsTwoFACode.length !== 6 || !/^\d+$/.test(settingsTwoFACode)) {
-      setSnackbar({
-        open: true,
-        message: t("invalid2FACode"),
-        type: "error",
-      });
+      showError(t("invalid2FACode"));
       return;
     }
 
@@ -204,17 +186,9 @@ const Settings = () => {
       setUser({ ...user, twoFactorEnabled: true });
       setShowEnable2FAModal(false);
       setSettingsTwoFACode("");
-      setSnackbar({
-        open: true,
-        message: t("twoFAEnabledSuccess"),
-        type: "success",
-      });
+      showSuccess(t("twoFAEnabledSuccess"));
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("actionFailed"),
-        type: "error",
-      });
+      showError(t("actionFailed"));
       setSettingsTwoFACode("");
     } finally {
       setSettingsVerifying2FA(false);
@@ -226,17 +200,9 @@ const Settings = () => {
     try {
       await authAPI.disable2FA();
       setUser({ ...user, twoFactorEnabled: false });
-      setSnackbar({
-        open: true,
-        message: t("twoFADisabledSuccess"),
-        type: "success",
-      });
+      showSuccess(t("twoFADisabledSuccess"));
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("actionFailed"),
-        type: "error",
-      });
+      showError(t("actionFailed"));
     }
   };
 
@@ -277,11 +243,7 @@ const Settings = () => {
       // Navigate to login immediately (no need to show snackbar here, login page will show it)
       navigate("/login");
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToDeleteUser"),
-        type: "error",
-      });
+      showError(t("failedToDeleteUser"));
       setDeleting(false);
     }
   };
@@ -314,13 +276,18 @@ const Settings = () => {
                     setUser({ ...user, username: e.target.value })
                   }
                   disabled={isAdmin}
-                  title={t("unableToEditUsername")}
+                  title={isAdmin ? t("unableToEditUsername") : ""}
                 />
                 {!isAdmin && (
                   <button
                     className="btn-primary"
                     onClick={async () => {
                       if (!user) return;
+                      // Validate username format
+                      if (!user.username || user.username.trim().length < 3) {
+                        showError(t("usernameMinLength"));
+                        return;
+                      }
                       try {
                         const check = await api.get(
                           `/users/check-username?username=${encodeURIComponent(
@@ -328,28 +295,30 @@ const Settings = () => {
                           )}`,
                         );
                         if (check.data.exists) {
-                          setSnackbar({
-                            open: true,
-                            message:
-                              t("usernameExists"),
-                            type: "error",
-                          });
+                          showError(t("usernameExists"));
                           return;
                         }
-                        await api.put(`/users/${user._id}`, {
+                        await api.put(`/users/me`, {
                           username: user.username,
                         });
-                        setSnackbar({
-                          open: true,
-                          message: t("usernameUpdated"),
-                          type: "success",
-                        });
+                        showSuccess(t("usernameUpdated"));
                       } catch (error: any) {
-                        setSnackbar({
-                          open: true,
-                          message: t("serverError"),
-                          type: "error",
-                        });
+                        const errorData = error.response?.data;
+                        const serverMessage = errorData?.message || "";
+                        if (errorData?.field === "username") {
+                          // Handle format or other validation errors
+                          if (
+                            serverMessage.toLowerCase().includes("must contain") ||
+                            serverMessage.toLowerCase().includes("requirements") ||
+                            serverMessage.toLowerCase().includes("invalid")
+                          ) {
+                            showError(t("usernameMinLength"));
+                          } else {
+                            showError(serverMessage || t("serverError"));
+                          }
+                        } else {
+                          showError(t("serverError"));
+                        }
                       }
                     }}
                   >
@@ -394,37 +363,151 @@ const Settings = () => {
                     <label className="form-label">
                       {t("currentPassword")}
                     </label>
-                    <input
-                      type="password"
-                      className="form-input"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      required
-                    />
+                    <div className="password-input-wrapper">
+                      <input
+                        type={showCurrentPassword ? "text" : "password"}
+                        className="form-input"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="password-toggle"
+                        aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                      >
+                        {showCurrentPassword ? (
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div className="form-group">
                     <label className="form-label">
                       {t("newPassword")}
                     </label>
-                    <input
-                      type="password"
-                      className="form-input"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                    />
+                    <div className="password-input-wrapper">
+                      <input
+                        type={showNewPassword ? "text" : "password"}
+                        className="form-input"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="password-toggle"
+                        aria-label={showNewPassword ? "Hide password" : "Show password"}
+                      >
+                        {showNewPassword ? (
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div className="form-group">
                     <label className="form-label">
                       {t("confirmPassword")}
                     </label>
-                    <input
-                      type="password"
-                      className="form-input"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                    />
+                    <div className="password-input-wrapper">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        className="form-input"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="password-toggle"
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      >
+                        {showConfirmPassword ? (
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div className="form-actions">
                     <button
@@ -803,11 +886,9 @@ const Settings = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
-        <footer className="page-footer">
-          <p>{t("copyright")}</p>
-        </footer>
+        <Footer />
     </>
   );
 

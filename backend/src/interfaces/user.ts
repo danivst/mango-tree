@@ -60,6 +60,10 @@ export interface IUser extends Document {
   createdAt: Date;
   followers: Types.ObjectId[];
   following: Types.ObjectId[];
+  pastUsernames: {
+    username: string;
+    changedAt: Date;
+  }[];
 }
 
 /**

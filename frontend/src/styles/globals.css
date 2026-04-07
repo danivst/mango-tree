@@ -1,3 +1,7 @@
+/* ============================================
+   GLOBAL STYLES & CSS VARIABLES
+   ============================================ */
+
 :root {
   --theme-bg: #f1f0cc;
   --theme-accent: #fcfbe4;
@@ -24,6 +28,41 @@ body {
   transition:
     background-color 0.3s ease,
     color 0.3s ease;
+  overflow-x: hidden;
+  /* Scrollbar styling - Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-text) var(--theme-accent);
+}
+
+/* WebKit (Chrome, Safari, Edge) scrollbar */
+body::-webkit-scrollbar {
+  width: 10px;
+}
+
+body::-webkit-scrollbar-track {
+  background: var(--theme-accent);
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: var(--theme-text);
+  border-radius: 5px;
+  border: 2px solid var(--theme-accent);
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #3a0e36;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  overflow-x: hidden;
 }
 
 #root {

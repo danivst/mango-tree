@@ -202,6 +202,10 @@ export interface UserProfile {
   theme?: Theme;
   language?: Language;
   notificationPreferences?: NotificationPreferences;
+  pastUsernames?: {
+    username: string;
+    changedAt: string;
+  }[];
 }
 
 // ============================================================================

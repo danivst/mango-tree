@@ -1,0 +1,204 @@
+/* ============================================
+   BUTTON COMPONENTS
+   ============================================ */
+
+/* Buttons */
+.btn-primary {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--theme-accent);
+  color: var(--theme-text);
+}
+
+.btn-primary:hover {
+  background: var(--theme-accent);
+  opacity: 0.8;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary.btn-sm {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.btn-secondary {
+  padding: 10px 24px;
+  border: 2px solid var(--theme-text);
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  color: var(--theme-text);
+}
+
+.btn-secondary.btn-sm {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ff2222;
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background: #ff4444;
+}
+
+.btn-danger:active {
+  transform: scale(0.98);
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Small button variant */
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Admin action buttons (Ban, Unban, Edit) */
+.btn-admin-action {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ffaa00;
+  color: #ffffff;
+}
+
+.btn-admin-action:hover {
+  background: #ffcc00;
+}
+
+.btn-admin-action:active {
+  transform: scale(0.98);
+}
+
+.btn-admin-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Post action button (used in Post page and UserProfile) */
+.post-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  min-width: auto;
+  flex-shrink: 0;
+}
+
+/* Translate button */
+.btn-translate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 2px solid var(--theme-accent);
+  border-radius: 8px;
+  background: var(--theme-accent);
+  color: var(--theme-text);
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-translate:hover {
+  opacity: 0.9;
+}
+
+.btn-translate:active {
+  transform: scale(0.98);
+}
+
+.btn-translate:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Follow/Unfollow button states */
+.btn-follow {
+  border-color: var(--theme-text) !important;
+  color: var(--theme-text) !important;
+  background: transparent !important;
+  border-radius: 8px;
+}
+
+.btn-following {
+  border-color: #a50104 !important;
+  color: #a50104 !important;
+  background: rgba(165, 1, 4, 0.1) !important;
+  border-radius: 8px;
+}
+
+/* Back button style (used in Reports, ToReview, etc.) */
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 2px solid var(--theme-text);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--theme-text);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "Poppins", sans-serif;
+  transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+

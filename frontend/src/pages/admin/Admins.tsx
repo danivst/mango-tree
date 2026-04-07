@@ -7,6 +7,7 @@ import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import Footer from "../../components/Footer";
 import Snackbar from "../../components/Snackbar";
+import { useSnackbar } from "../../utils/snackbar";
 
 /**
  * @file Admins.tsx
@@ -64,11 +65,7 @@ const Admins = () => {
   const itemsPerPage = 20;
   const [showAddAdmin, setShowAddAdmin] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
   const fetchAdmins = async () => {
     try {
@@ -84,34 +81,39 @@ const Admins = () => {
     }
   };
 
+  // Local EmptyState component for no data
+  const EmptyState = ({
+    icon,
+    title,
+    message
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    message?: string;
+  }) => (
+    <div className="empty-state">
+      <div className="empty-state-icon">{icon}</div>
+      <h3 className="empty-state-title">{title}</h3>
+      {message && <p className="empty-state-message">{message}</p>}
+    </div>
+  );
+
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!adminEmail || !adminEmail.includes("@")) {
-      setSnackbar({
-        open: true,
-        message: t("emailMustContainAt"),
-        type: "error",
-      });
+      showError(t("emailMustContainAt"));
       return;
     }
 
     try {
       await adminAPI.createAdmin(adminEmail);
-      setSnackbar({
-        open: true,
-        message: t("adminAccountCreatedSuccess"),
-        type: "success",
-      });
+      showSuccess(t("adminAccountCreatedSuccess"));
       setShowAddAdmin(false);
       setAdminEmail("");
       await fetchAdmins();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToCreateAdmin"),
-        type: "error",
-      });
+      showError(t("failedToCreateAdmin"));
     }
   };
 
@@ -343,11 +345,10 @@ const Admins = () => {
         </div>
 
         {filteredAndSortedAdmins.length === 0 ? (
-          <div className="loading">
-            {searchQuery.trim() !== ""
-              ? t("noSearchResults")
-              : t("noUsersFound")}
-          </div>
+          <EmptyState
+            icon={<span className="material-icons">person_off</span>}
+            title={searchQuery.trim() !== "" ? t("noSearchResults") : t("noUsersFound")}
+          />
         ) : (
           <>
             <div
@@ -481,7 +482,7 @@ const Admins = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
         <Footer />
       </div>

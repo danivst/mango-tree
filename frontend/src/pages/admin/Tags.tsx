@@ -13,6 +13,7 @@ import {
 import "../../styles/shared.css";
 import "./Tags.css";
 import Footer from "../../components/Footer";
+import { useSnackbar } from "../../utils/snackbar";
 
 /**
  * @file Tags.tsx
@@ -72,11 +73,7 @@ const Tags = () => {
   const itemsPerPage = 20;
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTagId, setEditTagId] = useState<string | null>(null);
   const [editTagName, setEditTagName] = useState("");
@@ -179,11 +176,7 @@ const Tags = () => {
     try {
       await fetchTags();
     } catch (err: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToLoadTags"),
-        type: "error",
-      });
+      showError(t("failedToLoadTags"));
     }
   };
 
@@ -241,39 +234,23 @@ const Tags = () => {
     e.preventDefault();
 
     if (!tagName || tagName.trim().length === 0) {
-      setSnackbar({
-        open: true,
-        message: t("tagNameEmpty"),
-        type: "error",
-      });
+      showError(t("tagNameEmpty"));
       return;
     }
 
     if (tagName.length > 20) {
-      setSnackbar({
-        open: true,
-        message: t("tagNameTooLong"),
-        type: "error",
-      });
+      showError(t("tagNameTooLong"));
       return;
     }
 
     try {
       await adminAPI.createTag(tagName.trim());
-      setSnackbar({
-        open: true,
-        message: t("tagCreatedSuccess"),
-        type: "success",
-      });
+      showSuccess(t("tagCreatedSuccess"));
       setShowAddTag(false);
       setTagName("");
       await fetchTags();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("tagCreatedFailed"),
-        type: "error",
-      });
+      showError(t("tagCreatedFailed"));
     }
   };
 
@@ -287,18 +264,10 @@ const Tags = () => {
     if (!deleteTagId) return;
     try {
       await adminAPI.deleteTag(deleteTagId);
-      setSnackbar({
-        open: true,
-        message: t("tagDeletedSuccess"),
-        type: "success",
-      });
+      showSuccess(t("tagDeletedSuccess"));
       await fetchTags();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("tagDeleteFailed"),
-        type: "error",
-      });
+      showError(t("tagDeleteFailed"));
     } finally {
       setShowDeleteModal(false);
       setDeleteTagId(null);
@@ -316,23 +285,32 @@ const Tags = () => {
     if (!editTagId) return;
     try {
       await adminAPI.updateTag(editTagId, editTagName.trim());
-      setSnackbar({
-        open: true,
-        message: t("tagUpdatedSuccess"),
-        type: "success",
-      });
+      showSuccess(t("tagUpdatedSuccess"));
       setShowEditModal(false);
       setEditTagId(null);
       setEditTagName("");
       await fetchTags();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("tagUpdateFailed"),
-        type: "error",
-      });
+      showError(t("tagUpdateFailed"));
     }
   };
+
+  // Local EmptyState component for no data
+  const EmptyState = ({
+    icon,
+    title,
+    message
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    message?: string;
+  }) => (
+    <div className="empty-state">
+      <div className="empty-state-icon">{icon}</div>
+      <h3 className="empty-state-title">{title}</h3>
+      {message && <p className="empty-state-message">{message}</p>}
+    </div>
+  );
 
   return (
     <>
@@ -390,6 +368,11 @@ const Tags = () => {
         <div className="loading loading-padded">
           No data loaded. Click Refresh to load data.
         </div>
+      ) : filteredData.length === 0 ? (
+        <EmptyState
+          icon={<span className="material-icons">local_offer</span>}
+          title={t("noTagsFound")}
+        />
       ) : (
         <div className="table-container">
           <table className="table">
@@ -596,7 +579,7 @@ const Tags = () => {
         message={snackbar.message}
         type={snackbar.type}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={closeSnackbar}
       />
       <Footer />
     </>

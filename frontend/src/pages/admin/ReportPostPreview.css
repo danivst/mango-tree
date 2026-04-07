@@ -1,4 +1,6 @@
-/* Report Post Preview Page Styles */
+/* ============================================
+   REPORT POST PREVIEW ADMIN PAGE
+   ============================================ */
 
 /* Icon size utilities */
 .icon-sm {
@@ -106,17 +108,6 @@
 
 /* Translate Button */
 
-/* Approval Badge */
-.approval-badge {
-  display: inline-block;
-  padding: 6px 16px;
-  background: rgba(255, 193, 7, 0.2);
-  color: #ffc107;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  border: 1px solid rgba(255, 193, 7, 0.5);
-}
 
 /* Section spacing */
 .section-spacing {
@@ -454,6 +445,50 @@
   margin: 0;
   line-height: 1.7;
   color: var(--theme-text);
+}
+
+/* Preview Previous Usernames */
+.preview-section-title {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  color: var(--theme-text);
+}
+
+.preview-past-usernames-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--theme-bg);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.preview-past-usernames-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.preview-past-usernames-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.preview-past-usernames-list::-webkit-scrollbar-thumb {
+  background: var(--theme-text);
+  border-radius: 3px;
+  opacity: 0.5;
+}
+
+.preview-past-usernames-list li {
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--theme-text);
+  opacity: 0.9;
 }
 
 /* Preview Divider */

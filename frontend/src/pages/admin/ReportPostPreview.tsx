@@ -18,6 +18,9 @@ import "./ReportPostPreview.css";
 import Snackbar from "../../components/Snackbar";
 import Footer from "../../components/Footer";
 import GoBackButton from "../../components/GoBackButton";
+import ShareButton from "../../components/ShareButton";
+import PastUsernames from "../../components/PastUsernames";
+import { useSnackbar } from "../../utils/snackbar";
 
 /**
  * @file ReportPostPreview.tsx
@@ -72,11 +75,7 @@ const ReportPostPreview = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showError, closeSnackbar } = useSnackbar();
 
   // Translation states (for post preview)
   const [showTranslation, setShowTranslation] = useState(false);
@@ -138,11 +137,7 @@ const ReportPostPreview = () => {
       const reports = await adminAPI.getReports();
       const currentReport = reports.find((r) => r._id === reportId);
       if (!currentReport) {
-        setSnackbar({
-          open: true,
-          message: t("somethingWentWrong"),
-          type: "error",
-        });
+        showError(t("somethingWentWrong"));
         return;
       }
       setReport(currentReport);
@@ -191,11 +186,7 @@ const ReportPostPreview = () => {
         }
       }
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("somethingWentWrong"),
-        type: "error",
-      });
+      showError(t("somethingWentWrong"));
     } finally {
       setLoading(false);
     }
@@ -316,11 +307,7 @@ const ReportPostPreview = () => {
       });
       setShowTranslation(true);
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("somethingWentWrong"),
-        type: "error",
-      });
+      showError(t("somethingWentWrong"));
     } finally {
       setTranslating(false);
     }
@@ -358,15 +345,28 @@ const ReportPostPreview = () => {
       setCommentTranslationCache(response.text);
       setCommentShowTranslation(true);
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("somethingWentWrong"),
-        type: "error",
-      });
+      showError(t("somethingWentWrong"));
     } finally {
       setCommentTranslating(false);
     }
   };
+
+  // Local EmptyState component for no data
+  const EmptyState = ({
+    icon,
+    title,
+    message
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    message?: string;
+  }) => (
+    <div className="empty-state">
+      <div className="empty-state-icon">{icon}</div>
+      <h3 className="empty-state-title">{title}</h3>
+      {message && <p className="empty-state-message">{message}</p>}
+    </div>
+  );
 
   if (loading) {
     return (
@@ -553,7 +553,7 @@ const ReportPostPreview = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
         <Footer />
       </div>
@@ -639,7 +639,7 @@ const ReportPostPreview = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
         <Footer />
       </div>
@@ -691,9 +691,16 @@ const ReportPostPreview = () => {
 
           {/* User Info */}
           <div className="flex-1">
-            <h1 className="preview-username">
-              @{user.username}
-            </h1>
+            <div className="d-flex justify-between items-center gap-3 mb-8">
+              <h1 className="preview-username mb-0">
+                @{user.username}
+              </h1>
+              <ShareButton
+                url={`${window.location.origin}/users/${user._id}`}
+                title={`@${user.username} - MangoTree Profile`}
+                description={user.bio || ""}
+              />
+            </div>
             <p className="preview-member-since">
               {t("memberSince")}: {formatDate(user.createdAt)}
             </p>
@@ -740,6 +747,11 @@ const ReportPostPreview = () => {
           </div>
         )}
 
+        {/* Previous Usernames */}
+        {user.pastUsernames && user.pastUsernames.length > 0 && (
+          <PastUsernames pastUsernames={user.pastUsernames} className="mb-24" />
+        )}
+
         {/* Divider */}
         <hr className="preview-divider" />
 
@@ -769,9 +781,10 @@ const ReportPostPreview = () => {
 
         {/* Posts Grid */}
         {filteredPosts.length === 0 ? (
-          <div className="loading loading-centered">
-            {t("noPostsFound")}
-          </div>
+          <EmptyState
+            icon={<span className="material-icons">article</span>}
+            title={t("noPostsFound")}
+          />
         ) : (
           <div className="cards-grid">
             {filteredPosts.map((post) => (
@@ -817,7 +830,7 @@ const ReportPostPreview = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
         <Footer />
       </div>
@@ -835,7 +848,7 @@ const ReportPostPreview = () => {
         message={snackbar.message}
         type={snackbar.type}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={closeSnackbar}
       />
       <Footer />
     </div>

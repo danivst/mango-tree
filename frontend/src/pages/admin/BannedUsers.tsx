@@ -8,11 +8,11 @@ import {
   SortState,
 } from "../../utils/table-utils";
 import "../../styles/shared.css";
-import "./BannedUsers.css";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
 import Footer from "../../components/Footer";
+import { useSnackbar } from "../../utils/snackbar";
 
 /**
  * @file BannedUsers.tsx
@@ -58,11 +58,7 @@ const BannedUsers = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const [unbanUserId, setUnbanUserId] = useState<string | null>(null); // New state for user to unban
   const [showUnbanConfirm, setShowUnbanConfirm] = useState(false); // New state for unban modal visibility
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null); // New state for user to delete
@@ -273,11 +269,7 @@ const BannedUsers = () => {
     try {
       await fetchBannedUsers();
     } catch (err: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToLoadBannedUsers"),
-        type: "error",
-      });
+      showError(t("failedToLoadBannedUsers"));
     }
   };
 
@@ -285,20 +277,12 @@ const BannedUsers = () => {
     if (!unbanUserId) return;
     try {
       await adminAPI.unbanUser(unbanUserId);
-      setSnackbar({
-        open: true,
-        message: `User ${userToUnban?.username} unbanned successfully.`,
-        type: "success",
-      });
+      showSuccess(`User ${userToUnban?.username} unbanned successfully.`);
       setShowUnbanConfirm(false);
       setUnbanUserId(null);
       await fetchBannedUsers(); // Refresh the list
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToUnbanUser"),
-        type: "error",
-      });
+      showError(t("failedToUnbanUser"));
     }
   };
 
@@ -324,21 +308,13 @@ const BannedUsers = () => {
     if (!deleteUserId) return;
     try {
       await adminAPI.deleteUser(deleteUserId, deleteReason);
-      setSnackbar({
-        open: true,
-        message: `User ${userToDelete?.username} deleted successfully.`,
-        type: "success",
-      });
+      showSuccess(`User ${userToDelete?.username} deleted successfully.`);
       setDeleteStep(null);
       setDeleteUserId(null);
       setDeleteReason("");
       await fetchBannedUsers(); // Refresh the list
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToDeleteUser"),
-        type: "error",
-      });
+      showError(t("failedToDeleteUser"));
     }
   };
 
@@ -349,6 +325,23 @@ const BannedUsers = () => {
   const userToDelete = useMemo(() => {
     return bannedUsers.find((user) => user._id === deleteUserId);
   }, [deleteUserId, bannedUsers]);
+
+  // Local EmptyState component for no data
+  const EmptyState = ({
+    icon,
+    title,
+    message
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    message?: string;
+  }) => (
+    <div className="empty-state">
+      <div className="empty-state-icon">{icon}</div>
+      <h3 className="empty-state-title">{title}</h3>
+      {message && <p className="empty-state-message">{message}</p>}
+    </div>
+  );
 
   return (
     <div>
@@ -389,7 +382,10 @@ const BannedUsers = () => {
           No data loaded. Click Refresh to load data.
         </div>
       ) : paginatedData.length === 0 ? (
-        <div className="no-results">{t("noBannedUsersFound")}</div>
+        <EmptyState
+          icon={<span className="material-icons">person_off</span>}
+          title={t("noBannedUsersFound")}
+        />
       ) : (
         <div
           className="table-container table-grab"
@@ -638,7 +634,7 @@ const BannedUsers = () => {
         message={snackbar.message}
         type={snackbar.type}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={closeSnackbar}
       />
       <Footer />
     </div>

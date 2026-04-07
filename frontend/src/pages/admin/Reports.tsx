@@ -10,6 +10,7 @@ import "./Reports.css";
 import api from "../../services/api";
 import Footer from "../../components/Footer";
 import GoBackButton from "../../components/GoBackButton";
+import { useSnackbar } from "../../utils/snackbar";
 
 /**
  * @file Reports.tsx
@@ -91,11 +92,7 @@ const Reports = () => {
   const [showReject, setShowReject] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [reason, setReason] = useState("");
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
   // Reason translation states
   const [showReasonTranslation, setShowReasonTranslation] = useState(false);
@@ -126,11 +123,7 @@ const Reports = () => {
     try {
       await fetchReports();
     } catch (err: any) {
-      setSnackbar({
-        open: true,
-        message: t("somethingWentWrong"),
-        type: "error",
-      });
+      showError(t("somethingWentWrong"));
     }
   };
 
@@ -192,57 +185,33 @@ const Reports = () => {
 
   const handleReject = async () => {
     if (!selectedReport || !reason.trim()) {
-      setSnackbar({
-        open: true,
-        message: t("pleaseProvideReason"),
-        type: "error",
-      });
+      showError(t("pleaseProvideReason"));
       return;
     }
 
     try {
       await adminAPI.rejectReport(selectedReport._id, reason);
-      setSnackbar({
-        open: true,
-        message: t("reportRejectedSuccess"),
-        type: "success",
-      });
+      showSuccess(t("reportRejectedSuccess"));
       handleBackToList();
       await fetchReports();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToRejectReport"),
-        type: "error",
-      });
+      showError(t("failedToRejectReport"));
     }
   };
 
   const handleDeleteItem = async () => {
     if (!selectedReport || !reason.trim()) {
-      setSnackbar({
-        open: true,
-        message: t("pleaseProvideReason"),
-        type: "error",
-      });
+      showError(t("pleaseProvideReason"));
       return;
     }
 
     try {
       await adminAPI.deleteReportedItem(selectedReport._id, reason);
-      setSnackbar({
-        open: true,
-        message: t("itemDeletedSuccess"),
-        type: "success",
-      });
+      showSuccess(t("itemDeletedSuccess"));
       handleBackToList();
       await fetchReports();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToDeleteItem"),
-        type: "error",
-      });
+      showError(t("failedToDeleteItem"));
     }
   };
 
@@ -418,12 +387,29 @@ const Reports = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
         <Footer />
       </div>
     );
   }
+
+  // Local EmptyState component for no data
+  const EmptyState = ({
+    icon,
+    title,
+    message
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    message?: string;
+  }) => (
+    <div className="empty-state">
+      <div className="empty-state-icon">{icon}</div>
+      <h3 className="empty-state-title">{title}</h3>
+      {message && <p className="empty-state-message">{message}</p>}
+    </div>
+  );
 
   // Otherwise show the list of reports
   return (
@@ -457,9 +443,10 @@ const Reports = () => {
           No data loaded. Click Refresh to load data.
         </div>
       ) : reports.length === 0 ? (
-        <div className="loading">
-          {t("noReports")}
-        </div>
+        <EmptyState
+          icon={<span className="material-icons">flag</span>}
+          title={t("noReports")}
+        />
       ) : (
         <div className="cards-grid">
           {reports.map((report) => (
@@ -485,7 +472,7 @@ const Reports = () => {
         message={snackbar.message}
         type={snackbar.type}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={closeSnackbar}
       />
       <Footer />
     </div>

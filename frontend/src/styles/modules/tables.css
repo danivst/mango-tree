@@ -1,0 +1,165 @@
+/* ============================================
+   TABLE & PAGINATION COMPONENTS
+   ============================================ */
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid var(--theme-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom scrollbar for table container */
+.table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: var(--theme-bg);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--theme-text);
+  border-radius: 4px;
+  opacity: 0.3;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  opacity: 0.6;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Poppins", sans-serif;
+}
+
+.table thead {
+  background: transparent;
+}
+
+.table th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--theme-text);
+  border-bottom: 2px solid var(--theme-text);
+}
+
+.table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--theme-text);
+  opacity: 1;
+  color: var(--theme-text);
+}
+
+.table tr:hover {
+  background: transparent;
+}
+
+/* Action buttons container - keeps buttons in single row */
+.table-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.table-actions .btn-admin-action,
+.table-actions .btn-danger,
+.table-actions .btn-primary,
+.table-actions .btn-secondary {
+  white-space: nowrap;
+}
+
+/* Action buttons in admin tables should have full opacity */
+.table td .btn-admin-action,
+.table td .btn-danger {
+  opacity: 1;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px;
+}
+
+.pagination-btn {
+  padding: 8px 16px;
+  background: var(--theme-accent);
+  color: var(--theme-text);
+  border: none;
+  border-radius: 6px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--theme-accent);
+  opacity: 0.8;
+}
+
+.pagination-btn:disabled {
+  background: var(--theme-accent);
+  color: var(--theme-text);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Pagination button alias used in admin pages */
+.pagination-button {
+  padding: 8px 16px;
+  background: var(--theme-accent);
+  color: var(--theme-text);
+  border: none;
+  border-radius: 6px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: var(--theme-accent);
+  opacity: 0.8;
+}
+
+.pagination-button:disabled {
+  background: var(--theme-accent);
+  color: var(--theme-text);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-button.active {
+  font-weight: 600;
+  border: 2px solid currentColor;
+}
+
+.pagination-info {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  color: var(--theme-text);
+}
+
+/* Sortable table headers */
+.sortable-header {
+  user-select: none;
+  cursor: pointer;
+}
+
+.sortable-header:hover {
+  background: transparent !important;
+}
+

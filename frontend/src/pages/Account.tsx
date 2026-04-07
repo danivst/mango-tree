@@ -6,8 +6,11 @@ import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
 import UserSidebar from "../components/UserSidebar";
 import Snackbar from "../components/Snackbar";
-import { getToken } from "../utils/auth";
+import { getCurrentUserId } from "../utils/auth";
+import { useSnackbar } from "../utils/snackbar";
 import PostCard from "../components/PostCard";
+import ShareButton from "../components/ShareButton";
+import PastUsernames from "../components/PastUsernames";
 import "../styles/shared.css";
 import "./Account.css";
 import Footer from "../components/Footer";
@@ -73,16 +76,7 @@ const Account = () => {
   const navigate = useNavigate();
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
-  const currentUserId = (() => {
-    const token = getToken();
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId || null;
-    } catch {
-      return null;
-    }
-  })();
+  const currentUserId = getCurrentUserId();
 
   const [user, setUser] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -95,11 +89,7 @@ const Account = () => {
   const [showBioModal, setShowBioModal] = useState(false);
   const [bioEditText, setBioEditText] = useState("");
   const [bioSubmitting, setBioSubmitting] = useState(false);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const [showBioTranslation, setShowBioTranslation] = useState(false);
 
   useEffect(() => {
@@ -120,11 +110,7 @@ const Account = () => {
       setPosts(postsRes.data);
     } catch (error: any) {
       console.error("Failed to fetch user data:", error);
-      setSnackbar({
-        open: true,
-        message: t("failedLoadUsers"),
-        type: "error",
-      });
+      showError(t("failedLoadUsers"));
     } finally {
       setLoading(false);
     }
@@ -151,11 +137,7 @@ const Account = () => {
     // Validate file type
     const supportedFormats = ["image/jpeg", "image/png", "image/webp"];
     if (!supportedFormats.includes(file.type)) {
-      setSnackbar({
-        open: true,
-        message: t("onlyJPGE"),
-        type: "error",
-      });
+      showError(t("onlyJPGE"));
       return;
     }
 
@@ -171,22 +153,14 @@ const Account = () => {
     if (!profileImagePreview) return;
     try {
       setSaving(true);
-      await api.put<UserProfile>(`/users/${currentUserId}`, { profileImage: profileImagePreview });
+      await api.put<UserProfile>(`/users/me`, { profileImage: profileImagePreview });
       setUser((prev: UserProfile | null) => (prev ? { ...prev, profileImage: profileImagePreview } : prev));
       setProfileImageFile(null);
       setProfileImagePreview("");
-      setSnackbar({
-        open: true,
-        message: t("profilePictureUpdated"),
-        type: "success",
-      });
+      showSuccess(t("profilePictureUpdated"));
     } catch (error: any) {
       console.error("Failed to update profile picture:", error);
-      setSnackbar({
-        open: true,
-        message: t("failedToUpdateProfilePicture"),
-        type: "error",
-      });
+      showError(t("failedToUpdateProfilePicture"));
     } finally {
       setSaving(false);
     }
@@ -217,18 +191,10 @@ const Account = () => {
     try {
       const updatedUser = await usersAPI.updateProfile({ bio: bioEditText });
       setUser(updatedUser);
-      setSnackbar({
-        open: true,
-        message: t("bioUpdated"),
-        type: "success",
-      });
+      showSuccess(t("bioUpdated"));
       handleCloseBioModal();
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToUpdateBio"),
-        type: "error",
-      });
+      showError(t("failedToUpdateBio"));
     } finally {
       setBioSubmitting(false);
     }
@@ -330,7 +296,14 @@ const Account = () => {
 
             {/* User Info */}
             <div className="flex-1">
-              <h1 className="profile-username">@{user.username}</h1>
+              <div className="d-flex justify-between items-center gap-3">
+                <h1 className="profile-username mb-0">@{user.username}</h1>
+                <ShareButton
+                  url={`${window.location.origin}/account`}
+                  title={`@${user.username} - My MangoTree Profile`}
+                  description={user.bio || ""}
+                />
+              </div>
               <p className="profile-meta">
                 {t("memberSince")}: {formatDate(user.createdAt)}
               </p>
@@ -397,6 +370,11 @@ const Account = () => {
             </div>
           </div>
 
+          {/* Previous Usernames */}
+          {user?.pastUsernames && user.pastUsernames.length > 0 && (
+            <PastUsernames pastUsernames={user.pastUsernames} className="mb-6" />
+          )}
+
           {/* Divider */}
           <hr className="page-divider" />
 
@@ -421,9 +399,12 @@ const Account = () => {
 
           {/* Posts Grid */}
           {filteredPosts.length === 0 ? (
-            <div className="loading">{selectedCategoryId ? t("noPostsFound") : t("selectCategory")}</div>
+            <div className="empty-state">
+              <span className="material-icons">article</span>
+              <h3 className="empty-state-title">{selectedCategoryId ? t("noPostsFound") : t("noPostsAvailable")}</h3>
+            </div>
           ) : (
-            <div className="account-posts-grid">
+            <div className="cards-grid posts-grid">
               {filteredPosts.map((post) => (
                 <PostCard key={post._id} post={post} />
               ))}
@@ -467,7 +448,7 @@ const Account = () => {
           message={snackbar.message}
           type={snackbar.type}
           open={snackbar.open}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={closeSnackbar}
         />
         <Footer />
       </div>

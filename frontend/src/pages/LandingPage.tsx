@@ -3,6 +3,7 @@ import { useThemeLanguage } from "../context/ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
 import "./LandingPage.css";
 import logo from "../assets/mangotree-logo.png";
+import Footer from "../components/Footer";
 
 /**
  * @file LandingPage.tsx
@@ -118,10 +119,7 @@ const LandingPage = () => {
           </div>
         </div>
       </main>
-      {/* Footer with copyright */}
-      <footer className="landing-footer">
-        <p>{t("copyright")}</p>
-      </footer>
+      <Footer />
     </div>
   );
 };

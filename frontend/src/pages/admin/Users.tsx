@@ -16,6 +16,8 @@ import { getTranslation, Language } from "../../utils/translations";
 import { useAdminData } from "../../context/AdminDataContext";
 import { Category } from "../../services/admin-api";
 import Footer from "../../components/Footer";
+import PastUsernames from "../../components/PastUsernames";
+import { useSnackbar } from "../../utils/snackbar";
 
 /**
  * @type DeleteStep
@@ -85,7 +87,7 @@ type BanUnbanStep = "warning" | "reason" | "confirm" | "unban_confirm" | null;
  */
 
 const Users = () => {
-  const { users, usersState, fetchUsers } = useAdminData();
+  const { users, usersState, fetchUsers, fetchReports, fetchFlaggedContent } = useAdminData();
   const { loading, error, hasFetched } = usersState;
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,11 +106,7 @@ const Users = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
+  const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
   // User Profile Preview states
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -343,11 +341,7 @@ const Users = () => {
     try {
       await fetchUsers();
     } catch (err: any) {
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || "Failed to load users",
-        type: "error",
-      });
+      showError(err.response?.data?.message || "Failed to load users");
     }
   };
 
@@ -379,21 +373,20 @@ const Users = () => {
 
     try {
       await adminAPI.deleteUser(deleteUserId, deleteReason);
-      setSnackbar({
-        open: true,
-        message: t("accountDeletedSuccessfully"),
-        type: "success",
-      });
+      showSuccess(t("accountDeletedSuccessfully"));
       setDeleteStep(null);
       setDeleteUserId(null);
       setDeleteReason("");
       await fetchUsers();
+      // Also refresh reports and flagged content to remove any related items (best effort)
+      try {
+        await fetchReports();
+        await fetchFlaggedContent();
+      } catch (err) {
+        console.error("Failed to fetch data after user deletion:", err);
+      }
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToDeleteUser"),
-        type: "error",
-      });
+      showError(t("failedToDeleteUser"));
     }
   };
 
@@ -414,11 +407,7 @@ const Users = () => {
     if (!banUserId || !banReason) return;
     try {
       await adminAPI.banUser(banUserId, banReason);
-      setSnackbar({
-        open: true,
-        message: `User ${userToBan?.username} banned successfully.`,
-        type: "success",
-      });
+      showSuccess(`User ${userToBan?.username} banned successfully.`);
       setBanUnbanStep(null);
       setBanUserId(null);
       setBanReason("");
@@ -429,11 +418,7 @@ const Users = () => {
       if (backendMessage === "user is already banned.") {
         displayMessage = t("userAlreadyBanned");
       }
-      setSnackbar({
-        open: true,
-        message: displayMessage,
-        type: "error",
-      });
+      showError(displayMessage);
     }
   };
 
@@ -447,20 +432,12 @@ const Users = () => {
 
     try {
       await adminAPI.unbanUser(userToUnban.banned_user_id);
-      setSnackbar({
-        open: true,
-        message: `User ${userToUnban?.username} unbanned successfully.`,
-        type: "success",
-      });
+      showSuccess(`User ${userToUnban?.username} unbanned successfully.`);
       setBanUnbanStep(null);
       setBanUserId(null);
       await fetchUsers(); // Refresh the user list
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToUnbanUser"),
-        type: "error",
-      });
+      showError(t("failedToUnbanUser"));
     }
   };
 
@@ -486,11 +463,7 @@ const Users = () => {
       setSelectedUser(userData);
       setPreviewLoading(false);
     } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: t("failedToLoadUserProfile"),
-        type: "error",
-      });
+      showError(t("failedToLoadUserProfile"));
       setPreviewLoading(false);
     }
   };
@@ -500,6 +473,23 @@ const Users = () => {
   const userToDelete = deleteUserId
     ? users.find((u) => u._id === deleteUserId)
     : null;
+
+  // Local EmptyState component for no data
+  const EmptyState = ({
+    icon,
+    title,
+    message
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    message?: string;
+  }) => (
+    <div className="empty-state">
+      <div className="empty-state-icon">{icon}</div>
+      <h3 className="empty-state-title">{title}</h3>
+      {message && <p className="empty-state-message">{message}</p>}
+    </div>
+  );
 
   return (
     <div>
@@ -538,6 +528,11 @@ const Users = () => {
         <div className="loading">
           No data loaded. Click Refresh to load data.
         </div>
+      ) : filteredData.length === 0 ? (
+        <EmptyState
+          icon={<span className="material-icons">person_off</span>}
+          title={t("noUsersFound")}
+        />
       ) : (
         <div
           className="table-container table-grab"
@@ -997,6 +992,11 @@ const Users = () => {
                   </div>
                 )}
 
+                {/* Past Usernames */}
+                {selectedUser?.pastUsernames && selectedUser.pastUsernames.length > 0 && (
+                  <PastUsernames pastUsernames={selectedUser.pastUsernames} className="preview-section mb-24" />
+                )}
+
                 {/* Divider */}
                 <hr className="preview-divider" />
 
@@ -1027,20 +1027,30 @@ const Users = () => {
                 )}
 
                 {/* Posts Grid */}
-                {userPosts.length === 0 ? (
-                  <div className="loading loading-centered">
-                    {t("noPostsFound")}
-                  </div>
-                ) : (
-                  <div className="cards-grid posts-grid">
-                    {userPosts
-                      .filter(
-                        (post) =>
-                          !selectedUserCategoryId ||
-                          (post.category &&
-                            post.category._id === selectedUserCategoryId),
-                      )
-                      .map((post) => (
+                {(() => {
+                  const filteredPosts = userPosts.filter(
+                    (post) =>
+                      !selectedUserCategoryId ||
+                      (post.category &&
+                        post.category._id === selectedUserCategoryId),
+                  );
+
+                  if (filteredPosts.length === 0) {
+                    return (
+                      <EmptyState
+                        icon={<span className="material-icons">article</span>}
+                        title={
+                          selectedUserCategoryId
+                            ? t("noPostsFound")
+                            : t("noPostsAvailable")
+                        }
+                      />
+                    );
+                  }
+
+                  return (
+                    <div className="cards-grid posts-grid">
+                      {filteredPosts.map((post) => (
                         <div
                           key={post._id}
                           className="card preview-post-card"
@@ -1087,7 +1097,7 @@ const Users = () => {
                         </div>
                       ))}
                   </div>
-                )}
+                )})()}
               </>
             )}
           </div>
@@ -1098,7 +1108,7 @@ const Users = () => {
         message={snackbar.message}
         type={snackbar.type}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={closeSnackbar}
       />
       <Footer />
     </div>

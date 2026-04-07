@@ -16,6 +16,7 @@ import {
   unbanUser,
   getBannedUsers,
 } from "../controllers/admin-controller";
+import { getActivityLogs } from "../controllers/activity-log-controller";
 import { auth } from "../utils/auth";
 import RoleTypeValue from "../enums/role-type";
 import { requireRole } from "../utils/auth";
@@ -77,5 +78,12 @@ router.post("/banned-users/:id/unban", auth, requireRole(RoleTypeValue.ADMIN), u
  * @access Admin only
  */
 router.get("/banned-users", auth, requireRole(RoleTypeValue.ADMIN), getBannedUsers);
+
+/**
+ * @route GET /logs
+ * @description Get activity logs for admin review
+ * @access Admin only
+ */
+router.get("/logs", auth, requireRole(RoleTypeValue.ADMIN), getActivityLogs);
 
 export default router;

@@ -1,4 +1,6 @@
-/* Users page specific styles */
+/* ============================================
+   USERS ADMIN PAGE
+   ============================================ */
 
 /* User link in table (underline) */
 .user-profile-link {
@@ -122,6 +124,31 @@
   color: var(--theme-text);
 }
 
+/* Preview Past Usernames */
+.preview-section-title {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  color: var(--theme-text);
+}
+
+.preview-past-usernames {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-past-usernames li {
+  background: var(--theme-bg);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--theme-text);
+  opacity: 0.9;
+}
+
 /* Preview Divider */
 .preview-divider {
   border: 0;
@@ -158,13 +185,6 @@
 .preview-category-tab:not(.active) {
   border: none;
   opacity: 0.6;
-}
-
-/* Preview Posts Grid */
-.posts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
 }
 
 /* Preview Post Card */

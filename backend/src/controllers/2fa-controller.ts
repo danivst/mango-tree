@@ -9,6 +9,7 @@ import { getDualTranslation } from "../utils/translation";
 import { AuthRequest } from "../interfaces/auth";
 import { get2FAEmailTemplate } from "../utils/email-templates";
 import { getLocalizedText } from "../utils/get-translation";
+import { logActivity } from "../utils/activity-logger";
 
 /**
  * @file 2fa-controller.ts
@@ -164,6 +165,13 @@ export const verify2FA = async (
     user.twoFactorCodeExpiry = undefined;
     await user.save();
 
+    // Log 2FA enable
+    await logActivity(req, '2FA_ENABLE', {
+      targetId: userId,
+      targetType: 'user',
+      description: 'Enabled two-factor authentication',
+    });
+
     // 6. issue authentication tokens (JWT & Refresh) for the new session
     const token = jwt.sign(
       { userId: user._id, username: user.username, role: user.role },
@@ -225,6 +233,13 @@ export const disable2FA = async (
     user.twoFactorCode = undefined;
     user.twoFactorCodeExpiry = undefined;
     await user.save();
+
+    // Log 2FA disable
+    await logActivity(req, '2FA_DISABLE', {
+      targetId: userId,
+      targetType: 'user',
+      description: 'Disabled two-factor authentication',
+    });
 
     return res.json({
       message: "two-factor authentication has been disabled successfully.",

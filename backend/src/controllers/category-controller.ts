@@ -3,6 +3,7 @@ import RoleTypeValue from "../enums/role-type";
 import Category from "../models/category";
 import { AuthRequest } from "../interfaces/auth";
 import { getDualTranslation } from "../utils/translation";
+import { logActivity } from "../utils/activity-logger";
 
 /**
  * @file category-controller.ts
@@ -80,6 +81,13 @@ export const createCategory = async (
       createdBy,
     });
 
+    // Log category creation
+    await logActivity(req, 'CATEGORY_CREATE', {
+      targetId: category._id.toString(),
+      targetType: 'category',
+      description: `Created category "${name}"`,
+    });
+
     return res.status(201).json({
       message: "Category created",
       category: {
@@ -132,6 +140,13 @@ export const updateCategory = async (
       return res.status(404).json({ message: "Category not found." });
     }
 
+    // Log category update
+    await logActivity(req, 'CATEGORY_UPDATE', {
+      targetId: id,
+      targetType: 'category',
+      description: `Updated category "${name}"`,
+    });
+
     return res.json({ message: "Category updated", category });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -161,6 +176,13 @@ export const deleteCategory = async (
     if (!category) {
       return res.status(404).json({ message: "Category not found." });
     }
+
+    // Log category deletion
+    await logActivity(req, 'CATEGORY_DELETE', {
+      targetId: id,
+      targetType: 'category',
+      description: `Deleted category "${category.name}"`,
+    });
 
     return res.json({ message: "Category deleted" });
   } catch (err: any) {

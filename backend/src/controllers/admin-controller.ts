@@ -11,6 +11,7 @@ import BannedUser from "../models/banned-user";
 import { sendEmail } from "../utils/email";
 import { getLocalizedText } from "../utils/get-translation";
 import { getGenericEmailTemplate } from "../utils/email-templates";
+import { logActivity } from "../utils/activity-logger";
 
 /**
  * Retrieves all posts pending approval.
@@ -87,9 +88,23 @@ export const approveContent = async (
         { new: true },
       );
       if (!post) return res.status(404).json({ message: "post not found." });
+
+      // Log content approval
+      await logActivity(req, 'CONTENT_APPROVE', {
+        targetId: id,
+        targetType: 'post',
+        description: `Approved post ${id}`,
+      });
     } else if (type === "comment") {
       const comment = await Comment.findByIdAndUpdate(id, { isVisible: true });
       if (!comment) return res.status(404).json({ message: "comment not found." });
+
+      // Log content approval
+      await logActivity(req, 'CONTENT_APPROVE', {
+        targetId: id,
+        targetType: 'comment',
+        description: `Approved comment ${id}`,
+      });
     }
 
     return res.json({ message: "content approved successfully." });
@@ -134,7 +149,7 @@ export const disapproveContent = async (
       await Post.findByIdAndDelete(id);
 
       // 3. notification: create a report feedback notification for the post author
-      const messageEn = `your post has been removed. reason: ${translatedReason.en}`;
+      const messageEn = `your post has been removed. reason: ${reason}`;
       const messageBg = `вашата публикация беше премахната. причина: ${translatedReason.bg}`;
 
       await Notification.create({
@@ -146,6 +161,13 @@ export const disapproveContent = async (
         },
         link: null,
       });
+
+      // Log content rejection
+      await logActivity(req, 'CONTENT_REJECT', {
+        targetId: id,
+        targetType: 'post',
+        description: `Rejected post ${id}. Reason: ${reason}`,
+      });
     } else if (type === "comment") {
       const comment = await Comment.findById(id);
       if (!comment) return res.status(404).json({ message: "comment not found." });
@@ -153,7 +175,7 @@ export const disapproveContent = async (
       const userId = comment.userId;
       await Comment.findByIdAndDelete(id);
 
-      const msgEn = `your comment has been removed. reason: ${translatedReason.en}`;
+      const msgEn = `your comment has been removed. reason: ${reason}`;
       const msgBg = `вашият коментар беше премахнат. причина: ${translatedReason.bg}`;
 
       await Notification.create({
@@ -164,6 +186,13 @@ export const disapproveContent = async (
           message: { en: msgEn, bg: msgBg },
         },
         link: null,
+      });
+
+      // Log content rejection
+      await logActivity(req, 'CONTENT_REJECT', {
+        targetId: id,
+        targetType: 'comment',
+        description: `Rejected comment ${id}. Reason: ${reason}`,
       });
     }
 
@@ -265,6 +294,13 @@ export const banUser = async (
       console.error("ban email failed to send.");
     }
 
+    // Log user ban
+    await logActivity(req, 'BAN_USER', {
+      targetId: userToBan._id.toString(),
+      targetType: 'user',
+      description: `Banned user ${userToBan.username}. Reason: ${ban_reason}`,
+    });
+
     return res.json({ message: `user ${userToBan.username} banned successfully.` });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -324,6 +360,13 @@ export const unbanUser = async (
         console.error("unban email failed.");
       }
     }
+
+    // Log user unban
+    await logActivity(req, 'UNBAN_USER', {
+      targetId: bannedUser.original_user_id.toString(),
+      targetType: 'user',
+      description: `Unbanned user ${bannedUser.username}`,
+    });
 
     // 3. cleanup: remove the record from the BannedUser collection
     await BannedUser.findByIdAndDelete(id);
