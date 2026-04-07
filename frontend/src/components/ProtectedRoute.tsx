@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { isTokenValid, clearAuth } from "../utils/auth";
 import { useEffect } from "react";
 
@@ -37,6 +37,8 @@ interface ProtectedRouteProps {
  */
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const location = useLocation();
+
   /**
    * Effect hook that runs on component mount.
    * Checks for tokens that exist but have expired, clears them,
@@ -54,11 +56,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   /**
    * Main render logic:
-   * - If no valid token → redirect to login page
+   * - If no valid token → redirect to login page with the current path as redirect parameter
    * - If valid token exists → render child components (protected content)
    */
   if (!isTokenValid()) {
-    return <Navigate to="/login" replace />;
+    const redirectPath = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?redirect=${redirectPath}`} replace />;
   }
 
   return <>{children}</>;

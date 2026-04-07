@@ -42,6 +42,9 @@ const Login = () => {
   const t = (key: string) => getTranslation(language, key);
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
+  // Get redirect URL from query params (where to go after login)
+  const redirectPath = new URLSearchParams(location.search).get('redirect') || '/home';
+
   const [activeTab, setActiveTab] = useState<"login" | "signin">(() => {
     if (location.pathname === "/signin") return "signin";
     return "login";
@@ -179,7 +182,8 @@ const Login = () => {
       await loadUserPreferences();
       await refreshUnreadCount();
 
-      const redirectTo = response.redirectTo || "/home";
+      // Decode the redirect URL from query param (if present)
+      const redirectTo = redirectPath ? decodeURIComponent(redirectPath) : (response.redirectTo || "/home");
       setTimeout(() => {
         navigate(redirectTo);
       }, 1000);
@@ -289,7 +293,8 @@ const Login = () => {
       setTwoFAUserId(null);
       setTwoFACode("");
 
-      const redirectTo = response.redirectTo || "/home";
+      // Decode the redirect URL from query param (if present)
+      const redirectTo = redirectPath ? decodeURIComponent(redirectPath) : (response.redirectTo || "/home");
       setTimeout(() => {
         navigate(redirectTo);
       }, 1000);
@@ -345,8 +350,10 @@ const Login = () => {
       setSigninEmail("");
       setSigninPassword("");
 
+      // Decode the redirect URL from query param (if present)
+      const redirectTo = redirectPath ? decodeURIComponent(redirectPath) : "/home";
       setTimeout(() => {
-        navigate("/home");
+        navigate(redirectTo);
       }, 1000);
     } catch (error: any) {
       const errorData = error.response?.data;
