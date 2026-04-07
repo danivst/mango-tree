@@ -1,5 +1,4 @@
 import { jwtDecode } from "jwt-decode";
-import { clearCookie } from "./cookies";
 import type { RoleType } from "./types";
 
 /**

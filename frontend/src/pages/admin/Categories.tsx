@@ -1,127 +1,79 @@
 import { useState, useEffect, useMemo } from "react";
-import { adminAPI, Category } from "../../services/admin-api";
-import Snackbar from "../../components/Snackbar";
-import {
-  sortData,
-  paginateData,
-  getTotalPages,
-  SortState,
-} from "../../utils/table-utils";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
-import { useAdminData } from "../../context/AdminDataContext";
+import { adminAPI, Category } from "../../services/admin-api";
+import { sortData, paginateData, getTotalPages, SortState } from "../../utils/table-utils";
 import "../../styles/shared.css";
 import Footer from "../../components/Footer";
+import Snackbar from "../../components/Snackbar";
 import { useSnackbar } from "../../utils/snackbar";
-
-/**
- * @file Categories.tsx
- * @description Admin page for managing post categories.
- * View, create, edit, and delete content categories used for post organization.
- *
- * Features:
- * - List all categories with name and post count
- * - Add new category via inline form
- * - Edit category name with modal
- * - Delete category with confirmation
- * - Sortable columns: name, postCount
- * - Search filter by category name
- * - Pagination (20 per page)
- *
- * CRUD Operations:
- * - Create: POST /api/admin/categories { name }
- * - Update: PUT /api/admin/categories/:id { name }
- * - Delete: DELETE /api/admin/categories/:id
- *
- * Data Source:
- * - Uses AdminDataContext.categories (fetched by initialize() or fetchCategories())
- *
- * Access Control:
- * - Route protected by AdminRoute (admin only)
- *
- * @page
- * @requires useState - Categories list, form inputs, search, sort, pagination, modal state
- * @requires useMemo - Filtered/sorted/paginated computed list
- * @requires useThemeLanguage - Translations and language switcher
- * @requires useAdminData - Access to categories array and categoriesState
- * @requires adminAPI - All CRUD operations for categories
- * @requires Snackbar - Success/error feedback
- * @requires Footer - Footer component
- * @requires sortData, paginateData, getTotalPages - Table utilities
- */
+import { useAdminData } from "../../context/AdminDataContext";
+import { AdminTable, ColumnDef } from "../../components/AdminTable";
 
 const Categories = () => {
   const { categories, categoriesState, fetchCategories } = useAdminData();
   const { loading, error, hasFetched } = categoriesState;
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
+
+  // States
   const [searchQuery, setSearchQuery] = useState("");
-  const [showAddCategory, setShowAddCategory] = useState(false);
-  const [categoryName, setCategoryName] = useState("");
-  const [sortState, setSortState] = useState<SortState>({
-    column: null,
-    direction: null,
-  });
+  const [sortState, setSortState] = useState<SortState>({ column: null, direction: null });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
   const [editCategoryName, setEditCategoryName] = useState("");
 
-  const filteredData = useMemo(() => {
-    let filtered = categories;
-    if (searchQuery.trim() !== "") {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((cat) =>
-        cat.name.toLowerCase().includes(query),
-      );
-    }
-    return filtered;
-  }, [searchQuery, categories]);
-
-  const sortedData = useMemo(() => {
-    return sortData(
-      filteredData,
-      sortState.column,
-      sortState.direction,
-      (cat, column) => {
-        switch (column) {
-          case "name":
-            return cat.name;
-          case "added":
-            return cat.createdAt;
-          case "by":
-            return cat.createdBy || "System";
-          default:
-            return null;
-        }
-      },
-    );
-  }, [filteredData, sortState]);
-
-  const paginatedData = useMemo(() => {
-    return paginateData(sortedData, currentPage, itemsPerPage);
-  }, [sortedData, currentPage, itemsPerPage]);
-
-  const totalPages = useMemo(() => {
-    return getTotalPages(sortedData.length, itemsPerPage);
-  }, [sortedData.length, itemsPerPage]);
-
+  // Reset to first page when search changes
   useEffect(() => {
-    setCurrentPage(1); // Reset to first page when search changes
+    setCurrentPage(1);
   }, [searchQuery]);
 
+  // Filter: search by category name only
+  const filteredCategories = useMemo(() => {
+    if (!hasFetched) return [];
+    if (searchQuery.trim() === "") return categories;
+    const query = searchQuery.toLowerCase();
+    return categories.filter(cat => cat.name.toLowerCase().includes(query));
+  }, [categories, searchQuery, hasFetched]);
+
+  // Sort
+  const sortedCategories = useMemo(() => {
+    return sortData(filteredCategories, sortState.column, sortState.direction, (cat, column) => {
+      switch (column) {
+        case 'name':
+          return cat.name;
+        case 'added':
+          return cat.createdAt;
+        case 'by':
+          return cat.createdBy || "System";
+        default:
+          return "";
+      }
+    });
+  }, [filteredCategories, sortState]);
+
+  // Paginate
+  const paginatedCategories = useMemo(() => {
+    return paginateData(sortedCategories, currentPage, itemsPerPage);
+  }, [sortedCategories, currentPage]);
+
+  const totalPages = useMemo(() => {
+    return getTotalPages(sortedCategories.length, itemsPerPage);
+  }, [sortedCategories.length]);
+
   const handleSort = (column: string) => {
-    setSortState((prev) => {
+    setSortState(prev => {
       if (prev.column === column) {
-        if (prev.direction === "asc") {
-          return { column, direction: "desc" };
-        } else if (prev.direction === "desc") {
-          return { column: null, direction: null };
-        }
+        if (prev.direction === "asc") return { column, direction: "desc" };
+        if (prev.direction === "desc") return { column: null, direction: null };
       }
       return { column, direction: "asc" };
     });
@@ -158,6 +110,20 @@ const Categories = () => {
     setShowDeleteModal(true);
   };
 
+  const handleDeleteCategoryConfirm = async () => {
+    if (!deleteCategoryId) return;
+    try {
+      await adminAPI.deleteCategory(deleteCategoryId);
+      showSuccess(t("categoryDeleted"));
+      await fetchCategories();
+    } catch (error: any) {
+      showError(t("deleteCategoryError"));
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteCategoryId(null);
+    }
+  };
+
   const handleEditClick = (category: Category) => {
     setEditCategoryId(category._id);
     setEditCategoryName(category.name);
@@ -179,180 +145,82 @@ const Categories = () => {
     }
   };
 
-  const handleDeleteCategoryConfirm = async () => {
-    if (!deleteCategoryId) return;
-    try {
-      await adminAPI.deleteCategory(deleteCategoryId);
-      showSuccess(t("categoryDeleted"));
-      await fetchCategories();
-    } catch (error: any) {
-      showError(t("deleteCategoryError"));
-    } finally {
-      setShowDeleteModal(false);
-      setDeleteCategoryId(null);
+  // Columns definition
+  const columns: ColumnDef<Category>[] = [
+    {
+      key: 'name',
+      label: t('category'),
+      sortable: true,
+      minWidth: '200px',
+      render: (cat) => cat.name
+    },
+    {
+      key: 'by',
+      label: t('by'),
+      sortable: true,
+      minWidth: '150px',
+      render: (cat) => {
+        return cat.createdBy
+          ? t(cat.createdBy.toLowerCase()) || cat.createdBy
+          : t("system");
+      }
     }
-  };
+  ];
 
-  // Local EmptyState component for no data
-  const EmptyState = ({
-    icon,
-    title,
-    message
-  }: {
-    icon: React.ReactNode;
-    title: string;
-    message?: string;
-  }) => (
-    <div className="empty-state">
-      <div className="empty-state-icon">{icon}</div>
-      <h3 className="empty-state-title">{title}</h3>
-      {message && <p className="empty-state-message">{message}</p>}
-    </div>
-  );
+  // Empty state
+  const emptyState = {
+    icon: <span className="material-icons">category</span>,
+    title: t('noCategoriesFound')
+  };
 
   return (
     <div>
-      <div className="page-container-header">
-        <h1 className="page-container-title">{t("categories")}</h1>
-        <div className="page-container-actions">
-          <button
-            className="btn-secondary icon-btn mr-2"
-            onClick={handleRefresh}
-            disabled={loading}
-          >
-            <span className="material-icons text-base">
-              refresh
-            </span>
-            {t("refresh")}
-          </button>
-          <input
-            type="text"
-            className="search-input"
-            placeholder={
-              t("search") + " " + t("categories").toLowerCase() + "..."
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      <h1 className="page-container-title">{t("categories")}</h1>
+
+      <AdminTable<Category>
+        data={paginatedCategories}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        sortState={sortState}
+        onSort={handleSort}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        columns={columns}
+        loading={loading}
+        error={error}
+        hasFetched={hasFetched}
+        onRefresh={handleRefresh}
+        emptyState={emptyState}
+        filterControls={
           <button
             className="btn-primary"
             onClick={() => setShowAddCategory(true)}
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             {t("addCategory")}
           </button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="error-box-colored">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="loading">{t("loading")}</div>
-      ) : !hasFetched ? (
-        <div className="loading">
-          No data loaded. Click Refresh to load data.
-        </div>
-      ) : filteredData.length === 0 ? (
-        <EmptyState
-          icon={<span className="material-icons">category</span>}
-          title={t("noCategoriesFound")}
-        />
-      ) : (
-        <div className="table-container">
-          <table className="table">
-            <thead>
-              <tr>
-                <th
-                  className="sortable-header"
-                  onClick={() => handleSort("name")}
-                >
-                  <div className="header-content">
-                    {t("category")}
-                  </div>
-                </th>
-                <th
-                  className="sortable-header"
-                  onClick={() => handleSort("by")}
-                >
-                  <div className="header-content">
-                    {t("by")}
-                  </div>
-                </th>
-                <th>{t("actions")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.map((category) => (
-                <tr key={category._id}>
-                  <td>{category.name}</td>
-                  <td>
-                    {category.createdBy
-                      ? t(category.createdBy.toLowerCase()) ||
-                        category.createdBy
-                      : t("system")}
-                  </td>
-                  <td>
-                    <div className="table-actions">
-                      <button
-                        className="btn-danger"
-                        onClick={() => handleDeleteCategoryClick(category._id)}
-                      >
-                        {t("delete")}
-                      </button>
-                      <button
-                        className="btn-admin-action"
-                        onClick={() => handleEditClick(category)}
-                      >
-                        {t("edit")}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button
-                className="pagination-button"
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                {t("previous")}
-              </button>
-              <span className="pagination-info">
-                {t("page")} {currentPage} {t("of")} {totalPages}
-              </span>
-              <button
-                className="pagination-button"
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                disabled={currentPage === totalPages}
-              >
-                {t("next")}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+        }
+        actionsRender={(category) => (
+          <div className="table-actions">
+            <button
+              className="btn-danger"
+              onClick={() => handleDeleteCategoryClick(category._id)}
+            >
+              {t("delete")}
+            </button>
+            <button
+              className="btn-admin-action"
+              onClick={() => handleEditClick(category)}
+            >
+              {t("edit")}
+            </button>
+          </div>
+        )}
+      />
 
       {/* Delete Category Modal */}
       {showDeleteModal && (
@@ -396,9 +264,7 @@ const Categories = () => {
                   onChange={(e) => setCategoryName(e.target.value)}
                   required
                   maxLength={20}
-                  placeholder={
-                    t("enterCategoryName")
-                  }
+                  placeholder={t("enterCategoryName")}
                 />
                 <p className="helper-text">
                   {categoryName.length}/20 {t("characters")}
@@ -439,9 +305,7 @@ const Categories = () => {
                   onChange={(e) => setEditCategoryName(e.target.value)}
                   required
                   maxLength={20}
-                  placeholder={
-                    t("enterCategoryName")
-                  }
+                  placeholder={t("enterCategoryName")}
                 />
                 <p className="helper-text">
                   {editCategoryName.length}/20 {t("characters")}

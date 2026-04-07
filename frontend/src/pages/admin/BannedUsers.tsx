@@ -1,55 +1,21 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { adminAPI } from "../../services/admin-api";
 import Snackbar from "../../components/Snackbar";
-import {
-  sortData,
-  paginateData,
-  getTotalPages,
-  SortState,
-} from "../../utils/table-utils";
-import "../../styles/shared.css";
+import { useAdminData } from "../../context/AdminDataContext";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
-import { useAdminData } from "../../context/AdminDataContext";
+import { sortData, paginateData, getTotalPages, SortState } from "../../utils/table-utils";
+import "../../styles/shared.css";
 import Footer from "../../components/Footer";
 import { useSnackbar } from "../../utils/snackbar";
-
-/**
- * @file BannedUsers.tsx
- * @description Admin page for viewing and managing banned users.
- * Displays users who have been banned, with ban reason and ban date.
- *
- * Features:
- * - List all banned users (from AdminDataContext)
- * - Sortable columns: username, email, ban reason, ban date
- * - Search filter by username/email
- * - Date range filter (ban date from/to) - UI present but filter not implemented
- * - Pagination (20 per page)
- * - Unban action with confirmation modal (immediate, no reason required)
- *
- * Data Source:
- * - Uses AdminDataContext.bannedUsers (fetched by initialize() or fetchBannedUsers())
- *
- * Access Control:
- * - Route protected by AdminRoute (admin only)
- *
- * @page
- * @requires useState - Banned users list, search, sort, pagination, modal state
- * @requires useEffect - No direct effect; data from AdminDataContext
- * @requires useMemo - Filtered/sorted/paginated computed list
- * @requires useThemeLanguage - Translations
- * @requires useAdminData - Access to bannedUsers array and bannedUsersState
- * @requires Snackbar - Feedback on unban success/error
- * @requires Footer - Footer component
- * @requires sortData, paginateData, getTotalPages - Table utilities
- */
+import { AdminTable, ColumnDef } from "../../components/AdminTable";
 
 const BannedUsers = () => {
   const { bannedUsers, bannedUsersState, fetchBannedUsers } = useAdminData();
   const { loading, error, hasFetched } = bannedUsersState;
   const [searchQuery, setSearchQuery] = useState("");
-  const [dateFrom, _setDateFrom] = useState("");
-  const [dateTo, _setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
   const [sortState, setSortState] = useState<SortState>({
@@ -59,75 +25,16 @@ const BannedUsers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
-  const [unbanUserId, setUnbanUserId] = useState<string | null>(null); // New state for user to unban
-  const [showUnbanConfirm, setShowUnbanConfirm] = useState(false); // New state for unban modal visibility
-  const [deleteUserId, setDeleteUserId] = useState<string | null>(null); // New state for user to delete
+  const [unbanUserId, setUnbanUserId] = useState<string | null>(null);
+  const [showUnbanConfirm, setShowUnbanConfirm] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [deleteStep, setDeleteStep] = useState<"warning" | "reason" | "confirm" | null>(null);
   const [deleteReason, setDeleteReason] = useState("");
 
-  // Refs for table container
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-
-  // Click-and-drag scrolling state
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartX = useRef(0);
-  const scrollStartLeft = useRef(0);
-
-  // Click-and-drag scrolling handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const container = tableContainerRef.current;
-    if (!container) return;
-
-    // Only start drag if clicking on the container (not on interactive elements like buttons/links)
-    if (
-      (e.target as HTMLElement).tagName === "INPUT" ||
-      (e.target as HTMLElement).tagName === "BUTTON" ||
-      (e.target as HTMLElement).tagName === "A" ||
-      (e.target as HTMLElement).closest("button") ||
-      (e.target as HTMLElement).closest("a")
-    ) {
-      return;
-    }
-
-    e.preventDefault();
-    setIsDragging(true);
-    dragStartX.current = e.clientX;
-    scrollStartLeft.current = container.scrollLeft;
-
-    document.body.style.userSelect = "none";
-    if (container) container.style.cursor = "grabbing";
-  };
-
+  // Reset to first page when filters change
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-
-      const container = tableContainerRef.current;
-      if (!container) return;
-
-      const deltaX = e.clientX - dragStartX.current;
-      container.scrollLeft = scrollStartLeft.current - deltaX;
-    };
-
-    const handleMouseUp = () => {
-      if (isDragging) {
-        setIsDragging(false);
-        document.body.style.userSelect = "";
-        const container = tableContainerRef.current;
-        if (container) container.style.cursor = "grab";
-      }
-    };
-
-    if (isDragging) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
-    }
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDragging]);
+    setCurrentPage(1);
+  }, [searchQuery, dateFrom, dateTo]);
 
   const filteredData = useMemo(() => {
     let filtered = bannedUsers;
@@ -178,7 +85,7 @@ const BannedUsers = () => {
           case "banned_at":
             return user.banned_at;
           default:
-            return null;
+            return "";
         }
       },
     );
@@ -186,15 +93,11 @@ const BannedUsers = () => {
 
   const paginatedData = useMemo(() => {
     return paginateData(sortedData, currentPage, itemsPerPage);
-  }, [sortedData, currentPage, itemsPerPage]);
+  }, [sortedData, currentPage]);
 
   const totalPages = useMemo(() => {
     return getTotalPages(sortedData.length, itemsPerPage);
-  }, [sortedData.length, itemsPerPage]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, dateFrom, dateTo]);
+  }, [sortedData.length]);
 
   const handleSort = (column: string) => {
     setSortState((prev) => {
@@ -210,67 +113,17 @@ const BannedUsers = () => {
     setCurrentPage(1);
   };
 
-  const getSortIcon = (column: string) => {
-    if (sortState.column !== column) {
-      return (
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="sort-icon-inactive"
-        >
-          <path d="M8 9l4-4 4 4M8 15l4 4 4-4" />
-        </svg>
-      );
-    }
-    if (sortState.direction === "asc") {
-      return (
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M8 9l4-4 4 4" />
-        </svg>
-      );
-    }
-    return (
-      <svg
-        width="12"
-        height="12"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M8 15l4 4 4-4" />
-      </svg>
-    );
-  };
-
-  const handleUnbanClick = (bannedUserId: string) => {
-    setUnbanUserId(bannedUserId);
-    setShowUnbanConfirm(true);
-  };
-
   const handleRefresh = async () => {
     try {
       await fetchBannedUsers();
     } catch (err: any) {
       showError(t("failedToLoadBannedUsers"));
     }
+  };
+
+  const handleUnbanClick = (bannedUserId: string) => {
+    setUnbanUserId(bannedUserId);
+    setShowUnbanConfirm(true);
   };
 
   const handleUnbanConfirm = async () => {
@@ -280,7 +133,7 @@ const BannedUsers = () => {
       showSuccess(`User ${userToUnban?.username} unbanned successfully.`);
       setShowUnbanConfirm(false);
       setUnbanUserId(null);
-      await fetchBannedUsers(); // Refresh the list
+      await fetchBannedUsers();
     } catch (error: any) {
       showError(t("failedToUnbanUser"));
     }
@@ -312,7 +165,7 @@ const BannedUsers = () => {
       setDeleteStep(null);
       setDeleteUserId(null);
       setDeleteReason("");
-      await fetchBannedUsers(); // Refresh the list
+      await fetchBannedUsers();
     } catch (error: any) {
       showError(t("failedToDeleteUser"));
     }
@@ -326,179 +179,104 @@ const BannedUsers = () => {
     return bannedUsers.find((user) => user._id === deleteUserId);
   }, [deleteUserId, bannedUsers]);
 
-  // Local EmptyState component for no data
-  const EmptyState = ({
-    icon,
-    title,
-    message
-  }: {
-    icon: React.ReactNode;
-    title: string;
-    message?: string;
-  }) => (
-    <div className="empty-state">
-      <div className="empty-state-icon">{icon}</div>
-      <h3 className="empty-state-title">{title}</h3>
-      {message && <p className="empty-state-message">{message}</p>}
-    </div>
-  );
+  // Columns definition
+  const columns: ColumnDef<any>[] = [
+    {
+      key: 'username',
+      label: t('username'),
+      sortable: true,
+      minWidth: '150px',
+      render: (user) => user.username
+    },
+    {
+      key: 'email',
+      label: t('email'),
+      sortable: true,
+      minWidth: '200px',
+      render: (user) => user.email
+    },
+    {
+      key: 'ban_reason',
+      label: t('reasonForBan'),
+      sortable: true,
+      minWidth: '200px',
+      render: (user) => user.ban_reason
+    },
+    {
+      key: 'banned_at',
+      label: t('bannedAt'),
+      sortable: true,
+      minWidth: '150px',
+      render: (user) => new Date(user.banned_at).toLocaleDateString(
+        language === "bg" ? "bg-BG" : "en-US",
+        { year: "numeric", month: "short", day: "numeric" }
+      )
+    }
+  ];
+
+  // Empty state
+  const emptyState = {
+    icon: <span className="material-icons">person_off</span>,
+    title: t('noBannedUsersFound')
+  };
 
   return (
     <div>
-      <div className="page-container-header">
-        <h1 className="page-container-title">{t("bannedUsers")}</h1>
-        <div className="page-container-actions">
-          <button
-            className="btn-secondary icon-btn mr-2"
-            onClick={handleRefresh}
-            disabled={loading}
-          >
-            <span className="material-icons text-base">
-              refresh
-            </span>
-            {t("refresh")}
-          </button>
-          <input
-            type="text"
-            className="search-input"
-            placeholder={t("search") + "..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {/* Date range filters can be added here if needed */}
-        </div>
-      </div>
+      <h1 className="page-container-title">{t("bannedUsers")}</h1>
 
-      {error && (
-        <div className="error-box-colored">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="loading">Loading...</div>
-      ) : !hasFetched ? (
-        <div className="loading">
-          No data loaded. Click Refresh to load data.
-        </div>
-      ) : paginatedData.length === 0 ? (
-        <EmptyState
-          icon={<span className="material-icons">person_off</span>}
-          title={t("noBannedUsersFound")}
-        />
-      ) : (
-        <div
-          className="table-container table-grab"
-          ref={tableContainerRef}
-          onMouseDown={handleMouseDown}
-        >
-          {/* Main table with bottom scrollbar */}
-          <table className="table">
-            <thead>
-              <tr>
-                <th
-                  className="sortable-header min-w-150"
-                  onClick={() => handleSort("username")}
-                >
-                  <div className="sort-header-content">
-                    {t("username")}
-                    {getSortIcon("username")}
-                  </div>
-                </th>
-                <th
-                  className="sortable-header min-w-200"
-                  onClick={() => handleSort("email")}
-                >
-                  <div className="sort-header-content">
-                    {t("email")}
-                    {getSortIcon("email")}
-                  </div>
-                </th>
-                <th
-                  className="sortable-header min-w-200"
-                  onClick={() => handleSort("ban_reason")}
-                >
-                  <div className="sort-header-content">
-                    {t("reasonForBan")}
-                    {getSortIcon("ban_reason")}
-                  </div>
-                </th>
-                <th
-                  className="sortable-header min-w-150"
-                  onClick={() => handleSort("banned_at")}
-                >
-                  <div className="sort-header-content">
-                    {t("bannedAt")}
-                    {getSortIcon("banned_at")}
-                  </div>
-                </th>
-                <th className="min-w-100">{t("actions")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.map((bannedUser) => (
-                <tr key={bannedUser._id}>
-                  <td>{bannedUser.username}</td>
-                  <td>{bannedUser.email}</td>
-                  <td>{bannedUser.ban_reason}</td>
-                  <td>
-                    {new Date(bannedUser.banned_at).toLocaleDateString(
-                      language === "bg" ? "bg-BG" : "en-US",
-                      {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      },
-                    )}
-                  </td>
-                  <td>
-                    <div className="table-actions">
-                      <button
-                        className="btn-danger"
-                        onClick={() => handleDeleteClick(bannedUser._id)}
-                      >
-                        {t("delete")}
-                      </button>
-                      <button
-                        className="btn-admin-action"
-                        onClick={() => handleUnbanClick(bannedUser._id)}
-                      >
-                        {t("unban")}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button
-                className="pagination-button"
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                {t("previous")}
-              </button>
-              <span className="pagination-info">
-                {t("page")} {currentPage} {t("of")} {totalPages} (
-                {sortedData.length} {t("total")})
-              </span>
-              <button
-                className="pagination-button"
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                disabled={currentPage === totalPages}
-              >
-                {t("next")}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <AdminTable<any>
+        data={paginatedData}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        sortState={sortState}
+        onSort={handleSort}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        columns={columns}
+        loading={loading}
+        error={error}
+        hasFetched={hasFetched}
+        onRefresh={handleRefresh}
+        emptyState={emptyState}
+        enableDragScroll={true}
+        filterControls={
+          <>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="date-input"
+              placeholder="From"
+              style={{ minWidth: '150px' }}
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="date-input"
+              placeholder="To"
+              style={{ minWidth: '150px' }}
+            />
+          </>
+        }
+        actionsRender={(user) => (
+          <div className="table-actions">
+            <button
+              className="btn-danger"
+              onClick={() => handleDeleteClick(user._id)}
+            >
+              {t("delete")}
+            </button>
+            <button
+              className="btn-admin-action"
+              onClick={() => handleUnbanClick(user._id)}
+            >
+              {t("unban")}
+            </button>
+          </div>
+        )}
+      />
 
       {/* Unban Confirmation Modal */}
       {showUnbanConfirm && userToUnban && (
@@ -536,9 +314,7 @@ const BannedUsers = () => {
             {deleteStep === "warning" && (
               <>
                 <h2 className="modal-title">{t("deleteAccount")}</h2>
-                <p className="modal-text">
-                  {t("adminDeleteAccountWarning")}
-                </p>
+                <p className="modal-text">{t("adminDeleteAccountWarning")}</p>
                 <div className="modal-actions">
                   <button
                     className="btn-secondary"
@@ -561,9 +337,7 @@ const BannedUsers = () => {
 
             {deleteStep === "reason" && (
               <>
-                <h2 className="modal-title">
-                  {t("adminReasonForDeletion")}
-                </h2>
+                <h2 className="modal-title">{t("adminReasonForDeletion")}</h2>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -571,9 +345,7 @@ const BannedUsers = () => {
                   }}
                 >
                   <div className="form-group">
-                    <label className="form-label">
-                      {t("adminReasonForDeletion")}
-                    </label>
+                    <label className="form-label">{t("adminReasonForDeletion")}</label>
                     <textarea
                       className="form-textarea"
                       value={deleteReason}
@@ -603,10 +375,7 @@ const BannedUsers = () => {
               <>
                 <h2 className="modal-title">{t("adminConfirmDeletion")}</h2>
                 <p className="modal-text">
-                  {t("adminConfirmDeletionText").replace(
-                    "{username}",
-                    userToDelete.username,
-                  )}
+                  {t("adminConfirmDeletionText").replace("{username}", userToDelete.username)}
                 </p>
                 <div className="modal-actions">
                   <button

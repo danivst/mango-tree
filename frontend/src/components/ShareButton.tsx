@@ -112,7 +112,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ url, title, description = "",
           <div className="share-menu-backdrop" onClick={closeMenu}></div>
           <div className="share-menu">
             {/* Native Share (if available) */}
-            {navigator.share && (
+            {'share' in navigator && (
               <button className="share-menu-item" onClick={handleNativeShare}>
                 <span className="material-icons">send</span>
                 <span>{t("shareNative")}</span>

@@ -294,15 +294,6 @@ const Home = () => {
     }
   }, [currentUserId, isSearching, loadInitialFeed]);
 
-  // Refs to hold latest values for observer callback
-  const loadMoreFeedRef = useRef(loadMoreFeed);
-  const loadMoreSearchRef = useRef(loadMoreSearch);
-  const feedLoadingRef = useRef(feedLoading);
-  const feedHasMoreRef = useRef(feedHasMore);
-  const searchLoadingRef = useRef(searchLoading);
-  const searchHasMoreRef = useRef(searchHasMore);
-  const isSearchingRef = useRef(isSearching);
-
   // Note: Using explicit "Load More" button instead of infinite scroll sentinel
 
 

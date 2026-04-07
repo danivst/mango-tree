@@ -157,12 +157,13 @@
 }
 
 .text-muted {
+  color: var(--theme-text);
   opacity: 0.6;
   font-style: italic;
 }
 
 .target-link {
-  color: var(--theme-accent);
+  color: var(--theme-text);
   text-decoration: none;
   font-size: 13px;
   font-family: 'Monaco', 'Menlo', monospace;
@@ -170,6 +171,7 @@
 
 .target-link:hover {
   text-decoration: underline;
+  color: var(--theme-accent);
 }
 
 .action-badge {
@@ -181,7 +183,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background: var(--theme-accent-alpha);
-  color: var(--theme-accent);
+  color: var(--theme-text);
   border: 1px solid var(--theme-accent);
 }
 

@@ -2,40 +2,16 @@ import { useState, useEffect, useMemo } from "react";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import { adminAPI } from "../../services/admin-api";
-import { useSnackbar } from "../../utils/snackbar";
-import Footer from "../../components/Footer";
+import { SortState } from "../../utils/table-utils";
+import "../../styles/shared.css";
 import "./ActivityLog.css";
+import Footer from "../../components/Footer";
+import { useSnackbar } from "../../utils/snackbar";
+import { AdminTable, ColumnDef } from "../../components/AdminTable";
 
-/**
- * @file ActivityLog.tsx
- * @description Admin activity log page - view and audit user actions.
- * Provides searchable/filterable table of all logged activities with full context.
- *
- * Features:
- * - Search by username or description
- * - Filter by action type (dropdown)
- * - Filter by date range (start and end date)
- * - Clear filters button
- * - Sortable table columns (Date, User, Action, Target)
- * - Pagination
- * - Shows: Date, User, Action Type, Target (with link if applicable), Description, IP Address
- *
- * Data Source:
- * - adminAPI.getActivityLogs() endpoint
- *
- * Access Control:
- * - Route protected by AdminRoute (admin only)
- *
- * @page
- */
-
-// Interface for an activity log entry
 interface ActivityLogEntry {
   _id: string;
-  userId: {
-    _id: string;
-    username: string;
-  } | null;
+  userId: { _id: string; username: string } | null;
   actionType: string;
   targetId?: string;
   targetType?: string;
@@ -56,7 +32,7 @@ const ActivityLog = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const limit = 50; // per page
+  const limit = 50;
 
   // Filters
   const [search, setSearch] = useState("");
@@ -64,12 +40,9 @@ const ActivityLog = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // Sorting state: { key: string, direction: 'asc' | 'desc' }
-  const [sortState, setSortState] = useState<{
-    key: string;
-    direction: "asc" | "desc";
-  }>({
-    key: "createdAt",
+  // Sorting state
+  const [sortState, setSortState] = useState<SortState>({
+    column: "createdAt",
     direction: "desc",
   });
 
@@ -95,55 +68,36 @@ const ActivityLog = () => {
     }
   };
 
-  const handleRefresh = async () => {
-    // Refresh without changing page state
-    setLoading(true);
-    try {
-      const response = await adminAPI.getActivityLogs({
-        page,
-        limit,
-        search: search || undefined,
-        actionType: actionType || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
-      });
-      setLogs(response.logs);
-      setTotalPages(response.totalPages);
-    } catch (error: any) {
-      console.error("Failed to refresh activity logs:", error);
-      showError(t("somethingWentWrong"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchLogs();
-  }, [page, search, actionType, startDate, endDate]); // Include filter dependencies
+  }, [page, search, actionType, startDate, endDate]);
 
   // Handle sorting
-  const handleSort = (key: string) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortState.key === key && sortState.direction === "asc") {
-      direction = "desc";
-    }
-    setSortState({ key, direction });
+  const handleSort = (column: string) => {
+    setSortState((prev: SortState) => {
+      if (prev.column === column) {
+        if (prev.direction === "asc") return { column, direction: "desc" };
+        if (prev.direction === "desc") return { column: null, direction: null };
+      }
+      return { column, direction: "asc" };
+    });
+    // Do NOT reset page; sorting is client-side on current page data
   };
 
   // Sort logs on client side (since backend may not support sort, but we can sort by createdAt descending by default)
   const sortedLogs = useMemo(() => {
     const sorted = [...logs];
-    if (sortState.key) {
+    if (sortState.column) {
       sorted.sort((a, b) => {
-        let valA: any = a[sortState.key as keyof ActivityLogEntry];
-        let valB: any = b[sortState.key as keyof ActivityLogEntry];
+        let valA: any = a[sortState.column as keyof ActivityLogEntry];
+        let valB: any = b[sortState.column as keyof ActivityLogEntry];
         // Special case for nested username
-        if (sortState.key === "username") {
+        if (sortState.column === "username") {
           valA = a.userId?.username || "";
           valB = b.userId?.username || "";
         }
         // For dates
-        if (typeof valA === "string" && sortState.key === "createdAt") {
+        if (typeof valA === "string" && sortState.column === "createdAt") {
           valA = new Date(valA).getTime();
           valB = new Date(valB).getTime();
         }
@@ -159,13 +113,7 @@ const ActivityLog = () => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(
       language === "bg" ? "bg-BG" : "en-US",
-      {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }
+      { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }
     );
   };
 
@@ -188,23 +136,11 @@ const ActivityLog = () => {
           </a>
         );
       case "comment":
-        return (
-          <span className="text-muted">
-            comment: {entry.targetId.substring(0, 8)}...
-          </span>
-        );
+        return <span className="text-muted">comment: {entry.targetId.substring(0, 8)}...</span>;
       case "report":
-        return (
-          <span className="text-muted">
-            report: {entry.targetId.substring(0, 8)}...
-          </span>
-        );
+        return <span className="text-muted">report: {entry.targetId.substring(0, 8)}...</span>;
       default:
-        return (
-          <span className="text-muted">
-            {entry.targetType}: {entry.targetId.substring(0, 8)}...
-          </span>
-        );
+        return <span className="text-muted">{entry.targetType}: {entry.targetId.substring(0, 8)}...</span>;
     }
   };
 
@@ -252,7 +188,6 @@ const ActivityLog = () => {
       'REPORT_ITEM_DELETE': 'activityReportItemDelete',
     };
 
-    // Correct key for LIKE/UNLIKE based on targetType
     let key = keyMap[actionType];
     if (actionType === 'LIKE' && targetType === 'comment') {
       key = 'activityLikeComment';
@@ -262,9 +197,7 @@ const ActivityLog = () => {
 
     if (!key) return description;
 
-    // Extract parameters from description based on action type
     let params: Record<string, string> = {};
-
     try {
       switch (actionType) {
         case 'USERNAME_CHANGE':
@@ -297,7 +230,7 @@ const ActivityLog = () => {
         case 'CONTENT_APPROVE':
           const approveMatch = description.match(/Approved (.+) (.+)$/);
           if (approveMatch) {
-            params.type = approveMatch[1]; // 'post' or 'comment'
+            params.type = approveMatch[1];
             params.id = approveMatch[2];
           }
           break;
@@ -359,11 +292,9 @@ const ActivityLog = () => {
           break;
       }
     } catch (err) {
-      // If parsing fails, return original description
       return description;
     }
 
-    // Translate certain parameter values to their localized equivalents
     if (params.theme) params.theme = t(params.theme);
     if (params.language) {
       const langKey = params.language === 'en' ? 'english' : params.language === 'bg' ? 'bulgarian' : params.language;
@@ -375,7 +306,7 @@ const ActivityLog = () => {
     return t(key, params);
   };
 
-  // Unique action types for dropdown (could be derived from logs, but hardcoded common ones)
+  // Unique action types for dropdown
   const actionTypes = useMemo(() => {
     const types = new Set<string>();
     logs.forEach((log) => types.add(log.actionType));
@@ -390,178 +321,106 @@ const ActivityLog = () => {
     setPage(1);
   };
 
-  if (loading && page === 1) {
-    return (
-      <div className="activity-log-container">
-        <div className="loading-centered">
-          <span className="material-icons spin large">refresh</span>
-        </div>
-      </div>
-    );
-  }
+  // Columns definition
+  const columns: ColumnDef<ActivityLogEntry>[] = [
+    {
+      key: 'createdAt',
+      label: t('date'),
+      sortable: true,
+      minWidth: '150px',
+      render: (log) => formatDate(log.createdAt)
+    },
+    {
+      key: 'username',
+      label: t('user'),
+      sortable: true,
+      minWidth: '150px',
+      render: (log) => log.userId?.username || "—"
+    },
+    {
+      key: 'actionType',
+      label: t('action'),
+      sortable: true,
+      minWidth: '150px',
+      render: (log) => <span className="action-badge">{log.actionType}</span>
+    },
+    {
+      key: 'target',
+      label: t('target'),
+      sortable: false,
+      minWidth: '150px',
+      render: (log) => renderTarget(log)
+    },
+    {
+      key: 'description',
+      label: t('description'),
+      sortable: false,
+      render: (log) => getLocalizedDescription(log.actionType, log.description, log.targetType)
+    },
+    {
+      key: 'ipAddress',
+      label: t('ipAddress'),
+      sortable: false,
+      minWidth: '150px',
+      render: (log) => log.ipAddress || "—"
+    }
+  ];
+
+  // Empty state
+  const emptyState = {
+    icon: <span className="material-icons">history</span>,
+    title: t("noLogsFound")
+  };
 
   return (
-    <div className="activity-log-container">
-      <div className="page-header">
-        <h1 className="page-title">{t("activityLog")}</h1>
-        <button
-          className="btn-secondary icon-btn mr-2"
-          onClick={handleRefresh}
-          disabled={loading}
-        >
-          <span className={`material-icons text-base ${loading ? 'spin' : ''}`}>
-            refresh
-          </span>
-          {t("refresh")}
-        </button>
-      </div>
+    <div>
+      <h1 className="page-container-title">{t("activityLog")}</h1>
 
-      {/* Filters */}
-      <div className="filters-bar">
-        <div className="filter-group">
-          <input
-            type="text"
-            placeholder={t("searchLogs")}
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="search-input"
-          />
-        </div>
-        <div className="filter-group">
-          <select
-            value={actionType}
-            onChange={(e) => {
-              setActionType(e.target.value);
-              setPage(1);
-            }}
-            className="filter-select"
-          >
-            <option value="">{t("allActions")}</option>
-            {actionTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-group">
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => {
-              setStartDate(e.target.value);
-              setPage(1);
-            }}
-            className="date-input"
-          />
-        </div>
-        <div className="filter-group">
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => {
-              setEndDate(e.target.value);
-              setPage(1);
-            }}
-            className="date-input"
-          />
-        </div>
-        <button className="btn-secondary" onClick={clearFilters}>
-          {t("clearFilters")}
-        </button>
-      </div>
-
-      {/* Table */}
-      {sortedLogs.length === 0 ? (
-        <div className="empty-state">
-          <p>{t("noLogsFound")}</p>
-        </div>
-      ) : (
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th
-                  className="clickable"
-                  onClick={() => handleSort("createdAt")}
-                >
-                  {t("date")}
-                  {sortState.key === "createdAt" && (
-                    <span className="sort-icon">
-                      {sortState.direction === "asc" ? "↑" : "↓"}
-                    </span>
-                  )}
-                </th>
-                <th
-                  className="clickable"
-                  onClick={() => handleSort("username")}
-                >
-                  {t("user")}
-                  {sortState.key === "username" && (
-                    <span className="sort-icon">
-                      {sortState.direction === "asc" ? "↑" : "↓"}
-                    </span>
-                  )}
-                </th>
-                <th
-                  className="clickable"
-                  onClick={() => handleSort("actionType")}
-                >
-                  {t("action")}
-                  {sortState.key === "actionType" && (
-                    <span className="sort-icon">
-                      {sortState.direction === "asc" ? "↑" : "↓"}
-                    </span>
-                  )}
-                </th>
-                <th>{t("target")}</th>
-                <th>{t("description")}</th>
-                <th>{t("ipAddress")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedLogs.map((log) => (
-                <tr key={log._id}>
-                  <td className="date-cell">{formatDate(log.createdAt)}</td>
-                  <td>{log.userId?.username || "—"}</td>
-                  <td>
-                    <span className="action-badge">{log.actionType}</span>
-                  </td>
-                  <td>{renderTarget(log)}</td>
-                  <td className="description-cell">{getLocalizedDescription(log.actionType, log.description, log.targetType)}</td>
-                  <td className="ip-cell">{log.ipAddress || "—"}</td>
-                </tr>
+      <AdminTable<ActivityLogEntry>
+        data={sortedLogs}
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        sortState={sortState}
+        onSort={handleSort}
+        searchQuery={search}
+        onSearchChange={(val) => { setSearch(val); setPage(1); }}
+        columns={columns}
+        loading={loading}
+        error={""} // No error var in this page; could track if needed
+        hasFetched={!loading}
+        onRefresh={fetchLogs}
+        emptyState={emptyState}
+        filterControls={
+          <>
+            <select
+              value={actionType}
+              onChange={(e) => { setActionType(e.target.value); setPage(1); }}
+              className="filter-select"
+            >
+              <option value="">{t("allActions")}</option>
+              {actionTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            className="btn-secondary pagination-btn"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            {"«"} {t("back")}
-          </button>
-          <span className="page-info">
-            {t("page")} {page} / {totalPages}
-          </span>
-          <button
-            className="btn-secondary pagination-btn"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            {t("next")} {"»"}
-          </button>
-        </div>
-      )}
+            </select>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+              className="date-input"
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+              className="date-input"
+            />
+            <button className="btn-secondary" onClick={clearFilters}>
+              {t("clearFilters")}
+            </button>
+          </>
+        }
+      />
 
       <Footer />
     </div>

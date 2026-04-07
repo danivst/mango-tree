@@ -19,7 +19,7 @@ export type RoleType = 'user' | 'admin';
  * Types of notifications that can be sent to users.
  * @typedef {'like' | 'comment' | 'reply' | 'follow' | 'report_feedback' | 'post_deleted' | 'system'} NotificationType
  */
-export type NotificationType = 'like' | 'comment' | 'reply' | 'follow' | 'report_feedback' | 'post_deleted' | 'system';
+export type NotificationType = 'like' | 'comment' | 'reply' | 'follow' | 'report_feedback' | 'post_deleted' | 'system' | 'new_login';
 
 /**
  * Content types that can be reported.

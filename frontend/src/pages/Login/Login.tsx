@@ -37,7 +37,7 @@ import "../Login.css";
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { language, setLanguage, setTheme, setLanguageImmediate, setThemeImmediate } = useThemeLanguage();
+  const { language, setLanguage, setLanguageImmediate, setThemeImmediate } = useThemeLanguage();
   const { refreshUnreadCount } = useNotifications();
   const t = (key: string) => getTranslation(language, key);
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
