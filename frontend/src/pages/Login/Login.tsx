@@ -1,16 +1,13 @@
 /**
- * @file index.tsx
+ * @file Login.tsx
  * @description Login page container component.
- * Orchestrates authentication flows for login, registration, 2FA, and password reset.
- * Manages all state and business logic, delegating UI to child components.
- *
- * @page
- * @requires useState, useEffect - React state management
- * @requires useNavigate, useLocation - React Router navigation
- * @requires useThemeLanguage - Theme and language context
- * @requires useNotifications - Notification context
- * @requires authAPI, usersAPI - API services
- * @requires all extracted child components
+ * Orchestrates high-level authentication flows including login, registration, 
+ * Two-Factor Authentication (2FA), and password recovery.
+ * * Responsibilities:
+ * - Manages centralized state for multiple auth forms and modals.
+ * - Handles session-based notifications (account deletion, expiration, suspension).
+ * - Synchronizes UI state (tabs) with browser routing (/login vs /signin).
+ * - Loads and applies persistent user preferences (theme, language) post-auth.
  */
 
 import { useState, useEffect } from "react";
@@ -22,64 +19,91 @@ import { useNotifications } from "../../context/NotificationContext";
 import { Theme, Language } from "../../utils/types";
 import { useSnackbar } from "../../utils/snackbar";
 import { setAuthTokens } from "../../utils/auth";
+import { 
+  validateUsername, 
+  validatePassword, 
+  validateEmail, 
+  validateTwoFactorCode, 
+} from "../../utils/validators";
 import LanguageSwitcher from "./LanguageSwitcher";
 import LoginHeader from "./LoginHeader";
 import LoginTabs from "./LoginTabs";
-import LoginForm from "./LoginForm";
-import SignupForm from "./SignupForm";
-import TwoFactorModal from "./TwoFactorModal";
-import ForgotPasswordModal from "./ForgotPasswordModal";
-import SuspensionModal from "./SuspensionModal";
-import Footer from "../../components/Footer";
-import Snackbar from "../../components/Snackbar";
-import "../Login.css";
+import LoginForm from "./forms/LoginForm";
+import SignupForm from "./forms/SignupForm";
+import TwoFactorModal from "./modals/TwoFactorModal";
+import ForgotPasswordModal from "./password/forgotten/ForgotPasswordModal";
+import SuspensionModal from "./modals/SuspensionModal";
+import Footer from "../../components/global/Footer";
+import Snackbar from "../../components/snackbar/Snackbar";
+import "./Login.css";
 
+/**
+ * @component Login
+ * @description The primary authentication entry point. Orchestrates the interaction 
+ * between specialized forms and security modals while managing the complex business 
+ * logic of the auth lifecycle.
+ * * @requires useThemeLanguage - Handles real-time localization and theme application.
+ * @requires useNotifications - Updates unread counts upon successful login.
+ * @requires authAPI - Logic for backend communication (Login, Register, 2FA).
+ * @requires useSnackbar - Standardized toast notifications for user feedback.
+ * @returns {JSX.Element} The assembled Login/Signup page view.
+ */
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { language, setLanguage, setLanguageImmediate, setThemeImmediate } = useThemeLanguage();
+  const { language, setLanguage, setLanguageImmediate, setThemeImmediate } =
+    useThemeLanguage() as { 
+      language: Language; 
+      setLanguage: (l: Language) => void;
+      setLanguageImmediate: (l: Language) => void;
+      setThemeImmediate: (t: Theme) => void;
+    };
   const { refreshUnreadCount } = useNotifications();
   const t = (key: string) => getTranslation(language, key);
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
-  // Get redirect URL from query params (where to go after login)
-  const redirectPath = new URLSearchParams(location.search).get('redirect') || '/home';
+  // Get redirect URL from query params to resume previous navigation after login
+  const redirectPath =
+    new URLSearchParams(location.search).get("redirect") || "/home";
 
+  /**
+   * State: Active view tab (Login vs Sign-up).
+   * Initialized based on current URL path.
+   */
   const [activeTab, setActiveTab] = useState<"login" | "signin">(() => {
     if (location.pathname === "/signin") return "signin";
     return "login";
   });
 
-  // 2FA state
+  // Security & Modal States
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [twoFAUserId, setTwoFAUserId] = useState<string | null>(null);
   const [twoFACode, setTwoFACode] = useState("");
   const [verifying2FA, setVerifying2FA] = useState(false);
 
-  // Suspension state
   const [showSuspensionModal, setShowSuspensionModal] = useState(false);
   const [suspensionReason, setSuspensionReason] = useState("");
 
-  // Login form state
+  // LoginForm-specific state
   const [loginUsername, setLoginUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Signup form state
+  // SignupForm-specific state
   const [username, setUsername] = useState("");
   const [signinEmail, setSigninEmail] = useState("");
   const [signinPassword, setSigninPassword] = useState("");
   const [showSigninPassword, setShowSigninPassword] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
 
-  // Forgot password state
+  // Password Recovery state
   const [forgotEmail, setForgotEmail] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
 
-  // Errors
+  // Validation & Server Error State
   const [errors, setErrors] = useState<{
     username?: string;
     password?: string;
@@ -89,7 +113,11 @@ const Login = () => {
     twofaCode?: string;
   }>({});
 
-  // Session flag check on mount
+  /**
+   * Effect: Check for session-based flags on mount.
+   * Handles edge cases like redirected logout, account deletion confirmation, 
+   * session expiration, and administrative suspensions.
+   */
   useEffect(() => {
     const accountDeleted = sessionStorage.getItem("accountDeleted");
     if (accountDeleted === "true") {
@@ -112,9 +140,11 @@ const Login = () => {
       sessionStorage.removeItem("accountSuspended");
       sessionStorage.removeItem("suspensionReason");
     }
-  }, [language, showSuccess, showError]);
+  }, [language, showSuccess, showError, t]);
 
-  // Tab/path sync
+  /**
+   * Effect: Sync browser URL path with the active tab state.
+   */
   useEffect(() => {
     const path = activeTab === "login" ? "/login" : "/signin";
     if (location.pathname !== path) {
@@ -122,14 +152,21 @@ const Login = () => {
     }
   }, [activeTab, navigate, location.pathname]);
 
+  /**
+   * Effect: Sync active tab state with the browser URL path (Back/Forward navigation support).
+   */
   useEffect(() => {
     if (location.pathname === "/signin" && activeTab !== "signin") {
       setActiveTab("signin");
     } else if (location.pathname === "/login" && activeTab !== "login") {
       setActiveTab("login");
     }
-  }, [location.pathname]);
+  }, [location.pathname, activeTab]);
 
+  /**
+   * Retrieves and applies user-specific settings (Theme/Language) upon successful login.
+   * Uses Immediate setters to bypass normal state lag and provide a seamless transition.
+   */
   const loadUserPreferences = async () => {
     try {
       const user: UserProfile = await usersAPI.getCurrentUser();
@@ -140,31 +177,41 @@ const Login = () => {
         setLanguageImmediate(user.language as Language);
       }
     } catch (error) {
-      console.log("No user preferences loaded (not logged in)");
+      if (import.meta.env.DEV) {
+        console.error("No user preferences loaded (not logged in)", error);
+      }
     }
   };
 
+  /**
+   * Logic: Handle Login Submission.
+   * Orchestrates 2FA redirection, credential validation, token storage, and redirection.
+   * Handles specific error codes like 403 (Banned) and 401 (Unauthorized).
+   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrors({});
 
-    const trimmedUsername = loginUsername.trim();
-    if (!trimmedUsername || trimmedUsername.length < 3) {
-      setErrors({ username: t("usernameMinLength") });
+    // Use Centralized Validators
+    const usernameError = validateUsername(loginUsername);
+    if (usernameError) {
+      setErrors({ username: t(usernameError) });
       setLoading(false);
       return;
     }
 
+    // Manual check for password presence (Backend handles strict strength on login)
     if (!password) {
-      setErrors({ password: t("passwordMinLength") });
+      setErrors({ password: t("passwordRequired") });
       setLoading(false);
       return;
     }
 
     try {
-      const response = await authAPI.login(trimmedUsername, password);
+      const response = await authAPI.login(loginUsername.trim(), password);
 
+      // Handle 2FA Requirement
       if (response.twoFactorRequired) {
         setTwoFAUserId(response.userId ?? null);
         setShow2FAModal(true);
@@ -182,8 +229,9 @@ const Login = () => {
       await loadUserPreferences();
       await refreshUnreadCount();
 
-      // Decode the redirect URL from query param (if present)
-      const redirectTo = redirectPath ? decodeURIComponent(redirectPath) : (response.redirectTo || "/home");
+      const redirectTo = redirectPath
+        ? decodeURIComponent(redirectPath)
+        : response.redirectTo || "/home";
       setTimeout(() => {
         navigate(redirectTo);
       }, 1000);
@@ -193,7 +241,12 @@ const Login = () => {
       const errorField = errorData?.field;
       let errorMessage = t("serverError");
 
-      if (error.response?.status === 403 && serverMessage.toLowerCase().includes("banned") && errorData?.reason) {
+      // Handle Ban Enforcement
+      if (
+        error.response?.status === 403 &&
+        serverMessage.toLowerCase().includes("banned") &&
+        errorData?.reason
+      ) {
         const reason = errorData.reason;
         const template = t("accountBannedMessage");
         errorMessage = template.replace(/{reason}/g, reason);
@@ -202,8 +255,13 @@ const Login = () => {
         return;
       }
 
+      // Specialized Error Mapping
       if (errorField === "username") {
-        if (serverMessage.toLowerCase().includes("not found") || serverMessage.toLowerCase().includes("does not exist") || serverMessage.toLowerCase().includes("no account")) {
+        if (
+          serverMessage.toLowerCase().includes("not found") ||
+          serverMessage.toLowerCase().includes("does not exist") ||
+          serverMessage.toLowerCase().includes("no account")
+        ) {
           errorMessage = t("userNotFound");
         } else {
           errorMessage = serverMessage || errorMessage;
@@ -212,7 +270,10 @@ const Login = () => {
       } else if (errorField === "password") {
         if (serverMessage.toLowerCase().includes("incorrect")) {
           errorMessage = t("incorrectPassword");
-        } else if (serverMessage.toLowerCase().includes("must contain") || serverMessage.toLowerCase().includes("requirements")) {
+        } else if (
+          serverMessage.toLowerCase().includes("must contain") ||
+          serverMessage.toLowerCase().includes("requirements")
+        ) {
           errorMessage = t("invalidPassword");
         } else {
           errorMessage = t("incorrectPassword");
@@ -230,20 +291,25 @@ const Login = () => {
     }
   };
 
+  /**
+   * Logic: Handle Forgot Password flow.
+   * Sends recovery email and manages UI state transitions.
+   */
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setSendingEmail(true);
     setErrors({ ...errors, forgotEmail: undefined });
 
-    const trimmedEmail = forgotEmail.trim();
-    if (!trimmedEmail || !trimmedEmail.includes("@")) {
-      setErrors({ ...errors, forgotEmail: t("emailMustContain") });
+    // Use Centralized Email Validator
+    const emailError = validateEmail(forgotEmail);
+    if (emailError) {
+      setErrors({ ...errors, forgotEmail: t(emailError) });
       setSendingEmail(false);
       return;
     }
 
     try {
-      await authAPI.forgotPassword(trimmedEmail);
+      await authAPI.forgotPassword(forgotEmail.trim());
       showSuccess(t("emailSent"));
       setShowForgotModal(false);
       setForgotEmail("");
@@ -268,12 +334,18 @@ const Login = () => {
     }
   };
 
+  /**
+   * Logic: Finalize 2FA Verification.
+   * Validates the security code and finishes the authentication handshake.
+   */
   const handleVerify2FA = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!twoFAUserId) return;
 
-    if (!twoFACode || twoFACode.length !== 6 || !/^\d+$/.test(twoFACode)) {
-      showError(t("invalid2FACode"));
+    // Use Centralized 2FA Validator
+    const codeError = validateTwoFactorCode(twoFACode);
+    if (codeError) {
+      showError(t(codeError));
       return;
     }
 
@@ -293,8 +365,9 @@ const Login = () => {
       setTwoFAUserId(null);
       setTwoFACode("");
 
-      // Decode the redirect URL from query param (if present)
-      const redirectTo = redirectPath ? decodeURIComponent(redirectPath) : (response.redirectTo || "/home");
+      const redirectTo = redirectPath
+        ? decodeURIComponent(redirectPath)
+        : response.redirectTo || "/home";
       setTimeout(() => {
         navigate(redirectTo);
       }, 1000);
@@ -306,35 +379,41 @@ const Login = () => {
     }
   };
 
+  /**
+   * Logic: Handle Account Registration.
+   * Manages data sanitization and backend registration lifecycle.
+   */
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setSigningIn(true);
     setErrors({});
 
-    const trimmedUsername = username.trim();
-    if (!trimmedUsername || trimmedUsername.length < 3) {
-      setErrors({ username: t("usernameMinLength") });
+    // Use Centralized Validators
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      setErrors({ username: t(usernameError) });
       setSigningIn(false);
       return;
     }
 
-    const trimmedEmail = signinEmail.trim();
-    if (!trimmedEmail || !trimmedEmail.includes("@")) {
-      setErrors({ signinEmail: t("emailMustContain") });
+    const emailError = validateEmail(signinEmail);
+    if (emailError) {
+      setErrors({ signinEmail: t(emailError) });
       setSigningIn(false);
       return;
     }
 
-    if (!signinPassword) {
-      setErrors({ signinPassword: t("passwordMinLength") });
+    const passwordError = validatePassword(signinPassword);
+    if (passwordError) {
+      setErrors({ signinPassword: t(passwordError) });
       setSigningIn(false);
       return;
     }
 
     try {
       const response = await authAPI.register(
-        trimmedUsername,
-        trimmedEmail,
+        username.trim(),
+        signinEmail.trim(),
         signinPassword,
       );
       showSuccess(t("successfullyCreatedAccount"));
@@ -350,8 +429,9 @@ const Login = () => {
       setSigninEmail("");
       setSigninPassword("");
 
-      // Decode the redirect URL from query param (if present)
-      const redirectTo = redirectPath ? decodeURIComponent(redirectPath) : "/home";
+      const redirectTo = redirectPath
+        ? decodeURIComponent(redirectPath)
+        : "/home";
       setTimeout(() => {
         navigate(redirectTo);
       }, 1000);
@@ -361,29 +441,25 @@ const Login = () => {
       const errorField = errorData?.field;
       let errorMessage = t("couldntCreateAccount");
 
+      // Handle duplicate credential conflicts
       if (errorField === "username") {
-        if (serverMessage.toLowerCase().includes("exists") || serverMessage.toLowerCase().includes("already in use") || serverMessage.toLowerCase().includes("already registered")) {
+        if (
+          serverMessage.toLowerCase().includes("exists") ||
+          serverMessage.toLowerCase().includes("already in use")
+        ) {
           errorMessage = t("usernameExists");
-        } else {
-          errorMessage = serverMessage || errorMessage;
         }
         setErrors({ username: errorMessage });
       } else if (errorField === "email") {
-        if (serverMessage.toLowerCase().includes("exists") || serverMessage.toLowerCase().includes("already in use") || serverMessage.toLowerCase().includes("already registered")) {
+        if (
+          serverMessage.toLowerCase().includes("exists") ||
+          serverMessage.toLowerCase().includes("already in use")
+        ) {
           errorMessage = t("emailExists");
-        } else {
-          errorMessage = serverMessage || errorMessage;
         }
         setErrors({ signinEmail: errorMessage });
       } else if (errorField === "password") {
-        if (serverMessage.toLowerCase().includes("incorrect")) {
-          errorMessage = t("incorrectPassword");
-        } else if (serverMessage.toLowerCase().includes("must contain") || serverMessage.toLowerCase().includes("requirements")) {
-          errorMessage = t("invalidPassword");
-        } else {
-          errorMessage = serverMessage || errorMessage;
-        }
-        setErrors({ signinPassword: errorMessage });
+        setErrors({ signinPassword: serverMessage || t("invalidPassword") });
       } else {
         showError(serverMessage || errorMessage);
       }
@@ -405,10 +481,7 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      <LanguageSwitcher
-        language={language}
-        onLanguageChange={setLanguage}
-      />
+      <LanguageSwitcher language={language} onLanguageChange={setLanguage} />
 
       <div className="login-box">
         <LoginHeader onNavigate={navigate} />
@@ -428,8 +501,8 @@ const Login = () => {
             loading={loading}
             errors={errors}
             onFieldChange={(field, value) => {
-              if (field === 'username') setLoginUsername(value);
-              if (field === 'password') setPassword(value);
+              if (field === "username") setLoginUsername(value);
+              if (field === "password") setPassword(value);
             }}
             onTogglePassword={() => setShowPassword(!showPassword)}
             onRememberMeChange={setRememberMe}
@@ -449,12 +522,12 @@ const Login = () => {
             errors={{
               username: errors.username,
               signinEmail: errors.signinEmail,
-              signinPassword: errors.signinPassword
+              signinPassword: errors.signinPassword,
             }}
             onFieldChange={(field, value) => {
-              if (field === 'username') setUsername(value);
-              if (field === 'signinEmail') setSigninEmail(value);
-              if (field === 'signinPassword') setSigninPassword(value);
+              if (field === "username") setUsername(value);
+              if (field === "signinEmail") setSigninEmail(value);
+              if (field === "signinPassword") setSigninPassword(value);
             }}
             onTogglePassword={() => setShowSigninPassword(!showSigninPassword)}
             onSubmit={handleSignIn}

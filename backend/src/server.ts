@@ -15,6 +15,8 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { PORT } from "./config/env";
 import { connectDB } from "./config/db";
+import logger from "./utils/logger";
+import { errorHandler } from "./middleware/error-middleware";
 
 import authRoutes from "./routes/auth-routes";
 import postRoutes from "./routes/post-routes";
@@ -29,6 +31,13 @@ import translateRoutes from "./routes/translate-routes";
 
 const app: Application = express();
 
+/* for https
+const sslOptions = {
+  key: fs.readFileSync(path.resolve(process.cwd(), "localhost-key.pem")),
+  cert: fs.readFileSync(path.resolve(process.cwd(), "localhost.pem")),
+};
+*/
+
 /**
  * Middleware configuration
  */
@@ -36,10 +45,10 @@ const app: Application = express();
 // CORS: Allow frontend origins to access the API
 app.use(cors({
   origin: [
+    /*"https://localhost:5173",*/
+    "http://192.168.0.21:5173",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5174"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -48,9 +57,9 @@ app.use(cors({
 // Parse JSON request bodies with 10MB limit (for large base64 images)
 app.use(express.json({ limit: '10mb' }));
 
-// Request logging middleware
+// Structured request logging middleware using pino
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  logger.info({ method: req.method, path: req.path }, `Incoming request`);
   next();
 });
 
@@ -78,28 +87,28 @@ app.use("/api/translate", translateRoutes);
 
 /**
  * Global error handling middleware
- * Catches unhandled errors and returns appropriate responses.
+ * Standardizes API error responses and integrates with pino logger.
+ * Must be the LAST middleware in the express app stack.
  */
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  if (err?.type === 'entity.parse.failed') {
-    return res.status(400).json({ message: "Invalid JSON" });
-  }
-
-  console.error("Unhandled error:", { message: err.message, url: req.url });
-  res.status(500).json({ message: "Internal server error" });
-});
+app.use(errorHandler);
 
 /**
  * Server startup
  * Connect to MongoDB first, then start listening on configured port.
  */
-connectDB().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+connectDB()
+  .then(() => {
+    /*for https
+    https.createServer(sslOptions, app).listen(PORT, '0.0.0.0', () => {
+          logger.info(`Server running on port ${PORT}`);
+        });*/
+    app.listen(PORT, '0.0.0.0', () => {
+      logger.info(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    logger.error(error, "Failed to start server due to MongoDB connection error");
+    process.exit(1);
   });
-}).catch((error) => {
-  console.error("Failed to start server:", error);
-  process.exit(1);
-});
 
 export default app;

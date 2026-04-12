@@ -6,6 +6,8 @@
  * Includes both utility functions and custom React hooks for common patterns.
  */
 
+import { useState, useEffect } from 'react';
+
 /**
  * Debounce a function call.
  * Delays execution until after wait milliseconds have elapsed since the last call.
@@ -124,8 +126,6 @@ export function throttle<T extends (...args: any[]) => any>(
  * }, [debouncedQuery]);
  * ```
  */
-import { useState, useEffect } from 'react';
-
 export function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 

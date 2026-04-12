@@ -6,6 +6,10 @@
   --theme-bg: #f1f0cc;
   --theme-accent: #fcfbe4;
   --theme-text: #250b24;
+  --sidebar-width: 280px;
+  --sidebar-collapsed-width: 80px;
+  --sidebar-gap: 20px;
+  --sidebar-left: 20px;
 }
 
 * {
@@ -70,4 +74,20 @@ body {
   min-height: 100vh;
   background-color: var(--theme-bg);
   color: var(--theme-text);
+}
+
+/* Tablet Breakpoint (768px to 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 70px;
+  }
+}
+
+/* Mobile Breakpoint */
+@media (max-width: 767px) {
+  :root {
+    --sidebar-width: 100%; /* Full screen overlay */
+    --sidebar-collapsed-width: 60px;
+  }
 }

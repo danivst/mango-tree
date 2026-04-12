@@ -13,20 +13,17 @@ export interface Translation {
 }
 
 /**
- * Retrieves the appropriate localized string based on the user's language.
- * Defaults to English ("en") if the language is not Bulgarian.
+ * Selects the appropriate translation string.
+ * Logic defaults to English unless the user's preference is explicitly set to Bulgarian ('bg').
  *
- * @param userLang - User's preferred language code ("en" or "bg")
- * @param translations - Object containing both bg and en translations
- * @returns Localized string matching the user's language
+ * @param userLang - The language code stored in user profile
+ * @param translations - Object containing 'bg' and 'en' keys
+ * @returns The translated string
  *
  * @example
  * ```typescript
- * const text = getLocalizedText(user.language, {
- *   bg: "Добре дошъл",
- *   en: "Welcome"
- * });
- * // Returns "Добре дошъл" if userLang === "bg"
+ * const text = getLocalizedText("bg", { en: "Hello", bg: "Здравей" });
+ * // returns "Здравей"
  * ```
  */
 export const getLocalizedText = (

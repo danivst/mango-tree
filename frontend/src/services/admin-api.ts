@@ -1,3 +1,13 @@
+/**
+ * @file adminAPI.ts
+ * @description API service for administrative functions.
+ * Provides methods for user management (ban/unban, delete), content moderation
+ * (reports, flagged content), and taxonomy management (tags and categories).
+ * All methods require admin privileges; unauthorized requests will be rejected
+ * by the backend with 403.
+ *
+ */
+
 import api from "./api";
 import type {
   User,
@@ -8,20 +18,11 @@ import type {
   FlaggedContent,
 } from "../utils/types";
 
-/**
- * @file adminAPI.ts
- * @description API service for administrative functions.
- * Provides methods for user management (ban/unban, delete), content moderation
- * (reports, flagged content), and taxonomy management (tags and categories).
- * All methods require admin privileges; unauthorized requests will be rejected
- * by the backend with 403.
- *
- * @namespace adminAPI
- */
+
 export const adminAPI = {
-  // ============================================================================
-  // User Management
-  // ============================================================================
+  /**
+   * User Management
+   */
 
   /**
    * Get all registered users.
@@ -108,9 +109,9 @@ export const adminAPI = {
     return response.data;
   },
 
-  // ============================================================================
-  // Tag Management
-  // ============================================================================
+  /**
+   * Tag Management
+   */
 
   /**
    * Get all tags.
@@ -163,9 +164,9 @@ export const adminAPI = {
     return response.data;
   },
 
-  // ============================================================================
-  // Category Management
-  // ============================================================================
+  /**
+   * Category Management
+   */
 
   /**
    * Get all categories.
@@ -220,9 +221,9 @@ export const adminAPI = {
     return response.data;
   },
 
-  // ============================================================================
-  // Report Moderation
-  // ============================================================================
+  /**
+   * Report Moderation
+   */
 
   /**
    * Get all submitted reports.
@@ -272,9 +273,9 @@ export const adminAPI = {
     return response.data;
   },
 
-  // ============================================================================
-  // Flagged Content (AI Moderation Queue)
-  // ============================================================================
+  /**
+   * Flagged Content (AI Moderation Queue)
+   */
 
   /**
    * Get all content flagged by AI for admin review.
@@ -323,9 +324,9 @@ export const adminAPI = {
     return response.data;
   },
 
-  // ============================================================================
-  // Activity Logs
-  // ============================================================================
+   /**
+   * Activity Logs
+   */
 
   /**
    * Get activity logs with optional filters.
@@ -348,7 +349,9 @@ export const adminAPI = {
   },
 };
 
-// Re-export types for other modules to import consistently
+/**
+ *  Re-export types for other modules to import consistently
+ */ 
 export type {
   User,
   BannedUser,

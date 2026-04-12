@@ -1,15 +1,26 @@
 /**
  * @file CommentItem.tsx
  * @description Recursive component for rendering a single comment and its nested replies.
- * Handles like, reply, delete, report, and translation actions.
- *
- * @component
+ * Optimized for responsive layouts to prevent horizontal overflow on small screens.
  */
 
 import React from 'react';
 import { Comment } from '../../services/api';
 import { detectLanguage } from '../../utils/language';
-import ShareButton from '../../components/ShareButton';
+import ShareButton from '../../components/buttons/share/ShareButton';
+
+// MUI Icon Imports
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import SendIcon from '@mui/icons-material/Send';
+import ReplyIcon from '@mui/icons-material/Reply';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import WarningIcon from '@mui/icons-material/Warning';
+import DeleteIcon from '@mui/icons-material/Delete';
+import TranslateIcon from '@mui/icons-material/Translate';
+import LanguageIcon from '@mui/icons-material/Language';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 interface CommentItemProps {
   comment: Comment;
@@ -80,8 +91,21 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
   const isNested = depth > 0;
 
+  /**
+   * Responsive Indentation: 
+   * On small screens, we cap the margin to ensure the text doesn't 
+   * get squeezed into a tiny vertical column.
+   */
+  const getResponsiveMargin = () => {
+    if (!isNested) return 0;
+    const isMobile = window.innerWidth < 600;
+    const marginStep = isMobile ? 12 : 20;
+    const maxMargin = isMobile ? 36 : 100; // Cap indentation on mobile
+    return Math.min(depth * marginStep, maxMargin);
+  };
+
   return (
-    <div style={{ marginLeft: isNested ? '20px' : 0 }}>
+    <div style={{ marginLeft: `${getResponsiveMargin()}px`, width: 'auto' }}>
       <div
         key={comment._id}
         id={`comment-${comment._id}`}
@@ -95,6 +119,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             style={{
               width: isNested ? "32px" : "40px",
               height: isNested ? "32px" : "40px",
+              flexShrink: 0
             }}
           >
             {comment.userId?.profileImage ? (
@@ -115,13 +140,14 @@ const CommentItem: React.FC<CommentItemProps> = ({
             )}
           </div>
 
-          <div className="comment-main">
-            {/* Comment Header */}
-            <div className="comment-header">
+          <div className="comment-main" style={{ minWidth: 0 }}>
+            {/* Comment Header - Flex wrap is critical here */}
+            <div className="comment-header" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
               <span
                 className="comment-author"
                 style={{
                   fontSize: isNested ? "12px" : "14px",
+                  wordBreak: 'break-all'
                 }}
                 onClick={() => navigate(`/users/${comment.userId?._id}`)}
               >
@@ -131,12 +157,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 className="comment-time"
                 style={{
                   fontSize: isNested ? "11px" : "12px",
+                  whiteSpace: 'nowrap'
                 }}
               >
                 {formatCommentTime(comment.createdAt)}
               </span>
 
-              {/* Action Buttons */}
+              {/* Action Buttons Container */}
               <div className="comment-actions">
                 {/* Like Button */}
                 <button
@@ -155,11 +182,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   title={isLiked ? t("unlike") : t("like")}
                 >
                   {likingComment[comment._id] ? (
-                    <span className="material-icons spin" style={{ fontSize: isNested ? "12px" : "16px" }}>refresh</span>
+                    <RefreshIcon className="spin" sx={{ fontSize: isNested ? 12 : 16 }} />
                   ) : (
-                    <span className="material-icons" style={{ fontSize: isNested ? "12px" : "16px" }}>
-                      {isLiked ? "favorite" : "favorite_border"}
-                    </span>
+                    isLiked ? (
+                      <FavoriteIcon sx={{ fontSize: isNested ? 12 : 16 }} />
+                    ) : (
+                      <FavoriteBorderIcon sx={{ fontSize: isNested ? 12 : 16 }} />
+                    )
                   )}
                   <span>{commentLikesCount}</span>
                 </button>
@@ -177,14 +206,16 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     }}
                     title={t("reply")}
                   >
-                    <span className="material-icons" style={{ fontSize: isNested ? "12px" : "16px" }}>
-                      {replyingToCommentId === comment._id ? "send" : "reply"}
-                    </span>
-                    <span>{replyingToCommentId === comment._id ? t("reply") : t("reply")}</span>
+                    {replyingToCommentId === comment._id ? (
+                      <SendIcon sx={{ fontSize: isNested ? 12 : 16 }} />
+                    ) : (
+                      <ReplyIcon sx={{ fontSize: isNested ? 12 : 16 }} />
+                    )}
+                    <span className="hide-on-mobile">{t("reply")}</span>
                   </button>
                 )}
 
-                {/* Toggle Replies Button - only if there are replies */}
+                {/* Toggle Replies Button */}
                 {comment.replies && comment.replies.length > 0 && (
                   <button
                     className="btn-comment-action btn-toggle"
@@ -194,13 +225,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     }}
                     title={isRepliesHidden ? t("showReplies") : t("hideReplies")}
                   >
-                    <span className="material-icons" style={{ fontSize: isNested ? "12px" : "16px" }}>
-                      {isRepliesHidden ? "expand_more" : "expand_less"}
-                    </span>
-                    <span>
-                      {isRepliesHidden
-                        ? t("showReplies")
-                        : t("hideReplies")}
+                    {isRepliesHidden ? (
+                      <ExpandMoreIcon sx={{ fontSize: isNested ? 12 : 16 }} />
+                    ) : (
+                      <ExpandLessIcon sx={{ fontSize: isNested ? 12 : 16 }} />
+                    )}
+                    <span className="hide-on-mobile">
+                      {isRepliesHidden ? t("showReplies") : t("hideReplies")}
                     </span>
                   </button>
                 )}
@@ -215,8 +246,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     }}
                     title={t("report")}
                   >
-                    <span className="material-icons" style={{ fontSize: isNested ? "12px" : "16px" }}>warning</span>
-                    <span>{t("report")}</span>
+                    <WarningIcon sx={{ fontSize: isNested ? 12 : 16 }} />
+                    <span className="hide-on-mobile">{t("report")}</span>
                   </button>
                 )}
 
@@ -230,12 +261,12 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     }}
                     title={t("delete")}
                   >
-                    <span className="material-icons" style={{ fontSize: isNested ? "12px" : "16px" }}>delete</span>
+                    <DeleteIcon sx={{ fontSize: isNested ? 12 : 16 }} />
                   </button>
                 )}
 
                 {/* Share Button */}
-                <div className="btn-comment-action" style={{ fontSize: isNested ? "10px" : "12px" }}>
+                <div className="btn-comment-action" style={{ fontSize: isNested ? "10px" : "12px", padding: '2px 4px' }}>
                   <ShareButton
                     url={`${window.location.origin}/posts/${postId}#comment-${comment._id}`}
                     title={`Comment by @${comment.userId?.username}`}
@@ -245,15 +276,15 @@ const CommentItem: React.FC<CommentItemProps> = ({
               </div>
             </div>
 
-            {/* Comment Text */}
-            <div className="comment-content">
-              <p className="comment-text" style={{ fontSize: isNested ? "13px" : "14px" }}>
+            {/* Comment Text and Translation */}
+            <div className="comment-content" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <p className="comment-text" style={{ fontSize: isNested ? "13px" : "14px", margin: 0 }}>
                 {translatedCommentId === comment._id
                   ? commentTranslationCache[comment._id] || comment.text
                   : comment.text}
               </p>
 
-              {/* Translate Button */}
+              {/* Translate Button - Moved below text on mobile if needed */}
               {(() => {
                 const commentLang = detectLanguage(comment.text);
                 const isCommentInUserLanguage = commentLang === language;
@@ -264,27 +295,20 @@ const CommentItem: React.FC<CommentItemProps> = ({
                       e.stopPropagation();
                       onTranslate(comment._id);
                     }}
-                    disabled={false}
+                    className="post-translate-btn"
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      padding: "6px 10px",
-                      border: "2px solid var(--theme-accent)",
-                      background: "var(--theme-accent)",
-                      color: "var(--theme-text)",
-                      borderRadius: "8px",
-                      cursor: "pointer",
+                      alignSelf: 'flex-start',
                       fontSize: isNested ? "10px" : "12px",
-                      fontWeight: 500,
-                      flexShrink: 0,
+                      marginTop: '4px'
                     }}
                     title={translatedCommentId === comment._id ? t("viewOriginal") : t("translate")}
                   >
-                    <span className="material-icons text-xs">
-                      {translatedCommentId === comment._id ? "translate" : "language"}
-                    </span>
-                    <span className="text-10">
+                    {translatedCommentId === comment._id ? (
+                      <TranslateIcon sx={{ fontSize: 14 }} />
+                    ) : (
+                      <LanguageIcon sx={{ fontSize: 14 }} />
+                    )}
+                    <span>
                       {translatedCommentId === comment._id ? t("viewOriginal") : t("translate")}
                     </span>
                   </button>
@@ -309,9 +333,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     className="btn-cancel"
                     onClick={onCancelReply}
                     disabled={submittingReply[comment._id]}
-                    style={{
-                      cursor: submittingReply[comment._id] ? 'not-allowed' : 'pointer',
-                    }}
                   >
                     {t("cancel")}
                   </button>
@@ -319,12 +340,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     type="submit"
                     className="btn-submit-reply"
                     disabled={submittingReply[comment._id] || !replyTexts[comment._id]?.trim()}
-                    style={{
-                      cursor: submittingReply[comment._id] || !replyTexts[comment._id]?.trim() ? 'not-allowed' : 'pointer',
-                    }}
                   >
                     {submittingReply[comment._id] ? (
-                      <span className="material-icons spin" style={{ fontSize: '14px' }}>refresh</span>
+                      <RefreshIcon className="spin" sx={{ fontSize: 14 }} />
                     ) : (
                       t("reply")
                     )}
@@ -336,9 +354,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
         </div>
       </div>
 
-      {/* Render Replies */}
+      {/* Render Replies Recursive */}
       {comment.replies && comment.replies.length > 0 && !isRepliesHidden && (
-        <div className="mt-3">
+        <div className="replies-container">
           {comment.replies.map((reply: Comment) => (
             <CommentItem
               key={reply._id}

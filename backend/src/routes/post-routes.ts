@@ -8,20 +8,7 @@
  */
 
 import express, { Router } from "express";
-import {
-  createPost,
-  getAllPosts,
-  getPostById,
-  updatePost,
-  deletePost,
-  toggleLikePost,
-  getHomeFeed,
-  getPostsByAuthor,
-  searchPosts,
-  getFollowedPosts,
-  getSuggestedPosts,
-  translatePost,
-} from "../controllers/post-controller";
+import * as postController from "../controllers/post/post-controller";
 import { auth } from "../utils/auth";
 
 const router: Router = express.Router();
@@ -44,14 +31,14 @@ router.use((req, res, next) => {
  * @body {title, content, images[], category, tags[]}
  * @access Authenticated
  */
-router.post("/", auth, createPost);
+router.post("/", auth, postController.createPost);
 
 /**
  * @route GET /home
  * @description Get personalized home feed (visible posts sorted by date)
  * @access Authenticated
  */
-router.get("/home", auth, getHomeFeed);
+router.get("/home", auth, postController.getHomeFeed);
 
 /**
  * @route GET /search
@@ -59,21 +46,21 @@ router.get("/home", auth, getHomeFeed);
  * @query q - Search query string
  * @access Authenticated
  */
-router.get("/search", auth, searchPosts);
+router.get("/search", auth, postController.searchPosts);
 
 /**
  * @route GET /followed
  * @description Get posts from users the current user follows
  * @access Authenticated
  */
-router.get("/followed", auth, getFollowedPosts);
+router.get("/followed", auth, postController.getFollowedPosts);
 
 /**
  * @route GET /suggested
  * @description Get suggested posts based on user preferences/interactions
  * @access Authenticated
  */
-router.get("/suggested", auth, getSuggestedPosts);
+router.get("/suggested", auth, postController.getSuggestedPosts);
 
 /**
  * General post retrieval routes.
@@ -82,7 +69,7 @@ router.get("/suggested", auth, getSuggestedPosts);
  * @route GET /
  * @description Get all visible posts (public endpoint)
  */
-router.get("/", getAllPosts);
+router.get("/", postController.getAllPosts);
 
 /**
  * @route GET /author/:authorId
@@ -90,14 +77,14 @@ router.get("/", getAllPosts);
  * @param {string} authorId - User ID
  * @access Authenticated
  */
-router.get("/author/:authorId", auth, getPostsByAuthor);
+router.get("/author/:authorId", auth, postController.getPostsByAuthor);
 
 /**
  * @route GET /:id
  * @description Get a specific post by ID
  * @param {string} id - Post ID
  */
-router.get("/:id", getPostById);
+router.get("/:id", postController.getPostById);
 
 /**
  * Post management routes (require ownership or admin privileges).
@@ -109,7 +96,7 @@ router.get("/:id", getPostById);
  * @body {title?, content?, images?, category?, tags?}
  * @access Authenticated (owner or admin)
  */
-router.put("/:id", auth, updatePost);
+router.put("/:id", auth, postController.updatePost);
 
 /**
  * @route DELETE /:id
@@ -117,7 +104,7 @@ router.put("/:id", auth, updatePost);
  * @param {string} id - Post ID
  * @access Authenticated (owner or admin)
  */
-router.delete("/:id", auth, deletePost);
+router.delete("/:id", auth, postController.deletePost);
 
 /**
  * Social interaction and utility routes.
@@ -128,7 +115,7 @@ router.delete("/:id", auth, deletePost);
  * @param {string} id - Post ID
  * @access Authenticated
  */
-router.post("/:id/like", auth, toggleLikePost);
+router.post("/:id/like", auth, postController.toggleLikePost);
 
 /**
  * @route DELETE /:id/like
@@ -136,7 +123,7 @@ router.post("/:id/like", auth, toggleLikePost);
  * @param {string} id - Post ID
  * @access Authenticated
  */
-router.delete("/:id/like", auth, toggleLikePost);
+router.delete("/:id/like", auth, postController.toggleLikePost);
 
 /**
  * @route POST /:id/translate
@@ -144,6 +131,6 @@ router.delete("/:id/like", auth, toggleLikePost);
  * @param {string} id - Post ID
  * @access Authenticated
  */
-router.post("/:id/translate", auth, translatePost);
+router.post("/:id/translate", auth, postController.translatePost);
 
 export default router;

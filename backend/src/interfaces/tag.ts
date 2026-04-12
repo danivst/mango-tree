@@ -4,11 +4,11 @@ import TagType from "../enums/tag-type";
 /**
  * @interface ITag
  * @description Mongoose document interface for Tag model.
- * Represents a tag that can be associated with posts.
+ * Represents a tag that can be associated with posts for filtering and search.
  *
- * @property {Document['_id']} _id - Unique identifier (MongoDB ObjectId)
+ * @property {mongoose.Types.ObjectId} _id - Unique identifier (MongoDB ObjectId)
  * @property {string} name - Tag name
- * @property {TagTranslations} translations - Bilingual translations for tag name
+ * @property {Object} translations - Bilingual translations for tag name
  * @property {keyof typeof TagType} [type] - Optional tag type classification
  * @property {string} [createdBy] - Optional username who created the tag
  * @property {Date} [createdAt] - Tag creation timestamp
@@ -32,6 +32,9 @@ export interface ITag extends Document {
 /**
  * @interface TagTranslations
  * @description Translation structure for tag names.
+ * Used during creation to handle bilingual tag identification.
+ * 
+ * @property {Object} name - English and Bulgarian names
  */
 export interface TagTranslations {
   name: {

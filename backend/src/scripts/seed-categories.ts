@@ -7,7 +7,7 @@
 
 import mongoose from 'mongoose';
 import { MONGO_URI } from '../config/env';
-import Category from '../models/category';
+import Category from '../models/category-model';
 
 const seedCategories = async () => {
   try {

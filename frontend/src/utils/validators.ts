@@ -10,7 +10,7 @@
  * ```typescript
  * const error = validators.username(username);
  * if (error) {
- *   setErrors({ username: t(error) });
+ * setErrors({ username: t(error) });
  * }
  * ```
  */
@@ -60,30 +60,46 @@ export const validateUsername = (
  * @errorKeys
  * - "emailRequired" (when empty)
  * - "emailMustContain" (when missing '@')
+ * - "emailInvalid" (for regex failure)
  */
 export const validateEmail = (email: string): ValidationResult => {
   if (!email?.trim()) {
     return 'emailRequired';
   }
-  if (!email.includes('@')) {
-    return 'emailMustContain';
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return 'emailInvalid';
   }
   return null;
 };
 
 /**
  * Password validation
- * Checks for presence. Does not enforce complexity (backend handles that).
+ * Checks for presence and complexity.
  *
  * @param password - The password to validate
  * @returns ValidationResult - null if valid, error key if invalid
  *
  * @errorKeys
  * - "passwordRequired" (when empty)
+ * - "passwordMinLength" (when < 8)
+ * - "passwordComplexityRequirement" (when missing character types)
  */
 export const validatePassword = (password: string): ValidationResult => {
   if (!password) {
     return 'passwordRequired';
+  }
+  if (password.length < 8) {
+    return 'passwordMinLength';
+  }
+
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+    return 'passwordComplexityRequirement';
   }
   return null;
 };
@@ -169,6 +185,3 @@ export const validatePasswordMatch = (
   }
   return null;
 };
-
-// Utility to get the first validation error from an array of validators
-// (Not currently used - can be re-added with correct signature if needed)

@@ -17,7 +17,7 @@ import { RoleType } from "../enums/role-type";
  * @property {string} [bio] - Optional user biography (max 100 chars, default: "")
  * @property {boolean} [isApproved] - Whether user is approved (default: true)
  * @property {boolean} [isBanned] - Whether user is banned (default: false)
- * @property {Translation} translations - Bilingual translations for user content
+ * @property {Object} translations - Bilingual translations for user content
  * @property {NotificationPreferences} notificationPreferences - User's notification settings
  * @property {string} [theme] - Preferred UI theme: "dark", "purple", "cream", "light", "mango" (default: "mango")
  * @property {string} [language] - Preferred language: "en" or "bg" (default: "en")
@@ -27,6 +27,7 @@ import { RoleType } from "../enums/role-type";
  * @property {Date} createdAt - Account creation timestamp
  * @property {Types.ObjectId[]} followers - Array of user IDs who follow this user
  * @property {Types.ObjectId[]} following - Array of user IDs this user follows
+ * @property {Array} pastUsernames - History of previous usernames and change dates
  */
 export interface IUser extends Document {
   _id: Types.ObjectId;
@@ -69,7 +70,10 @@ export interface IUser extends Document {
 /**
  * @interface Translation
  * @description Bilingual translation structure for dynamically stored text.
- * Stores both Bulgarian (bg) and English (en) versions of content.
+ * Used to store both Bulgarian (bg) and English (en) versions of content.
+ * 
+ * @property {string} bg - Bulgarian content
+ * @property {string} en - English content
  */
 export interface Translation {
   bg: string;
@@ -79,14 +83,16 @@ export interface Translation {
 /**
  * @interface NotificationPreferences
  * @description User preferences for receiving notifications.
+ * Controls delivery channels for various system activities.
+ * 
+ * @property {boolean} emailReports - Email notifications for reports
+ * @property {boolean} emailComments - Email notifications for comments
+ * @property {boolean} inAppReports - In-app notifications for reports
+ * @property {boolean} inAppComments - In-app notifications for comments
  */
 export interface NotificationPreferences {
-  /** Email notifications for reports */
   emailReports: boolean;
-  /** Email notifications for comments */
   emailComments: boolean;
-  /** In-app notifications for reports */
   inAppReports: boolean;
-  /** In-app notifications for comments */
   inAppComments: boolean;
 }

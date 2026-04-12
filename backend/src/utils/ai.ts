@@ -6,6 +6,7 @@
  */
 
 import axios from "axios";
+import logger from "../utils/logger";
 import { GEMINI_API_KEY, GEMINI_MODEL_DEFAULT } from "../config/env";
 import {
   ModerationResult,
@@ -46,19 +47,15 @@ export interface ModerateOptions {
 }
 
 /**
- * Moderates content using Google Gemini AI.
- * Checks for appropriateness and, optionally, cooking relevance.
+ * Internal helper to communicate with Gemini API.
+ * Sends text and optional images for analysis using a structured JSON schema response.
  *
- * @param title - Content title (for posts) or empty string for comments
- * @param content - Text content to moderate
- * @param images - Optional array of base64 image data for visual analysis
- * @param checkCookingRelated - If true, validates content is cooking-related
- * @returns ModerationResult with flagged status and reason
- *
- * @throws {Error} If rate limit exceeded or service error occurs
- *
- * @internal
- * This function is private and should be called via moderateContent or moderateText.
+ * @param title - Content title
+ * @param content - Body text
+ * @param images - Base64 image strings
+ * @param checkCookingRelated - Whether to enforce food-relevance checks
+ * @returns ModerationResult object
+ * @throws {Error} If API returns 429 or empty response
  */
 const moderateWithGemini = async (
   title: string,
@@ -141,7 +138,7 @@ const moderateWithGemini = async (
     };
 
   } catch (err: any) {
-    console.error("[moderator] error:", err.message);
+    logger.error({ error: err.message }, "[moderator] error during AI moderation");
     if (err.response?.status === 429) {
       throw new Error("AI rate limit exceeded");
     }
@@ -150,10 +147,10 @@ const moderateWithGemini = async (
 };
 
 /**
- * Processes the moderation queue sequentially to respect rate limits.
- * Processes at most one item at a time with delay between requests.
+ * Sequential queue processor.
+ * Ensures that the application stays within the 10 requests/minute free-tier limit.
  *
- * @internal
+ * @returns Promise void
  */
 const processQueue = async (): Promise<void> => {
   if (isProcessingQueue || moderationQueue.length === 0) return;
@@ -170,6 +167,7 @@ const processQueue = async (): Promise<void> => {
       );
       item.resolve(result);
     } catch (err) {
+      logger.error(err, "Moderation queue processing error");
       item.reject(err);
     }
     // Wait before processing next item to respect rate limit
@@ -179,20 +177,18 @@ const processQueue = async (): Promise<void> => {
 };
 
 /**
- * Public API: Moderate post content (title + images).
- * Queues the request and returns a promise that resolves with moderation result.
+ * Moderates complex content (Posts).
+ * Validates text, title, and images for both safety and cooking relevance.
  *
- * @param title - Post title
- * @param content - Post content
- * @param images - Optional array of image URLs/base64 data
- * @returns Promise<ModerationResult>
+ * @param title - The post title
+ * @param content - The post description
+ * @param images - Array of image strings (base64 or URLs)
+ * @returns Promise resolving to ModerationResult
  *
  * @example
  * ```typescript
- * const result = await moderateContent("Delicious Pasta", "Here's my recipe...", ["image1.jpg"]);
- * if (result.flagged) {
- *   console.log("Post rejected:", result.reason);
- * }
+ * const res = await moderateContent("My Cake", "Baked this today", ["base64..."]);
+ * if (res.flagged) console.log(res.reason);
  * ```
  */
 export const moderateContent = (
@@ -213,15 +209,15 @@ export const moderateContent = (
   });
 
 /**
- * Public API: Moderate text-only content (comments).
- * Queues the request and returns a promise that resolves with moderation result.
+ * Moderates simple text (Comments).
+ * Validates text only for safety and appropriateness. Relevance check is skipped.
  *
- * @param text - Comment text content
- * @returns Promise<ModerationResult>
+ * @param text - The comment text content
+ * @returns Promise resolving to ModerationResult
  *
  * @example
  * ```typescript
- * const result = await moderateText("This comment is inappropriate");
+ * const res = await moderateText("This is a nice recipe!");
  * ```
  */
 export const moderateText = (

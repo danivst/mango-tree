@@ -1,22 +1,28 @@
 /**
  * @file ReportModal.tsx
  * @description Modal for reporting a post or comment.
- * Allows user to enter a reason for reporting content.
- *
- * @component
- * @param {Object} props
- * @param {boolean} props.open - Whether modal is visible
- * @param {string} props.reason - Current reason text
- * @param {(reason: string) => void} props.onReasonChange - Reason text change handler
- * @param {string | null} props.reportingCommentId - If set, reporting a comment (null means reporting post)
- * @param {boolean} props.loading - Whether report submission is in progress
- * @param {() => void} props.onReport - Submit report handler
- * @param {() => void} props.onCancel - Cancel/close handler
- * @param {(key: string) => string} props.t - Translation function
- * @returns {JSX.Element}
+ * Allows users to enter a specific reason for reporting content. The modal dynamically
+ * adjusts its labels and placeholders depending on whether a post or a comment is being reported.
  */
+
 import React from 'react';
 
+// MUI Icon Import
+import RefreshIcon from '@mui/icons-material/Refresh';
+
+/**
+ * @interface ReportModalProps
+ * @description Props for the ReportModal component.
+ *
+ * @property {boolean} open - Whether modal is visible
+ * @property {string} reason - Current reason text state
+ * @property {(reason: string) => void} onReasonChange - Reason text change handler
+ * @property {string | null} reportingCommentId - If set, reporting a comment (null means reporting post)
+ * @property {boolean} loading - Whether report submission is in progress
+ * @property {() => void} onReport - Submit report handler
+ * @property {() => void} onCancel - Cancel/close handler
+ * @property {(key: string) => string} t - Translation function
+ */
 interface ReportModalProps {
   open: boolean;
   reason: string;
@@ -28,6 +34,14 @@ interface ReportModalProps {
   t: (key: string) => string;
 }
 
+/**
+ * @component ReportModal
+ * @description Renders a modal dialog with a textarea for user feedback on content violations.
+ * Features auto-focus on the input field and a loading state for the submission button.
+ *
+ * @param {ReportModalProps} props - Component props
+ * @returns {JSX.Element | null} The rendered report modal or null if not open
+ */
 const ReportModal: React.FC<ReportModalProps> = ({
   open,
   reason,
@@ -38,6 +52,9 @@ const ReportModal: React.FC<ReportModalProps> = ({
   onCancel,
   t
 }) => {
+  /**
+   * Guard clause: prevent rendering if the modal is closed.
+   */
   if (!open) return null;
 
   return (
@@ -59,6 +76,7 @@ const ReportModal: React.FC<ReportModalProps> = ({
         />
         <div className="modal-actions">
           <button
+            type="button"
             className="btn-secondary"
             onClick={onCancel}
             disabled={loading}
@@ -66,12 +84,13 @@ const ReportModal: React.FC<ReportModalProps> = ({
             {t("cancel")}
           </button>
           <button
+            type="button"
             className="btn-primary"
             onClick={onReport}
             disabled={loading}
           >
             {loading ? (
-              <span className="material-icons spin text-base">refresh</span>
+              <RefreshIcon className="spin text-base" sx={{ fontSize: 20 }} />
             ) : (
               t("report")
             )}

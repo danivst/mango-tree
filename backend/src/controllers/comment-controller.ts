@@ -1,33 +1,41 @@
-import { Request, Response } from "express";
-import { Types } from "mongoose";
-import Comment from "../models/comment";
-import Post from "../models/post";
-import User from "../models/user";
-import Notification from "../models/notification";
-import NotificationType from "../enums/notification-type";
-import RoleTypeValue from "../enums/role-type";
-import { AuthRequest } from "../interfaces/auth";
-import { getDualTranslation } from "../utils/translation";
-import { moderateText } from "../utils/ai";
-import { logActivity } from "../utils/activity-logger";
-
 /**
  * @file comment-controller.ts
  * @description Manages comment and reply operations including AI moderation,
  * notifications, and translation.
  */
 
+import { Request, Response } from "express";
+import { Types } from "mongoose";
+import Comment from "../models/comment-model";
+import Post from "../models/post-model";
+import User from "../models/user-model";
+import Notification from "../models/notification-model";
+import NotificationType from "../enums/notification-type";
+import RoleTypeValue from "../enums/role-type";
+import { AuthRequest } from "../interfaces/auth";
+import { getDualTranslation } from "../utils/translation";
+import { moderateText } from "../utils/ai";
+import { logActivity } from "../utils/activity-logger";
+import logger from "../utils/logger";
+
 /**
- * Creates a new comment or reply on a post.
- * Moderates content via AI; if flagged as inappropriate, sends notification
- * and returns flagged status (200 OK, not an error).
- * Generates bilingual translations for the comment text.
- * Sends notifications to post author (for new comments) and parent comment author (for replies).
+ * Creates a new comment or reply.
+ * Performs AI moderation. If flagged, rejects content and notifies user. Otherwise, saves and notifies post/parent author.
  *
  * @param req - AuthRequest with body { postId, text, parentCommentId? }
- * @param res - Response with created comment or flagged status
- * @returns 201 with populated comment, or 200 with flagged: true if inappropriate,
- *          404 if post not found, 500 on server error
+ * @param res - Express response object
+ * @returns Response with created comment or rejection reason
+ * @throws {Error} Moderation service or database failure
+ *
+ * @example
+ * ```json
+ * Request body:
+ * { "postId": "...", "text": "This looks delicious!" }
+ * ```
+ * @response
+ * ```json
+ * { "_id": "...", "text": "...", "userId": { "username": "..." } }
+ * ```
  */
 export const createComment = async (
   req: AuthRequest,
@@ -50,7 +58,10 @@ export const createComment = async (
     try {
       moderationResult = await moderateText(text);
     } catch (moderationErr: any) {
-      console.error("[createComment] Moderation service error:", moderationErr.message);
+      logger.error(
+        moderationErr,
+        "[createComment] Moderation service error",
+      );
       moderationError = true;
       moderationResult = { flagged: false }; // Continue creating comment but flag for admin review if needed
     }
@@ -108,7 +119,9 @@ export const createComment = async (
         return res.status(404).json({ message: "Parent comment not found" });
       }
       if (parentComment.postId.toString() !== postId) {
-        return res.status(400).json({ message: "Parent comment does not belong to this post" });
+        return res
+          .status(400)
+          .json({ message: "Parent comment does not belong to this post" });
       }
       commentData.parentCommentId = new Types.ObjectId(parentCommentId);
     }
@@ -116,13 +129,15 @@ export const createComment = async (
     const comment = await Comment.create(commentData);
 
     // Populate userId before returning
-    const populatedComment = await Comment.findById(comment._id)
-      .populate("userId", "username profileImage");
+    const populatedComment = await Comment.findById(comment._id).populate(
+      "userId",
+      "username profileImage",
+    );
 
     // Log comment creation
-    await logActivity(req, 'COMMENT_CREATE', {
+    await logActivity(req, "COMMENT_CREATE", {
       targetId: comment._id.toString(),
-      targetType: 'comment',
+      targetType: "comment",
       description: `Created comment on post ${postId}`,
     });
 
@@ -157,7 +172,10 @@ export const createComment = async (
 
     // If this is a reply, notify the parent comment author
     if (parentCommentId) {
-      const parentComment = await Comment.findById(parentCommentId).populate('userId', 'username');
+      const parentComment = await Comment.findById(parentCommentId).populate(
+        "userId",
+        "username",
+      );
       const parentAuthor = parentComment?.userId;
       if (parentAuthor && !parentAuthor._id.equals(userIdObj)) {
         // Actor username already fetched above
@@ -192,12 +210,22 @@ export const createComment = async (
 };
 
 /**
- * Toggles like/unlike on a comment.
- * Sends a notification to comment author when liked (not when unliking).
+ * Toggles a like on a comment.
+ * Adds/removes user from likes array and notifies the author if it's a new like.
  *
- * @param req - AuthRequest with params { id } (comment ID)
- * @param res - Response with { message, likes[] }
- * @returns 200 with updated likes array, 404 if comment not found
+ * @param req - AuthRequest with params { id }
+ * @param res - Express response object
+ * @returns Response with updated likes array
+ * @throws {Error} Database update failure
+ *
+ * @example
+ * ```json
+ * POST /api/comments/commentId123/like
+ * ```
+ * @response
+ * ```json
+ * { "message": "Liked", "likes": ["userId1", "userId2"] }
+ * ```
  */
 export const toggleLikeComment = async (
   req: AuthRequest,
@@ -226,10 +254,10 @@ export const toggleLikeComment = async (
     await comment.save();
 
     // Log like/unlike action
-    await logActivity(req, hasLiked ? 'UNLIKE' : 'LIKE', {
+    await logActivity(req, hasLiked ? "UNLIKE" : "LIKE", {
       targetId: id,
-      targetType: 'comment',
-      description: `${hasLiked ? 'Unliked' : 'Liked'} comment ${id}`,
+      targetType: "comment",
+      description: `${hasLiked ? "Unliked" : "Liked"} comment ${id}`,
     });
 
     if (!hasLiked && !comment.userId.equals(userIdObj)) {
@@ -267,12 +295,22 @@ export const toggleLikeComment = async (
 };
 
 /**
- * Translates a comment's text to the requested language.
- * Uses DeepL API to get both translations, then returns the requested one.
+ * Translates a comment on demand.
+ * Uses DeepL to translate the specific comment text into the target language.
  *
- * @param req - AuthRequest with params { id } and query { targetLang: 'en'|'bg' }
- * @param res - Response with { text, sourceLang, targetLang }
- * @returns 200 with translated text, 400 for invalid language, 404 if comment not found
+ * @param req - AuthRequest with params { id } and query { targetLang }
+ * @param res - Express response object
+ * @returns Response with translated text
+ * @throws {Error} Translation service failure
+ *
+ * @example
+ * ```json
+ * GET /api/comments/id/translate?targetLang=bg
+ * ```
+ * @response
+ * ```json
+ * { "text": "Прекрасно!", "sourceLang": "en", "targetLang": "bg" }
+ * ```
  */
 export const translateComment = async (
   req: AuthRequest,
@@ -282,8 +320,10 @@ export const translateComment = async (
     const { id } = req.params;
     const { targetLang } = req.query;
 
-    if (!targetLang || !['en', 'bg'].includes(targetLang as string)) {
-      return res.status(400).json({ message: "Invalid target language. Use 'en' or 'bg'." });
+    if (!targetLang || !["en", "bg"].includes(targetLang as string)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid target language. Use 'en' or 'bg'." });
     }
 
     const comment = await Comment.findById(id);
@@ -293,28 +333,38 @@ export const translateComment = async (
 
     // Translate the comment text
     const translation = await getDualTranslation(comment.text);
-    const isBg = targetLang === 'bg';
+    const isBg = targetLang === "bg";
     const translatedText = isBg ? translation.bg : translation.en;
 
     return res.json({
       text: translatedText,
-      sourceLang: isBg ? 'en' : 'bg',
+      sourceLang: isBg ? "en" : "bg",
       targetLang: targetLang,
     });
   } catch (err: any) {
-    console.error("Comment translation error:", err);
+    logger.error(err, "Comment translation error");
     return res.status(500).json({ message: err.message });
   }
 };
 
 /**
- * Updates a comment's text (owner only).
- * Re-translates the new text via DeepL and re-moderates via AI.
- * If flagged, sends notification but still saves the update.
+ * Updates an existing comment.
+ * Re-moderates the new text via AI and re-translates it. restricted to Owner.
  *
  * @param req - AuthRequest with params { id } and body { text }
- * @param res - Response with updated comment or flagged status
- * @returns 200 with updated comment or flagged: true, 403 if not owner, 404 if not found
+ * @param res - Express response object
+ * @returns Response with updated comment
+ * @throws {Error} Moderation or database failure
+ *
+ * @example
+ * ```json
+ * Request body:
+ * { "text": "Updated comment text" }
+ * ```
+ * @response
+ * ```json
+ * { "_id": "...", "text": "Updated comment text" }
+ * ```
  */
 export const updateComment = async (
   req: AuthRequest,
@@ -338,8 +388,10 @@ export const updateComment = async (
     try {
       const moderationResult = await moderateText(text);
       if (moderationResult?.flagged) {
-        const flaggedMessageEn = "Your comment update was flagged as inappropriate";
-        const flaggedMessageBg = "Актуализацията на коментара ви беше маркирана като неподходяща";
+        const flaggedMessageEn =
+          "Your comment update was flagged as inappropriate";
+        const flaggedMessageBg =
+          "Актуализацията на коментара ви беше маркирана като неподходяща";
 
         await Notification.create({
           userId,
@@ -362,7 +414,10 @@ export const updateComment = async (
         });
       }
     } catch (moderationErr: any) {
-      console.error("[updateComment] Moderation service error:", moderationErr.message);
+      logger.error(
+        moderationErr,
+        "[updateComment] Moderation service error",
+      );
       // Continue with update even if moderation service fails
     }
 
@@ -375,9 +430,9 @@ export const updateComment = async (
     await comment.save();
 
     // Log comment update
-    await logActivity(req, 'COMMENT_EDIT', {
+    await logActivity(req, "COMMENT_EDIT", {
       targetId: id,
-      targetType: 'comment',
+      targetType: "comment",
       description: `Updated comment ${id}`,
     });
 
@@ -387,26 +442,48 @@ export const updateComment = async (
   }
 };
 
-/* ---------- DELETE COMMENT ---------- */
-// Helper to delete a comment and all its descendants recursively
-const deleteCommentTree = async (commentId: Types.ObjectId): Promise<void> => {
-  // Find all direct children
-  const children = await Comment.find({ parentCommentId: commentId });
-  // Recursively delete each child and its subtree
-  for (const child of children) {
-    await deleteCommentTree(child._id as Types.ObjectId);
+/**
+ * Recursively deletes a comment tree.
+ * Helper function to handle cascade deletion of replies.
+ *
+ * @param commentId - Root comment ID to delete
+ * @returns Promise void
+ * @throws {Error} Database deletion failure
+ */
+const deleteCommentTree = async (
+  commentId: Types.ObjectId
+): Promise<void> => {
+  try {
+    // Find all direct children
+    const children = await Comment.find({ parentCommentId: commentId });
+    // Recursively delete each child and its subtree
+    for (const child of children) {
+      await deleteCommentTree(child._id as Types.ObjectId);
+    }
+    // Finally delete this comment
+    await Comment.findByIdAndDelete(commentId);
+  } catch (err: any) {
+    logger.error(err, `Error deleting comment tree for commentId ${commentId}`);
   }
-  // Finally delete this comment
-  await Comment.findByIdAndDelete(commentId);
 };
 
 /**
- * Deletes a comment and all its replies recursively.
- * Owner or admin only. Uses helper deleteCommentTree for cascade deletion.
+ * Deletes a comment and all its replies.
+ * Restricted to Owner or Admin. Triggers a recursive tree deletion.
  *
  * @param req - AuthRequest with params { id }
- * @param res - Response with success message or error
- * @returns 200 on success, 403 if not authorized, 404 if comment not found
+ * @param res - Express response object
+ * @returns Response with deletion confirmation
+ * @throws {Error} Database deletion failure
+ *
+ * @example
+ * ```json
+ * DELETE /api/comments/commentId123
+ * ```
+ * @response
+ * ```json
+ * { "message": "Comment deleted" }
+ * ```
  */
 export const deleteComment = async (
   req: AuthRequest,
@@ -432,9 +509,9 @@ export const deleteComment = async (
     await deleteCommentTree(comment._id as Types.ObjectId);
 
     // Log comment deletion
-    await logActivity(req, 'COMMENT_DELETE', {
+    await logActivity(req, "COMMENT_DELETE", {
       targetId: id,
-      targetType: 'comment',
+      targetType: "comment",
       description: `Deleted comment ${id}`,
     });
 
@@ -445,12 +522,24 @@ export const deleteComment = async (
 };
 
 /**
- * Retrieves all comments for a specific post, organized as a tree.
- * Returns only visible comments. Builds nested structure using parentCommentId.
+ * Retrieves comments for a post in a tree structure.
+ * Organizes replies under their respective parent comments. Only returns visible comments.
  *
  * @param req - Request with params { postId }
- * @param res - Response with array of root comments, each having replies[] nested
- * @returns 200 with hierarchical comment tree, 500 on error
+ * @param res - Express response object
+ * @returns Response with hierarchical comment list
+ * @throws {Error} Database retrieval failure
+ *
+ * @example
+ * ```json
+ * GET /api/posts/postId/comments
+ * ```
+ * @response
+ * ```json
+ * [
+ * { "_id": "root", "text": "...", "replies": [{ "_id": "reply", ... }] }
+ * ]
+ * ```
  */
 export const getCommentsByPost = async (
   req: Request,
@@ -472,20 +561,23 @@ export const getCommentsByPost = async (
     const rootComments: any[] = [];
 
     // First pass: create map and add replies array to each comment
-    comments.forEach(comment => {
+    comments.forEach((comment) => {
       const commentId = comment._id as Types.ObjectId;
       commentMap.set(commentId.toString(), {
         ...comment.toObject(),
-        replies: []
+        replies: [],
       });
     });
 
     // Second pass: build tree by assigning comments to their parents
-    comments.forEach(comment => {
+    comments.forEach((comment) => {
       const commentId = comment._id as Types.ObjectId;
       const commentObj = commentMap.get(commentId.toString());
 
-      if (comment.parentCommentId && commentMap.has(comment.parentCommentId.toString())) {
+      if (
+        comment.parentCommentId &&
+        commentMap.has(comment.parentCommentId.toString())
+      ) {
         // This is a reply - add it to parent's replies array
         const parent = commentMap.get(comment.parentCommentId.toString());
         parent.replies.push(commentObj);
@@ -497,35 +589,47 @@ export const getCommentsByPost = async (
 
     // Sort replies within each parent by createdAt ascending
     const sortRepliesRecursive = (commentList: any[]) => {
-      commentList.forEach(comment => {
+      commentList.forEach((comment) => {
         if (comment.replies && comment.replies.length > 0) {
-          comment.replies.sort((a: any, b: any) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          comment.replies.sort(
+            (a: any, b: any) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
           );
           sortRepliesRecursive(comment.replies);
         }
       });
     };
 
-    rootComments.sort((a, b) =>
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    rootComments.sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
     sortRepliesRecursive(rootComments);
 
     return res.json(rootComments);
   } catch (err: any) {
-    console.error("[getCommentsByPost] Error:", err);
+    logger.error(err, "[getCommentsByPost] Error");
     return res.status(500).json({ message: err.message });
   }
 };
 
 /**
- * Retrieves a single comment by ID.
- * Only returns visible comments.
+ * Fetches a single comment.
+ * Population includes the author's basic profile. Only returns if visible.
  *
  * @param req - Request with params { id }
- * @param res - Response with comment populated with userId
- * @returns 200 with comment, 404 if not found
+ * @param res - Express response object
+ * @returns Response with comment data
+ * @throws {Error} Database fetch failure
+ *
+ * @example
+ * ```json
+ * GET /api/comments/commentId123
+ * ```
+ * @response
+ * ```json
+ * { "_id": "...", "text": "...", "userId": { "username": "..." } }
+ * ```
  */
 export const getComment = async (
   req: Request,

@@ -90,7 +90,7 @@
 }
 
 /* Tablets (768px - 1023px) */
-@media (min-width: 768px) and (max-width: 1023px) {
+@media (min-width: 768px) and (max-width: 1023px) {   
   .page-container {
     left: var(--sidebar-offset, 0);
     right: var(--sidebar-gap, 16px);

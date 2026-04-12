@@ -2,25 +2,30 @@
  * @file db.ts
  * @description MongoDB database connection utility using Mongoose.
  * Establishes connection to the configured MongoDB instance.
- * Exits process with error code 1 if connection fails.
  */
 
 import mongoose from "mongoose";
 import { MONGO_URI } from "./env";
+import logger from "../utils/logger";
 
 /**
- * Connects to MongoDB using the URI from environment variables.
- * Should be called during application startup.
+ * Connects to MongoDB.
+ * Uses URI from environment variables and logs success or critical failure.
  *
- * @returns Promise<void> that resolves when connected or rejects on failure
- * @throws Will exit process (code 1) if connection fails
+ * @returns {Promise<void>} Resolves when connected successfully
+ * @throws {Error} Exits process (code 1) if connection fails
+ *
+ * @example
+ * ```typescript
+ * await connectDB();
+ * ```
  */
 export const connectDB = async (): Promise<void> => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log("MongoDB connected successfully");
+    logger.info("MongoDB connected successfully");
   } catch (error) {
-    console.error("MongoDB connection failed:", error);
+    logger.error(error, "MongoDB connection failed");
     process.exit(1);
   }
 };

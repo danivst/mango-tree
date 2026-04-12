@@ -8,13 +8,13 @@
 
 import mongoose from 'mongoose';
 import { MONGO_URI } from '../config/env';
-import Tag from '../models/tag';
+import Tag from '../models/tag-model';
 import TagType from '../enums/tag-type';
 
 const seedTags = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log('mongodb connected for tag seeding');
+    console.log('✅ MongoDB connected for tag seeding');
 
     // clear existing tags
     await Tag.deleteMany({});

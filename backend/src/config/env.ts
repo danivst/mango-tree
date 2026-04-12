@@ -6,16 +6,16 @@
  */
 
 import dotenv from "dotenv";
+import logger from "../utils/logger";
 
 dotenv.config();
 
 /**
- * Helper to require an environment variable to be present.
- * Throws descriptive error if variable is missing.
+ * Validates and retrieves an environment variable.
  *
  * @param key - Environment variable name
- * @returns The variable's value
- * @throws Error if variable is not defined
+ * @returns The variable's value string
+ * @throws {Error} If variable is not defined
  */
 const requireEnv = (key: string): string => {
   const value = process.env[key];
@@ -29,6 +29,7 @@ const requireEnv = (key: string): string => {
  * Server configuration
  */
 export const PORT = Number(process.env.PORT) || 3000;
+export const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
 
 /**
  * Database configuration
@@ -50,7 +51,7 @@ export const CLIENT_URL = requireEnv("CLIENT_URL");
  * AI/Moderation configuration
  */
 export const GEMINI_API_KEY = requireEnv("GEMINI_API_KEY");
-export const GEMINI_MODEL_DEFAULT = process.env.GEMINI_MODEL_DEFAULT || "gemini-2.5-flash-lite";
+export const GEMINI_MODEL_DEFAULT = process.env.GEMINI_MODEL_DEFAULT || "gemini-1.5-flash";
 
 /**
  * Translation configuration
@@ -65,8 +66,6 @@ export const IS_DEV = NODE_ENV === "development";
 
 /**
  * Email configuration
- * Primary: Resend API
- * Fallback: Gmail SMTP
  */
 export const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
 export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
@@ -76,20 +75,16 @@ export const SMTP_PASS = process.env.SMTP_PASS ?? "";
 
 /**
  * Development logging
- * Outputs configuration details when in development mode
  */
 if (IS_DEV) {
-  console.log("Environment variables loaded");
-  console.log(`Client URL: ${CLIENT_URL}`);
-  console.log(`Mongo URI loaded`);
-  console.log(`Gemini API Key: ${GEMINI_API_KEY.substring(0, 8)}...`);
-  console.log(`Resend From: ${RESEND_FROM_EMAIL}`);
+  logger.info({
+    clientUrl: CLIENT_URL,
+    geminiKey: `${GEMINI_API_KEY.substring(0, 8)}...`,
+    resendFrom: RESEND_FROM_EMAIL,
+    smtpConfigured: !!SMTP_USER
+  }, "Environment variables loaded");
 
-  if (!RESEND_API_KEY) {
-    console.log("Resend API key not configured. Using SMTP if available.");
-  }
-
-  if (SMTP_USER) {
-    console.log(`SMTP Backup Configured: ${SMTP_USER}`);
+  if (!RESEND_API_KEY && !SMTP_USER) {
+    logger.warn("No email service (Resend or SMTP) configured.");
   }
 }

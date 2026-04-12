@@ -1,24 +1,46 @@
+/**
+ * @file report-controller.ts
+ * @description Handles user reports against posts, comments, and users. 
+ * Includes administrative tools for reviewing reports, updating status, 
+ * and performing content take-downs with automated bilingual notifications.
+ */
+
 import { Response } from "express";
-import Report from "../models/report";
-import Post from "../models/post";
-import Comment from "../models/comment";
-import User from "../models/user";
-import Notification from "../models/notification";
+import Report from "../models/report-model";
+import Post from "../models/post-model";
+import Comment from "../models/comment-model";
+import User from "../models/user-model";
+import Notification from "../models/notification-model";
 import NotificationType from "../enums/notification-type";
-import ReportTargetTypeValue, { ReportTargetType } from "../enums/report-target-type";
-import ReportStatusTypeValue, { ReportStatusType } from "../enums/report-status-type";
+import ReportTargetTypeValue, {
+  ReportTargetType,
+} from "../enums/report-target-type";
+import ReportStatusTypeValue, {
+  ReportStatusType,
+} from "../enums/report-status-type";
 import RoleTypeValue from "../enums/role-type";
 import { AuthRequest } from "../interfaces/auth";
 import { getDualTranslation } from "../utils/translation";
 import { logActivity } from "../utils/activity-logger";
 
 /**
- * Submits a report against a post, comment, or user.
- * Validates that the target exists before creating the report.
+ * Files a new report.
+ * Validates the target (Post/Comment/User) existence before creating. Logs the report submission.
  *
- * @param req - AuthRequest with body { targetType: 'post'|'comment'|'user', targetId: string, reason: string }
- * @param res - Response with { message, report } or error
- * @returns 201 on success, 400 for invalid target or missing fields, 404 if target not found
+ * @param req - AuthRequest with body { targetType, targetId, reason }
+ * @param res - Express response object
+ * @returns Response with created report data
+ * @throws {Error} Database validation or creation failure
+ *
+ * @example
+ * ```json
+ * Request body:
+ * { "targetType": "post", "targetId": "...", "reason": "Spam" }
+ * ```
+ * @response
+ * ```json
+ * { "message": "Report submitted successfully", "report": { ... } }
+ * ```
  */
 export const createReport = async (
   req: AuthRequest,
@@ -62,7 +84,7 @@ export const createReport = async (
     });
 
     // Log report submission
-    await logActivity(req, 'REPORT_SUBMIT', {
+    await logActivity(req, "REPORT_SUBMIT", {
       targetId,
       targetType: targetType as any,
       description: `Reported ${targetType} ${targetId}. Reason: ${reason}`,
@@ -77,12 +99,22 @@ export const createReport = async (
 };
 
 /**
- * Retrieves all reports, sorted by newest first.
- * Admin only.
+ * Retrieves all reports.
+ * Sorted by newest first. Restricted to Admins.
  *
- * @param req - AuthRequest with user.role === ADMIN
- * @param res - Response with array of Report documents (populated with reporter info)
- * @returns 200 with reports array, 403 if not admin
+ * @param req - AuthRequest
+ * @param res - Express response object
+ * @returns Response with list of reports
+ * @throws {Error} Database retrieval error
+ *
+ * @example
+ * ```json
+ * GET /api/admin/reports
+ * ```
+ * @response
+ * ```json
+ * [ { "_id": "...", "reason": "Harassment", "status": "PENDING" } ]
+ * ```
  */
 export const getAllReports = async (
   req: AuthRequest,
@@ -102,12 +134,23 @@ export const getAllReports = async (
 };
 
 /**
- * Updates the status of a report (e.g., PENDING, RESOLVED, REJECTED, ACTION_TAKEN).
- * Admin only. If rejecting with a reason, sends a notification to the reporter.
+ * Updates the status of a report.
+ * Resolves or rejects a report. If rejected, sends a translated explanation to the reporter. restricted to Admins.
  *
- * @param req - AuthRequest with params { id } and body { status: string, reason?: string }
- * @param res - Response with { message, report } or error
- * @returns 200 on success, 400 for invalid status, 404 if report not found, 403 if not admin
+ * @param req - AuthRequest with params { id } and body { status, reason? }
+ * @param res - Express response object
+ * @returns Response with updated report data
+ * @throws {Error} Database update failure
+ *
+ * @example
+ * ```json
+ * Request body:
+ * { "status": "REJECTED", "reason": "Not a violation" }
+ * ```
+ * @response
+ * ```json
+ * { "message": "Report updated", "report": { ... } }
+ * ```
  */
 export const updateReportStatus = async (
   req: AuthRequest,
@@ -162,9 +205,9 @@ export const updateReportStatus = async (
     }
 
     // Log report status update
-    await logActivity(req, 'REPORT_STATUS_UPDATE', {
+    await logActivity(req, "REPORT_STATUS_UPDATE", {
       targetId: id,
-      targetType: 'report',
+      targetType: "report",
       description: `Updated report ${id} status to ${status}`,
     });
 
@@ -175,12 +218,23 @@ export const updateReportStatus = async (
 };
 
 /**
- * Deletes the reported item (post or comment) and notifies relevant parties.
- * Admin only. Sends notifications to the item author and the reporter.
+ * Deletes content associated with a report.
+ * Deletes the post/comment, notifies the violator with a translated reason, and thanks the reporter. restricted to Admins.
  *
- * @param req - AuthRequest with params { id } (report ID) and body { reason: string }
- * @param res - Response with { message } or error
- * @returns 200 on success, 400 if target not found, 404 if report not found, 403 if not admin
+ * @param req - AuthRequest with params { id } and body { reason }
+ * @param res - Express response object
+ * @returns Response with success message
+ * @throws {Error} Database deletion failure
+ *
+ * @example
+ * ```json
+ * Request body:
+ * { "reason": "Prohibited content" }
+ * ```
+ * @response
+ * ```json
+ * { "message": "Item deleted and notifications sent." }
+ * ```
  */
 export const deleteReportedItem = async (
   req: AuthRequest,
@@ -279,7 +333,7 @@ export const deleteReportedItem = async (
     });
 
     // Log reported item deletion
-    await logActivity(req, 'REPORT_ITEM_DELETE', {
+    await logActivity(req, "REPORT_ITEM_DELETE", {
       targetId: report.targetId.toString(),
       targetType: report.targetType as any,
       description: `Deleted reported ${report.targetType} ${report.targetId}`,

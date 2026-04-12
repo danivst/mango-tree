@@ -1,3 +1,10 @@
+/**
+ * @file AdminDataContext.tsx
+ * @description React Context for centralized admin dashboard data management.
+ * Provides state and operations for all admin-visible entities (users, reports, content review, categories, tags).
+ * Implements a consistent pattern: each entity has raw data + loading/error/fetched state.
+ */
+
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import {
   adminAPI,

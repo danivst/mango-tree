@@ -5,26 +5,33 @@
  */
 
 import { Response } from "express";
-import ActivityLog from "../models/activity-log";
+import ActivityLog from "../models/activity-log-model";
 import { AuthRequest } from "../interfaces/auth";
-import { requireRole } from "../utils/auth";
 import RoleTypeValue from "../enums/role-type";
+import logger from "../utils/logger";
 
 /**
- * Retrieves activity logs with optional filters and pagination.
- * Accessible only by admins.
+ * Retrieves a paginated list of activity logs.
+ * Restricted to Admins. Supports filtering by user, action type, date range, and text search.
  *
- * Query parameters:
- * - page (number, default 1)
- * - limit (number, default 50)
- * - userId (string) - filter by user ID
- * - actionType (string) - filter by action type
- * - startDate (ISO date string)
- * - endDate (ISO date string)
- * - search (string) - searches description and username
+ * @param req - AuthRequest with query parameters { page, limit, userId, actionType, startDate, endDate, search }
+ * @param res - Express response object
+ * @returns Response with paginated logs and metadata
+ * @throws {Error} Database retrieval error
  *
- * @param req - AuthRequest with query params
- * @param res - Response with JSON { logs, total, page, totalPages }
+ * @example
+ * ```json
+ * GET /api/admin/logs?page=1&limit=10&actionType=BAN_USER
+ * ```
+ * @response
+ * ```json
+ * {
+ * "logs": [...],
+ * "total": 150,
+ * "page": 1,
+ * "totalPages": 15
+ * }
+ * ```
  */
 export const getActivityLogs = async (
   req: AuthRequest,
@@ -57,20 +64,11 @@ export const getActivityLogs = async (
     }
 
     // Handle search using aggregation or text index if needed.
-    // For simplicity, we'll fetch IDs and then filter population, but it's complex.
-    // Alternative: Use $or with direct field matching.
     if (search) {
       const q = (search as string).trim();
       if (q) {
         // Search in description field (case insensitive)
-        query.description = { $regex: q, $options: 'i' };
-        // For username search, we need to join with User collection.
-        // Simplest: use $lookup aggregation or do two-step query.
-        // Since populate can't be used in query, we'll fetch IDs that match username separately.
-        // However, to keep it simple and given small scale, we can fetch all and filter client-side after population.
-        // We'll adjust later: First get matching user IDs, then add $or condition.
-        // But for now, we'll rely on client-side filtering for username only (since description can be filtered server-side).
-        // We'll handle this more efficiently later if needed.
+        query.description = { $regex: q, $options: "i" };
       }
     }
 
@@ -96,12 +94,9 @@ export const getActivityLogs = async (
           log.description.toLowerCase().includes(q) ||
           (log.userId as any)?.username?.toLowerCase().includes(q),
       );
-      // Recalculate totalPages based on filtered results? That's tricky because total count might be off.
-      // For now, we'll keep total as the unfiltered count (or could count matches separately, but expensive).
-      // The frontend will show total number of logs matching all filters except username part of search is client-side.
     }
 
-    const totalPages = Math.ceil(logs.length / limitNum);
+    const totalPages = Math.ceil(total / limitNum);
 
     return res.json({
       logs,
@@ -110,7 +105,7 @@ export const getActivityLogs = async (
       totalPages,
     });
   } catch (err: any) {
-    console.error("Error fetching activity logs:", err);
+    logger.error(err, "Error fetching activity logs");
     return res.status(500).json({ message: err.message });
   }
 };

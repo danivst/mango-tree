@@ -1,55 +1,36 @@
 /**
  * @file email-templates.ts
  * @description Centralized HTML email template generators.
- * All email templates follow a consistent design language:
- * - Primary color: #E77728 (MangoTree orange)
- * - Font: 'Segoe UI', Arial, sans-serif
- * - Max width: 600px
- * - Responsive design with inline styles
+ * @see interfaces/email.ts for parameter type definitions.
  *
- * Each template function returns an HTML string ready to be passed to the email service.
- * Templates support bilingual content (English/Bulgarian) through parameters.
+ * This module provides functions to generate consistent, bilingual HTML emails
+ * for various user notifications such as 2FA codes, welcome messages, password resets, etc.
+ * Each function accepts a parameter object that contains all necessary data to populate the template.
+ * The generated HTML is designed to be visually appealing and mobile-responsive.
  */
 
-import { getLocalizedText } from "./get-translation";
-
-/**
- * Parameters for the 2FA verification email template.
- */
-export interface Get2FAEmailTemplateParams {
-  /** Email title localized to user's language */
-  title: string;
-  /** Introductory text localized to user's language */
-  intro: string;
-  /** The 6-digit verification code */
-  code: string;
-  /** Security note about code expiry and safety */
-  securityNote: string;
-  /** Email signature */
-  signature: string;
-}
+import {
+  Get2FAEmailTemplateParams,
+  GetGenericEmailTemplateParams,
+  GetWelcomeEmailTemplateParams,
+  GetAdminCreatedEmailTemplateParams,
+  GetPasswordResetEmailTemplateParams,
+  GetAccountDeletedEmailTemplateParams,
+  GetSuspensionEmailTemplateParams,
+} from "../interfaces/email";
 
 /**
  * Generates the HTML for a two-factor authentication verification email.
- * Features a prominently displayed code in a dashed orange box.
+ * Includes a prominent 6-digit code display with security instructions.
  *
- * @param params - Template parameters
- * @returns HTML string for the 2FA email
- *
- * @example
+ * @param params - Object containing title, intro, code, securityNote, and signature
+ * @returns HTML string for the email body
+ * * @example
  * ```typescript
- * const html = get2FAEmailTemplate({
- *   title: "MangoTree Two-Factor Authentication",
- *   intro: "To log in, use the following code:",
- *   code: "123456",
- *   securityNote: "This code expires in 10 minutes.",
- *   signature: "Sincerely, the MangoTree team"
- * });
+ * const html = get2FAEmailTemplate({ title: "Security Code", code: "123456", ... });
  * ```
  */
-export const get2FAEmailTemplate = (
-  params: Get2FAEmailTemplateParams
-): string => `
+export const get2FAEmailTemplate = (params: Get2FAEmailTemplateParams): string => `
   <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
     <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${params.title}</h2>
     <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">Hello ${params.intro}</p>
@@ -64,36 +45,13 @@ export const get2FAEmailTemplate = (
 `;
 
 /**
- * Parameters for a generic email template (simple title/body/signature).
- */
-export interface GetGenericEmailTemplateParams {
-  /** Email title localized to user's language */
-  title: string;
-  /** Main body content localized to user's language */
-  body: string;
-  /** Email signature */
-  signature: string;
-}
-
-/**
- * Generates a simple email with title, body, and signature.
- * Suitable for notifications and announcements.
+ * Generates a simple email with basic text formatting.
+ * Used for general notifications that don't require complex layouts.
  *
- * @param params - Template parameters
- * @returns HTML string for the email
- *
- * @example
- * ```typescript
- * const html = getGenericEmailTemplate({
- *   title: "Welcome to MangoTree!",
- *   body: "Your account has been created successfully.",
- *   signature: "The MangoTree Team"
- * });
- * ```
+ * @param params - Object containing title, body, and signature
+ * @returns HTML string for the email body
  */
-export const getGenericEmailTemplate = (
-  params: GetGenericEmailTemplateParams
-): string => `
+export const getGenericEmailTemplate = (params: GetGenericEmailTemplateParams): string => `
   <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
     <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${params.title}</h2>
     <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 30px 0;">${params.body}</p>
@@ -102,30 +60,13 @@ export const getGenericEmailTemplate = (
 `;
 
 /**
- * Parameters for a welcome email sent after registration.
- */
-export interface GetWelcomeEmailTemplateParams {
-  /** User's chosen username */
-  username: string;
-  /** Localized title */
-  title: string;
-  /** Localized greeting */
-  greeting: string;
-  /** Localized welcome message body */
-  body: string;
-  /** Localized signature */
-  signature: string;
-}
-
-/**
  * Generates the welcome email for new users.
+ * Congratulates the user and provides an introductory message to the community.
  *
- * @param params - Template parameters
- * @returns HTML string for the welcome email
+ * @param params - Object containing title, username, greeting, body, and signature
+ * @returns HTML string for the email body
  */
-export const getWelcomeEmailTemplate = (
-  params: GetWelcomeEmailTemplateParams
-): string => `
+export const getWelcomeEmailTemplate = (params: GetWelcomeEmailTemplateParams): string => `
   <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
     <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${params.title}</h2>
     <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">Hello ${params.username},</p>
@@ -136,41 +77,13 @@ export const getWelcomeEmailTemplate = (
 `;
 
 /**
- * Parameters for admin account creation email.
- */
-export interface GetAdminCreatedEmailTemplateParams {
-  /** Admin's username */
-  username: string;
-  /** Generated temporary password */
-  defaultPassword: string;
-  /** Localized title */
-  title: string;
-  /** Localized greeting */
-  greeting: string;
-  /** Localized credentials label */
-  credentialsLabel: string;
-  /** Localized username label */
-  usernameLabel: string;
-  /** Localized password label */
-  passwordLabel: string;
-  /** Localized instruction about changing password */
-  instruction: string;
-  /** Localized footer message */
-  footer: string;
-  /** Localized signature */
-  signature: string;
-}
-
-/**
- * Generates the admin account creation email with credentials.
- * Includes a highlighted box with username and temporary password.
+ * Generates the admin account creation email.
+ * Includes auto-generated credentials and strong instructions to change the default password.
  *
- * @param params - Template parameters
- * @returns HTML string for the admin creation email
+ * @param params - Object containing title, credentialsLabel, username, defaultPassword, and signature
+ * @returns HTML string for the email body
  */
-export const getAdminCreatedEmailTemplate = (
-  params: GetAdminCreatedEmailTemplateParams
-): string => `
+export const getAdminCreatedEmailTemplate = (params: GetAdminCreatedEmailTemplateParams): string => `
   <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
     <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${params.title}</h2>
     <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">${params.greeting}</p>
@@ -190,34 +103,13 @@ export const getAdminCreatedEmailTemplate = (
 `;
 
 /**
- * Parameters for password reset email.
- */
-export interface GetPasswordResetEmailTemplateParams {
-  /** Reset link URL with token */
-  resetLink: string;
-  /** Localized title */
-  title: string;
-  /** Localized intro */
-  intro: string;
-  /** Localized button text */
-  buttonText: string;
-  /** Localized ignore message */
-  ignoreMsg: string;
-  /** Localized automated message */
-  automatedMsg: string;
-  /** Localized signature */
-  signature: string;
-}
-
-/**
- * Generates the password reset email with a call-to-action button.
+ * Generates the password reset email.
+ * Includes a secure token-based link rendered as a call-to-action button.
  *
- * @param params - Template parameters
- * @returns HTML string for the password reset email
+ * @param params - Object containing title, intro, resetLink, buttonText, and signature
+ * @returns HTML string for the email body
  */
-export const getPasswordResetEmailTemplate = (
-  params: GetPasswordResetEmailTemplateParams
-): string => `
+export const getPasswordResetEmailTemplate = (params: GetPasswordResetEmailTemplateParams): string => `
   <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
     <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${params.title}</h2>
     <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">${params.intro}</p>
@@ -231,26 +123,13 @@ export const getPasswordResetEmailTemplate = (
 `;
 
 /**
- * Parameters for account deletion email.
- */
-export interface GetAccountDeletedEmailTemplateParams {
-  /** Localized title (different for self vs admin deletion) */
-  title: string;
-  /** Localized body message explaining deletion */
-  body: string;
-  /** Localized signature */
-  signature: string;
-}
-
-/**
  * Generates the account deletion confirmation email.
+ * Notifies the user that their account and data have been removed from the system.
  *
- * @param params - Template parameters
- * @returns HTML string for the deletion email
+ * @param params - Object containing title, body, and signature
+ * @returns HTML string for the email body
  */
-export const getAccountDeletedEmailTemplate = (
-  params: GetAccountDeletedEmailTemplateParams
-): string => `
+export const getAccountDeletedEmailTemplate = (params: GetAccountDeletedEmailTemplateParams): string => `
   <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
     <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${params.title}</h2>
     <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 30px 0;">${params.body}</p>
@@ -259,27 +138,13 @@ export const getAccountDeletedEmailTemplate = (
 `;
 
 /**
- * Parameters for account suspension/notification email.
- */
-export interface GetSuspensionEmailTemplateParams {
-  /** Localized title */
-  title: string;
-  /** Localized suspension reason message (includes reason) */
-  message: string;
-  /** Localized signature */
-  signature: string;
-}
-
-/**
  * Generates the account suspension notification email.
- * Used when an admin suspends a user's account.
+ * Informs the user of an administrative ban or temporary suspension.
  *
- * @param params - Template parameters
- * @returns HTML string for the suspension email
+ * @param params - Object containing title, message, and signature
+ * @returns HTML string for the email body
  */
-export const getSuspensionEmailTemplate = (
-  params: GetSuspensionEmailTemplateParams
-): string => `
+export const getSuspensionEmailTemplate = (params: GetSuspensionEmailTemplateParams): string => `
   <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
     <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${params.title}</h2>
     <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 30px 0;">${params.message}</p>
@@ -287,13 +152,19 @@ export const getSuspensionEmailTemplate = (
   </div>
 `;
 
+
 /**
- * Helper function to build an email body using the appropriate template.
- * This function can be used by email service to choose template based on type.
+ * Dispatches the correct template based on the notification type.
+ * Acts as a centralized factory for HTML email generation.
  *
- * @param type - Email template type
- * @param data - Data required for the specific template
- * @returns HTML string
+ * @param type - Union of valid template types
+ * @param data - Parameter object matching the required interface for the chosen type
+ * @returns Populated HTML string
+ * @throws {Error} If an unsupported template type is provided
+ * * @example
+ * ```typescript
+ * const body = buildEmailBody('welcome', { username: "ChefJohn", ... });
+ * ```
  */
 export function buildEmailBody(
   type: 'welcome' | 'password-reset' | 'account-deleted' | 'admin-created' |
@@ -318,4 +189,4 @@ export function buildEmailBody(
     default:
       throw new Error(`Unknown email template type: ${type}`);
   }
-}
+} 

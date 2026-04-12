@@ -5,6 +5,7 @@
  */
 
 import axios from "axios";
+import logger from "../utils/logger";
 
 /**
  * Interface for geolocation response from ipapi.co
@@ -19,11 +20,18 @@ export interface GeoLocation {
 }
 
 /**
- * Fetches geographical location information for an IP address.
- * Falls back to default message if service is unavailable or IP is localhost.
+ * Resolves an IP address to a physical location.
+ * Skips lookups for local/private IP ranges. Returns a formatted string "City, Country".
  *
- * @param ipAddress - The IP address to look up
- * @returns Promise with formatted location string (e.g., "Sofia, Bulgaria") or "unknown location"
+ * @param ipAddress - The target IPv4 or IPv6 address
+ * @returns Promise resolving to formatted location string or "Unknown location"
+ * @throws {Error} Internal service errors are caught and return a fallback string
+ *
+ * @example
+ * ```typescript
+ * const loc = await getLocationFromIP("8.8.8.8");
+ * // returns "Mountain View, United States"
+ * ```
  */
 export const getLocationFromIP = async (ipAddress: string): Promise<string> => {
   // Don't query for localhost/private IPs
@@ -47,7 +55,7 @@ export const getLocationFromIP = async (ipAddress: string): Promise<string> => {
       return 'Unknown location';
     }
   } catch (error: any) {
-    console.error('Geolocation lookup failed:', error?.message || String(error));
+    logger.warn({ ip: ipAddress, message: error?.message }, "Geolocation lookup failed");
     return 'Unknown location';
   }
 };

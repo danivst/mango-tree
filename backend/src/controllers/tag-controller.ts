@@ -1,10 +1,3 @@
-import { Request, Response } from "express";
-import RoleTypeValue from "../enums/role-type";
-import Tag from "../models/tag";
-import { AuthRequest } from "../interfaces/auth";
-import { getDualTranslation } from "../utils/translation";
-import { logActivity } from "../utils/activity-logger";
-
 /**
  * @file tag-controller.ts
  * @description Manages tag CRUD operations.
@@ -12,12 +5,30 @@ import { logActivity } from "../utils/activity-logger";
  * All routes require ADMIN role except GET /.
  */
 
+import { Request, Response } from "express";
+import RoleTypeValue from "../enums/role-type";
+import Tag from "../models/tag-model";
+import { AuthRequest } from "../interfaces/auth";
+import { getDualTranslation } from "../utils/translation";
+import { logActivity } from "../utils/activity-logger";
+
 /**
- * Retrieves all tags sorted by English name.
+ * Fetches all tags.
+ * Sorted alphabetically by English name. Publicly accessible.
  *
  * @param req - Request
- * @param res - Response with array of Tag documents
- * @returns 200 with tags array
+ * @param res - Express response object
+ * @returns Response with list of tags
+ * @throws {Error} Database retrieval error
+ *
+ * @example
+ * ```json
+ * GET /api/tags
+ * ```
+ * @response
+ * ```json
+ * [ { "name": "Vegan", "translations": { "en": "Vegan", "bg": "Веган" } } ]
+ * ```
  */
 export const getTags = async (
   req: Request,
@@ -33,12 +44,23 @@ export const getTags = async (
 };
 
 /**
- * Creates a new tag with automatic bilingual translation.
- * Admin only. Name is automatically translated to both English and Bulgarian.
+ * Creates a new tag.
+ * Automatically translates the tag name. restricted to Admins.
  *
- * @param req - AuthRequest with body { name: string, type? }
- * @param res - Response with created tag or error
- * @returns 201 on success, 403 if not admin, 400 if missing name or duplicate
+ * @param req - AuthRequest with body { name }
+ * @param res - Express response object
+ * @returns Response with created tag data
+ * @throws {Error} Database or translation failure
+ *
+ * @example
+ * ```json
+ * Request body:
+ * { "name": "Spicy" }
+ * ```
+ * @response
+ * ```json
+ * { "message": "Tag created", "tag": { ... } }
+ * ```
  */
 export const createTag = async (
   req: AuthRequest,
@@ -62,7 +84,7 @@ export const createTag = async (
     if (exists) return res.status(400).json({ message: "Tag already exists." });
 
     // Get user info for createdBy
-    const userModel = await (await import("../models/user")).default;
+    const userModel = await (await import("../models/user-model")).default;
     const user = await userModel.findById(req.user!.userId);
     const createdBy = user?.username || "System";
 
@@ -73,9 +95,9 @@ export const createTag = async (
     });
 
     // Log tag creation
-    await logActivity(req, 'TAG_CREATE', {
+    await logActivity(req, "TAG_CREATE", {
       targetId: tag._id.toString(),
-      targetType: 'tag',
+      targetType: "tag",
       description: `Created tag "${name}"`,
     });
 
@@ -92,12 +114,23 @@ export const createTag = async (
 };
 
 /**
- * Updates a tag's name and translations.
- * Admin only. Name changes are automatically re-translated.
+ * Updates a tag.
+ * Re-translates the tag name and updates all references. restricted to Admins.
  *
- * @param req - AuthRequest with params { id } and body { name? }
- * @param res - Response with updated tag or error
- * @returns 200 on success, 403 if not admin, 404 if not found
+ * @param req - AuthRequest with params { id } and body { name }
+ * @param res - Express response object
+ * @returns Response with updated tag data
+ * @throws {Error} Database update failure
+ *
+ * @example
+ * ```json
+ * Request body:
+ * { "name": "Healthy" }
+ * ```
+ * @response
+ * ```json
+ * { "message": "Tag updated", "tag": { ... } }
+ * ```
  */
 export const updateTag = async (
   req: AuthRequest,
@@ -126,9 +159,9 @@ export const updateTag = async (
     if (!tag) return res.status(404).json({ message: "Tag not found." });
 
     // Log tag update
-    await logActivity(req, 'TAG_UPDATE', {
+    await logActivity(req, "TAG_UPDATE", {
       targetId: id,
-      targetType: 'tag',
+      targetType: "tag",
       description: `Updated tag "${name}"`,
     });
 
@@ -139,12 +172,22 @@ export const updateTag = async (
 };
 
 /**
- * Deletes a tag by ID.
- * Admin only.
+ * Deletes a tag.
+ * restricted to Admins. Logs the deletion activity.
  *
  * @param req - AuthRequest with params { id }
- * @param res - Response with success message or error
- * @returns 200 on success, 403 if not admin, 404 if not found
+ * @param res - Express response object
+ * @returns Response with success message
+ * @throws {Error} Database deletion failure
+ *
+ * @example
+ * ```json
+ * DELETE /api/tags/id
+ * ```
+ * @response
+ * ```json
+ * { "message": "Tag deleted" }
+ * ```
  */
 export const deleteTag = async (
   req: AuthRequest,
@@ -160,9 +203,9 @@ export const deleteTag = async (
     if (!tag) return res.status(404).json({ message: "Tag not found." });
 
     // Log tag deletion
-    await logActivity(req, 'TAG_DELETE', {
+    await logActivity(req, "TAG_DELETE", {
       targetId: id,
-      targetType: 'tag',
+      targetType: "tag",
       description: `Deleted tag "${tag.name}"`,
     });
 

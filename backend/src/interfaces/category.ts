@@ -5,9 +5,9 @@ import mongoose, { Document } from "mongoose";
  * @description Mongoose document interface for Category model.
  * Represents a content category for organizing posts.
  *
- * @property {Document['_id']} _id - Unique identifier (MongoDB ObjectId)
+ * @property {mongoose.Types.ObjectId} _id - Unique identifier (MongoDB ObjectId)
  * @property {string} name - Category name
- * @property {CategoryTranslations} translations - Bilingual translations for category name
+ * @property {Object} translations - Bilingual translations for category name
  * @property {string} [createdBy] - Optional username of creator
  * @property {Date} [createdAt] - Category creation timestamp
  * @property {Date} [updatedAt] - Last modification timestamp
@@ -29,6 +29,9 @@ export interface ICategory extends Document {
 /**
  * @interface CategoryTranslations
  * @description Translation structure for category names.
+ * Used to handle bilingual data for UI display.
+ * 
+ * @property {Object} name - English and Bulgarian names
  */
 export interface CategoryTranslations {
   name: {

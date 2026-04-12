@@ -1,10 +1,3 @@
-import { Request, Response } from "express";
-import RoleTypeValue from "../enums/role-type";
-import Category from "../models/category";
-import { AuthRequest } from "../interfaces/auth";
-import { getDualTranslation } from "../utils/translation";
-import { logActivity } from "../utils/activity-logger";
-
 /**
  * @file category-controller.ts
  * @description Handles category management CRUD operations.
@@ -12,12 +5,32 @@ import { logActivity } from "../utils/activity-logger";
  * All routes require ADMIN role except GET /.
  */
 
+import { Request, Response } from "express";
+import RoleTypeValue from "../enums/role-type";
+import Category from "../models/category-model";
+import { AuthRequest } from "../interfaces/auth";
+import { getDualTranslation } from "../utils/translation";
+import { logActivity } from "../utils/activity-logger";
+
 /**
- * Retrieves all categories sorted by English name.
+ * Fetches all available categories.
+ * Sorted by English name. Publicly accessible.
  *
- * @param req - Express request
- * @param res - Response with array of Category documents
- * @returns JSON array of categories with translations
+ * @param req - Express request object
+ * @param res - Express response object
+ * @returns Response with array of categories
+ * @throws {Error} Database retrieval failure
+ *
+ * @example
+ * ```json
+ * GET /api/categories
+ * ```
+ * @response
+ * ```json
+ * [
+ * { "_id": "...", "name": "Desserts", "translations": { "en": "Desserts", "bg": "Десерти" } }
+ * ]
+ * ```
  */
 export const getCategories = async (
   req: Request,
@@ -33,12 +46,26 @@ export const getCategories = async (
 };
 
 /**
- * Creates a new category with automatic bilingual translation.
- * Admin only. Name is automatically translated to both English and Bulgarian.
+ * Creates a new content category.
+ * Translates the name automatically and logs the creation. restricted to Admins.
  *
- * @param req - AuthRequest with body { name: string }
- * @param res - Response with created category or error
- * @returns 201 on success, 403 if not admin, 400 if missing name or duplicate
+ * @param req - AuthRequest with body { name }
+ * @param res - Express response object
+ * @returns Response with created category data
+ * @throws {Error} Translation or database error
+ *
+ * @example
+ * ```json
+ * Request body:
+ * { "name": "Main Course" }
+ * ```
+ * @response
+ * ```json
+ * {
+ * "message": "Category created",
+ * "category": { "name": "Main Course", "createdBy": "AdminUser" }
+ * }
+ * ```
  */
 export const createCategory = async (
   req: AuthRequest,
@@ -71,7 +98,7 @@ export const createCategory = async (
     }
 
     // Get user info for createdBy
-    const userModel = (await import("../models/user")).default;
+    const userModel = (await import("../models/user-model")).default;
     const user = await userModel.findById(req.user!.userId);
     const createdBy = user?.username || "System";
 
@@ -82,9 +109,9 @@ export const createCategory = async (
     });
 
     // Log category creation
-    await logActivity(req, 'CATEGORY_CREATE', {
+    await logActivity(req, "CATEGORY_CREATE", {
       targetId: category._id.toString(),
-      targetType: 'category',
+      targetType: "category",
       description: `Created category "${name}"`,
     });
 
@@ -101,12 +128,23 @@ export const createCategory = async (
 };
 
 /**
- * Updates a category's name and translations.
- * Admin only. Name changes are automatically re-translated.
+ * Updates an existing category.
+ * Re-translates the new name. Restricted to Admins.
  *
- * @param req - AuthRequest with params { id } and body { name? }
- * @param res - Response with updated category or error
- * @returns 200 on success, 403 if not admin, 404 if not found
+ * @param req - AuthRequest with params { id } and body { name }
+ * @param res - Express response object
+ * @returns Response with updated category data
+ * @throws {Error} Database update failure
+ *
+ * @example
+ * ```json
+ * Request body:
+ * { "name": "Starters" }
+ * ```
+ * @response
+ * ```json
+ * { "message": "Category updated", "category": { ... } }
+ * ```
  */
 export const updateCategory = async (
   req: AuthRequest,
@@ -141,9 +179,9 @@ export const updateCategory = async (
     }
 
     // Log category update
-    await logActivity(req, 'CATEGORY_UPDATE', {
+    await logActivity(req, "CATEGORY_UPDATE", {
       targetId: id,
-      targetType: 'category',
+      targetType: "category",
       description: `Updated category "${name}"`,
     });
 
@@ -154,12 +192,22 @@ export const updateCategory = async (
 };
 
 /**
- * Deletes a category by ID.
- * Admin only. Does not check for associated posts.
+ * Deletes a category.
+ * Restricted to Admins. Logs the deletion activity.
  *
  * @param req - AuthRequest with params { id }
- * @param res - Response with success message or error
- * @returns 200 on success, 403 if not admin, 404 if not found
+ * @param res - Express response object
+ * @returns Response with success message
+ * @throws {Error} Database deletion failure
+ *
+ * @example
+ * ```json
+ * DELETE /api/categories/categoryId123
+ * ```
+ * @response
+ * ```json
+ * { "message": "Category deleted" }
+ * ```
  */
 export const deleteCategory = async (
   req: AuthRequest,
@@ -178,9 +226,9 @@ export const deleteCategory = async (
     }
 
     // Log category deletion
-    await logActivity(req, 'CATEGORY_DELETE', {
+    await logActivity(req, "CATEGORY_DELETE", {
       targetId: id,
-      targetType: 'category',
+      targetType: "category",
       description: `Deleted category "${category.name}"`,
     });
 

@@ -1,3 +1,10 @@
+/**
+ * @file api.ts
+ * @description Central HTTP client and API service definitions for the MangoTree application.
+ * Configures Axios with interceptors for JWT injection, token expiration handling, 
+ * and account status redirection.
+ */
+
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { clearAuth, isTokenValid } from "../utils/auth";
 import type {
@@ -22,7 +29,7 @@ import type {
  * @type {axios.AxiosInstance}
  */
 const api = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: "http://192.168.0.21:3000/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -700,7 +707,9 @@ export const reportsAPI = {
 
 export default api;
 
-// Re-export types for other modules to import consistently
+/**
+ * Re-export types for other modules to import consistently
+ */
 export type {
   LoginResponse,
   ErrorResponse,

@@ -11,7 +11,7 @@
  * Can be either text or inline image data.
  *
  * @property {string} [text] - Text content for the model
- * @property {{ data: string; mime_type: string }} [inline_data] - Base64 image data with MIME type
+ * @property {Object} [inline_data] - Base64 image data with MIME type
  */
 export interface GeminiPart {
   text?: string;
@@ -25,7 +25,7 @@ export interface GeminiPart {
  * @interface GeminiContent
  * @description Content structure for a Gemini API request.
  *
- * @property {string} role - Role of the sender ("user")
+ * @property {string} role - Role of the sender (e.g., "user")
  * @property {GeminiPart[]} parts - Array of content parts (text and/or images)
  */
 export interface GeminiContent {
@@ -40,10 +40,6 @@ export interface GeminiContent {
  *
  * @property {GeminiContent[]} contents - Array of conversation turns
  * @property {Object} generationConfig - Model generation parameters
- * @property {number} generationConfig.temperature - Sampling randomness (0.0-1.0)
- * @property {number} generationConfig.maxOutputTokens - Maximum tokens in response
- * @property {string} generationConfig.responseMimeType - Response format ("application/json")
- * @property {Object} [generationConfig.responseSchema] - JSON schema for structured output
  */
 export interface GeminiRequest {
   contents: GeminiContent[];
@@ -65,7 +61,7 @@ export interface GeminiRequest {
  *
  * @property {boolean} flagged - Whether content should be rejected (true) or approved (false)
  * @property {string} [reason] - Human-readable explanation when flagged
- * @property {boolean} [isCookingRelated] - For posts: is content cooking-related? (undefined for comments)
+ * @property {boolean} [isCookingRelated] - For posts: is content cooking-related?
  * @property {boolean} [isAppropriate] - General safety check: is content appropriate?
  */
 export interface ModerationResult {

@@ -37,13 +37,15 @@ export type ReportStatusType = 'pending' | 'reviewed' | 'rejected' | 'action_tak
  * Supported UI theme names.
  * @typedef {'dark' | 'purple' | 'cream' | 'light' | 'mango'} Theme
  */
-export type Theme = 'dark' | 'purple' | 'cream' | 'light' | 'mango';
+export type Theme = typeof ThemeValues[number];
+export const ThemeValues = ['dark', 'purple', 'cream', 'light', 'mango'];
 
 /**
  * Supported language codes.
  * @typedef {'en' | 'bg'} Language
  */
-export type Language = 'en' | 'bg';
+export type Language = typeof LanguageValues[number];
+export const LanguageValues = ['en', 'bg'];
 
 // ============================================================================
 // Translation Types

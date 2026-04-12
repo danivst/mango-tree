@@ -1,3 +1,9 @@
+/**
+ * @file NotificationContext.tsx
+ * @description React Context for managing user notification state across the application.
+ * Handles fetching, caching, and updating unread notification counts in real-time.
+ */
+
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { Notification } from "../services/api";
 import { notificationsAPI } from "../services/api";

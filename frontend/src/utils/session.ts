@@ -20,7 +20,9 @@ export const SessionFlag = {
 } as const;
 
 /**
- * Set a value in sessionStorage
+ * Set session storage item.
+ * @param key - Key
+ * @param value - Value
  */
 export const sessionSetItem = (key: string, value: string): void => {
   try {
@@ -31,9 +33,11 @@ export const sessionSetItem = (key: string, value: string): void => {
 };
 
 /**
- * Get a value from sessionStorage
+ * Get session storage item.
+ * @param key - Key
+ * @returns Value or null
  */
-export const sessionGetItem = (key: string): string | null => {
+  export const sessionGetItem = (key: string): string | null => {
   try {
     return window.sessionStorage.getItem(key);
   } catch (error) {
@@ -43,7 +47,8 @@ export const sessionGetItem = (key: string): string | null => {
 };
 
 /**
- * Remove a specific key from sessionStorage
+ * Remove session item.
+ * @param key - Key
  */
 export const sessionRemoveItem = (key: string): void => {
   try {
@@ -54,14 +59,18 @@ export const sessionRemoveItem = (key: string): void => {
 };
 
 /**
- * Set a boolean flag in sessionStorage (stores 'true' or 'false')
+ * Set boolean flag.
+ * @param flag - Flag key
+ * @param value - Boolean value
  */
 export const sessionSetFlag = (flag: string, value: boolean): void => {
   sessionSetItem(flag, value ? 'true' : 'false');
 };
 
 /**
- * Get a boolean flag from sessionStorage
+ * Get boolean flag.
+ * @param flag - Flag key
+ * @returns Boolean
  */
 export const sessionGetFlag = (flag: string): boolean => {
   return sessionGetItem(flag) === 'true';
@@ -71,6 +80,9 @@ export const sessionGetFlag = (flag: string): boolean => {
  * Consume a flag: returns its value and removes it from storage.
  * Useful for one-time notifications that should only show once.
  *
+ * @param flag - Flag key
+ * @returns Value
+ * 
  * @example
  * ```typescript
  * // In Login.tsx:
@@ -89,7 +101,10 @@ export const sessionConsumeFlag = (flag: string): boolean => {
 };
 
 /**
- * Get a flag and optionally clear it (or related flags)
+ * Consume flag and related flags.
+ * @param flag - Flag
+ * @param relatedFlags - Related keys
+ * @returns {boolean}
  */
 export const sessionConsumeWithRelated = (
   flag: string,

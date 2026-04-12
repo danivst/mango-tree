@@ -6,6 +6,7 @@
  */
 
 import fetch from "node-fetch";
+import logger from "../utils/logger";
 import { TranslationResult } from "../interfaces/translation";
 
 /**
@@ -19,24 +20,23 @@ const DEEPL_URL = "https://api-free.deepl.com/v2/translate";
  * Translation features will fail without this environment variable.
  */
 if (!DEEPL_API_KEY) {
-  console.warn("WARNING: DEEPL_API_KEY is not defined in environment variables.");
+  logger.warn("DEEPL_API_KEY is not defined in environment variables. Translation features will fail.");
 }
 
 // Re-export the TranslationResult interface for consumers of this utility
 export type { TranslationResult } from "../interfaces/translation";
 
 /**
- * Translates text to both Bulgarian and English using DeepL API.
- * Performs parallel requests for efficiency.
+ * Translates text into both Bulgarian and English.
+ * Internally executes parallel requests to the DeepL API for optimal performance.
  *
- * @param text - The text to translate (must be non-empty)
- * @returns Promise resolving to { bg: string, en: string } with translations
- * @throws {Error} If text is empty or translation fails
+ * @param text - The raw text provided by the user
+ * @returns Promise resolving to TranslationResult { bg: string, en: string }
+ * @throws {Error} If text is empty or API authentication/service fails
  *
  * @example
  * ```typescript
- * const translations = await getDualTranslation("Hello, world!");
- * // Returns { bg: "Здравей, свят!", en: "Hello, world!" }
+ * const result = await getDualTranslation("I love cooking!");
  * ```
  */
 export const getDualTranslation = async (
@@ -64,7 +64,9 @@ export const getDualTranslation = async (
 
     if (!res.ok) {
       const errorData = (await res.json().catch(() => ({}))) as any;
-      throw new Error(errorData.message || `DeepL API error: ${res.status}`);
+      const message = errorData.message || `DeepL API error: ${res.status}`;
+      logger.error({ status: res.status, target }, message);
+      throw new Error(message);
     }
 
     const data = (await res.json()) as { translations: { text: string }[] };
@@ -86,6 +88,7 @@ export const getDualTranslation = async (
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
+    logger.error(error, "Translation Module Failure");
     throw new Error(`Translation Module: ${message}`);
   }
 };

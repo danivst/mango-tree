@@ -4,27 +4,34 @@
  * Provides request authentication and role-based access control.
  */
 
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { RoleType } from '../enums/role-type';
-import { JwtPayload, AuthRequest } from '../interfaces/auth';
+import { Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import logger from "../utils/logger";
+import { RoleType } from "../enums/role-type";
+import { JwtPayload, AuthRequest } from "../interfaces/auth";
 
 /**
- * Authentication middleware.
- * Verifies JWT token from Authorization header and attaches user payload to request.
- * Allows OPTIONS requests to pass through for CORS preflight.
+ * Authenticates incoming requests via JWT.
+ * Validates the Bearer token in the Authorization header. On success, attaches user payload to the request.
  *
- * @param req - Express request (typed as AuthRequest after middleware)
- * @param res - Express response
+ * @param req - AuthRequest (Express request with user property)
+ * @param res - Express response object
  * @param next - Express next function
- * @returns 401 if no token, 403 if invalid token, or calls next() if valid
+ * @returns void
+ * @throws {UnauthorizedError} 401 if token is missing
+ * @throws {ForbiddenError} 403 if token is invalid or expired
+ *
+ * @example
+ * ```typescript
+ * router.get("/profile", auth, profileHandler);
+ * ```
  */
 export const auth = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ): void => {
-  console.log("[auth] Middleware called for:", req.method, req.path);
+  logger.info({ method: req.method, path: req.path }, "[auth] Middleware called");
 
   // Allow OPTIONS requests (CORS preflight) to pass through without auth
   if (req.method === 'OPTIONS') {
@@ -34,7 +41,7 @@ export const auth = (
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.log("[auth] No token provided");
+    logger.warn({ path: req.path }, "[auth] No token provided");
     res.status(401).json({ message: 'No token, authorization denied' });
     return;
   }
@@ -47,32 +54,34 @@ export const auth = (
       process.env.JWT_SECRET as string
     ) as JwtPayload;
 
-    console.log("[auth] Token valid, user:", decoded.userId);
+    logger.debug({ userId: decoded.userId }, "[auth] Token valid");
     req.user = decoded;
     next();
   } catch (err: any) {
-    console.log("[auth] Token invalid:", err.message);
+    logger.warn({ error: err.message }, "[auth] Token invalid or expired");
     res.status(403).json({ message: 'Invalid or expired token' });
     return;
   }
 };
 
 /**
- * Role-based access control middleware factory.
- * Creates a middleware that requires the user to have one of the specified roles.
+ * Enforces role-based permissions.
+ * Factory function that returns a middleware checking if req.user.role matches allowed values.
  *
- * @param roles - Allowed roles (variadic)
- * @returns Middleware function that checks user role
+ * @param roles - List of RoleType enums allowed to access the route
+ * @returns Middleware function
+ * @throws {ForbiddenError} 403 if user role is insufficient
  *
  * @example
  * ```typescript
- * router.get('/admin', requireRole(RoleType.ADMIN), adminHandler);
+ * router.delete("/user/:id", auth, requireRole(RoleType.ADMIN), deleteHandler);
  * ```
  */
 export const requireRole =
   (...roles: RoleType[]) =>
   (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role)) {
+      logger.warn({ userId: req.user?.userId, role: req.user?.role, required: roles }, "Access denied: insufficient permissions");
       res.status(403).json({ message: 'Access denied' });
       return;
     }

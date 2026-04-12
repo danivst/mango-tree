@@ -13,6 +13,7 @@
 
 import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
+import logger from '../utils/logger';
 import {
   RESEND_API_KEY,
   RESEND_FROM_EMAIL,
@@ -33,23 +34,18 @@ export interface EmailPayload {
 }
 
 /**
- * Sends an email with automatic fallback from Resend to SMTP.
- * Attempts Resend first if API key is configured and valid.
- * If Resend fails or is not configured, falls back to SMTP transport.
+ * Dispatches an email to a specific recipient.
+ * Attempts delivery via Resend API first. If unsuccessful or unconfigured, falls back to SMTP via Nodemailer.
  *
  * @param to - Recipient email address
  * @param subject - Email subject line
- * @param html - HTML content for the email body
- * @returns Promise that resolves when email is successfully sent
- * @throws {Error} If both Resend and SMTP fail
+ * @param html - HTML body content
+ * @returns Promise resolving on successful delivery
+ * @throws {Error} If both Resend and SMTP fallback fail
  *
  * @example
  * ```typescript
- * await sendEmail(
- *   'user@example.com',
- *   'Welcome!',
- *   '<h1>Hello!</h1><p>Welcome to our app.</p>'
- * );
+ * await sendEmail("user@example.com", "Hello!", "<h1>Welcome</h1>");
  * ```
  */
 export const sendEmail = async (
@@ -71,13 +67,13 @@ export const sendEmail = async (
       });
 
       if (result.data && result.data.id) {
-        console.log(`Email sent via Resend! ID: ${result.data.id}`);
+        logger.info({ emailId: result.data.id, recipient: to }, "Email sent via Resend");
         return;
       }
 
-      console.warn('Resend returned an error, attempting SMTP fallback...');
+      logger.warn("Resend returned an error, attempting SMTP fallback...");
     } catch (error) {
-      console.error('Resend failed, attempting SMTP fallback...', error);
+      logger.error(error, "Resend failed, attempting SMTP fallback...");
     }
   }
 
@@ -100,9 +96,9 @@ export const sendEmail = async (
       html,
     });
 
-    console.log(`Email sent successfully via SMTP to ${to}`);
+    logger.info({ recipient: to }, "Email sent successfully via SMTP");
   } catch (smtpError: any) {
-    console.error('Critical: Both Resend and SMTP failed!');
+    logger.error(smtpError, "Critical: Both Resend and SMTP failed!");
     throw new Error(`Email System Failure: ${smtpError.message}`);
   }
 };

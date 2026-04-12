@@ -7,17 +7,7 @@
  */
 
 import express, { Router } from "express";
-import {
-  registerUser,
-  loginUser,
-  registerAdmin,
-  requestPasswordReset,
-  resetPassword,
-  getResetTokenInfo,
-  setupPassword,
-  changePassword,
-  logoutUser,
-} from "../controllers/auth-controller";
+import * as authController from "../controllers/auth/auth-controller";
 import { auth } from "../utils/auth";
 import RoleTypeValue from "../enums/role-type";
 import { requireRole } from "../utils/auth";
@@ -34,7 +24,7 @@ const router: Router = express.Router();
  * @body {username, email, password}
  * @access Public
  */
-router.post("/register", registerUser);
+router.post("/register", authController.registerUser);
 
 /**
  * @route POST /login
@@ -42,7 +32,7 @@ router.post("/register", registerUser);
  * @body {username, password}
  * @access Public
  */
-router.post("/login", loginUser);
+router.post("/login", authController.loginUser);
 
 /**
  * @route POST /2fa/verify
@@ -65,7 +55,7 @@ router.post(
   "/register-admin",
   auth,
   requireRole(RoleTypeValue.ADMIN),
-  registerAdmin,
+  authController.registerAdmin,
 );
 
 /**
@@ -77,14 +67,14 @@ router.post(
  * @body {currentPassword, newPassword}
  * @access Authenticated
  */
-router.post("/change-password", auth, changePassword);
+router.post("/change-password", auth, authController.changePassword);
 
 /**
  * @route POST /logout
  * @description Log out authenticated user and record activity
  * @access Authenticated
  */
-router.post("/logout", auth, logoutUser);
+router.post("/logout", auth, authController.logoutUser);
 
 /**
  * @route POST /forgot-password
@@ -92,7 +82,7 @@ router.post("/logout", auth, logoutUser);
  * @body {email}
  * @access Public
  */
-router.post("/forgot-password", requestPasswordReset);
+router.post("/forgot-password", authController.requestPasswordReset);
 
 /**
  * @route GET /reset-token/:token
@@ -100,7 +90,7 @@ router.post("/forgot-password", requestPasswordReset);
  * @param {string} token - Password reset token
  * @access Public
  */
-router.get("/reset-token/:token", getResetTokenInfo);
+router.get("/reset-token/:token", authController.getResetTokenInfo);
 
 /**
  * @route POST /reset-password
@@ -108,7 +98,7 @@ router.get("/reset-token/:token", getResetTokenInfo);
  * @body {token, password, email?}
  * @access Public
  */
-router.post("/reset-password", resetPassword);
+router.post("/reset-password", authController.resetPassword);
 
 /**
  * @route POST /setup-password
@@ -116,6 +106,6 @@ router.post("/reset-password", resetPassword);
  * @body {token, password}
  * @access Public
  */
-router.post("/setup-password", setupPassword);
+router.post("/setup-password", authController.setupPassword);
 
 export default router;

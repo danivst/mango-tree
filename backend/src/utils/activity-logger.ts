@@ -10,18 +10,29 @@
  * - Errors are logged but do not throw to avoid interrupting main flows
  */
 
-import ActivityLog from "../models/activity-log";
+import ActivityLog from "../models/activity-log-model";
 import mongoose from "mongoose";
+import logger from "../utils/logger";
 
 /**
  * Logs an activity performed by a user.
+ * Extracts network metadata (IP, User-Agent) from the request and persists the event. 
+ * This process is non-blocking and will not throw errors to the primary flow.
  *
- * @param req - Express request object containing user info, IP, user-agent
- * @param actionType - Type of action (e.g., 'LOGIN', 'POST_CREATE', 'USERNAME_CHANGE')
- * @param options - Optional additional context:
- *   - targetId: Reference to affected entity (post ID, user ID, etc.)
- *   - targetType: Type of target ('post', 'user', 'comment', etc.)
- *   - description: Human-readable description of the action (defaults to actionType if omitted)
+ * @param req - Express request object containing user info, IP, and user-agent
+ * @param actionType - Type of action (e.g., 'LOGIN', 'POST_CREATE')
+ * @param options - Context including optional explicit userId, targetId, and description
+ * @returns Promise void (internal errors are logged via pino)
+ * @throws {Error} No errors are thrown; failures are caught internally to prevent flow interruption
+ *
+ * @example
+ * ```typescript
+ * await logActivity(req, "2FA_ENABLE", {
+ * targetId: userId,
+ * targetType: "user",
+ * description: "Enabled two-factor authentication"
+ * });
+ * ```
  */
 export const logActivity = async (
   req: any,
@@ -38,6 +49,7 @@ export const logActivity = async (
     const userId = options.userId || req.user?.userId;
     if (!userId) {
       // No user identifier, skip logging
+      logger.info({ actionType }, "Activity logging skipped: No user ID found");
       return;
     }
 
@@ -66,7 +78,7 @@ export const logActivity = async (
 
     await ActivityLog.create(logEntry);
   } catch (err) {
-    console.error("Failed to log activity:", err);
+    logger.error(err, "Failed to log activity");
     // Do not throw – logging should never break the primary flow
   }
 };

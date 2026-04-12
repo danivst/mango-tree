@@ -1,19 +1,31 @@
-import { Request, Response } from "express";
-import { getDualTranslation } from "../utils/translation";
-
 /**
  * @file translate-controller.ts
  * @description Provides on-demand text translation using DeepL API.
  * Translates any text to both English and Bulgarian, returns requested target.
  */
 
+import { Request, Response } from "express";
+import { getDualTranslation } from "../utils/translation";
+import logger from "../utils/logger";
+
 /**
- * Translates text to the specified target language.
- * Uses DeepL to get both translations, then returns the requested one.
+ * Translates text into a target language.
+ * Fetches dual translations (EN/BG) and returns the requested one.
  *
- * @param req - Request with body { text, sourceLang?, targetLang: 'en'|'bg' }
- * @param res - Response with { translation: string }
- * @returns 200 with translated text, 400 if text missing or invalid targetLang
+ * @param req - Request with body { text, targetLang }
+ * @param res - Express response object
+ * @returns Response with translated text
+ * @throws {Error} Translation service error
+ *
+ * @example
+ * ```json
+ * Request body:
+ * { "text": "Hello", "targetLang": "bg" }
+ * ```
+ * @response
+ * ```json
+ * { "translation": "Здравей" }
+ * ```
  */
 export const translateText = async (req: Request, res: Response): Promise<Response> => {
   try {
@@ -34,7 +46,7 @@ export const translateText = async (req: Request, res: Response): Promise<Respon
     // Return only the target language translation
     return res.json({ translation: translation[targetLang as 'en' | 'bg'] });
   } catch (error: any) {
-    console.error("Translation error:", error);
+    logger.error(error, "Translation error");
     return res.status(500).json({ message: error.message || "Translation failed" });
   }
 };

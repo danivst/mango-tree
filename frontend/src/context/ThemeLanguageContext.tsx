@@ -1,3 +1,9 @@
+/**
+ * @file ThemeLanguageContext.tsx
+ * @description React Context for managing application-wide theme and language settings.
+ * Provides theme switching and internationalization across the entire app with persistence.
+ */
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { setCookie, getCookie } from "../utils/cookies";
 import { usersAPI, UserProfile } from "../services/api";

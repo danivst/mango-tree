@@ -1,12 +1,12 @@
-import { jwtDecode } from "jwt-decode";
-import type { RoleType } from "./types";
-
 /**
  * @file auth.ts
  * @description Authentication utilities for managing JWT tokens,
  * validation, and role extraction. Provides helpers to check login state,
  * get current user role, and safely clear authentication data.
  */
+
+import { jwtDecode } from "jwt-decode";
+import type { RoleType } from "./types";
 
 /**
  * Payload structure for decoded JWT tokens (client-side).

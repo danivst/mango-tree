@@ -8,7 +8,7 @@ import { Document, Types } from "mongoose";
  * @property {Types.ObjectId} _id - Unique identifier (MongoDB ObjectId)
  * @property {string} title - Post title
  * @property {string} content - Post content/description
- * @property {PostTranslations} translations - Bilingual translations for content and tags
+ * @property {Object} translations - Bilingual translations for content and tags
  * @property {string[]} image - Array of image URLs (base64 or file paths)
  * @property {Types.ObjectId} authorId - Reference to the User who created this post
  * @property {Types.ObjectId} category - Reference to the Category document
@@ -51,6 +51,11 @@ export interface IPost extends Document {
 /**
  * @interface PostTranslations
  * @description Translation structure for post content.
+ * Used during the creation and update process to handle bilingual data.
+ *
+ * @property {Object} title - English and Bulgarian titles
+ * @property {Object} content - English and Bulgarian content body
+ * @property {Object} tags - Optional arrays of translated tag names
  */
 export interface PostTranslations {
   title: {

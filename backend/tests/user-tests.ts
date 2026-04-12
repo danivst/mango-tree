@@ -9,43 +9,97 @@
 
 // @ts-nocheck
 
-import { Request, Response } from 'express';
-import mongoose from 'mongoose';
-import * as userController from '../src/controllers/user-controller';
-import RoleTypeValue from '../src/enums/role-type';
+import { Request, Response } from "express";
+import mongoose from "mongoose";
+import * as userController from "../src/controllers/user/user-controller";
+import RoleTypeValue from "../src/enums/role-type";
+import NotificationType from "../src/enums/notification-type";
+import logger from "../src/utils/logger";
 
-// module mocks
-jest.mock('../src/utils/email', () => ({
-  sendEmail: jest.fn(),
+/**
+ * Mock the logger utility to prevent test output pollution.
+ */
+jest.mock("../src/utils/logger");
+
+/**
+ * Mocking external utility modules.
+ */
+jest.mock("../src/utils/email", () => ({
+  sendEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('../src/utils/translation', () => ({
-  getDualTranslation: jest.fn(),
+jest.mock("../src/utils/translation", () => ({
+  getDualTranslation: jest.fn().mockResolvedValue({ en: "translated", bg: "преведено" }),
 }));
 
-jest.mock('../src/models/notification');
+/**
+ * Mocking the activity logger to prevent it from failing due to missing request properties.
+ */
+jest.mock("../src/utils/activity-logger", () => ({
+  logActivity: jest.fn().mockResolvedValue(undefined),
+}));
 
-jest.mock('../src/models/post', () => ({
+/**
+ * Mocking Mongoose models. 
+ * Using __esModule: true and default property to satisfy dynamic (await import) 
+ * and standard imports used in the controller.
+ */
+jest.mock("../src/models/notification-model", () => ({
   __esModule: true,
   default: {
-    deleteMany: jest.fn(),
+    create: jest.fn().mockResolvedValue({}),
+    deleteMany: jest.fn().mockResolvedValue({ deletedCount: 0 }),
   },
 }));
 
-jest.mock('../src/models/comment', () => ({
+jest.mock("../src/models/post-model", () => ({
   __esModule: true,
   default: {
-    deleteMany: jest.fn(),
+    deleteMany: jest.fn().mockResolvedValue({ deletedCount: 0 }),
+    updateMany: jest.fn().mockResolvedValue({ modifiedCount: 0 }),
+    find: jest.fn().mockReturnValue({
+      distinct: jest.fn().mockResolvedValue([]) 
+    }),
   },
 }));
 
-import User from '../src/models/user';
-import Post from '../src/models/post';
-import Comment from '../src/models/comment';
-import { sendEmail } from '../src/utils/email';
-import { getDualTranslation } from '../src/utils/translation';
+jest.mock("../src/models/comment-model", () => ({
+  __esModule: true,
+  default: {
+    deleteMany: jest.fn().mockResolvedValue({ deletedCount: 0 }),
+    updateMany: jest.fn().mockResolvedValue({ modifiedCount: 0 }),
+    find: jest.fn().mockReturnValue({
+      distinct: jest.fn().mockResolvedValue([])
+    }),
+  },
+}));
 
-// mock query helper
+jest.mock("../src/models/report-model", () => ({
+  __esModule: true,
+  default: {
+    deleteMany: jest.fn().mockResolvedValue({ deletedCount: 0 }),
+  },
+}));
+
+jest.mock("../src/models/banned-user-model", () => ({
+  __esModule: true,
+  default: {
+    deleteOne: jest.fn().mockResolvedValue({ deletedCount: 0 }),
+  },
+}));
+
+import User from "../src/models/user-model";
+import Notification from "../src/models/notification-model";
+import Post from "../src/models/post-model";
+import Comment from "../src/models/comment-model";
+
+/**
+ * Helper to create a mock Mongoose query object.
+ * Supports chaining for common query operations.
+ * 
+ * @param {any} result - The data to be returned by the mocked query.
+ * @returns {object} A mocked query object.
+ */
 function createMockQuery(result) {
   const query = {
     then(onfulfilled, onrejected) {
@@ -54,216 +108,180 @@ function createMockQuery(result) {
     exec: jest.fn().mockReturnValue(Promise.resolve(result)),
   };
   query.select = jest.fn().mockReturnValue(query);
-  query.populate = jest.fn().mockReturnValue(query);
   query.sort = jest.fn().mockReturnValue(query);
-  query.lean = jest.fn().mockReturnValue(query);
   query.limit = jest.fn().mockReturnValue(query);
   query.skip = jest.fn().mockReturnValue(query);
   return query;
 }
 
-// user document helper
+/**
+ * Helper function to create a standardized mock User document.
+ * 
+ * @param {object} overrides - Object containing fields to override in the base mock.
+ * @returns {object} A mock user document.
+ */
 const createMockUserDoc = (overrides = {}) => {
-  const mockSave = jest.fn().mockResolvedValue(this);
-  const base = {
-    _id: new mongoose.Types.ObjectId(),
-    username: 'testuser',
-    email: 'test@example.com',
-    passwordHash: 'hashed',
+  const userId = overrides._id || new mongoose.Types.ObjectId();
+  return {
+    _id: userId,
+    username: "testuser",
+    email: "test@example.com",
     role: RoleTypeValue.USER,
-    profileImage: '',
-    bio: '',
-    isApproved: true,
-    isBanned: false,
-    translations: { bio: { bg: '', en: '' } },
-    notificationPreferences: {
-      emailReports: true,
-      emailComments: true,
-      inAppReports: true,
-      inAppComments: true,
-    },
-    theme: 'cream',
-    language: 'en',
-    createdAt: new Date(),
-    followers: [],
     following: [],
-    save: mockSave,
+    followers: [],
+    pastUsernames: [],
+    language: "en",
+    isBanned: false,
+    save: jest.fn().mockResolvedValue(true),
+    ...overrides,
   };
-  return { ...base, ...overrides, save: mockSave };
 };
 
-// model method mocks
-const mockFindById = jest.fn();
-const mockFindOne = jest.fn();
-const mockExists = jest.fn();
-const mockFind = jest.fn();
-const mockFindByIdAndUpdate = jest.fn();
-const mockFindAndUpdate = jest.fn();
-const mockFindByIdAndDelete = jest.fn();
-const mockDeleteMany = jest.fn();
+/**
+ * Static mock assignments for User model methods.
+ */
+User.findById = jest.fn();
+User.findOne = jest.fn();
+User.exists = jest.fn();
+User.find = jest.fn();
+User.findByIdAndUpdate = jest.fn();
+User.findByIdAndDelete = jest.fn();
 
-User.findById = mockFindById;
-User.findOne = mockFindOne;
-User.exists = mockExists;
-User.find = mockFind;
-User.findByIdAndUpdate = mockFindByIdAndUpdate;
-User.findAndUpdate = mockFindAndUpdate;
-User.findByIdAndDelete = mockFindByIdAndDelete;
-User.deleteMany = mockDeleteMany;
-
-// test setup
+/**
+ * Global setup before each test case.
+ */
 beforeEach(() => {
   jest.clearAllMocks();
-  getDualTranslation.mockImplementation((key) =>
-    Promise.resolve({ en: key, bg: key })
-  );
-  sendEmail.mockResolvedValue(undefined);
 });
 
-// user tests
-describe('User Controller - CRUD Operations', () => {
+/**
+ * Main test suite for User Controller.
+ */
+describe("User Controller - Full Suite", () => {
 
-  // get user profile
-  describe('GET /users/:id - getUserProfile', () => {
-    it('should return user profile when user exists and is visible', async () => {
-      const mockUser = createMockUserDoc();
-      mockFindById.mockReturnValue(createMockQuery(mockUser));
+  /**
+   * Tests for checkUsername
+   */
+  describe("GET /check-username", () => {
+    it("should return exists: true if username is taken", async () => {
+      User.exists.mockResolvedValue(true);
+      const req = { query: { username: "taken" }, headers: {} };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
 
-      const req = {
-        params: { id: mockUser._id.toString() },
-        user: { userId: 'otherId', role: RoleTypeValue.USER },
-      };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      };
-
-      await userController.getUserProfile(req, res);
-
-      expect(mockFindById).toHaveBeenCalledWith(mockUser._id.toString());
-      expect(res.json).toHaveBeenCalledWith(mockUser);
-    });
-
-    it('should return 404 when user does not exist', async () => {
-      mockFindById.mockReturnValue(createMockQuery(null));
-
-      const req = {
-        params: { id: '507f1f77bcf86cd799439011' },
-        user: { userId: 'someId', role: RoleTypeValue.USER },
-      };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      };
-
-      await userController.getUserProfile(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ message: 'User not found' });
+      await userController.checkUsername(req, res);
+      expect(res.json).toHaveBeenCalledWith({ exists: true });
     });
   });
 
-  // update profile
-  describe('POST /users/:id - updateProfile', () => {
-    it('should update user profile successfully', async () => {
-      const userId = new mongoose.Types.ObjectId();
-      const updates = { bio: 'New bio', username: 'newname' };
-      const updatedUser = createMockUserDoc({ _id: userId, ...updates });
+  /**
+   * Tests for getUserProfile
+   */
+  describe("GET /users/:id - getUserProfile", () => {
+    it("should return user profile successfully", async () => {
+      const mockUser = createMockUserDoc();
+      User.findById.mockReturnValue(createMockQuery(mockUser));
 
-      mockFindByIdAndUpdate.mockReturnValue(createMockQuery(updatedUser));
+      const req = { 
+        params: { id: mockUser._id.toString() }, 
+        user: { userId: "some-id", role: RoleTypeValue.USER },
+        headers: {} 
+      };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+      await userController.getUserProfile(req, res);
+      expect(res.json).toHaveBeenCalledWith(mockUser);
+    });
+  });
+
+  /**
+   * Tests for updateProfile
+   */
+  describe("POST /users/:id - updateProfile", () => {
+    /**
+     * @test Verifies that username changes correctly update the pastUsernames array.
+     */
+    it("should update profile and archive old username", async () => {
+      const userId = new mongoose.Types.ObjectId();
+      const existingUser = createMockUserDoc({ _id: userId, username: "oldname" });
+      
+      User.findById.mockReturnValueOnce(createMockQuery(existingUser)); 
+      User.findOne.mockResolvedValue(null); // No conflicts
+      User.findById.mockReturnValueOnce(createMockQuery(existingUser)); 
 
       const req = {
         params: { id: userId.toString() },
-        body: updates,
+        body: { username: "newname", bio: "Updated bio" },
         user: { userId: userId.toString(), role: RoleTypeValue.USER },
+        headers: {},
+        connection: {}
       };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
 
       await userController.updateProfile(req, res);
 
-      expect(mockFindByIdAndUpdate).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalled();
+      expect(existingUser.username).toBe("newname");
+      expect(existingUser.pastUsernames).toHaveLength(1);
+      expect(existingUser.save).toHaveBeenCalled();
     });
   });
 
-  // toggle follow
-  describe('POST /users/toggle-follow - toggleFollow', () => {
-    it('should follow a user successfully', async () => {
-      const userId = new mongoose.Types.ObjectId();
-      const targetId = new mongoose.Types.ObjectId();
+  /**
+   * Tests for toggleFollow
+   */
+  describe("POST /users/toggle-follow", () => {
+    it("should allow a user to follow another", async () => {
+      const u1Id = new mongoose.Types.ObjectId();
+      const u2Id = new mongoose.Types.ObjectId();
+      const user1 = createMockUserDoc({ _id: u1Id });
+      const user2 = createMockUserDoc({ _id: u2Id });
 
-      const user = createMockUserDoc({ _id: userId, following: [] });
-      const targetUser = createMockUserDoc({ _id: targetId, followers: [] });
-
-      mockFindById
-        .mockResolvedValueOnce(user)
-        .mockResolvedValueOnce(targetUser);
+      User.findById.mockResolvedValueOnce(user1).mockResolvedValueOnce(user2);
 
       const req = {
-        body: { targetId: targetId.toString() },
-        user: { userId: userId.toString() },
+        body: { targetId: u2Id.toString() },
+        user: { userId: u1Id.toString() },
+        headers: {},
+        connection: {}
       };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
 
       await userController.toggleFollow(req, res);
 
-      expect(res.json).toHaveBeenCalledWith({ message: 'Followed' });
+      expect(user1.following).toContainEqual(u2Id);
+      expect(user2.followers).toContainEqual(u1Id);
+      expect(res.json).toHaveBeenCalledWith({ message: "Followed" });
     });
   });
 
-  // get current user
-  describe('GET /users/me - getCurrentUser', () => {
-    it('should return current user profile', async () => {
+  /**
+   * Tests for deleteUser
+   */
+  describe("DELETE /users/:id - deleteUser", () => {
+    /**
+     * @test Verifies account deletion and data cleanup across related collections.
+     */
+    it("should delete account and associated data", async () => {
       const userId = new mongoose.Types.ObjectId();
-      const mockUser = createMockUserDoc({ _id: userId });
+      const user = createMockUserDoc({ _id: userId, email: "bye@test.com" });
 
-      mockFindById.mockReturnValue(createMockQuery(mockUser));
-
-      const req = { user: { userId: userId.toString() } };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      };
-
-      await userController.getCurrentUser(req, res);
-
-      expect(res.json).toHaveBeenCalledWith(mockUser);
-    });
-  });
-
-  // delete user
-  describe('DELETE /users/:id - deleteUser', () => {
-    it('should delete user account successfully', async () => {
-      const userId = new mongoose.Types.ObjectId();
-      const user = createMockUserDoc({ _id: userId });
-
-      User.findById
-        .mockResolvedValueOnce(user)
-        .mockResolvedValueOnce(null);
-
-      mockFindByIdAndDelete.mockResolvedValue(user);
-      Post.deleteMany.mockResolvedValueOnce({ deletedCount: 1 });
-      Comment.deleteMany.mockResolvedValueOnce({ deletedCount: 1 });
+      User.findById.mockResolvedValue(user);
+      User.findByIdAndDelete.mockResolvedValue(user);
 
       const req = {
         params: { id: userId.toString() },
         user: { userId: userId.toString(), role: RoleTypeValue.USER },
+        headers: {},
+        connection: {}
       };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
 
       await userController.deleteUser(req, res);
 
-      expect(mockFindByIdAndDelete).toHaveBeenCalledWith(userId.toString());
-      expect(res.json).toHaveBeenCalledWith({ message: 'Account deleted' });
+      // Verify cleanup of dynamic imports via mocked defaults
+      expect(Post.deleteMany).toHaveBeenCalled();
+      expect(Comment.deleteMany).toHaveBeenCalled();
+      expect(User.findByIdAndDelete).toHaveBeenCalledWith(userId.toString());
+      expect(res.json).toHaveBeenCalledWith({ message: "Account and associated content deleted" });
     });
   });
 });

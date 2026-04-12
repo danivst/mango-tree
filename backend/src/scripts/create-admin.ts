@@ -12,28 +12,28 @@
  * IMPORTANT: Change the default password after first login!
  */
 
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv';
-import User from '../models/user';
-import { MONGO_URI } from '../config/env';
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+import User from "../models/user-model";
+import { MONGO_URI } from "../config/env";
 
 dotenv.config();
 
 const createAdmin = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log('✅ MongoDB connected');
+    console.log("✅ MongoDB connected");
 
-    const adminEmail = 'admin@mangotree.com';
-    const adminPassword = 'Admin123!@#';
-    const adminUsername = 'admin';
+    const adminEmail = "admin@mangotree.com";
+    const adminPassword = "Admin123!@#";
+    const adminUsername = "admin";
 
     // check if it exists
     const existingAdmin = await User.findOne({ email: adminEmail });
 
     if (existingAdmin) {
-      console.log('Admin account already exists!');
+      console.log("Admin account already exists!");
       console.log(`Email: ${adminEmail}`);
       await mongoose.disconnect();
       return;
@@ -46,18 +46,16 @@ const createAdmin = async () => {
       username: adminUsername,
       email: adminEmail,
       passwordHash,
-      role: 'admin',
+      role: "admin",
     });
 
-    console.log('Admin account created successfully!');
+    console.log("Admin account created successfully!");
     console.log(`Email: ${adminEmail}`);
     console.log(`Username: ${adminUsername}`);
     console.log(`Password: ${adminPassword}`);
-    console.log('\nYou can now login with these credentials.');
-
     await mongoose.disconnect();
   } catch (error: any) {
-    console.error('Error creating admin:', error);
+    console.error("Error creating admin:", error);
     await mongoose.disconnect();
     process.exit(1);
   }

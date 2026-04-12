@@ -11,9 +11,9 @@
  */
 
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import dotenv from "dotenv";
-import User from "../models/user";
+import User from "../models/user-model";
 import { MONGO_URI } from "../config/env";
 
 dotenv.config();

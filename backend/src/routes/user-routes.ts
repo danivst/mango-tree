@@ -9,22 +9,7 @@
 
 import express, { Router } from "express";
 import RoleTypeValue from "../enums/role-type";
-import {
-  getUserProfile,
-  updateProfile,
-  toggleFollow,
-  getAllUsers,
-  getAllAdmins,
-  deleteUser,
-  getCurrentUser,
-  checkUsername,
-  updateNotificationPreferences,
-  updateEmail,
-  getRegularUsers,
-  getFollowers,
-  getFollowing,
-  removeFollower,
-} from "../controllers/user-controller";
+import * as userController from "../controllers/user/user-controller";
 import { auth, requireRole } from "../utils/auth";
 import { enable2FA, disable2FA } from "../controllers/2fa-controller";
 
@@ -36,7 +21,7 @@ const router: Router = express.Router();
  * @query username - Username to check
  * @access Public (auth required but that's enforced by middleware)
  */
-router.get("/check-username", auth, checkUsername);
+router.get("/check-username", auth, userController.checkUsername);
 
 /**
  * Routes for the authenticated user's own profile and settings.
@@ -47,28 +32,21 @@ router.get("/check-username", auth, checkUsername);
  * @description Get current user's profile
  * @access Authenticated
  */
-router.get("/me", auth, getCurrentUser);
+router.get("/me", auth, userController.getCurrentUser);
 
 /**
  * @route PUT /me
  * @description Update current user's profile (username, bio, profile image, theme, language)
  * @access Authenticated
  */
-router.put("/me", auth, updateProfile);
+router.put("/me", auth, userController.updateProfile);
 
 /**
  * @route PUT /me/settings
  * @description Update notification preferences
  * @access Authenticated
  */
-router.put("/me/settings", auth, updateNotificationPreferences);
-
-/**
- * @route PUT /me/email
- * @description Change email address
- * @access Authenticated
- */
-router.put("/me/email", auth, updateEmail);
+router.put("/me/settings", auth, userController.updateNotificationPreferences);
 
 /**
  * Two-factor authentication routes for authenticated user.
@@ -95,14 +73,14 @@ router.post("/me/2fa/disable", auth, disable2FA);
  * @description Get all regular (non-admin, non-banned) users for discovery
  * @access Authenticated
  */
-router.get("/regular", auth, getRegularUsers);
+router.get("/regular", auth, userController.getRegularUsers);
 
 /**
  * @route GET /admins
  * @description Get all admin users
  * @access Admin only
  */
-router.get("/admins", auth, requireRole(RoleTypeValue.ADMIN), getAllAdmins);
+router.get("/admins", auth, requireRole(RoleTypeValue.ADMIN), userController.getAllAdmins);
 
 /**
  * Social relationship routes: followers and following.
@@ -113,7 +91,7 @@ router.get("/admins", auth, requireRole(RoleTypeValue.ADMIN), getAllAdmins);
  * @param {string} id - User ID
  * @access Authenticated (can view own followers or any if admin)
  */
-router.get("/:id/followers", auth, getFollowers);
+router.get("/:id/followers", auth, userController.getFollowers);
 
 /**
  * @route GET /:id/following
@@ -121,7 +99,7 @@ router.get("/:id/followers", auth, getFollowers);
  * @param {string} id - User ID
  * @access Authenticated (can view own following or any if admin)
  */
-router.get("/:id/following", auth, getFollowing);
+router.get("/:id/following", auth, userController.getFollowing);
 
 /**
  * @route DELETE /followers/:followerId
@@ -129,14 +107,14 @@ router.get("/:id/following", auth, getFollowing);
  * @param {string} followerId - ID of follower to remove
  * @access Authenticated
  */
-router.delete("/followers/:followerId", auth, removeFollower);
+router.delete("/followers/:followerId", auth, userController.removeFollower);
 
 /**
  * @route POST /follow
  * @description Toggle following/unfollowing a user
  * @access Authenticated
  */
-router.post("/follow", auth, toggleFollow);
+router.post("/follow", auth, userController.toggleFollow);
 
 /**
  * Generic user profile and management routes.
@@ -147,7 +125,7 @@ router.post("/follow", auth, toggleFollow);
  * @param {string} id - User ID
  * @access Authenticated
  */
-router.get("/:id", auth, getUserProfile);
+router.get("/:id", auth, userController.getUserProfile);
 
 /**
  * @route PUT /:id
@@ -155,14 +133,14 @@ router.get("/:id", auth, getUserProfile);
  * @param {string} id - User ID
  * @access Authenticated (owner or admin)
  */
-router.put("/:id", auth, updateProfile);
+router.put("/:id", auth, userController.updateProfile);
 
 /**
  * @route GET /
  * @description Get all non-banned regular users (excluding requester)
  * @access Authenticated
  */
-router.get("/", auth, getAllUsers);
+router.get("/", auth, userController.getAllUsers);
 
 /**
  * @route DELETE /:id
@@ -170,6 +148,6 @@ router.get("/", auth, getAllUsers);
  * @param {string} id - User ID to delete
  * @access Authenticated (owner or admin)
  */
-router.delete("/:id", auth, deleteUser);
+router.delete("/:id", auth, userController.deleteUser);
 
 export default router;

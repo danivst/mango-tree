@@ -177,3 +177,23 @@
   opacity: 1 !important;
 }
 
+@media (max-width: 767px) {
+  .theme-selector, 
+  .theme-selector.grid-2 {
+    grid-template-columns: 1fr !important; 
+    gap: 12px; 
+  }
+
+  .theme-option {
+    flex-direction: row; 
+    justify-content: flex-start;
+    padding: 12px 20px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .theme-preview {
+    width: 50px;  
+    height: 50px;
+  }
+}

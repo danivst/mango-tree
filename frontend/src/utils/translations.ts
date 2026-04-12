@@ -216,7 +216,7 @@ export const translations: Record<Language, Record<string, string>> = {
     users: "Users",
     tags: "Tags",
     categories: "Categories",
-    activityLog: "Activity Log",
+    activityLog: "Activity Logs",
 
     // Activity Log
     date: "Date",
@@ -311,6 +311,7 @@ export const translations: Record<Language, Record<string, string>> = {
     contentDetails: "Content Details",
     type: "Type",
     author: "Author",
+    reason: "Reason",
 
     // Comments
     comments: "Comments",
@@ -812,7 +813,7 @@ export const translations: Record<Language, Record<string, string>> = {
     users: "Потребители",
     tags: "Тагове",
     categories: "Категории",
-    activityLog: "Журнал на дейности",
+    activityLog: "Дейности",
 
     // Activity Log
     date: "Дата",
@@ -906,6 +907,7 @@ export const translations: Record<Language, Record<string, string>> = {
     contentDetails: "Детайли за съдържанието",
     type: "Тип",
     author: "Автор",
+    reason: "Причина",
 
     // Comments
     comments: "Коментари",

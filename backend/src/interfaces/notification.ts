@@ -10,8 +10,8 @@ import { NotificationType } from "../enums/notification-type";
  * @property {Types.ObjectId} userId - Reference to the recipient User
  * @property {NotificationType} type - Type of notification (enum value)
  * @property {string} message - Notification message content
- * @property {NotificationTranslations} translations - Bilingual translations for message
- * @property {string | null} [link] - Optional URL link for the notification (default: null)
+ * @property {Object} translations - Bilingual translations for message
+ * @property {string | null} [link] - Optional URL link for the notification
  * @property {boolean} read - Whether the notification has been read
  * @property {Date} createdAt - Notification creation timestamp
  */
@@ -34,6 +34,9 @@ export interface INotification extends Document {
 /**
  * @interface NotificationTranslations
  * @description Translation structure for notification messages.
+ * Used to display alerts in the user's preferred language.
+ * 
+ * @property {Object} message - English and Bulgarian messages
  */
 export interface NotificationTranslations {
   message: {
