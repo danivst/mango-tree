@@ -65,13 +65,19 @@ export const NODE_ENV = process.env.NODE_ENV || "development";
 export const IS_DEV = NODE_ENV === "development";
 
 /**
- * Email configuration
+ * Resend Email configuration
  */
 export const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
 export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
+/**
+ * SMTP Email configuration
+ */
+export const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
+export const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
 export const SMTP_USER = process.env.SMTP_USER ?? "";
 export const SMTP_PASS = process.env.SMTP_PASS ?? "";
+export const SMTP_SECURE = process.env.SMTP_SECURE === "true"; // true for 465, false for 587
 
 /**
  * Development logging

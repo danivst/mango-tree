@@ -9,11 +9,13 @@ import User from "../../models/user-model";
 import RoleTypeValue from "../../enums/role-type";
 import Notification from "../../models/notification-model";
 import NotificationType from "../../enums/notification-type";
+import ThemeTypeValue from "../../enums/theme-type";
 import { AuthRequest } from "../../interfaces/auth";
 import { getDualTranslation } from "../../utils/translation";
 import { getLocalizedText } from "../../utils/get-translation";
 import { logActivity } from "../../utils/activity-logger";
 import logger from "../../utils/logger";
+import LanguageTypeValue from "../../enums/language-type";
 
 /**
  * Checks username availability.
@@ -137,15 +139,13 @@ export const updateProfile = async (
       existingUser.translations = { bio: bioTranslations };
     }
     if (theme) {
-      const validThemes = ["dark", "purple", "cream", "light", "mango"];
-      if (!validThemes.includes(theme)) {
+      if (!Object.values(ThemeTypeValue).includes(theme)) {
         return res.status(400).json({ message: "Invalid theme" });
       }
       existingUser.theme = theme;
     }
     if (language) {
-      const validLanguages = ["en", "bg"];
-      if (!validLanguages.includes(language)) {
+      if (!Object.values(LanguageTypeValue).includes(language)) {
         return res.status(400).json({ message: "Invalid language" });
       }
       existingUser.language = language;
@@ -260,67 +260,6 @@ export const getCurrentUser = async (
     return res.json(user);
   } catch (err: any) {
     logger.error(err, "Error retrieving current user profile");
-    return res.status(500).json({ message: err.message });
-  }
-};
-
-/**
- * Updates notification settings.
- *
- * @param req - AuthRequest with body { notificationPreferences }
- * @param res - Express response object
- * @returns Response with updated user preferences
- */
-export const updateNotificationPreferences = async (
-  req: AuthRequest,
-  res: Response,
-): Promise<Response> => {
-  try {
-    const userId = req.user!.userId;
-    const { notificationPreferences } = req.body;
-
-    if (!notificationPreferences) {
-      return res
-        .status(400)
-        .json({ message: "Notification preferences are required." });
-    }
-
-    // Basic validation for the structure of notificationPreferences
-    const validPreferences = {
-      emailReports:
-        typeof notificationPreferences.emailReports === "boolean"
-          ? notificationPreferences.emailReports
-          : true,
-      emailComments:
-        typeof notificationPreferences.emailComments === "boolean"
-          ? notificationPreferences.emailComments
-          : true,
-      inAppReports:
-        typeof notificationPreferences.inAppReports === "boolean"
-          ? notificationPreferences.inAppReports
-          : true,
-      inAppComments:
-        typeof notificationPreferences.inAppComments === "boolean"
-          ? notificationPreferences.inAppComments
-          : true,
-    };
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { notificationPreferences: validPreferences },
-      { new: true, runValidators: true },
-    ).select("-passwordHash"); // Exclude password hash from response
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    return res.json({
-      message: "Notification preferences updated successfully.",
-      user,
-    });
-  } catch (err: any) {
-    logger.error(err, "Error updating notification preferences");
     return res.status(500).json({ message: err.message });
   }
 };

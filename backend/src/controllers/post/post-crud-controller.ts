@@ -9,16 +9,14 @@ import { Request, Response } from "express";
 import { Types } from "mongoose";
 import Post from "../../models/post-model";
 import Comment from "../../models/comment-model";
-import Tag from "../../models/tag-model";
 import Notification from "../../models/notification-model";
 import NotificationType from "../../enums/notification-type";
 import RoleTypeValue from "../../enums/role-type";
 import moderateContent from "../../utils/ai";
 import { AuthRequest } from "../../interfaces/auth";
 import { getDualTranslation } from "../../utils/translation";
-import { logActivity } from "../../utils/activity-logger";
+import { logActivity } from "../../utils/activity-logger"; 
 import logger from "../../utils/logger";
-import { log } from "node:console";
 
 /**
  * Creates a new post.
@@ -52,38 +50,17 @@ export const createPost = async (
     const authorId = req.user!.userId;
 
     if (!title || !content) {
-      return res
-        .status(400)
-        .json({ message: "Title and content are required." });
+      return res.status(400).json({ message: "Title and content are required." });
     }
 
-    // Validate category is a valid ObjectId
     if (!category || !Types.ObjectId.isValid(category)) {
       return res.status(400).json({ message: "Invalid category provided." });
     }
 
-    // Ensure tags is an array
-    let tagsArray = Array.isArray(tags) ? tags : [];
+    const tagsArray = Array.isArray(tags) 
+      ? tags.filter(t => Types.ObjectId.isValid(t)) 
+      : [];
 
-    // Convert tag IDs to tag names
-    if (tagsArray.length > 0) {
-      const validTagIds = tagsArray.filter((tag) =>
-        Types.ObjectId.isValid(tag),
-      );
-      if (validTagIds.length > 0) {
-        const tagDocs = await Tag.find({ _id: { $in: validTagIds } }).lean();
-        const idToNameMap = new Map(
-          tagDocs.map((t: any) => [t._id.toString(), t.name]),
-        );
-        tagsArray = tagsArray.map((tag) =>
-          Types.ObjectId.isValid(tag) && idToNameMap.has(tag)
-            ? idToNameMap.get(tag)!
-            : tag,
-        );
-      }
-    }
-
-    // AI Moderation for Text and Images
     let moderationResult: any = null;
     let moderationError = false;
 
@@ -92,60 +69,28 @@ export const createPost = async (
     } catch (moderationErr: any) {
       logger.error(moderationErr, "Moderation service error");
       moderationError = true;
-      moderationResult = { flagged: false }; // Create the post but flag for admin review
+      moderationResult = { flagged: false }; 
     }
 
     if (moderationResult?.flagged) {
-      // Determine specific error code based on moderation flags
-      let reasonKey: string;
-      let reasonDetail: string = moderationResult.reason || "";
-
-      if (moderationResult.isCookingRelated === false) {
-        reasonKey = "postNotCooking";
-      } else if (moderationResult.isAppropriate === false) {
-        reasonKey = "postInappropriate";
-      } else {
-        // Generic rejection (should not happen with current logic, but fallback)
-        reasonKey = "postRejected";
-      }
-
-      // Send notification to user with "Post rejected. Reason:" prefix
-      const prefixEn = "Post rejected. Reason: ";
-      const prefixBg = "Публикацията е отхвърлена. Причина: ";
-      const reasonEn = moderationResult.reason || "Content is inappropriate.";
-      const reasonBg =
-        moderationResult.isCookingRelated === false
-          ? "Публикацията не е свързана с готвене."
-          : moderationResult.isAppropriate === false
-            ? "Съдържанието е неуместно."
-            : "Съдържанието е неподходящо.";
-      const messageEn = prefixEn + reasonEn;
-      const messageBg = prefixBg + reasonBg;
+      let reasonKey = moderationResult.isCookingRelated === false ? "postNotCooking" : "postInappropriate";
+      const messageEn = `Post upload failed. Reason: ${moderationResult.reason || "Inappropriate content."}`;
+      const messageBg = moderationResult.isCookingRelated === false 
+        ? "Публикуването не бе успешно. Причина: Публикацията не е свързана с готвене." 
+        : "Публикуването не бе успешно. Причина: Съдържанието е неуместно.";
 
       await Notification.create({
         userId: authorId,
-        type: NotificationType.REPORT_FEEDBACK,
+        type: NotificationType.FAIL,
         message: messageEn,
-        translations: {
-          message: {
-            en: messageEn,
-            bg: messageBg,
-          },
-        },
+        translations: { message: { en: messageEn, bg: messageBg } },
         link: null,
       });
 
-      // Return 200 OK with rejection info - this is a moderation decision, not an error
-      return res.json({
-        error: reasonKey,
-        reason: reasonDetail,
-        flagged: true,
-      });
+      return res.json({ error: reasonKey, flagged: true });
     }
 
-    // Translate title and content with fallback
-    let titleTrans: { en: string; bg: string };
-    let contentTrans: { en: string; bg: string };
+    let titleTrans, contentTrans;
     try {
       [titleTrans, contentTrans] = await Promise.all([
         getDualTranslation(title),
@@ -156,113 +101,59 @@ export const createPost = async (
       contentTrans = { en: content, bg: content };
     }
 
-    // Translate tags with fallback
-    let tagsTranslations: { bg: string[]; en: string[] } = { bg: [], en: [] };
-    if (tagsArray.length > 0) {
-      try {
-        const tagTranslationPromises = tagsArray.map((tag) =>
-          getDualTranslation(tag),
-        );
-        const tagTranslations = await Promise.all(tagTranslationPromises);
-        tagsTranslations.en = tagTranslations.map((t) => t.en);
-        tagsTranslations.bg = tagTranslations.map((t) => t.bg);
-      } catch (err) {
-        // If translation fails, use original tags for both languages
-        tagsTranslations.en = tagsArray;
-        tagsTranslations.bg = tagsArray;
-      }
-    }
-
-    const imagesArray = Array.isArray(image) ? image : [];
-
-    // Determine approval status:
-    // - flagged true (caught by AI) → rejected above (never reaches here)
-    // - flagged false, no moderation error → auto-approved
-    // - moderation error (quota, API down) → requires admin review (isApproved: false)
     const isApproved = !moderationError;
 
-    // If moderation failed, optionally notify user that post needs review
-    if (moderationError) {
-      const messageEn =
-        "Your post has been submitted and is pending admin review due to AI service limitations.";
-      const messageBg =
-        "Публикацията ви беше изпратена и чака одобрение от администратор поради ограничения в AI услугата.";
-
-      try {
-        await Notification.create({
-          userId: authorId,
-          type: NotificationType.REPORT_FEEDBACK,
-          message: messageEn,
-          translations: {
-            message: {
-              en: messageEn,
-              bg: messageBg,
-            },
-          },
-          link: null,
-        });
-      } catch (notifErr) {
-        logger.error(notifErr, "Failed to send moderation error notification:");
-      }
-    }
-
     const post = await Post.create({
-      title: titleTrans.en,
-      content: contentTrans.en,
-      translations: {
-        title: titleTrans,
-        content: contentTrans,
-        tags: tagsTranslations,
-      },
-      image: imagesArray,
+      title: title, 
+      content: content, 
+      translations: { title: titleTrans, content: contentTrans },
+      image: Array.isArray(image) ? image : [],
       authorId,
       category,
       tags: tagsArray,
-      isApproved: isApproved,
+      isApproved,
       isVisible: true,
       likes: [],
     });
 
-    // Log post creation for audit
+    // Log activity: Post Creation
     await logActivity(req, "POST_CREATE", {
       targetId: post._id.toString(),
       targetType: "post",
-      description: `Created post: ${post.title}`,
+      description: `Created post "${title}"`,
     });
 
-    // Send success notification for successfully published posts (not pending review)
-    if (isApproved) {
-      try {
-        await Notification.create({
-          userId: authorId,
-          type: NotificationType.REPORT_FEEDBACK,
-          message: "Your post has been published successfully!",
-          translations: {
-            message: {
-              en: "Your post has been published successfully!",
-              bg: "Публикацията ви беше публикувана успешно!",
-            },
-          },
-          link: `/posts/${post._id}`,
-        });
-      } catch (notifErr) {
-        logger.error(notifErr, "Failed to send success notification:");
-      }
+    if (!isApproved) {
+      const messageEn = "Post upload successful, but pending admin review due to a technical check.";
+      const messageBg = "Публикуването е успешно, но изчаква преглед от администратор поради техническа проверка.";
+
+      await Notification.create({
+        userId: authorId,
+        type: NotificationType.SYSTEM,
+        message: messageEn,
+        translations: { message: { en: messageEn, bg: messageBg } },
+        link: isApproved ? `/posts/${post._id}` : null,
+      });
     }
 
-    // Send success message based on status
-    if (moderationError) {
-      // Post created but needs admin review
-      return res.status(202).json({
-        messageKey: "postPendingAdminReview",
-        post,
-      });
-    } else {
-      return res.status(201).json({
-        messageKey: "postPublishedSuccess",
-        post,
+    if (isApproved) {
+      const messageEn = "Your post has been published successfully!";
+      const messageBg = "Публикацията ви беше публикувана успешно!";
+
+      await Notification.create({
+        userId: authorId,
+        type: NotificationType.SUCCESS,
+        message: messageEn,
+        translations: { message: { en: messageEn, bg: messageBg } },
+        link: isApproved ? `/posts/${post._id}` : null,
       });
     }
+
+    return res.status(isApproved ? 201 : 202).json({
+      messageKey: isApproved ? "postPublishedSuccess" : "postPendingAdminReview",
+      post,
+    });
+    
   } catch (err: any) {
     logger.error(err, "Create Post Error");
     return res.status(500).json({ message: err.message });
@@ -295,117 +186,89 @@ export const updatePost = async (
 ): Promise<Response> => {
   try {
     const { id } = req.params;
-    const { title, content, ...otherUpdates } = req.body;
+    const { title, content, tags, image, category } = req.body;
     const userId = req.user!.userId;
 
     const post = await Post.findById(id);
     if (!post) return res.status(404).json({ message: "Post not found" });
 
-    if (
-      post.authorId.toString() !== userId &&
-      req.user!.role !== RoleTypeValue.ADMIN
-    ) {
+    if (post.authorId.toString() !== userId && req.user!.role !== RoleTypeValue.ADMIN) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    if (title || content) {
-      const { flagged } = await moderateContent(
-        title || post.title,
-        content || post.content,
-        otherUpdates.image || post.image,
-      );
-      if (flagged) {
-        return res.status(400).json({
-          error: "contentFlaggedDuringUpdate",
-        });
+    let isApproved = post.isApproved;
+    const contentChanged = title !== post.title || content !== post.content || JSON.stringify(image) !== JSON.stringify(post.image);
+
+    if (contentChanged) {
+      try {
+        const moderationResult = await moderateContent(title || post.title, content || post.content, image || post.image);
+        if (moderationResult?.flagged) {
+          let reasonKey = moderationResult.isCookingRelated === false ? "postNotCooking" : "postInappropriate";
+          const messageEn = `Post edit rejected. Reason: ${moderationResult.reason || "Inappropriate content."}`;
+          const messageBg = moderationResult.isCookingRelated === false ? "Редакцията е отхвърлена: не е свързана с готвене." : "Редакцията е отхвърлена: неуместно съдържание.";
+
+          await Notification.create({
+            userId: post.authorId,
+            type: NotificationType.FAIL,
+            message: messageEn,
+            translations: { message: { en: messageEn, bg: messageBg } },
+            link: null,
+          });
+
+          return res.status(200).json({ error: reasonKey, flagged: true });
+        }
+        isApproved = true; 
+      } catch (err) {
+        isApproved = false;
       }
     }
 
-    const updateData: any = { ...otherUpdates };
-
-    // Convert tag IDs to tag names if tags are being updated
-    if (updateData.tags && Array.isArray(updateData.tags)) {
-      const tagIds = updateData.tags.filter((tag: string) =>
-        Types.ObjectId.isValid(tag),
-      );
-      if (tagIds.length > 0) {
-        const tagDocs = await Tag.find({ _id: { $in: tagIds } }).lean();
-        const idToNameMap = new Map(
-          tagDocs.map((t: any) => [t._id.toString(), t.name]),
-        );
-        updateData.tags = updateData.tags.map((tag: string) =>
-          Types.ObjectId.isValid(tag) && idToNameMap.has(tag)
-            ? idToNameMap.get(tag)!
-            : tag,
-        );
-      }
-    }
+    const updateData: any = { 
+      image: Array.isArray(image) ? image : post.image,
+      category: category || post.category,
+      isApproved,
+      tags: Array.isArray(tags) ? tags.filter((tag: string) => Types.ObjectId.isValid(tag)) : post.tags
+    };
 
     if (title || content) {
       const [newTitleTrans, newContentTrans] = await Promise.all([
-        title
-          ? getDualTranslation(title)
-          : Promise.resolve(
-              post.translations?.title || { en: post.title, bg: post.title },
-            ),
-        content
-          ? getDualTranslation(content)
-          : Promise.resolve(
-              post.translations?.content || {
-                en: post.content,
-                bg: post.content,
-              },
-            ),
+        getDualTranslation(title || post.title),
+        getDualTranslation(content || post.content),
       ]);
-
-      updateData.title = newTitleTrans.en;
-      updateData.content = newContentTrans.en;
-      // Preserve existing tags translations if they exist
-      updateData.translations = {
-        title: newTitleTrans,
-        content: newContentTrans,
-      };
-      if (post.translations?.tags) {
-        updateData.translations.tags = post.translations.tags;
-      }
+      updateData.title = title || post.title; 
+      updateData.content = content || post.content; 
+      updateData.translations = { title: newTitleTrans, content: newContentTrans };
     }
 
-    // If tags are being updated, translate them and merge into translations
-    if (updateData.tags && Array.isArray(updateData.tags)) {
-      const tagsToTranslate = updateData.tags;
-      let tagsTrans: { bg: string[]; en: string[] };
-      try {
-        const tagTranslations = await Promise.all(
-          tagsToTranslate.map((tag: string) => getDualTranslation(tag)),
-        );
-        tagsTrans = {
-          en: tagTranslations.map((t) => t.en),
-          bg: tagTranslations.map((t) => t.bg),
-        };
-      } catch (err) {
-        tagsTrans = { en: tagsToTranslate, bg: tagsToTranslate };
-      }
+    const updatedPost = await Post.findByIdAndUpdate(id, updateData, { new: true })
+      .populate("authorId", "username profileImage")
+      .populate("category", "name")
+      .populate("tags");
 
-      // Ensure updateData.translations exists
-      if (!updateData.translations) {
-        // Preserve existing title/content translations if not already being updated
-        updateData.translations = {
-          title: post.translations?.title || { en: post.title, bg: post.title },
-          content: post.translations?.content || {
-            en: post.content,
-            bg: post.content,
-          },
-        };
-      }
-      // Set/override tags translations
-      updateData.translations.tags = tagsTrans;
-    }
-
-    const updatedPost = await Post.findByIdAndUpdate(id, updateData, {
-      new: true,
+    // Log activity: Post Update
+    await logActivity(req, "POST_UPDATE", {
+      targetId: id,
+      targetType: "post",
+      description: `Updated post "${updatedPost?.title}"`,
     });
 
-    return res.json(updatedPost);
+    const messageKey = isApproved ? "postUpdatedSuccess" : "postPendingAdminReview";
+    const notifMessageEn = isApproved ? "Your post has been updated successfully!" : "Your edit is pending admin review.";
+    const notifMessageBg = isApproved ? "Публикацията ви беше обновена успешно!" : "Редакцията ви изчаква преглед от администратор.";
+
+    await Notification.create({
+      userId: post.authorId,
+      type: NotificationType.SUCCESS,
+      message: notifMessageEn,
+      translations: { message: { en: notifMessageEn, bg: notifMessageBg } },
+      link: `/posts/${post._id}`,
+    });
+
+    return res.status(isApproved ? 200 : 202).json({
+      messageKey,
+      post: updatedPost
+    });
+
   } catch (err: any) {
     logger.error(err, "Update Post Error");
     return res.status(500).json({ message: err.message });
@@ -430,26 +293,21 @@ export const updatePost = async (
  * [ { "_id": "...", "title": "Pasta", "commentCount": 5 }, ... ]
  * ```
  */
-export const getAllPosts = async (
-  req: Request,
-  res: Response,
-): Promise<Response> => {
+export const getAllPosts = async (req: Request, res: Response): Promise<Response> => {
   try {
     const posts = await Post.find({ isVisible: true })
       .populate("authorId", "username profileImage")
+      .populate("tags")
       .sort({ createdAt: -1 })
       .lean();
 
-    // Get comment counts for posts
     const postIds = posts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
       { $group: { _id: "$postId", count: { $sum: 1 } } },
     ]);
 
-    const countsMap = new Map(
-      commentCounts.map((c) => [c._id.toString(), c.count]),
-    );
+    const countsMap = new Map(commentCounts.map((c) => [c._id.toString(), c.count]));
     const postsWithCounts = posts.map((post) => ({
       ...post,
       commentCount: countsMap.get(post._id.toString()) || 0,
@@ -480,29 +338,17 @@ export const getAllPosts = async (
  * { "_id": "123", "title": "Pasta", "authorId": { "username": "chef" }, ... }
  * ```
  */
-export const getPostById = async (
-  req: Request,
-  res: Response,
-): Promise<Response> => {
+export const getPostById = async (req: Request, res: Response): Promise<Response> => {
   try {
     const post = await Post.findById(req.params.id)
       .populate("authorId", "username profileImage")
-      .populate("category", "name");
-    if (!post || !post.isVisible)
-      return res.status(404).json({ message: "Post not found" });
+      .populate("category", "name")
+      .populate("tags");
+      
+    if (!post || !post.isVisible) return res.status(404).json({ message: "Post not found" });
 
-    // Get comment count
-    const commentCount = await Comment.countDocuments({
-      postId: post._id,
-      isVisible: { $ne: false },
-    });
-
-    const postWithCount = {
-      ...post.toObject(),
-      commentCount,
-    };
-
-    return res.json(postWithCount);
+    const commentCount = await Comment.countDocuments({ postId: post._id, isVisible: { $ne: false } });
+    return res.json({ ...post.toObject(), commentCount });
   } catch (err: any) {
     logger.error(err, "Get Post By ID Error");
     return res.status(500).json({ message: err.message });
@@ -528,77 +374,34 @@ export const getPostById = async (
  * { "message": "Post deleted successfully" }
  * ```
  */
-export const deletePost = async (
-  req: AuthRequest,
-  res: Response,
-): Promise<Response> => {
+export const deletePost = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
-    if (
-      post.authorId.toString() !== req.user!.userId &&
-      req.user!.role !== RoleTypeValue.ADMIN
-    ) {
+    if (post.authorId.toString() !== req.user!.userId && req.user!.role !== RoleTypeValue.ADMIN) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
     const authorId = post.authorId;
     const postTitle = post.title;
-
     await Post.findByIdAndDelete(req.params.id);
 
-    // Determine if this is self-deletion or admin deletion
-    const isSelfDeletion = authorId.toString() === req.user!.userId;
+    // Log activity: Post Deletion
+    await logActivity(req, "POST_DELETE", { 
+      targetId: req.params.id, 
+      targetType: "post", 
+      description: `Deleted post: ${postTitle}` 
+    });
 
-    if (isSelfDeletion) {
-      // Notify the user that they deleted their own post
-      const messageEn = `You deleted your post.`;
-      const messageBg = `Вие изтрихте вашата публикация.`;
+    const messageEn = post.authorId.toString() === req.user!.userId ? "You deleted your post." : "Your post was removed by an administrator.";
+    const messageBg = post.authorId.toString() === req.user!.userId ? "Вие изтрихте вашата публикация." : "Вашата публикация беше премахната от администратор.";
 
-      try {
-        await Notification.create({
-          userId: authorId,
-          type: NotificationType.POST_DELETED,
-          message: messageEn,
-          translations: {
-            message: {
-              en: messageEn,
-              bg: messageBg,
-            },
-          },
-          link: "/account",
-        });
-      } catch (notifErr) {
-        logger.error(notifErr, "Failed to send self-deletion notification:");
-      }
-    } else if (req.user!.role === RoleTypeValue.ADMIN) {
-      // Admin deleted someone else's post: notify the author
-      const messageEn = `Your post was removed by an administrator.`;
-      const messageBg = `Вашата публикация беше премахната от администратор.`;
-
-      try {
-        await Notification.create({
-          userId: authorId,
-          type: NotificationType.POST_DELETED,
-          message: messageEn,
-          translations: {
-            message: {
-              en: messageEn,
-              bg: messageBg,
-            },
-          },
-          link: "/account",
-        });
-      } catch (notifErr) {
-        logger.error(notifErr, "Failed to send admin-deletion notification:");
-      }
-    }
-
-    // Log post deletion for audit
-    await logActivity(req, "POST_DELETE", {
-      targetId: req.params.id,
-      targetType: "post",
-      description: `Deleted post: ${postTitle}`,
+    await Notification.create({
+      userId: authorId,
+      type: NotificationType.DELETED,
+      message: messageEn,
+      translations: { message: { en: messageEn, bg: messageBg } },
+      link: "/account",
     });
 
     return res.json({ message: "Post deleted successfully" });

@@ -1,9 +1,6 @@
 /**
  * @file PostCard.tsx
  * @description Card component for displaying a post preview in feed/grid layouts.
- * Displays post image, title, content preview, tags, author info, category, date, and engagement stats.
- * Supports bilingual content with one-click translation between English and Bulgarian.
- * Handles posts pending approval with visual badge.
  */
 
 import { useState } from "react";
@@ -14,7 +11,6 @@ import { Post, postsAPI } from "../../services/api";
 import "./PostCard.css";
 import { getCategoryDisplayName } from "../../utils/display";
 
-// MUI Icon Imports
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import TranslateIcon from '@mui/icons-material/Translate';
@@ -23,20 +19,14 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 
 /**
  * @interface PostCardProps
- * @description Props for the PostCard component.
- *
- * @property {Post} post - Complete Post object with all nested data including author, category, translations
+ * @property {Post} post - Complete Post object with nested author, category, and tags.
  */
 interface PostCardProps {
   post: Post;
 }
 
 /**
- * Detects the primary language of a text string using Cyrillic character detection.
- * Used to determine if translation is needed based on user's UI language.
- *
- * @param {string} text - Text to analyze for language detection
- * @returns {'en' | 'bg'} - Detected language code (English if no Cyrillic found)
+ * Detects the primary language of a text string.
  */
 const detectLanguage = (text: string): 'en' | 'bg' => {
   if (!text) return 'en';
@@ -46,24 +36,18 @@ const detectLanguage = (text: string): 'en' | 'bg' => {
   return 'en';
 };
 
-/**
- * @component PostCard
- * @description Card component for displaying a post preview.
- * @requires useState - React state for translation UI state
- * @requires useNavigate - React Router navigation handler
- * @requires useThemeLanguage - Context for current UI language
- * @requires postsAPI - API service for post operations
- */
 const PostCard = ({ post }: PostCardProps) => {
   const { language } = useThemeLanguage();
   const navigate = useNavigate();
   const t = (key: string) => getTranslation(language, key);
 
+  // Translation states
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [translationCache, setTranslationCache] = useState<{ title: string; content: string; tags?: string[] } | null>(null);
+  const [translating, setTranslating] = useState(false);
+
   /**
    * Formats a date string according to current UI language locale.
-   *
-   * @param {string} dateString - ISO date string to format
-   * @returns {string} - Formatted localized date string
    */
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(
@@ -76,48 +60,30 @@ const PostCard = ({ post }: PostCardProps) => {
     );
   };
 
+  const isEdited = () => {
+    if (!post.updatedAt || !post.createdAt) return false;
+    
+    // Convert to numbers (milliseconds)
+    const createdTime = new Date(post.createdAt).getTime();
+    const updatedTime = new Date(post.updatedAt).getTime();
+    
+    // Only show "Edited" if the difference is more than 60 seconds
+    // This ignores minor differences caused by database initialization
+    return (updatedTime - createdTime) > 60000; 
+  };
+
   /**
-   * Truncates content to specified maximum length with ellipsis.
-   *
-   * @param {string} content - Full content text
-   * @param {number} [maxLength=150] - Maximum length before truncation
-   * @returns {string} - Truncated content with "..." if needed
+   * Truncates content to specified maximum length.
    */
   const truncateContent = (content: string, maxLength: number = 150) => {
+    if (!content) return "";
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength).trim() + "...";
   };
 
   /**
-   * Navigates to the post detail page when card is clicked.
-   */
-  const handlePostClick = () => {
-    navigate(`/posts/${post._id}`);
-  };
-
-  /**
-   * Handles click on author section (avatar or username).
-   *
-   * @param {React.MouseEvent} e - Click event
-   */
-  const handleAuthorClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(`/users/${post.authorId._id}`);
-  };
-
-  // Translation states
-  const [showTranslation, setShowTranslation] = useState(false);
-  const [translationCache, setTranslationCache] = useState<{ title: string; content: string; tags?: string[] } | null>(null);
-  const [translating, setTranslating] = useState(false);
-
-  /**
-   * Detects language of post title to determine if translation button should show.
-   */
-  const postLanguage = detectLanguage(post.title);
-  const shouldShowTranslateButton = postLanguage !== language;
-
-  /**
    * Handles translation toggle and fetch logic.
+   * Aligned with backend translatePost controller.
    */
   const handleTranslate = async () => {
     if (showTranslation) {
@@ -130,16 +96,18 @@ const PostCard = ({ post }: PostCardProps) => {
       return;
     }
 
+    // Check if translations already exist in the post object
     if (
       post.translations?.title?.[language] &&
-      post.translations?.content?.[language] &&
-      post.translations?.tags?.[language] &&
-      post.translations.tags[language].length > 0
+      post.translations?.content?.[language]
     ) {
       setTranslationCache({
         title: post.translations.title[language],
         content: post.translations.content[language],
-        tags: post.translations.tags[language],
+        // Map populated tags to their translated names if available
+        tags: post.tags?.map((tag: any) => 
+          tag.translations?.[language] || tag.name
+        ),
       });
       setShowTranslation(true);
       return;
@@ -147,6 +115,7 @@ const PostCard = ({ post }: PostCardProps) => {
 
     setTranslating(true);
     try {
+      // API call to post-interaction-controller.ts -> translatePost
       const response = await postsAPI.translatePost(post._id, language);
       setTranslationCache({
         title: response.title,
@@ -155,29 +124,38 @@ const PostCard = ({ post }: PostCardProps) => {
       });
       setShowTranslation(true);
     } catch (error: any) {
-      if (import.meta.env.DEV) {
-        console.error("Translation failed:", error);
-      }
+      console.error("Translation failed:", error);
     } finally {
       setTranslating(false);
     }
   };
 
-  /**
-   * Derived display values that switch between original and translated content.
-   */
+  // Derived display values
   const displayTitle = showTranslation
     ? (translationCache?.title || post.translations?.title?.[language] || post.title)
     : post.title;
+
   const displayContent = showTranslation
     ? (translationCache?.content || post.translations?.content?.[language] || post.content)
     : post.content;
-  const displayTags = showTranslation
-    ? (translationCache?.tags || post.translations?.tags?.[language] || post.tags)
-    : post.tags;
+
+  // Handle Tag objects: show translated string array if translating, 
+  // otherwise map through populated Tag objects to get names.
+  const displayTags = showTranslation && translationCache?.tags
+    ? translationCache.tags
+    : post.tags?.map((tag: any) => (typeof tag === 'object' ? tag.name : tag));
+
+  const postLanguage = detectLanguage(post.title);
+  const shouldShowTranslateButton = postLanguage !== language;
 
   return (
-    <div className="post-card card" onClick={handlePostClick} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') handlePostClick(); }}>
+    <div 
+      className="post-card card" 
+      onClick={() => navigate(`/posts/${post._id}`)} 
+      role="button" 
+      tabIndex={0} 
+      onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/posts/${post._id}`); }}
+    >
       {/* Post Image */}
       {post.image && post.image.length > 0 && (
         <div className="post-card-image-container">
@@ -199,14 +177,11 @@ const PostCard = ({ post }: PostCardProps) => {
         {truncateContent(displayContent)}
       </p>
 
-      {/* Tags */}
+      {/* Tags - Populated from Tag model */}
       {displayTags && displayTags.length > 0 && (
         <div className="post-card-tags">
           {displayTags.slice(0, 5).map((tag: string, idx: number) => (
-            <span
-              key={idx}
-              className="post-card-tag"
-            >
+            <span key={idx} className="post-card-tag">
               #{tag}
             </span>
           ))}
@@ -222,7 +197,6 @@ const PostCard = ({ post }: PostCardProps) => {
 
       {/* Action Buttons Row */}
       <div className="post-card-actions">
-        {/* Translate Button */}
         {shouldShowTranslateButton && (
           <button
             onClick={(e) => {
@@ -242,9 +216,12 @@ const PostCard = ({ post }: PostCardProps) => {
         )}
       </div>
 
-      {/* Author & Category & Date Row */}
+      {/* Author & Meta Data */}
       <div className="post-card-meta">
-        <div className="post-card-author" onClick={handleAuthorClick}>
+        <div 
+          className="post-card-author" 
+          onClick={(e) => { e.stopPropagation(); navigate(`/users/${post.authorId._id}`); }}
+        >
           {post.authorId.profileImage ? (
             <img
               src={post.authorId.profileImage}
@@ -264,10 +241,7 @@ const PostCard = ({ post }: PostCardProps) => {
         <span className="post-card-separator">•</span>
 
         {post.category && (
-          <span
-            className="post-card-category"
-            title={getCategoryDisplayName(post.category?.name || "", t)}
-          >
+          <span className="post-card-category">
             {getCategoryDisplayName(post.category?.name || "", t)}
           </span>
         )}
@@ -275,11 +249,14 @@ const PostCard = ({ post }: PostCardProps) => {
         <span className="post-card-separator">•</span>
 
         <span className="post-card-date">
-          {formatDate(post.createdAt)}
+          {formatDate(post.createdAt)} 
+          {isEdited()
+            ? ` • ${t("editedAt")} ${formatDate(post.updatedAt)}` 
+            : ""}
         </span>
       </div>
 
-      {/* Stats: Likes and Comments */}
+      {/* Engagement Stats */}
       <div className="post-card-stats">
         <div className="post-card-stat">
           <FavoriteIcon sx={{ fontSize: 18, mr: 0.5 }} />

@@ -107,6 +107,9 @@ export const translations: Record<Language, Record<string, string>> = {
     deletePost: "Delete Post",
     confirmDeletePost: "Are you sure you want to delete this post?",
     postDeleted: "Post deleted successfully",
+    postUpdatedSuccess: "Post updated successfully",
+    commentUpdateSuccess: "Comment updated successfully",
+    commentUpdateFail: "Comment update failed",
     changeUsername: "Change Username",
     noBio: "No bio set",
     reportUsername: "Report username",
@@ -552,6 +555,10 @@ export const translations: Record<Language, Record<string, string>> = {
     post: "Post",
     user: "User",
     comment: "Comment",
+    add: "Add",
+    editedAt: "Edited at: ",
+    edited: "Edited",
+    save: "Save",
 
     // Landing Page
     landingWelcome: "Welcome to MangoTree",
@@ -628,6 +635,10 @@ export const translations: Record<Language, Record<string, string>> = {
     post: "Публикация",
     user: "Потребител",
     comment: "Коментар",
+    add: "Добави",
+    editedAt: "Редактирано на: ",
+    edited: "Редактирано",
+    save: "Запази",
 
     // Auth
     login: "Влизане",
@@ -700,6 +711,9 @@ export const translations: Record<Language, Record<string, string>> = {
     deletePost: "Изтриване",
     confirmDeletePost: "Сигурни ли сте, че искате да изтриете тази публикация?",
     postDeleted: "Публикацията беше изтрита успешно",
+    postUpdatedSuccess: "Публикацията беше обновена успешно",
+    commentUpdateSuccess: "Коментарът беше обновен успешно",
+    commentUpdateFail: "Неуспешно обновяване на коментар",
     changeUsername: "Промяна на потребителско име",
     usernameUpdated: "Потребителското име беше обновено успешно",
     noBio: "Няма зададена биография",

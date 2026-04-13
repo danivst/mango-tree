@@ -6,7 +6,7 @@
  * @see IPost interface for the full type definition
  */
 
-import mongoose, { Document, Schema, Model, Types } from "mongoose";
+import mongoose, { Schema, Model } from "mongoose";
 import { IPost } from "../interfaces/post";
 
 const postSchema: Schema<IPost> = new Schema(
@@ -29,10 +29,6 @@ const postSchema: Schema<IPost> = new Schema(
         bg: { type: String, default: "" },
         en: { type: String, default: "" },
       },
-      tags: {
-        bg: { type: [String], default: [] },
-        en: { type: [String], default: [] },
-      },
     },
     image: {
       type: [String],
@@ -50,8 +46,8 @@ const postSchema: Schema<IPost> = new Schema(
     },
     tags: [
       {
-        type: String,
-        trim: true,
+        type: Schema.Types.ObjectId,
+        ref: "Tag",
       },
     ],
     likes: [

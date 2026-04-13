@@ -87,31 +87,14 @@ const Notifications = () => {
       case "comment":
         return <CommentIcon />;
       case "report_feedback":
-        if (
-          lowerMessage.includes("service limitations") ||
-          lowerMessage.includes("ai service") ||
-          lowerMessage.includes("pending admin review")
-        ) {
-          return <WarningIcon />;
-        }
-        if (
-          lowerMessage.includes("rejected") ||
-          lowerMessage.includes("removed") ||
-          lowerMessage.includes("violated") ||
-          lowerMessage.includes("deleted")
-        ) {
-          return <CloseIcon />;
-        }
+        if (lowerMessage.includes("deleted")) return <CloseIcon />;
         return <CheckCircleIcon />;
-      case "post_deleted":
-        if (lowerMessage.includes("removed by an administrator")) {
-          return <CloseIcon />;
-        }
-        return <NotificationsIcon />;
+      case "fail":
+        return <CloseIcon />;
+      case "success":
+        return <CheckCircleIcon />;
       case "system":
-        if (lowerMessage.includes("warning") || lowerMessage.includes("alert")) {
-          return <WarningIcon />;
-        }
+        if (lowerMessage.includes("warning") || lowerMessage.includes("alert")) return <WarningIcon />;
         return <InfoIcon />;
       case "new_login":
         return <WarningIcon />;
@@ -130,13 +113,12 @@ const Notifications = () => {
     if (type === "like") return "#E91E63";
     if (type === "follow" || type === "comment") return "#2196F3";
     if (type === "report_feedback") {
-      if (lowerMessage.includes("pending admin review")) return "#FF9800";
-      if (lowerMessage.includes("rejected") || lowerMessage.includes("removed")) return "#F44336";
+      if (lowerMessage.includes("deleted") ||
+          lowerMessage.includes("administrator")) return "#F44336";
       return "#4CAF50";
     }
-    if (type === "post_deleted") {
-      return lowerMessage.includes("administrator") ? "#F44336" : "#757575";
-    }
+    if (type === "success") return "#4CAF50";
+    if (type === "fail") return "#F44336";
     if (type === "system" || type === "new_login") return "#FF9800";
     return "#757575";
   };

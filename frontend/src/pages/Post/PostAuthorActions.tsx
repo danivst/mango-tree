@@ -34,6 +34,7 @@ interface PostAuthorActionsProps {
   handleFollow: () => void;
   handleLike: () => void;
   handleDeletePostClick: () => void;
+  onEdit: () => void;
   setReportModalOpen: (open: boolean) => void;
   navigate: (path: string) => void;
   t: (key: string) => string;
@@ -49,6 +50,7 @@ const PostAuthorActions: React.FC<PostAuthorActionsProps> = ({
   handleFollow,
   handleLike,
   handleDeletePostClick,
+  onEdit,
   setReportModalOpen,
   navigate,
   t,
@@ -111,6 +113,17 @@ const PostAuthorActions: React.FC<PostAuthorActionsProps> = ({
           <span>{likesCount} {likesCount === 1 ? t("likeCount") : t("likes")}</span>
         </button>
 
+        {/* Edit Button - Visible only to owner */}
+        {currentUserId && currentUserId === post.authorId._id && (
+        <button 
+            onClick={onEdit} 
+            className="btn-secondary post-action-btn btn-edit"
+        >
+            <span className="material-icons text-base">edit</span>
+            <span>{t("edit")}</span>
+        </button>
+        )}
+        
         {currentUserId && currentUserId === post.authorId._id && (
           <button onClick={handleDeletePostClick} disabled={actionLoading.delete} className="btn-secondary post-action-btn btn-delete">
             {actionLoading.delete ? <span className="material-icons spin text-base">refresh</span> : <span className="material-icons text-base">delete</span>}

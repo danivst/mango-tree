@@ -5,11 +5,12 @@
  * and a weighted recommendation engine for suggested content.
  */
 
-import { Response } from "express";
+import { Response, Request } from "express";
 import { Types } from "mongoose";
 import Post from "../../models/post-model";
 import Comment from "../../models/comment-model";
 import User from "../../models/user-model";
+import Tag from "../../models/tag-model"; // Added Tag model import
 import { AuthRequest } from "../../interfaces/auth";
 import logger from "../../utils/logger";
 
@@ -49,10 +50,10 @@ export const getHomeFeed = async (
       authorId: { $ne: userIdObj },
     })
       .populate("authorId", "username profileImage")
+      .populate("tags") // Added population for tags in home feed
       .sort({ createdAt: -1 })
       .lean();
 
-    // Get comment counts for all posts
     const postIds = allPosts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
@@ -63,7 +64,6 @@ export const getHomeFeed = async (
       commentCounts.map((c) => [c._id.toString(), c.count]),
     );
 
-    // Add commentCount to each post
     const postsWithCounts = allPosts.map((post) => ({
       ...post,
       commentCount: countsMap.get(post._id.toString()) || 0,
@@ -110,10 +110,10 @@ export const getPostsByAuthor = async (
     const posts = await Post.find({ authorId, isVisible: true })
       .populate("category", "name translations")
       .populate("authorId", "username profileImage")
+      .populate("tags") // Added population
       .sort({ createdAt: -1 })
       .lean();
 
-    // Get comment counts for posts
     const postIds = posts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
@@ -165,33 +165,45 @@ export const searchPosts = async (
       return res.status(400).json({ message: "Search query is required" });
     }
 
-    // Prevent caching of search results
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
     res.set("Pragma", "no-cache");
     res.set("Expires", "0");
 
-    // First, try $text search
+    // First, find any Tag IDs that match the search string in name or translations
+    const matchingTags = await Tag.find({
+      $or: [
+        { name: { $regex: query, "options": "i" } },
+        { "translations.bg": { $regex: query, "options": "i" } },
+        { "translations.en": { $regex: query, "options": "i" } }
+      ]
+    }).select("_id");
+    const tagIds = matchingTags.map(t => t._id);
+
+    // Search posts by Text score OR by matching Tag IDs
     let posts = await Post.find(
       {
-        $text: { $search: query },
+        $or: [
+          { $text: { $search: query } },
+          { tags: { $in: tagIds } }
+        ],
         isVisible: true,
       },
       { score: { $meta: "textScore" } },
     )
       .populate("authorId", "username profileImage")
       .populate("category", "name translations")
+      .populate("tags") // Added population for tags in search results
       .sort({ score: { $meta: "textScore" }, createdAt: -1 })
       .skip(parseInt(skip as string) || 0)
       .limit(parseInt(limit as string) || 50)
       .lean();
 
-    // If $text search returned nothing, try a fallback regex search (case insensitive)
+    // Fallback regex search if text index/tag match yielded nothing
     if (posts.length === 0) {
       const regexQuery = {
         $or: [
           { title: { $regex: query, $options: "i" } },
           { content: { $regex: query, $options: "i" } },
-          { tags: { $in: [new RegExp(query, "i")] } },
         ],
         isVisible: true,
       };
@@ -199,19 +211,21 @@ export const searchPosts = async (
       posts = await Post.find(regexQuery)
         .populate("authorId", "username profileImage")
         .populate("category", "name translations")
+        .populate("tags") // Added population for tags in regex search results
         .sort({ createdAt: -1 })
         .skip(parseInt(skip as string) || 0)
         .limit(parseInt(limit as string) || 50)
         .lean();
     }
 
-    // Get total count for pagination
     const total = await Post.countDocuments({
-      $text: { $search: query },
+      $or: [
+        { $text: { $search: query } },
+        { tags: { $in: tagIds } }
+      ],
       isVisible: true,
     });
 
-    // Get comment counts for posts
     const postIds = posts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
@@ -261,99 +275,59 @@ export const getFollowedPosts = async (
 ): Promise<Response> => {
   try {
     const userId = req.user?.userId;
-    if (!userId) {
-      logger.error("No userId in token");
-      return res.status(401).json({ message: "Not authenticated" });
-    }
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
+    
     const userIdObj = new Types.ObjectId(userId);
     const limit = parseInt(req.query.limit as string) || 50;
     const skip = parseInt(req.query.skip as string) || 0;
 
-    // Get user's following list
     const user = await User.findById(userId).select("following");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Filter and convert following IDs to valid ObjectIds
-    const followingIds: Types.ObjectId[] = [];
-    for (const id of user.following) {
-      if (Types.ObjectId.isValid(id)) {
-        try {
-          followingIds.push(new Types.ObjectId(id));
-        } catch (e) {
-          logger.error(e, "Invalid following ID:");
-        }
-      }
-    }
+    const followingIds = user.following
+      .filter(id => Types.ObjectId.isValid(id))
+      .map(id => new Types.ObjectId(id));
 
-    // If user follows nobody, return empty
     if (followingIds.length === 0) {
-      return res.json({
-        posts: [],
-        total: 0,
-        hasMore: false,
-      });
+      return res.json({ posts: [], total: 0, hasMore: false });
     }
 
-    // Find posts from followed users (exclude user's own posts)
-    let posts;
-    try {
-      posts = await Post.find({
-        authorId: { $in: followingIds, $ne: userIdObj },
-        isVisible: true,
-      })
-        .populate("authorId", "username profileImage")
-        .populate("category", "name translations")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit + 1) // Fetch one extra to check if there are more
-        .lean();
-    } catch (queryErr) {
-      logger.error(queryErr, "Error fetching posts");
-      throw queryErr; // Re-throw to be caught by outer catch
-    }
+    const posts = await Post.find({
+      authorId: { $in: followingIds, $ne: userIdObj },
+      isVisible: true,
+    })
+      .populate("authorId", "username profileImage")
+      .populate("category", "name translations")
+      .populate("tags") // Added population
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit + 1)
+      .lean();
 
     const hasMore = posts.length > limit;
     const paginatedPosts = hasMore ? posts.slice(0, limit) : posts;
 
-    // Get total for accurate count (optional, could be expensive)
-    let total;
-    try {
-      total = await Post.countDocuments({
-        authorId: { $in: followingIds, $ne: userIdObj },
-        isVisible: true,
-      });
-    } catch (countErr) {
-      logger.error(countErr, "Error counting posts:");
-      total = paginatedPosts.length; // Fallback
-    }
+    const total = await Post.countDocuments({
+      authorId: { $in: followingIds, $ne: userIdObj },
+      isVisible: true,
+    });
 
-    // Get comment counts for posts
     const postIds = paginatedPosts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
       { $group: { _id: "$postId", count: { $sum: 1 } } },
     ]);
 
-    const countsMap = new Map(
-      commentCounts.map((c) => [c._id.toString(), c.count]),
-    );
+    const countsMap = new Map(commentCounts.map((c) => [c._id.toString(), c.count]));
     const postsWithCounts = paginatedPosts.map((post) => ({
       ...post,
       commentCount: countsMap.get(post._id.toString()) || 0,
     }));
 
-    return res.json({
-      posts: postsWithCounts,
-      total,
-      hasMore,
-    });
+    return res.json({ posts: postsWithCounts, total, hasMore });
   } catch (err: any) {
     logger.error(err, "Get Followed Posts Error");
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch followed posts", error: err.message });
+    return res.status(500).json({ message: "Failed to fetch followed posts" });
   }
 };
 
@@ -381,176 +355,92 @@ export const getSuggestedPosts = async (
 ): Promise<Response> => {
   try {
     const userId = req.user?.userId;
-    if (!userId) {
-      logger.error("No userId in token");
-      return res.status(401).json({ message: "Not authenticated" });
-    }
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
+    
     const userIdObj = new Types.ObjectId(userId);
     const limit = parseInt(req.query.limit as string) || 50;
     const skip = parseInt(req.query.skip as string) || 0;
 
-    // Parallel fetch user data
-    const [user, likedPosts, commentedPostIds] = await Promise.all([
+    const [user, likedPosts] = await Promise.all([
       User.findById(userId).select("following"),
-      Post.find({ likes: userIdObj, isVisible: true })
-        .select("_id category tags")
-        .lean(),
-      Comment.find({ userId: userIdObj }).select("postId").lean(),
+      Post.find({ likes: userIdObj, isVisible: true }).select("_id category tags").lean(),
     ]);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Extract data for scoring
-    const followingIds = user.following.map((id) =>
-      Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id,
-    );
+    const followingIds = user.following
+      .filter(id => Types.ObjectId.isValid(id))
+      .map(id => new Types.ObjectId(id));
 
     const likedPostIds = likedPosts.map((p) => p._id);
-    const commentedPostIdsSet = new Set(
-      commentedPostIds.map((c) => c.postId).filter(Boolean),
-    );
 
-    // Build category affinity map (categories user has liked)
     const categoryAffinity = new Set<string>();
-    likedPosts
-      .map((p) => p.category?.toString())
-      .filter((id): id is string => id !== undefined && id !== null)
-      .forEach((catId) => categoryAffinity.add(catId));
+    likedPosts.forEach(p => {
+      if (p.category) categoryAffinity.add(p.category.toString());
+    });
 
-    // Build tag affinity map (tags from liked/interacted posts)
+    // Build tag affinity map using Tag IDs
     const tagAffinity = new Set<string>();
     likedPosts.forEach((post) => {
       if (post.tags && Array.isArray(post.tags)) {
-        post.tags.forEach((tag: string) => tagAffinity.add(tag.toLowerCase()));
+        post.tags.forEach((tagId: any) => tagAffinity.add(tagId.toString()));
       }
     });
 
-    // Build candidate pool: posts NOT from user, NOT from followed users (already in their own feed), isVisible
     const candidateQuery: any = {
       isVisible: true,
+      authorId: { $nin: [...followingIds, userIdObj] },
+      _id: { $nin: likedPostIds }
     };
 
-    // Only add authorId filter if we have followingIds
-    if (followingIds.length > 0) {
-      candidateQuery.authorId = { $nin: followingIds };
-    }
-    candidateQuery.authorId = {
-      ...(candidateQuery.authorId || {}),
-      $ne: userIdObj,
-    };
-
-    // Exclude posts user has already liked (optional, keeps feed fresh)
-    if (likedPostIds.length > 0) {
-      candidateQuery._id = { $nin: likedPostIds };
-    }
-
-    // Get total count of candidates for pagination
     const totalCandidates = await Post.countDocuments(candidateQuery);
 
-    // Fetch candidate posts with pagination
     const candidates = await Post.find(candidateQuery)
       .populate("authorId", "username profileImage")
       .populate("category", "name translations")
-      .sort({ createdAt: -1 }) // Start with recent as baseline
+      .populate("tags") // Added population
+      .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit * 2) // Fetch more to allow scoring and sorting
+      .limit(limit * 2)
       .lean();
 
-    // Score each candidate post (simplified with defensive checks)
-    const scoredCandidates: any[] = candidates.map((post: any) => {
+    const scoredCandidates = candidates.map((post: any) => {
       let score = 0;
-
-      // Safely get category ID
-      const categoryDoc = post.category as any;
-      const postCategory =
-        categoryDoc?._id?.toString() || categoryDoc?.toString();
-
-      // Safely get tags
-      const postTags = Array.isArray(post.tags)
-        ? post.tags.map((t: string) => t.toLowerCase())
+      const postCategory = post.category?._id?.toString() || post.category?.toString();
+      
+      // Post tags are now objects after population, use _id
+      const postTagIds = Array.isArray(post.tags)
+        ? post.tags.map((t: any) => t._id?.toString() || t.toString())
         : [];
 
-      // Date calculations
       const postDate = new Date(post.createdAt);
       const daysAgo = (Date.now() - postDate.getTime()) / (1000 * 60 * 60 * 24);
-      const likesCount = Array.isArray(post.likes) ? post.likes.length : 0;
+      const likesCount = post.likes?.length || 0;
 
-      // Category affinity: +3 per matching category
-      if (postCategory && categoryAffinity.has(postCategory)) {
-        score += 3;
-      }
+      if (postCategory && categoryAffinity.has(postCategory)) score += 3;
 
-      // Tag overlap: +2 per matching tag
-      const matchingTags = postTags.filter((tag: string) =>
-        tagAffinity.has(tag),
-      ).length;
+      // Tag overlap scoring based on IDs
+      const matchingTags = postTagIds.filter((tagId: string) => tagAffinity.has(tagId)).length;
       score += matchingTags * 2;
 
-      // Recency: +1 per day newer (max +30)
-      const recencyBonus = Math.max(0, 30 - Math.floor(daysAgo));
-      score += recencyBonus;
-
-      // Popularity: +log(likes + 1)
+      score += Math.max(0, 30 - Math.floor(daysAgo));
       score += Math.log(likesCount + 1);
-
-      // Randomness: -5 to +5
       score += Math.random() * 10 - 5;
 
       return { ...post, score };
     });
 
-    // Sort by score descending, then by date as tiebreaker
-    scoredCandidates.sort((a, b) => {
-      if (Math.abs(b.score - a.score) < 0.01) {
-        // Close scores, use date
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      }
-      return b.score - a.score;
-    });
-
-    // Take only the requested limit
+    scoredCandidates.sort((a, b) => b.score - a.score);
     const scoredPosts = scoredCandidates.slice(0, limit);
 
-    // Edge case: if we don't have enough posts, fall back to recent popular posts
-    if (scoredPosts.length < limit && skip === 0) {
-      const remainingNeeded = limit - scoredPosts.length;
-      const fallbackQuery = {
-        isVisible: true,
-        authorId: { $ne: userIdObj },
-        _id: { $nin: scoredPosts.map((p) => p._id) },
-      };
-
-      const fallbackPosts = await Post.find(fallbackQuery)
-        .populate("authorId", "username profileImage")
-        .populate("category", "name translations")
-        .sort({ createdAt: -1, likes: -1 })
-        .limit(remainingNeeded)
-        .lean();
-
-      // Add score property to fallback posts to keep consistent type
-      const fallbackPostsWithScore = fallbackPosts.map((p: any) => ({
-        ...p,
-        score: 0,
-      }));
-      scoredPosts.push(...fallbackPostsWithScore);
-    }
-
-    // Get comment counts for posts
-    const allReturnedPosts = [...scoredPosts];
-    const postIds = allReturnedPosts.map((post) => post._id);
+    const postIds = scoredPosts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
       { $match: { postId: { $in: postIds }, isVisible: { $ne: false } } },
       { $group: { _id: "$postId", count: { $sum: 1 } } },
     ]);
 
-    const countsMap = new Map(
-      commentCounts.map((c) => [c._id.toString(), c.count]),
-    );
-    const postsWithCounts = allReturnedPosts.map((post) => ({
+    const countsMap = new Map(commentCounts.map((c) => [c._id.toString(), c.count]));
+    const postsWithCounts = scoredPosts.map((post) => ({
       ...post,
       commentCount: countsMap.get(post._id.toString()) || 0,
     }));

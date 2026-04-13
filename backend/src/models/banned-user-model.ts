@@ -21,17 +21,17 @@ const BannedUserSchema: Schema = new Schema({
     required: true, 
     unique: true 
   },
-  original_user_id: {
+  originalUserId: {
     type: Schema.Types.ObjectId,
     required: true,
     ref: "User",
     unique: true,
   },
-  ban_reason: { 
+  banReason: { 
     type: String, 
     required: true 
   },
-  banned_at: { 
+  bannedAt: { 
     type: Date, 
     default: Date.now 
   },

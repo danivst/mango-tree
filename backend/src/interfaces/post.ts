@@ -8,11 +8,11 @@ import { Document, Types } from "mongoose";
  * @property {Types.ObjectId} _id - Unique identifier (MongoDB ObjectId)
  * @property {string} title - Post title
  * @property {string} content - Post content/description
- * @property {Object} translations - Bilingual translations for content and tags
+ * @property {Object} translations - Bilingual translations for content and title
  * @property {string[]} image - Array of image URLs (base64 or file paths)
  * @property {Types.ObjectId} authorId - Reference to the User who created this post
  * @property {Types.ObjectId} category - Reference to the Category document
- * @property {string[]} tags - Array of tag strings for categorization
+ * @property {Types.ObjectId[]} tags - Array of tag strings for categorization
  * @property {Types.ObjectId[]} likes - Array of user IDs who liked this post
  * @property {Date} createdAt - Post creation timestamp
  * @property {Date} updatedAt - Last modification timestamp
@@ -32,15 +32,11 @@ export interface IPost extends Document {
       bg: string;
       en: string;
     };
-    tags?: {
-      bg: string[];
-      en: string[];
-    };
   };
   image: string[];
   authorId: Types.ObjectId;
   category: Types.ObjectId;
-  tags: string[];
+  tags: Types.ObjectId[];
   likes: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;

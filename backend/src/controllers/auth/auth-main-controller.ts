@@ -254,7 +254,7 @@ export const loginUser = async (
   if (bannedUser) {
     return res.status(403).json({
       message: "accountBanned",
-      reason: bannedUser.ban_reason,
+      reason: bannedUser.banReason,
     });
   }
 

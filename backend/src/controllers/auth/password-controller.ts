@@ -145,7 +145,7 @@ export const requestPasswordReset = async (
       "If you have not submitted this request, you can ignore this message.",
     ),
     getDualTranslation(
-      "This message is automated therefore any response to it will be in vain. If you have any questions, email mangotree@support.com.",
+      "This message is automated therefore any response to it will be in vain. If you have any questions, email mangotree-support@gmail.com.",
     ),
     getDualTranslation("Sincerely, the MangoTree team"),
   ]);

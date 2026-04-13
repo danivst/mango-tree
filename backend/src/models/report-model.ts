@@ -41,10 +41,6 @@ const reportSchema: Schema<IReport> = new Schema(
       enum: Object.values(ReportStatusType),
       default: ReportStatusType.PENDING,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   {
     timestamps: true,

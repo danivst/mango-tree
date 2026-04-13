@@ -518,6 +518,99 @@
   font-family: 'Poppins', sans-serif;
 }
 
+/* Sticky top for edit bar */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    background-color: var(--theme-bg);
+    z-index: 100;
+}
+
+/* Tag dropdown and search integration */
+.tag-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 250px;
+    background: var(--theme-bg);
+    border: 1px solid var(--theme-text);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    margin-top: 5px;
+}
+
+.tag-dropdown-search {
+    padding: 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.tag-search-input {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 4px;
+    background: var(--theme-bg);
+    color: var(--theme-text);
+}
+
+.tag-dropdown-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.tag-dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    color: var(--theme-text);
+}
+
+.tag-dropdown-item:hover {
+    background: var(--theme-accent);
+}
+
+.edit-image-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 5;
+}
+
+.edit-add-img-btn, .edit-remove-img-btn {
+    opacity: 0.9;
+    padding: 6px 12px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.edit-add-img-btn:hover, .edit-remove-img-btn:hover {
+    opacity: 1;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Ensure the label has its own line and spacing */
+.edit-mode-category {
+    display: flex;
+    flex-direction: column; /* Stack label on top of selector */
+    gap: 8px;               /* Space between label and dropdown */
+    margin-bottom: 1.5rem;
+}
+
+.edit-mode-category .form-label {
+    font-weight: 600;
+    margin: 0;
+}
+
 @media (max-width: 600px) {
   .comment-actions {
     margin-left: 0;

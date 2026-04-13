@@ -99,7 +99,8 @@ export const toggleLikePost = async (
 
 /**
  * Translates a post on demand.
- * Fetches dual translations for title, content, and tags based on the requested language.
+ * Fetches dual translations for title and content. Tags are retrieved from the 
+ * referenced Tag model translations.
  *
  * @param req - AuthRequest with params { id } and query { targetLang }
  * @param res - Express response object
@@ -122,45 +123,37 @@ export const translatePost = async (
   try {
     const { id } = req.params;
     const { targetLang } = req.query;
+    const isBg = targetLang === "bg";
 
-    // Validate target language
     if (!targetLang || !["en", "bg"].includes(targetLang as string)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid target language. Use 'en' or 'bg'." });
+      return res.status(400).json({ message: "Invalid target language." });
     }
 
-    const post = await Post.findById(id)
-      .populate("authorId", "username profileImage")
-      .populate("category", "name");
-    if (!post || !post.isVisible) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    // Populate tags to get access to the .name property
+    const post = await Post.findById(id).populate("tags"); 
+    if (!post || !post.isVisible) return res.status(404).json({ message: "Post not found" });
 
-    // Determine source text (original content)
-    const titleToTranslate = post.title;
-    const contentToTranslate = post.content;
+    // Extract names and filter out any potential nulls/undefined
+    const tagsToTranslate = post.tags
+      .map((tag: any) => (typeof tag === 'object' ? tag.name : tag))
+      .filter((name: any) => typeof name === 'string' && name.trim() !== "");
 
-    // Get translations for both languages
-    const [titleTrans, contentTrans] = await Promise.all([
-      getDualTranslation(titleToTranslate),
-      getDualTranslation(contentToTranslate),
+    // Perform AI translations in parallel
+    const [titleTrans, contentTrans, tagsTrans] = await Promise.all([
+      getDualTranslation(post.title),
+      getDualTranslation(post.content),
+      // This maps each tag string to its own translation promise
+      Promise.all(tagsToTranslate.map(tagName => getDualTranslation(tagName)))
     ]);
 
-    // Translate tags
-    let translatedTags: string[] = [];
-    if (post.tags && post.tags.length > 0) {
-      const tagsTranslations = await Promise.all(
-        post.tags.map((tag) => getDualTranslation(tag)),
-      );
-      const isBg = targetLang === "bg";
-      translatedTags = tagsTranslations.map((t) => (isBg ? t.bg : t.en));
-    }
-
-    // Return the requested language
-    const isBg = targetLang === "bg";
+    // Map the results back to the requested language
     const translatedTitle = isBg ? titleTrans.bg : titleTrans.en;
     const translatedContent = isBg ? contentTrans.bg : contentTrans.en;
+    
+    // Ensure we filter again in case the AI returned an empty string
+    const translatedTags = tagsTrans
+      .map(t => (isBg ? t.bg : t.en))
+      .filter(text => text && text.trim() !== "");
 
     return res.json({
       title: translatedTitle,
@@ -170,7 +163,6 @@ export const translatePost = async (
       targetLang: targetLang,
     });
   } catch (err: any) {
-    logger.error(err, "Translation error");
     return res.status(500).json({ message: err.message });
   }
 };

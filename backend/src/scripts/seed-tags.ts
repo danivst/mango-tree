@@ -9,7 +9,7 @@
 import mongoose from 'mongoose';
 import { MONGO_URI } from '../config/env';
 import Tag from '../models/tag-model';
-import TagType from '../enums/tag-type';
+import { getDualTranslation } from '../utils/translation';
 
 const seedTags = async () => {
   try {
@@ -20,78 +20,89 @@ const seedTags = async () => {
     await Tag.deleteMany({});
 
     const tags = [
-      { name: 'italian', type: TagType.CUISINE },
-      { name: 'chinese', type: TagType.CUISINE },
-      { name: 'japanese', type: TagType.CUISINE },
-      { name: 'thai', type: TagType.CUISINE },
-      { name: 'mexican', type: TagType.CUISINE },
-      { name: 'indian', type: TagType.CUISINE },
-      { name: 'french', type: TagType.CUISINE },
-      { name: 'greek', type: TagType.CUISINE },
-      { name: 'spanish', type: TagType.CUISINE },
-      { name: 'turkish', type: TagType.CUISINE },
-      { name: 'american', type: TagType.CUISINE },
-      { name: 'korean', type: TagType.CUISINE },
-      { name: 'vietnamese', type: TagType.CUISINE },
-      { name: 'lebanese', type: TagType.CUISINE },
-      { name: 'moroccan', type: TagType.CUISINE },
-      { name: 'caribbean', type: TagType.CUISINE },
-      { name: 'brazilian', type: TagType.CUISINE },
-      { name: 'german', type: TagType.CUISINE },
-      { name: 'british', type: TagType.CUISINE },
-      { name: 'mediterranean', type: TagType.CUISINE },
+      { name: 'italian' },
+      { name: 'chinese' },
+      { name: 'japanese' },
+      { name: 'thai' },
+      { name: 'mexican' },
+      { name: 'indian' },
+      { name: 'french' },
+      { name: 'greek' },
+      { name: 'spanish' },
+      { name: 'turkish' },
+      { name: 'american' },
+      { name: 'korean' },
+      { name: 'vietnamese' },
+      { name: 'lebanese' },
+      { name: 'moroccan' },
+      { name: 'caribbean' },
+      { name: 'brazilian' },
+      { name: 'german' },
+      { name: 'british' },
+      { name: 'mediterranean' },
 
-      { name: 'breakfast', type: TagType.MEAL_TIME },
-      { name: 'brunch', type: TagType.MEAL_TIME },
-      { name: 'lunch', type: TagType.MEAL_TIME },
-      { name: 'dinner', type: TagType.MEAL_TIME },
-      { name: 'late-night', type: TagType.MEAL_TIME },
-      { name: 'snack', type: TagType.MEAL_TIME },
+      { name: 'breakfast' },
+      { name: 'brunch' },
+      { name: 'lunch' },
+      { name: 'dinner' },
+      { name: 'late-night' },
+      { name: 'snack' },
 
-      { name: 'soup', type: TagType.MEAL_TYPE },
-      { name: 'salad', type: TagType.MEAL_TYPE },
-      { name: 'main course', type: TagType.MEAL_TYPE },
-      { name: 'side dish', type: TagType.MEAL_TYPE },
-      { name: 'dessert', type: TagType.MEAL_TYPE },
-      { name: 'appetizer', type: TagType.MEAL_TYPE },
-      { name: 'drink', type: TagType.MEAL_TYPE },
-      { name: 'smoothie', type: TagType.MEAL_TYPE },
-      { name: 'sandwich', type: TagType.MEAL_TYPE },
-      { name: 'pasta', type: TagType.MEAL_TYPE },
+      { name: 'soup' },
+      { name: 'salad' },
+      { name: 'main course' },
+      { name: 'side dish' },
+      { name: 'dessert' },
+      { name: 'appetizer' },
+      { name: 'drink' },
+      { name: 'smoothie' },
+      { name: 'sandwich' },
+      { name: 'pasta' },
 
-      { name: 'easy', type: TagType.DIFFICULTY },
-      { name: 'medium', type: TagType.DIFFICULTY },
-      { name: 'hard', type: TagType.DIFFICULTY },
+      { name: 'easy' },
+      { name: 'medium' },
+      { name: 'hard' },
 
-      { name: 'healthy', type: TagType.MEAL_TYPE },
-      { name: 'vegan', type: TagType.MEAL_TYPE },
-      { name: 'vegetarian', type: TagType.MEAL_TYPE },
-      { name: 'gluten-free', type: TagType.MEAL_TYPE },
-      { name: 'keto', type: TagType.MEAL_TYPE },
-      { name: 'low-carb', type: TagType.MEAL_TYPE },
-      { name: 'high-protein', type: TagType.MEAL_TYPE },
-      { name: 'dairy-free', type: TagType.MEAL_TYPE },
-      { name: 'low-fat', type: TagType.MEAL_TYPE },
-      { name: 'sugar-free', type: TagType.MEAL_TYPE },
-      { name: 'bbq', type: TagType.MEAL_TYPE },
-      { name: 'grill', type: TagType.MEAL_TYPE },
-      { name: 'roast', type: TagType.MEAL_TYPE },
-      { name: 'baked', type: TagType.MEAL_TYPE },
-      { name: 'stew', type: TagType.MEAL_TYPE },
-      { name: 'fried', type: TagType.MEAL_TYPE },
-      { name: 'one-pot', type: TagType.MEAL_TYPE },
-      { name: 'instant pot', type: TagType.MEAL_TYPE },
-      { name: 'air fryer', type: TagType.MEAL_TYPE },
-      { name: 'picnic', type: TagType.MEAL_TYPE },
-      { name: 'holiday', type: TagType.MEAL_TYPE },
-      { name: 'kids friendly', type: TagType.MEAL_TYPE },
-      { name: 'comfort food', type: TagType.MEAL_TYPE },
-      { name: 'quick & easy', type: TagType.MEAL_TYPE },
-      { name: 'party food', type: TagType.MEAL_TYPE },
+      { name: 'healthy' },
+      { name: 'vegan' },
+      { name: 'vegetarian' },
+      { name: 'gluten-free' },
+      { name: 'keto' },
+      { name: 'low-carb' },
+      { name: 'high-protein' },
+      { name: 'dairy-free' },
+      { name: 'low-fat' },
+      { name: 'sugar-free' },
+      { name: 'bbq' },
+      { name: 'grill' },
+      { name: 'roast' },
+      { name: 'baked' },
+      { name: 'stew' },
+      { name: 'fried' },
+      { name: 'one-pot' },
+      { name: 'instant pot' },
+      { name: 'air fryer' },
+      { name: 'picnic' },
+      { name: 'holiday' },
+      { name: 'kids friendly' },
+      { name: 'comfort food' },
+      { name: 'quick & easy' },
+      { name: 'party food' },
     ];
 
-    await Tag.insertMany(tags);
-    console.log(`✅ Tags seeded successfully (total: ${tags.length})`);
+    const tagsWithTranslations = await Promise.all(
+      tags.map(async (tag) => {
+        const dualNames = await getDualTranslation(tag.name);
+        return {
+          name: dualNames.en, // Keep the primary name as English
+          translations: dualNames, // Store both { en, bg }
+          createdBy: 'System'
+        };
+      })
+    );
+
+    await Tag.insertMany(tagsWithTranslations);
+    console.log(`✅ Tags seeded successfully (total: ${tagsWithTranslations.length})`);
     process.exit(0);
   } catch (err) {
     console.error('❌ Tag seeding failed:', err);

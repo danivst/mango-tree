@@ -7,6 +7,8 @@
  * Environment variables required:
  * - RESEND_API_KEY: Resend API key (starts with "re_")
  * - RESEND_FROM_EMAIL: Sender email address for Resend
+ * - SMTP_HOST: SMTP server hostname (e.g., smtp.gmail.com)
+ * - SMTP_PORT: SMTP server port (e.g., 587 or 465)
  * - SMTP_USER: Gmail address for SMTP fallback
  * - SMTP_PASS: Gmail app password for SMTP fallback
  */
@@ -17,9 +19,23 @@ import logger from '../utils/logger';
 import {
   RESEND_API_KEY,
   RESEND_FROM_EMAIL,
+  SMTP_HOST,
+  SMTP_PORT,
   SMTP_USER,
   SMTP_PASS
 } from '../config/env';
+
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+
+const transporter = nodemailer.createTransport({
+  host: SMTP_HOST,
+  port: Number(SMTP_PORT),
+  secure: Number(SMTP_PORT) === 465,
+  auth: {
+    user: SMTP_USER,
+    pass: SMTP_PASS,
+  },
+});
 
 /**
  * Email payload interface
@@ -54,9 +70,8 @@ export const sendEmail = async (
   html: string
 ): Promise<void> => {
   // Attempt to use Resend if API key is configured
-  if (RESEND_API_KEY && RESEND_API_KEY.startsWith('re_')) {
+  if (resend && RESEND_API_KEY.startsWith('re_')) {
     try {
-      const resend = new Resend(RESEND_API_KEY);
       let fromEmail = RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
       const result = await resend.emails.send({
@@ -79,14 +94,6 @@ export const sendEmail = async (
 
   // Attempt SMTP fallback if Resend fails or is not configured
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      },
-    });
-
     const fromEmail = SMTP_USER || RESEND_FROM_EMAIL;
 
     await transporter.sendMail({

@@ -7,7 +7,6 @@
  */
 
 import mongoose, { Schema, Model } from "mongoose";
-import TagType from "../enums/tag-type";
 import { ITag } from "../interfaces/tag";
 
 const tagSchema: Schema<ITag> = new Schema(
@@ -20,11 +19,6 @@ const tagSchema: Schema<ITag> = new Schema(
     translations: {
       bg: { type: String, default: "" },
       en: { type: String, default: "" },
-    },
-    type: {
-      type: String,
-      enum: Object.values(TagType),
-      required: false,
     },
     createdBy: {
       type: String,

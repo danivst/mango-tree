@@ -1,5 +1,7 @@
 import { Document, Types } from "mongoose";
 import { RoleType } from "../enums/role-type";
+import { ThemeType } from "../enums/theme-type";
+import { LanguageType } from "../enums/language-type";
 
 /**
  * @interface IUser
@@ -18,9 +20,8 @@ import { RoleType } from "../enums/role-type";
  * @property {boolean} [isApproved] - Whether user is approved (default: true)
  * @property {boolean} [isBanned] - Whether user is banned (default: false)
  * @property {Object} translations - Bilingual translations for user content
- * @property {NotificationPreferences} notificationPreferences - User's notification settings
- * @property {string} [theme] - Preferred UI theme: "dark", "purple", "cream", "light", "mango" (default: "mango")
- * @property {string} [language] - Preferred language: "en" or "bg" (default: "en")
+ * @property {ThemeType} [theme] - Preferred UI theme (default: "mango")
+ * @property {LanguageType} [language] - Preferred language (default: "en")
  * @property {boolean} [twoFactorEnabled] - Whether 2FA is enabled
  * @property {string} [twoFactorCode] - Current 2FA verification code
  * @property {Date} [twoFactorCodeExpiry] - 2FA code expiry timestamp
@@ -47,14 +48,8 @@ export interface IUser extends Document {
       en: string;
     };
   };
-  notificationPreferences: {
-    emailReports: boolean;
-    emailComments: boolean;
-    inAppReports: boolean;
-    inAppComments: boolean;
-  };
-  theme?: "dark" | "purple" | "cream" | "light" | "mango";
-  language?: "en" | "bg";
+  theme?: ThemeType;
+  language?: LanguageType;
   twoFactorEnabled?: boolean;
   twoFactorCode?: string;
   twoFactorCodeExpiry?: Date;

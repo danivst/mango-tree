@@ -19,6 +19,7 @@ import {
   getSuspensionEmailTemplate,
 } from "../../utils/email-templates";
 import logger from "../../utils/logger";
+import LanguageTypeValue from "../../enums/language-type";
 
 /**
  * Retrieves all regular users.
@@ -122,12 +123,12 @@ export const deleteUser = async (
     if (req.user!.role === RoleTypeValue.ADMIN && reason) {
       const translatedReason = await getDualTranslation(reason);
 
-      const suspendMessageEn = `Your account has been permanently suspended due to: ${translatedReason.en}. Contact mangotree@support.com for appeals.`;
-      const suspendMessageBg = `Вашият акаунт беше спрян за постоянно поради: ${translatedReason.bg}. Свържете се с mangotree@support.com за обжалване.`;
+      const suspendMessageEn = `Your account has been permanently suspended due to: ${translatedReason.en}. Contact mangotree-support@gmail.com for appeals.`;
+      const suspendMessageBg = `Вашият акаунт беше спрян за постоянно поради: ${translatedReason.bg}. Свържете се с mangotree-support@gmail.com за обжалване.`;
 
       await Notification.create({
         userId: id,
-        type: NotificationType.REPORT_FEEDBACK,
+        type: NotificationType.SYSTEM,
         message: suspendMessageEn,
         translations: {
           message: { en: suspendMessageEn, bg: suspendMessageBg },
@@ -138,7 +139,7 @@ export const deleteUser = async (
 
     // Email Preparation & Sending
     const isSelfDeletion = req.user!.userId === id;
-    const userLang = user.language || "en";
+    const userLang = user.language || LanguageTypeValue.EN; // Default to English if not set
 
     const titleKey = isSelfDeletion ? "Account Deleted" : "Account Deleted by Administrator";
     const bodyKey = isSelfDeletion

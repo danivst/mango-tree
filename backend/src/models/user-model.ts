@@ -9,6 +9,8 @@
 import mongoose, { Schema, Model } from "mongoose";
 import RoleTypeValue from "../enums/role-type";
 import { IUser } from "../interfaces/user";
+import ThemeTypeValue from "../enums/theme-type";
+import LanguageTypeValue from "../enums/language-type";
 
 const userSchema: Schema<IUser> = new Schema(
   {
@@ -60,21 +62,15 @@ const userSchema: Schema<IUser> = new Schema(
         en: { type: String, default: "" },
       },
     },
-    notificationPreferences: {
-      emailReports: { type: Boolean, default: true },
-      emailComments: { type: Boolean, default: true },
-      inAppReports: { type: Boolean, default: true },
-      inAppComments: { type: Boolean, default: true },
-    },
     theme: {
       type: String,
-      enum: ["dark", "purple", "cream", "light", "mango"],
-      default: "mango",
+      enum: Object.values(ThemeTypeValue),
+      default: ThemeTypeValue.MANGO,
     },
     language: {
       type: String,
-      enum: ["en", "bg"],
-      default: "en",
+      enum: Object.values(LanguageTypeValue),
+      default: LanguageTypeValue.EN,
     },
     twoFactorEnabled: {
       type: Boolean,
@@ -85,10 +81,6 @@ const userSchema: Schema<IUser> = new Schema(
     },
     twoFactorCodeExpiry: {
       type: Date,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
     },
     followers: {
       type: [

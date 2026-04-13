@@ -1,4 +1,4 @@
-import mongoose, { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 
 /**
  * @interface IBannedUser
@@ -8,14 +8,14 @@ import mongoose, { Document } from "mongoose";
  *
  * @property {string} email - Banned user's email address (for blocking re-registration)
  * @property {string} username - Banned user's chosen username
- * @property {mongoose.Types.ObjectId} original_user_id - Reference to the original User document
- * @property {string} ban_reason - Reason for the ban (admin-provided)
- * @property {Date} banned_at - Timestamp when the ban was issued
+ * @property {Types.ObjectId} originalUserId - Reference to the original User document
+ * @property {string} banReason - Reason for the ban (admin-provided)
+ * @property {Date} bannedAt - Timestamp when the ban was issued
  */
 export interface IBannedUser extends Document {
   email: string;
   username: string;
-  original_user_id: mongoose.Types.ObjectId;
-  ban_reason: string;
-  banned_at: Date;
+  originalUserId: Types.ObjectId;
+  banReason: string;
+  bannedAt: Date;
 }

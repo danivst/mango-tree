@@ -204,7 +204,6 @@ const seedPosts = async () => {
     const allPosts = [];
 
     for (const user of users) {
-      // Each user creates between 1 and 5 posts
       const postCount = Math.floor(Math.random() * 5) + 1;
       
       for (let i = 0; i < postCount; i++) {
@@ -216,18 +215,24 @@ const seedPosts = async () => {
         else { source = FLEX_DATA; catId = catMap.flex; }
 
         const template = source[Math.floor(Math.random() * source.length)];
-        const tagNames = allTags.filter(t => template.tagNames?.includes(t.name)).map(t => t.name);
 
-        // Logic: Questions sometimes don't have images, Recipes/Flex always do
+        const tagIds = allTags
+          .filter(t => template.tagNames?.includes(t.name))
+          .map(t => t._id);
+
         const hasImage = catId !== catMap.question || Math.random() > 0.5;
         const images = hasImage && template.imageUrl ? [template.imageUrl] : [];
 
         allPosts.push({
           title: template.title,
           content: template.content,
+          translations: {
+            title: { en: template.title, bg: "" },
+            content: { en: template.content, bg: "" },
+          },
           authorId: user._id,
           category: catId,
-          tags: tagNames,
+          tags: tagIds,
           image: images,
           isApproved: true,
           isVisible: true,
@@ -236,11 +241,11 @@ const seedPosts = async () => {
       }
     }
 
-    // Clean existing posts (Optional - remove if you want to append)
+    // Clean existing posts to prevent mixed data types (strings vs IDs)
     await Post.deleteMany({});
     
     const createdPosts = await Post.insertMany(allPosts);
-    console.log(`✅ ${createdPosts.length} posts created`);
+    console.log(`✅ ${createdPosts.length} posts created with ObjectId references`);
 
     // Add Random Likes
     for (const post of createdPosts) {
@@ -250,7 +255,7 @@ const seedPosts = async () => {
       await post.save();
     }
 
-    console.log("✅ Likes seeded. Seeding complete!");
+    console.log("✅ Seeding complete!");
     process.exit(0);
   } catch (err) {
     console.error("❌ Seeding failed:", err);

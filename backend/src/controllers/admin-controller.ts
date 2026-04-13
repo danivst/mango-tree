@@ -332,7 +332,7 @@ export const banUser = async (
     const [titleT, bodyT, sigT] = await Promise.all([
       getDualTranslation("Account Banned"),
       getDualTranslation(
-        `Your account has been banned from MangoTree. Reason: ${ban_reason}. If you believe this is a mistake, please contact mangotree@support.com.`,
+        `Your account has been banned from MangoTree. Reason: ${ban_reason}. If you believe this is a mistake, please contact mangotree-support@gmail.com.`,
       ),
       getDualTranslation("Sincerely, the MangoTree team"),
     ]);
@@ -398,7 +398,7 @@ export const unbanUser = async (
       return res.status(404).json({ message: "banned user record not found." });
 
     // Restore original user: update flags and bring back content visibility
-    const originalUser = await User.findById(bannedUser.original_user_id);
+    const originalUser = await User.findById(bannedUser.originalUserId);
     if (originalUser) {
       originalUser.isApproved = true;
       originalUser.isBanned = false;
@@ -439,7 +439,7 @@ export const unbanUser = async (
 
     // Log user unban
     await logActivity(req, "UNBAN_USER", {
-      targetId: bannedUser.original_user_id.toString(),
+      targetId: bannedUser.originalUserId.toString(),
       targetType: "user",
       description: `Unbanned user ${bannedUser.username}`,
     });

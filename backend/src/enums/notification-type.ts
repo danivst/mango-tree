@@ -4,6 +4,8 @@
  * Categorizes the different kinds of in-app notifications users can receive.
  */
 
+import { success } from "zod";
+
 /**
  * Types of notifications that can be sent to users.
  */
@@ -18,8 +20,12 @@ const NotificationType = {
   FOLLOW: 'follow' as const,
   /** Report received an admin's decision/response */
   REPORT_FEEDBACK: 'report_feedback' as const,
-  /** Post was deleted by moderation */
-  POST_DELETED: 'post_deleted' as const,
+  /** Post was deleted */
+  DELETED: 'deleted' as const,
+  /** Post/comment was successfully uploaded */
+  SUCCESS: 'success' as const,
+  /** Post/comment was unsuccessfully uploaded */
+  FAIL: 'fail' as const,
   /** System announcement or alert */
   SYSTEM: 'system' as const,
   /** New login to account detected */

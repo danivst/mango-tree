@@ -84,7 +84,7 @@ export const createComment = async (
 
       await Notification.create({
         userId: userId,
-        type: NotificationType.REPORT_FEEDBACK,
+        type: NotificationType.FAIL,
         message: messageEn,
         translations: {
           message: {
@@ -395,7 +395,7 @@ export const updateComment = async (
 
         await Notification.create({
           userId,
-          type: NotificationType.REPORT_FEEDBACK,
+          type: NotificationType.FAIL,
           message: flaggedMessageEn,
           translations: {
             message: {
@@ -428,6 +428,23 @@ export const updateComment = async (
     comment.translations = translations;
 
     await comment.save();
+
+    // Create a notification for a successful update
+    const successMsgEn = "Your comment was updated successfully.";
+    const successMsgBg = "Коментарът ви беше актуализиран успешно.";
+
+    await Notification.create({
+      userId: userId,
+      type: NotificationType.SUCCESS,
+      message: successMsgEn,
+      translations: {
+        message: { 
+          en: successMsgEn, 
+          bg: successMsgBg 
+        },
+      },
+      link: `/posts/${comment.postId}#comment-${comment._id}`,
+    });
 
     // Log comment update
     await logActivity(req, "COMMENT_EDIT", {

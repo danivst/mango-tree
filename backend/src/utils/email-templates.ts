@@ -70,7 +70,6 @@ export const getWelcomeEmailTemplate = (params: GetWelcomeEmailTemplateParams): 
   <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
     <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${params.title}</h2>
     <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">Hello ${params.username},</p>
-    <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">${params.greeting}</p>
     <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 30px 0;">${params.body}</p>
     <p style="font-size: 14px; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">${params.signature}</p>
   </div>

@@ -42,13 +42,6 @@ router.get("/me", auth, userController.getCurrentUser);
 router.put("/me", auth, userController.updateProfile);
 
 /**
- * @route PUT /me/settings
- * @description Update notification preferences
- * @access Authenticated
- */
-router.put("/me/settings", auth, userController.updateNotificationPreferences);
-
-/**
  * Two-factor authentication routes for authenticated user.
  */
 /**
