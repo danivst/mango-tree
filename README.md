@@ -187,7 +187,7 @@ The ultimate goal is a functioning website that promotes the cultural value of c
    npm run create-user
    ```
 
-   To create a default user account run:
+   To create a default admin account run:
    ```bash
    npm run create-admin
    ```
