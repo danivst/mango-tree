@@ -119,7 +119,7 @@ export const approveContent = async (
 
       // Log content approval
       await logActivity(req, "CONTENT_APPROVE", {
-        targetId: id,
+        targetId: post.id.toString(),
         targetType: "post",
         description: `Approved post ${id}`,
       });
@@ -130,7 +130,7 @@ export const approveContent = async (
 
       // Log content approval
       await logActivity(req, "CONTENT_APPROVE", {
-        targetId: id,
+        targetId: comment.id.toString(),
         targetType: "comment",
         description: `Approved comment ${id}`,
       });
@@ -190,7 +190,7 @@ export const disapproveContent = async (
       const authorId = post.authorId;
       await Post.findByIdAndDelete(id);
 
-      // 3. notification: create a report feedback notification for the post author
+      // Notification: create a report feedback notification for the post author
       const messageEn = `your post has been removed. reason: ${reason}`;
       const messageBg = `вашата публикация беше премахната. причина: ${translatedReason.bg}`;
 
@@ -206,7 +206,7 @@ export const disapproveContent = async (
 
       // Log content rejection
       await logActivity(req, "CONTENT_REJECT", {
-        targetId: id,
+        targetId: post.id.toString(),
         targetType: "post",
         description: `Rejected post ${id}. Reason: ${reason}`,
       });
@@ -233,7 +233,7 @@ export const disapproveContent = async (
 
       // Log content rejection
       await logActivity(req, "CONTENT_REJECT", {
-        targetId: id,
+        targetId: comment.id.toString(),
         targetType: "comment",
         description: `Rejected comment ${id}. Reason: ${reason}`,
       });
@@ -297,9 +297,9 @@ export const banUser = async (
     await BannedUser.create({
       email: userToBan.email,
       username: userToBan.username,
-      original_user_id: userToBan._id,
-      ban_reason: ban_reason,
-      banned_at: new Date(),
+      originalUserId: userToBan._id,
+      banReason: ban_reason,
+      bannedAt: new Date(),
     });
 
     // Content suppression: hide all posts and comments from the public eye

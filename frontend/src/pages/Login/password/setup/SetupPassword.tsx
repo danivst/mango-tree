@@ -25,7 +25,6 @@ import { getTranslation } from '../../../../utils/translations';
 import { validatePassword, validatePasswordMatch } from '../../../../utils/validators';
 import '../../Login.css';
 import './SetupPassword.css';
-import logo from  '../../../../assets/mangotree-logo.png';
 
 // MUI Icon Imports
 import Visibility from '@mui/icons-material/Visibility';
@@ -129,7 +128,7 @@ const SetupPassword = () => {
     <div className="login-container">
       <div className="login-box">
         <div className="login-header">
-          <img src={logo} alt="MangoTree" className="logo-placeholder" />
+          <img src="/mangotree-logo.png" alt="MangoTree" className="logo-placeholder" />
           <h1 className="login-title">MangoTree</h1>
         </div>
 

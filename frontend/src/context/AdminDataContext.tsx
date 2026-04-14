@@ -243,7 +243,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       // Merge banned status into allUsers array
       const usersWithBanStatus = allUsers.map((user) => {
         const bannedInfo = bannedList.find(
-          (bUser) => bUser.original_user_id === user._id,
+          (bUser) => bUser.originalUserId === user._id,
         );
         return {
           ...user,

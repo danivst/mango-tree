@@ -72,6 +72,7 @@ const Users = () => {
   const [banUnbanStep, setBanUnbanStep] = useState<BanUnbanStep>(null);
   const [banUserId, setBanUserId] = useState<string | null>(null);
   const [banReason, setBanReason] = useState("");
+  const [unbanTarget, setUnbanTarget] = useState<any | null>(null);
 
   // User Profile Preview states
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -281,8 +282,8 @@ const Users = () => {
     }
   };
 
-  const handleUnbanClick = (userId: string) => {
-    setBanUserId(userId);
+  const handleUnbanClick = (user: any) => {
+    setUnbanTarget(user);
     setBanUnbanStep("unban_confirm");
   };
 
@@ -290,9 +291,10 @@ const Users = () => {
    * Finalizes user unbanning via the Admin API.
    */
   const handleUnbanConfirm = async () => {
-    if (!userToUnban?.banned_user_id) return;
+    const recordId = unbanTarget?.banned_user_id || unbanTarget?._id;
+    if (!recordId) return;
     try {
-      await adminAPI.unbanUser(userToUnban.banned_user_id);
+      await adminAPI.unbanUser(recordId);
       showSuccess(`User ${userToUnban?.username} unbanned successfully.`);
       setBanUnbanStep(null);
       setBanUserId(null);

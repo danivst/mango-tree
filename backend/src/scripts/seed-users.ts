@@ -16,6 +16,7 @@ import Post from "../models/post-model";
 import Comment from "../models/comment-model";
 import Report from "../models/report-model";
 import Notification from "../models/notification-model";
+import BannedUser from "../models/banned-user-model";
 import { MONGO_URI } from "../config/env";
 
 dotenv.config();
@@ -45,6 +46,7 @@ const seedUsers = async () => {
     await Comment.deleteMany({});
     await Report.deleteMany({});
     await Notification.deleteMany({});
+    await BannedUser.deleteMany({});
     // Following/Followers and Likes are embedded in User and Post models respectively, 
     // so clearing User and Post models handles them.
 

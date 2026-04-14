@@ -13,7 +13,7 @@ import { authAPI } from "../../../services/api";
 import { clearAuth } from "../../../utils/auth";
 
 import "./UserSidebar.css";
-import logo from "../../../assets/mangotree-logo.png";
+import logo from "../../../../public/mangotree-logo.png";
 
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";

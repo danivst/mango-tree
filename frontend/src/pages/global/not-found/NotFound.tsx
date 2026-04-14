@@ -7,7 +7,7 @@
 import { useThemeLanguage } from "../../../context/ThemeLanguageContext";
 import { getTranslation } from "../../../utils/translations";
 import { useNavigate } from "react-router-dom";
-import logo from "../../../assets/mangotree-logo.png";
+import logo from "../../../../public/mangotree-logo.png";
 import Footer from "../../../components/global/Footer";
 import "./NotFound.css";
 import "../../../styles/shared.css";

@@ -206,7 +206,7 @@ export const updateReportStatus = async (
 
     // Log report status update
     await logActivity(req, "REPORT_STATUS_UPDATE", {
-      targetId: id,
+      targetId: report.id.toString(),
       targetType: "report",
       description: `Updated report ${id} status to ${status}`,
     });

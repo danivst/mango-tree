@@ -1,8 +1,6 @@
 /**
  * @file seed-tags.ts
- * @description Database seeding script for predefined tags.
- * Deletes all existing tags and creates a comprehensive set of default tags
- * categorized by cuisine, meal time, meal type, difficulty, and dietary restrictions.
+ * @description Database seeding script for predefined tags with DeepL translation support.
  * Run via: `npm run seed:tags` or `ts-node src/scripts/seed-tags.ts`
  */
 
@@ -11,101 +9,114 @@ import { MONGO_URI } from '../config/env';
 import Tag from '../models/tag-model';
 import { getDualTranslation } from '../utils/translation';
 
+/**
+ * Utility to pause execution for a set duration.
+ * Helps stay within API rate limits.
+ */
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const seedTags = async () => {
   try {
+    // Establish Database Connection
     await mongoose.connect(MONGO_URI);
     console.log('✅ MongoDB connected for tag seeding');
 
-    // clear existing tags
+    // Clear existing data to avoid duplicates
     await Tag.deleteMany({});
+    console.log('🗑️  Existing tags cleared from database');
 
+    // Define the Tag List
     const tags = [
-      { name: 'italian' },
-      { name: 'chinese' },
-      { name: 'japanese' },
-      { name: 'thai' },
-      { name: 'mexican' },
-      { name: 'indian' },
-      { name: 'french' },
-      { name: 'greek' },
-      { name: 'spanish' },
-      { name: 'turkish' },
-      { name: 'american' },
-      { name: 'korean' },
-      { name: 'vietnamese' },
-      { name: 'lebanese' },
-      { name: 'moroccan' },
-      { name: 'caribbean' },
-      { name: 'brazilian' },
-      { name: 'german' },
-      { name: 'british' },
-      { name: 'mediterranean' },
+      // Cuisines
+      { name: 'italian' }, { name: 'chinese' }, { name: 'japanese' }, { name: 'thai' },
+      { name: 'mexican' }, { name: 'indian' }, { name: 'french' }, { name: 'greek' },
+      { name: 'spanish' }, { name: 'turkish' }, { name: 'american' }, { name: 'korean' },
+      { name: 'vietnamese' }, { name: 'lebanese' }, { name: 'moroccan' }, { name: 'caribbean' },
+      { name: 'brazilian' }, { name: 'german' }, { name: 'british' }, { name: 'mediterranean' },
 
-      { name: 'breakfast' },
-      { name: 'brunch' },
-      { name: 'lunch' },
-      { name: 'dinner' },
-      { name: 'late-night' },
-      { name: 'snack' },
+      // Meal Times
+      { name: 'breakfast' }, { name: 'brunch' }, { name: 'lunch' }, { name: 'dinner' },
+      { name: 'late-night' }, { name: 'snack' },
 
-      { name: 'soup' },
-      { name: 'salad' },
-      { name: 'main course' },
-      { name: 'side dish' },
-      { name: 'dessert' },
-      { name: 'appetizer' },
-      { name: 'drink' },
-      { name: 'smoothie' },
-      { name: 'sandwich' },
-      { name: 'pasta' },
+      // Meal Types
+      { name: 'soup' }, { name: 'salad' }, { name: 'main course' }, { name: 'side dish' },
+      { name: 'dessert' }, { name: 'appetizer' }, { name: 'drink' }, { name: 'smoothie' },
+      { name: 'sandwich' }, { name: 'pasta' },
 
-      { name: 'easy' },
-      { name: 'medium' },
-      { name: 'hard' },
+      // Difficulty
+      { name: 'easy' }, { name: 'medium' }, { name: 'hard' },
 
-      { name: 'healthy' },
-      { name: 'vegan' },
-      { name: 'vegetarian' },
-      { name: 'gluten-free' },
-      { name: 'keto' },
-      { name: 'low-carb' },
-      { name: 'high-protein' },
-      { name: 'dairy-free' },
-      { name: 'low-fat' },
-      { name: 'sugar-free' },
-      { name: 'bbq' },
-      { name: 'grill' },
-      { name: 'roast' },
-      { name: 'baked' },
-      { name: 'stew' },
-      { name: 'fried' },
-      { name: 'one-pot' },
-      { name: 'instant pot' },
-      { name: 'air fryer' },
-      { name: 'picnic' },
-      { name: 'holiday' },
-      { name: 'kids friendly' },
-      { name: 'comfort food' },
-      { name: 'quick & easy' },
-      { name: 'party food' },
+      // Dietary & Lifestyle
+      { name: 'healthy' }, { name: 'vegan' }, { name: 'vegetarian' }, { name: 'gluten-free' },
+      { name: 'keto' }, { name: 'low-carb' }, { name: 'high-protein' }, { name: 'dairy-free' },
+      { name: 'low-fat' }, { name: 'sugar-free' },
+
+      // Cooking Methods & Occasions
+      { name: 'bbq' }, { name: 'grill' }, { name: 'roast' }, { name: 'baked' },
+      { name: 'stew' }, { name: 'fried' }, { name: 'one-pot' }, { name: 'instant pot' },
+      { name: 'air fryer' }, { name: 'picnic' }, { name: 'holiday' }, { name: 'kids friendly' },
+      { name: 'comfort food' }, { name: 'quick & easy' }, { name: 'party food' },
     ];
 
-    const tagsWithTranslations = await Promise.all(
-      tags.map(async (tag) => {
-        const dualNames = await getDualTranslation(tag.name);
-        return {
-          name: dualNames.en, // Keep the primary name as English
-          translations: dualNames, // Store both { en, bg }
-          createdBy: 'System'
-        };
-      })
-    );
+    const tagsWithTranslations = [];
+    console.log(`🌍 Starting translation process for ${tags.length} tags...`);
 
-    await Tag.insertMany(tagsWithTranslations);
-    console.log(`✅ Tags seeded successfully (total: ${tagsWithTranslations.length})`);
+    // Sequential Processing Loop
+    for (const [index, tag] of tags.entries()) {
+      let retryCount = 0;
+      let success = false;
+      const maxRetries = 3;
+
+      // Retry logic specifically for 429 Rate Limit errors
+      while (!success && retryCount < maxRetries) {
+        try {
+          // Attempt translation
+          const dualNames = await getDualTranslation(tag.name);
+          
+          tagsWithTranslations.push({
+            name: dualNames.en, 
+            translations: dualNames, 
+            createdBy: 'System'
+          });
+
+          console.log(`  [${index + 1}/${tags.length}] ✔ Processed: ${tag.name}`);
+          success = true;
+
+          /**
+           * PAUSE: Wait 500ms between requests.
+           * This "throttling" prevents DeepL from seeing a burst of requests
+           * and helps stay under the "requests per minute" limit.
+           */
+          await sleep(500); 
+
+        } catch (error: any) {
+          // If rate Limit is hit (429)
+          if (error.message?.includes('429')) {
+            retryCount++;
+            const waitTime = retryCount * 5000; // Exponential backoff: 5s, 10s...
+            console.warn(`  ⚠️ Rate limit hit on "${tag.name}". Retrying in ${waitTime / 1000}s (Attempt ${retryCount})...`);
+            await sleep(waitTime);
+          } else {
+            // Log other errors (network, auth, etc.) and skip to next tag
+            console.error(`  ❌ Error translating "${tag.name}":`, error.message);
+            break; 
+          }
+        }
+      }
+    }
+
+    // Bulk Insert into Database
+    if (tagsWithTranslations.length > 0) {
+      await Tag.insertMany(tagsWithTranslations);
+      console.log('---');
+      console.log(`✅ Seeding Complete: ${tagsWithTranslations.length} tags inserted.`);
+    } else {
+      console.error('❌ No tags were translated. Database update skipped.');
+    }
+
     process.exit(0);
   } catch (err) {
-    console.error('❌ Tag seeding failed:', err);
+    console.error('💥 Critical script failure:', err);
     process.exit(1);
   }
 };

@@ -20,7 +20,6 @@ import Snackbar from "../../../../components/snackbar/Snackbar";
 import { validatePassword, validatePasswordMatch } from "../../../../utils/validators";
 import "./ResetPassword.css";
 import "../../Login.css";
-import logo from "../../../../assets/mangotree-logo.png";
 
 // MUI Icon Imports
 import Visibility from '@mui/icons-material/Visibility';
@@ -199,7 +198,7 @@ const ResetPassword = () => {
 
       <div className="login-box">
         <div className="login-header">
-          <img src={logo} alt="MangoTree" className="logo-placeholder" />
+          <img src="/mangotree-logo.png" alt="MangoTree" className="logo-placeholder" />
           <h1 className="login-title">MangoTree</h1>
         </div>
 

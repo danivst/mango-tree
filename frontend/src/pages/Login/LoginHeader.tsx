@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import logo from '../../assets/mangotree-logo.png';
+import logo from '../../../public/mangotree-logo.png';
 
 /**
  * @interface LoginHeaderProps

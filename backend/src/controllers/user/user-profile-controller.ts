@@ -157,28 +157,28 @@ export const updateProfile = async (
     // Log profile updates (non-username, which is logged separately)
     if (profileImage) {
       await logActivity(req, "PROFILE_IMAGE_CHANGE", {
-        targetId: userId,
+        targetId: userId.toString(),
         targetType: "user",
         description: "Updated profile image",
       });
     }
     if (theme) {
       await logActivity(req, "THEME_CHANGE", {
-        targetId: userId,
+        targetId: userId.toString(),
         targetType: "user",
         description: `Changed theme to ${theme}`,
       });
     }
     if (language) {
       await logActivity(req, "LANGUAGE_CHANGE", {
-        targetId: userId,
+        targetId: userId.toString(),
         targetType: "user",
         description: `Changed language to ${language}`,
       });
     }
     if (bio) {
       await logActivity(req, "BIO_UPDATE", {
-        targetId: userId,
+        targetId: userId.toString(),
         targetType: "user",
         description: "Updated bio",
       });
@@ -230,7 +230,7 @@ export const updateProfile = async (
 
       // Log username change for audit
       await logActivity(req, "USERNAME_CHANGE", {
-        targetId: userId,
+        targetId: userId.toString(),
         targetType: "user",
         description: `Changed username to ${username}`,
       });

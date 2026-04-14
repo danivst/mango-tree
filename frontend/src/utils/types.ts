@@ -404,17 +404,17 @@ export interface Report {
  * @property {string} _id - Unique identifier
  * @property {string} email - Banned user's email (to block re-registration)
  * @property {string} username - Banned user's chosen username
- * @property {string} original_user_id - Reference to the original User document
- * @property {string} ban_reason - Reason for the ban (admin-provided)
- * @property {string} banned_at - Timestamp when the ban was issued (ISO string)
+ * @property {string} originalUserId - Reference to the original User document
+ * @property {string} banReason - Reason for the ban (admin-provided)
+ * @property {string} bannedAt - Timestamp when the ban was issued (ISO string)
  */
 export interface BannedUser {
   _id: string;
   email: string;
   username: string;
-  original_user_id: string;
-  ban_reason: string;
-  banned_at: string;
+  originalUserId: string;
+  banReason: string;
+  bannedAt: string;
 }
 
 /**

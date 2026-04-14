@@ -255,7 +255,7 @@ export const toggleLikeComment = async (
 
     // Log like/unlike action
     await logActivity(req, hasLiked ? "UNLIKE" : "LIKE", {
-      targetId: id,
+      targetId: comment.id.toString(),
       targetType: "comment",
       description: `${hasLiked ? "Unliked" : "Liked"} comment ${id}`,
     });
@@ -448,7 +448,7 @@ export const updateComment = async (
 
     // Log comment update
     await logActivity(req, "COMMENT_EDIT", {
-      targetId: id,
+      targetId: comment.id.toString(),
       targetType: "comment",
       description: `Updated comment ${id}`,
     });
@@ -527,7 +527,7 @@ export const deleteComment = async (
 
     // Log comment deletion
     await logActivity(req, "COMMENT_DELETE", {
-      targetId: id,
+      targetId: comment.id.toString(),
       targetType: "comment",
       description: `Deleted comment ${id}`,
     });

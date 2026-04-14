@@ -89,6 +89,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const isCurrentUserOwner = currentUserId && comment.userId?._id === currentUserId;
   const isRepliesHidden = !!hiddenReplies[comment._id];
 
+  const wasEdited = comment.updatedAt && 
+    (new Date(comment.updatedAt).getTime() - new Date(comment.createdAt).getTime() > 5000);
+
   const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();
     const replyText = replyTexts[comment._id]?.trim();
@@ -132,7 +135,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
               <span className="comment-author" style={{ fontSize: isNested ? "12px" : "14px", wordBreak: 'break-all' }} onClick={() => navigate(`/users/${comment.userId?._id}`)}>@{comment.userId?.username}</span>
               <span className="comment-time" style={{ fontSize: isNested ? "11px" : "12px", whiteSpace: 'nowrap' }}>
                 {formatCommentTime(comment.createdAt)}
-                {comment.updatedAt && new Date(comment.updatedAt).getTime() > new Date(comment.createdAt).getTime() + 1000 && (
+                {wasEdited && (
                   <span style={{ fontStyle: 'italic', marginLeft: '4px' }}> ({t("edited")})</span>
                 )}
               </span>

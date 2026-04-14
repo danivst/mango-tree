@@ -19,7 +19,7 @@ import { useThemeLanguage } from "../../../context/ThemeLanguageContext";
 import { getTranslation } from "../../../utils/translations";
 import "./LandingPage.css";
 import "../../../styles/shared.css";
-import logo from "../../../assets/mangotree-logo.png";
+import logo from "../../../../public/mangotree-logo.png";
 import Footer from "../../../components/global/Footer";
 
 // MUI Icon Import

@@ -251,7 +251,7 @@ const PostCard = ({ post }: PostCardProps) => {
         <span className="post-card-date">
           {formatDate(post.createdAt)} 
           {isEdited()
-            ? ` • ${t("editedAt")} ${formatDate(post.updatedAt)}` 
+            ? ` • ${t("editedOn")} ${formatDate(post.updatedAt)}` 
             : ""}
         </span>
       </div>

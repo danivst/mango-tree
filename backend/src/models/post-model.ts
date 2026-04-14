@@ -74,7 +74,6 @@ const postSchema: Schema<IPost> = new Schema(
 postSchema.index({
   title: 'text',
   content: 'text',
-  tags: 'text',
 });
 
 // Compound indexes for better query performance

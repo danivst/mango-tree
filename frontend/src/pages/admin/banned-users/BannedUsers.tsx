@@ -88,14 +88,14 @@ const BannedUsers = () => {
         (user) =>
           user.username.toLowerCase().includes(query) ||
           user.email.toLowerCase().includes(query) ||
-          user.ban_reason.toLowerCase().includes(query),
+          user.banReason.toLowerCase().includes(query),
       );
     }
 
     if (dateFrom) {
       const fromDate = new Date(dateFrom);
       filtered = filtered.filter((user) => {
-        const userDate = new Date(user.banned_at);
+        const userDate = new Date(user.bannedAt);
         return userDate >= fromDate;
       });
     }
@@ -104,7 +104,7 @@ const BannedUsers = () => {
       const toDate = new Date(dateTo);
       toDate.setHours(23, 59, 59, 999);
       filtered = filtered.filter((user) => {
-        const userDate = new Date(user.banned_at);
+        const userDate = new Date(user.bannedAt);
         return userDate <= toDate;
       });
     }
@@ -127,9 +127,9 @@ const BannedUsers = () => {
           case "email":
             return user.email;
           case "ban_reason":
-            return user.ban_reason;
+            return user.banReason;
           case "banned_at":
-            return user.banned_at;
+            return user.bannedAt;
           default:
             return "";
         }
@@ -244,13 +244,13 @@ const BannedUsers = () => {
       render: (user) => user.email,
     },
     {
-      key: "ban_reason",
+      key: "banReason",
       label: t("reasonForBan"),
       sortable: true,
       minWidth: "250px",
       render: (user) => {
         const isExpanded = expandedReasonId === user._id;
-        const reason = user.ban_reason || "";
+        const reason = user.banReason || "";
         const shouldTruncate = reason.length > 30;
         
         const displayText = isExpanded 
@@ -276,12 +276,12 @@ const BannedUsers = () => {
       },
     },
     {
-      key: "banned_at",
+      key: "bannedAt",
       label: t("bannedAt"),
       sortable: true,
       minWidth: "150px",
       render: (user) =>
-        new Date(user.banned_at).toLocaleDateString(
+        new Date(user.bannedAt).toLocaleDateString(
           language === "bg" ? "bg-BG" : "en-US",
           { year: "numeric", month: "short", day: "numeric" },
         ),

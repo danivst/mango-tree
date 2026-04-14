@@ -180,7 +180,7 @@ export const updateCategory = async (
 
     // Log category update
     await logActivity(req, "CATEGORY_UPDATE", {
-      targetId: id,
+      targetId: category.id.toString(),
       targetType: "category",
       description: `Updated category "${name}"`,
     });
@@ -227,7 +227,7 @@ export const deleteCategory = async (
 
     // Log category deletion
     await logActivity(req, "CATEGORY_DELETE", {
-      targetId: id,
+      targetId: category.id.toString(),
       targetType: "category",
       description: `Deleted category "${category.name}"`,
     });

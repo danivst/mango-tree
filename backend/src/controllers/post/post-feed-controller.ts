@@ -10,7 +10,7 @@ import { Types } from "mongoose";
 import Post from "../../models/post-model";
 import Comment from "../../models/comment-model";
 import User from "../../models/user-model";
-import Tag from "../../models/tag-model"; // Added Tag model import
+import Tag from "../../models/tag-model";
 import { AuthRequest } from "../../interfaces/auth";
 import logger from "../../utils/logger";
 
@@ -47,10 +47,11 @@ export const getHomeFeed = async (
 
     const allPosts = await Post.find({
       isVisible: true,
+      isApproved: true,
       authorId: { $ne: userIdObj },
     })
       .populate("authorId", "username profileImage")
-      .populate("tags") // Added population for tags in home feed
+      .populate("tags")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -107,10 +108,10 @@ export const getPostsByAuthor = async (
   try {
     const { authorId } = req.params;
 
-    const posts = await Post.find({ authorId, isVisible: true })
+    const posts = await Post.find({ authorId, isVisible: true, isApproved: true, })
       .populate("category", "name translations")
       .populate("authorId", "username profileImage")
-      .populate("tags") // Added population
+      .populate("tags") 
       .sort({ createdAt: -1 })
       .lean();
 
@@ -165,40 +166,50 @@ export const searchPosts = async (
       return res.status(400).json({ message: "Search query is required" });
     }
 
+    const limitNum = Number(limit) || 50;
+    const skipNum = Number(skip) || 0;
+
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
     res.set("Pragma", "no-cache");
     res.set("Expires", "0");
 
-    // First, find any Tag IDs that match the search string in name or translations
+    // Find Tag IDs that match the search string in name or translations
     const matchingTags = await Tag.find({
       $or: [
-        { name: { $regex: query, "options": "i" } },
-        { "translations.bg": { $regex: query, "options": "i" } },
-        { "translations.en": { $regex: query, "options": "i" } }
+        { name: { $regex: query, $options: "i" } },
+        { "translations.bg": { $regex: query, $options: "i" } },
+        { "translations.en": { $regex: query, $options: "i" } }
       ]
     }).select("_id");
     const tagIds = matchingTags.map(t => t._id);
 
-    // Search posts by Text score OR by matching Tag IDs
-    let posts = await Post.find(
-      {
-        $or: [
-          { $text: { $search: query } },
-          { tags: { $in: tagIds } }
-        ],
-        isVisible: true,
-      },
-      { score: { $meta: "textScore" } },
-    )
+    // Separate $text search to avoid restricted $or usage and metadata conflicts
+    const textMatchedPosts = await Post.find(
+      { $text: { $search: query }, isVisible: true, isApproved: true },
+      { _id: 1 }
+    ).lean();
+    const textMatchedIds = textMatchedPosts.map(p => p._id);
+
+    // Combined query using $in instead of $text inside $or
+    const finalQuery = {
+      $or: [
+        { _id: { $in: textMatchedIds } },
+        { tags: { $in: tagIds } }
+      ],
+      isVisible: true,
+      isApproved: true,
+    };
+
+    let posts = await Post.find(finalQuery)
       .populate("authorId", "username profileImage")
       .populate("category", "name translations")
-      .populate("tags") // Added population for tags in search results
-      .sort({ score: { $meta: "textScore" }, createdAt: -1 })
-      .skip(parseInt(skip as string) || 0)
-      .limit(parseInt(limit as string) || 50)
+      .populate("tags")
+      .sort({ createdAt: -1 })
+      .skip(skipNum)
+      .limit(limitNum)
       .lean();
 
-    // Fallback regex search if text index/tag match yielded nothing
+    // Fallback regex search if indexed results yielded nothing
     if (posts.length === 0) {
       const regexQuery = {
         $or: [
@@ -206,25 +217,20 @@ export const searchPosts = async (
           { content: { $regex: query, $options: "i" } },
         ],
         isVisible: true,
+        isApproved: true,
       };
 
       posts = await Post.find(regexQuery)
         .populate("authorId", "username profileImage")
         .populate("category", "name translations")
-        .populate("tags") // Added population for tags in regex search results
+        .populate("tags") 
         .sort({ createdAt: -1 })
-        .skip(parseInt(skip as string) || 0)
-        .limit(parseInt(limit as string) || 50)
+        .skip(skipNum)
+        .limit(limitNum)
         .lean();
     }
 
-    const total = await Post.countDocuments({
-      $or: [
-        { $text: { $search: query } },
-        { tags: { $in: tagIds } }
-      ],
-      isVisible: true,
-    });
+    const total = await Post.countDocuments(finalQuery);
 
     const postIds = posts.map((post) => post._id);
     const commentCounts = await Comment.aggregate([
@@ -243,7 +249,7 @@ export const searchPosts = async (
     return res.json({
       posts: postsWithCounts,
       total,
-      hasMore: parseInt(skip as string) + parseInt(limit as string) < total,
+      hasMore: skipNum + limitNum < total,
     });
   } catch (err: any) {
     logger.error(err, "Search Posts Error:");
@@ -295,10 +301,11 @@ export const getFollowedPosts = async (
     const posts = await Post.find({
       authorId: { $in: followingIds, $ne: userIdObj },
       isVisible: true,
+      isApproved: true,
     })
       .populate("authorId", "username profileImage")
       .populate("category", "name translations")
-      .populate("tags") // Added population
+      .populate("tags")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit + 1)
@@ -310,6 +317,7 @@ export const getFollowedPosts = async (
     const total = await Post.countDocuments({
       authorId: { $in: followingIds, $ne: userIdObj },
       isVisible: true,
+      isApproved: true,
     });
 
     const postIds = paginatedPosts.map((post) => post._id);
@@ -363,7 +371,7 @@ export const getSuggestedPosts = async (
 
     const [user, likedPosts] = await Promise.all([
       User.findById(userId).select("following"),
-      Post.find({ likes: userIdObj, isVisible: true }).select("_id category tags").lean(),
+      Post.find({ likes: userIdObj, isVisible: true, isApproved: true, }).select("_id category tags").lean(),
     ]);
 
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -389,6 +397,7 @@ export const getSuggestedPosts = async (
 
     const candidateQuery: any = {
       isVisible: true,
+      isApproved: true,
       authorId: { $nin: [...followingIds, userIdObj] },
       _id: { $nin: likedPostIds }
     };
@@ -398,7 +407,7 @@ export const getSuggestedPosts = async (
     const candidates = await Post.find(candidateQuery)
       .populate("authorId", "username profileImage")
       .populate("category", "name translations")
-      .populate("tags") // Added population
+      .populate("tags") 
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit * 2)
@@ -408,7 +417,7 @@ export const getSuggestedPosts = async (
       let score = 0;
       const postCategory = post.category?._id?.toString() || post.category?.toString();
       
-      // Post tags are now objects after population, use _id
+      // Post tags are objects after population, use _id
       const postTagIds = Array.isArray(post.tags)
         ? post.tags.map((t: any) => t._id?.toString() || t.toString())
         : [];

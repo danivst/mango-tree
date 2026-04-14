@@ -197,7 +197,7 @@ const renderTarget = (entry: ActivityLogEntry) => {
       FOLLOW: "activityFollow",
       UNFOLLOW: "activityUnfollow",
       POST_CREATE: "activityPostCreate",
-      POST_EDIT: "activityPostEdit",
+      POST_UPDATE: "activityPostEdit",
       POST_DELETE: "activityPostDelete",
       COMMENT_CREATE: "activityCommentCreate",
       COMMENT_EDIT: "activityCommentEdit",
@@ -256,9 +256,9 @@ const renderTarget = (entry: ActivityLogEntry) => {
           if (userMatch) params.username = userMatch[1];
           break;
         case "POST_CREATE":
-        case "POST_EDIT":
+        case "POST_UPDATE":
         case "POST_DELETE":
-          const titleMatch = description.match(/:\s*(.+)$/);
+          const titleMatch = description.match(/(?::\s*|")([^"]+)"?$/);
           if (titleMatch) params.title = titleMatch[1];
           break;
         case "CONTENT_APPROVE":

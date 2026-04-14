@@ -11,13 +11,35 @@ import { IActivityLog } from "../interfaces/activity-log";
 
 const activityLogSchema: Schema<IActivityLog> = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true, },
-    actionType: { type: String, required: true, index: true, },
-    targetId: { type: Schema.Types.ObjectId, index: true, },
-    targetType: { type: String, index: true, },
-    description: { type: String, required: true, },
-    ipAddress: { type: String, },
-    userAgent: { type: String, },
+    userId: { 
+      type: Schema.Types.ObjectId, 
+      ref: "User", 
+      required: true, 
+      index: true, 
+    },
+    actionType: { 
+      type: String, 
+      required: true,
+      index: true, 
+    },
+    targetId: { 
+      type: Schema.Types.ObjectId,
+      index: true, 
+    },
+    targetType: { 
+      type: String, 
+      index: true, 
+    },
+    description: { 
+      type: String, 
+      required: true, 
+    },
+    ipAddress: { 
+      type: String, 
+    },
+    userAgent: { 
+      type: String, 
+    },
   },
   {
     timestamps: true,

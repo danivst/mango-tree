@@ -51,7 +51,7 @@ export const CLIENT_URL = requireEnv("CLIENT_URL");
  * AI/Moderation configuration
  */
 export const GEMINI_API_KEY = requireEnv("GEMINI_API_KEY");
-export const GEMINI_MODEL_DEFAULT = process.env.GEMINI_MODEL_DEFAULT || "gemini-1.5-flash";
+export const GEMINI_MODEL_DEFAULT = process.env.GEMINI_MODEL_DEFAULT || "gemini-2.5-flash-lite";
 
 /**
  * Translation configuration

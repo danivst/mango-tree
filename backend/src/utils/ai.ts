@@ -16,6 +16,16 @@ import {
 } from "../interfaces/moderation";
 
 /**
+ * Axios instance with predefined headers
+ */
+const aiClient = axios.create({
+  headers: {
+    "User-Agent": "MangoTree/1.0.0",
+    "Content-Type": "application/json"
+  }
+});
+
+/**
  * Gemini model configuration
  */
 const GEMINI_MODEL = GEMINI_MODEL_DEFAULT || "gemini-2.5-flash-lite";
@@ -114,7 +124,7 @@ const moderateWithGemini = async (
       }
     };
 
-    const response = await axios.post(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, requestBody);
+    const response = await aiClient.post(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, requestBody);
     const responsePart = response.data.candidates?.[0]?.content?.parts?.[0];
 
     // Handle structured JSON output from Gemini

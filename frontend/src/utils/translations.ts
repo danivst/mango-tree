@@ -556,7 +556,7 @@ export const translations: Record<Language, Record<string, string>> = {
     user: "User",
     comment: "Comment",
     add: "Add",
-    editedAt: "Edited at: ",
+    editedOn: "Edited on: ",
     edited: "Edited",
     save: "Save",
 
@@ -636,7 +636,7 @@ export const translations: Record<Language, Record<string, string>> = {
     user: "Потребител",
     comment: "Коментар",
     add: "Добави",
-    editedAt: "Редактирано на: ",
+    editedOn: "Редактирано на: ",
     edited: "Редактирано",
     save: "Запази",
 
@@ -853,7 +853,7 @@ export const translations: Record<Language, Record<string, string>> = {
     activityBioUpdate: "Обновена биография",
     activityPasswordChange: "Променена парола",
     activityFollow: "Започна да следва потребител {username}",
-    activityUnfollow: "спря да последовател на потребител {username}",
+    activityUnfollow: "Спря да последовател на потребител {username}",
     activityPostCreate: "Създадена публикация: {title}",
     activityPostEdit: "Редактирана публикация: {title}",
     activityPostDelete: "Изтрита публикация: {title}",

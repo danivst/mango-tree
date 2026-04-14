@@ -134,11 +134,13 @@ const Notifications = () => {
     if (diffInSeconds < 60) return t("justNow");
     if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      return language === "bg" ? `${t("ago")} ${minutes} ${t("minutes")}` : `${minutes} ${t("minutes")} ${t("ago")}`;
+      const minuteKey = minutes === 1 ? "minute" : "minutes";
+      return language === "bg" ? `${t("ago")} ${minutes} ${t(minuteKey)}` : `${minutes} ${t(minuteKey)} ${t("ago")}`;
     }
     if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      return language === "bg" ? `${t("ago")} ${hours} ${t("hours")}` : `${hours} ${t("hours")} ${t("ago")}`;
+      const hourKey = hours === 1 ? "hour" : "hours";
+      return language === "bg" ? `${t("ago")} ${hours} ${t(hourKey)}` : `${hours} ${t(hourKey)} ${t("ago")}`;
     }
     return date.toLocaleDateString(language === "bg" ? "bg-BG" : "en-US", {
       year: "numeric", month: "short", day: "numeric",

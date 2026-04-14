@@ -160,7 +160,7 @@ export const updateTag = async (
 
     // Log tag update
     await logActivity(req, "TAG_UPDATE", {
-      targetId: id,
+      targetId: tag.id.toString(),
       targetType: "tag",
       description: `Updated tag "${name}"`,
     });
@@ -204,7 +204,7 @@ export const deleteTag = async (
 
     // Log tag deletion
     await logActivity(req, "TAG_DELETE", {
-      targetId: id,
+      targetId: tag.id.toString(),
       targetType: "tag",
       description: `Deleted tag "${tag.name}"`,
     });
