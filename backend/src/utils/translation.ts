@@ -42,10 +42,7 @@ export type { TranslationResult } from "../interfaces/translation";
 export const getDualTranslation = async (
   text: string
 ): Promise<TranslationResult> => {
-  if (!text) {
-    throw new Error("No text provided for translation.");
-  }
-
+  if (!text) { throw new Error("No text provided for translation."); }
   /**
    * Helper function to translate text to a specific target language.
    *
@@ -58,6 +55,7 @@ export const getDualTranslation = async (
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         Authorization: `DeepL-Auth-Key ${DEEPL_API_KEY}`,
+        "User-Agent": "MangoTree/1.0.0"
       },
       body: `text=${encodeURIComponent(text)}&target_lang=${target}`,
     });
@@ -72,19 +70,12 @@ export const getDualTranslation = async (
     const data = (await res.json()) as { translations: { text: string }[] };
     return data.translations[0].text;
   };
-
   try {
     const result: TranslationResult = { bg: "", en: "" };
-
     // Execute both translation requests in parallel for optimal performance
-    const [bgRes, enRes] = await Promise.all([
-      translate("BG"),
-      translate("EN-US"),
-    ]);
-
+    const [bgRes, enRes] = await Promise.all([ translate("BG"), translate("EN-US"), ]);
     result.bg = bgRes;
     result.en = enRes;
-
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

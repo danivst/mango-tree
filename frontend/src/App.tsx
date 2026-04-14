@@ -26,34 +26,20 @@ import ErrorBoundary from "./components/global/ErrorBoundary";
 // Defined routes with lazy loading for code-splitting and performance optimization
 // Public / Login
 const Login = lazy(() => import("./pages/login/Login"));
-const ResetPassword = lazy(
-  () => import("./pages/login/password/reset/ResetPassword"),
-);
-const SetupPassword = lazy(
-  () => import("./pages/login/password/setup/SetupPassword"),
-);
-const LandingPage = lazy(
-  () => import("./pages/global/landing-page/LandingPage"),
-);
-
+const ResetPassword = lazy(() => import("./pages/login/password/reset/ResetPassword"));
+const SetupPassword = lazy(() => import("./pages/login/password/setup/SetupPassword"));
+const LandingPage = lazy(() => import("./pages/global/landing-page/LandingPage"));
 // User Pages
 const Home = lazy(() => import("./pages/user/home/Home"));
 const Settings = lazy(() => import("./pages/settings/Settings"));
 const Upload = lazy(() => import("./pages/user/upload/Upload"));
-const Notifications = lazy(
-  () => import("./pages/user/notifications/Notifications"),
-);
+const Notifications = lazy(() => import("./pages/user/notifications/Notifications"));
 const Post = lazy(() => import("./pages/post/Post"));
 const Search = lazy(() => import("./pages/user/search/Search"));
 const UserProfile = lazy(() => import("./pages/user/profile/UserProfile"));
 const Account = lazy(() => import("./pages/user/account/Account"));
-const Followers = lazy(
-  () => import("./pages/user/account/followers/Followers"),
-);
-const Following = lazy(
-  () => import("./pages/user/account/following/Following"),
-);
-
+const Followers = lazy(() => import("./pages/user/account/followers/Followers"));
+const Following = lazy(() => import("./pages/user/account/following/Following"));
 // Admin Pages
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Users = lazy(() => import("./pages/admin/users/Users"));
@@ -62,14 +48,9 @@ const Tags = lazy(() => import("./pages/admin/tags/Tags"));
 const Categories = lazy(() => import("./pages/admin/categories/Categories"));
 const ToReview = lazy(() => import("./pages/admin/reviews/ToReview"));
 const Reports = lazy(() => import("./pages/admin/reports/Reports"));
-const ReportPostPreview = lazy(
-  () => import("./pages/admin/reports/ReportPostPreview"),
-);
-const BannedUsers = lazy(
-  () => import("./pages/admin/banned-users/BannedUsers"),
-);
+const ReportPostPreview = lazy(() => import("./pages/admin/reports/ReportPostPreview"));
+const BannedUsers = lazy(() => import("./pages/admin/banned-users/BannedUsers"));
 const ActivityLog = lazy(() => import("./pages/admin/logs/ActivityLog"));
-
 // Global
 const NotFound = lazy(() => import("./pages/global/not-found/NotFound"));
 

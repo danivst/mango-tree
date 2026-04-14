@@ -43,6 +43,9 @@ export const getLocationFromIP = async (ipAddress: string): Promise<string> => {
     // Using ipapi.co - free tier: 1000 requests/day, no API key required
     const response = await axios.get<GeoLocation>(`https://ipapi.co/${ipAddress}/json/`, {
       timeout: 3000, // 3 second timeout to avoid delaying login
+      headers: {
+        'User-Agent': 'MangoTree/1.0.0'
+      }
     });
 
     const data = response.data;
