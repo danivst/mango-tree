@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-Over the centuries, culinary knowledge has been passed down through generations—verbally, in handwritten recipes, or through shared cooking experiences. In the digital age, traditional methods of sharing gradually give way to technology-driven solutions. Access to quality, reliable culinary content has become increasingly limited, while online spaces are often diverse but unstructured.
+Over the centuries, culinary knowledge has been passed down through generations - verbally, in handwritten recipes, or through shared cooking experiences. In the digital age, traditional methods of sharing gradually give way to technology-driven solutions. Access to quality, reliable culinary content has become increasingly limited, while online spaces are often diverse but unstructured.
 
 In response to this need, the **MangoTree** project aims to develop a web platform that facilitates and encourages the exchange of culinary experiences by sharing recipes, tips, and inspiration. The platform seeks to create a virtual community of cooking enthusiasts, providing an accessible and interactive environment for communication, creativity, and mutual support.
 
