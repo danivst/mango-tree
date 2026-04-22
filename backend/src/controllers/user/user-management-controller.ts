@@ -123,8 +123,8 @@ export const deleteUser = async (
     if (req.user!.role === RoleTypeValue.ADMIN && reason) {
       const translatedReason = await getDualTranslation(reason);
 
-      const suspendMessageEn = `Your account has been permanently suspended due to: ${translatedReason.en}. Contact mangotree-support@gmail.com for appeals.`;
-      const suspendMessageBg = `Вашият акаунт беше спрян за постоянно поради: ${translatedReason.bg}. Свържете се с mangotree-support@gmail.com за обжалване.`;
+      const suspendMessageEn = `Your account has been permanently suspended due to: ${translatedReason.en}. Contact support@mangotreeofficial.com for appeals.`;
+      const suspendMessageBg = `Вашият акаунт беше спрян за постоянно поради: ${translatedReason.bg}. Свържете се с support@mangotreeofficial.com за обжалване.`;
 
       await Notification.create({
         userId: id,

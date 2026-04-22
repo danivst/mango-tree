@@ -332,7 +332,7 @@ export const banUser = async (
     const [titleT, bodyT, sigT] = await Promise.all([
       getDualTranslation("Account Banned"),
       getDualTranslation(
-        `Your account has been banned from MangoTree. Reason: ${ban_reason}. If you believe this is a mistake, please contact mangotree-support@gmail.com.`,
+        `Your account has been banned from MangoTree. Reason: ${ban_reason}. If you believe this is a mistake, please contactsupport@mangotreeofficial.com.`,
       ),
       getDualTranslation("Sincerely, the MangoTree team"),
     ]);

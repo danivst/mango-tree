@@ -5,7 +5,6 @@
  * of user-generated content (bio, post content, etc.).
  */
 
-import fetch from "node-fetch";
 import logger from "../utils/logger";
 import { TranslationResult } from "../interfaces/translation";
 

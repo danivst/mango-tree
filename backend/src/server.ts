@@ -31,13 +31,6 @@ import translateRoutes from "./routes/translate-routes";
 
 const app: Application = express();
 
-/* for https
-const sslOptions = {
-  key: fs.readFileSync(path.resolve(process.cwd(), "localhost-key.pem")),
-  cert: fs.readFileSync(path.resolve(process.cwd(), "localhost.pem")),
-};
-*/
-
 /**
  * Middleware configuration
  */
@@ -45,7 +38,6 @@ const sslOptions = {
 // CORS: Allow frontend origins to access the API
 app.use(cors({
   origin: [
-    /*"https://localhost:5173",*/
     "http://192.168.0.21:5173",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -98,10 +90,6 @@ app.use(errorHandler);
  */
 connectDB()
   .then(() => {
-    /*for https
-    https.createServer(sslOptions, app).listen(PORT, '0.0.0.0', () => {
-          logger.info(`Server running on port ${PORT}`);
-        });*/
     app.listen(PORT, '0.0.0.0', () => {
       logger.info(`Server running on port ${PORT}`);
     });

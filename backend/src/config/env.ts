@@ -68,16 +68,7 @@ export const IS_DEV = NODE_ENV === "development";
  * Resend Email configuration
  */
 export const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
-export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
-
-/**
- * SMTP Email configuration
- */
-export const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
-export const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
-export const SMTP_USER = process.env.SMTP_USER ?? "";
-export const SMTP_PASS = process.env.SMTP_PASS ?? "";
-export const SMTP_SECURE = process.env.SMTP_SECURE === "true"; // true for 465, false for 587
+export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "support@mangotreeofficial.com";
 
 /**
  * Development logging
@@ -87,10 +78,9 @@ if (IS_DEV) {
     clientUrl: CLIENT_URL,
     geminiKey: `${GEMINI_API_KEY.substring(0, 8)}...`,
     resendFrom: RESEND_FROM_EMAIL,
-    smtpConfigured: !!SMTP_USER
   }, "Environment variables loaded");
 
-  if (!RESEND_API_KEY && !SMTP_USER) {
-    logger.warn("No email service (Resend or SMTP) configured.");
+  if (!RESEND_API_KEY) {
+    logger.warn("No email service configured.");
   }
 }
