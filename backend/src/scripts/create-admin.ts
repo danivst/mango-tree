@@ -5,7 +5,7 @@
  * Run via: `npm run create-admin` or `ts-node src/scripts/create-admin.ts`
  *
  * Default credentials:
- * - Email: admin@mangotree.com
+ * - Email: admin@mangotreeofficial.com
  * - Username: admin
  * - Password: Admin123!@#
  *
@@ -25,7 +25,7 @@ const createAdmin = async () => {
     await mongoose.connect(MONGO_URI);
     console.log("✅ MongoDB connected");
 
-    const adminEmail = "admin@mangotree.com";
+    const adminEmail = "admin@mangotreeofficial.com";
     const adminPassword = "Admin123!@#";
     const adminUsername = "admin";
 

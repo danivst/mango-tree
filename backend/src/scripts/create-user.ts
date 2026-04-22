@@ -5,7 +5,7 @@
  * Run via: `npm run create-user` or `ts-node src/scripts/create-user.ts`
  *
  * Default credentials:
- * - Email: user@mangotree.com
+ * - Email: user@mangotreeofficial.com
  * - Username: user
  * - Password: User123!@#
  */
@@ -23,7 +23,7 @@ const createUser = async () => {
     await mongoose.connect(MONGO_URI);
     console.log("✅ MongoDB connected");
 
-    const userEmail = "user@mangotree.com";
+    const userEmail = "user@mangotreeofficial.com";
     const userPassword = "User123!@#";
     const userUsername = "user";
 
