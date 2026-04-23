@@ -1,0 +1,24 @@
+{
+  "name": "@mangotree/shared",
+  "version": "1.0.0",
+  "description": "Shared types, enums, and interfaces for MangoTree monorepo",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "mangotree",
+    "shared",
+    "types",
+    "enums"
+  ],
+  "author": "MangoTree Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.0.0"
+  }
+}

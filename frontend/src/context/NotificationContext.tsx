@@ -88,31 +88,37 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
    * Errors are logged but do not throw to caller; fetchUnreadCount is also called by
    * refreshUnreadCount which handles its own error UI in parent components if needed.
    */
-  const fetchUnreadCount = useCallback(async () => {
-    // Only fetch if user is authenticated and is NOT an admin
-    if (!isAuthenticated || loading || !user) {
-      return;
-    }
-    if (user.role === "admin") {
-      // Admins don't need notifications, skip fetching entirely
-      return;
-    }
-    try {
-      const notifications = await notificationsAPI.getNotifications();
-      const unread = notifications.filter((n: Notification) => !n.read).length;
-      setUnreadCount(unread);
-    } catch (error) {
-      console.error("Failed to fetch unread notifications count:", error);
-      // Keep previous count; don't set to zero on error
-    }
-  }, [isAuthenticated, loading, user]);
+  const fetchUnreadCount = useCallback(
+    async (forceFetch = false) => {
+      // Only fetch if user is authenticated and is NOT an admin,
+      // unless a caller specifically forces a refresh (e.g. after login).
+      if (!forceFetch && (!isAuthenticated || loading || !user)) {
+        return;
+      }
+
+      if (user?.role === "admin") {
+        // Admins don't need notifications, skip fetching entirely
+        return;
+      }
+
+      try {
+        const notifications = await notificationsAPI.getNotifications();
+        const unread = notifications.filter((n: Notification) => !n.read).length;
+        setUnreadCount(unread);
+      } catch (error) {
+        console.error("Failed to fetch unread notifications count:", error);
+        // Keep previous count; don't set to zero on error
+      }
+    },
+    [isAuthenticated, loading, user],
+  );
 
   /**
    * Public method to manually refresh the unread count.
    * Useful after actions that might affect notification count (e.g., marking a notification read, posting a comment that triggers a notification).
    */
   const refreshUnreadCount = async () => {
-    await fetchUnreadCount();
+    await fetchUnreadCount(true);
   };
 
   /**

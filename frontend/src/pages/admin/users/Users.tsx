@@ -205,7 +205,7 @@ const Users = () => {
     try {
       await fetchUsers();
     } catch (err: any) {
-      showError(err.response?.data?.message || "Failed to load users");
+      showError(t("failedToLoadUsers"));
     }
   };
 
@@ -267,14 +267,16 @@ const Users = () => {
     if (!banUserId || !banReason) return;
     try {
       await adminAPI.banUser(banUserId, banReason);
-      showSuccess(`User ${userToBan?.username} banned successfully.`);
+      showSuccess(
+        t("userBannedSuccessfully").replace("{username}", userToBan?.username || "")
+      );      
       setBanUnbanStep(null);
       setBanUserId(null);
       setBanReason("");
       await fetchUsers();
     } catch (error: any) {
       const backendMessage = error.response?.data?.message;
-      let displayMessage = backendMessage || "Failed to ban user";
+      let displayMessage = t("actionFailed");
       if (backendMessage === "user is already banned.") {
         displayMessage = t("userAlreadyBanned");
       }
@@ -295,7 +297,9 @@ const Users = () => {
     if (!recordId) return;
     try {
       await adminAPI.unbanUser(recordId);
-      showSuccess(`User ${userToUnban?.username} unbanned successfully.`);
+      showSuccess(
+        t("userUnbannedSuccessfully").replace("{username}", userToUnban?.username || "")
+      );      
       setBanUnbanStep(null);
       setBanUserId(null);
       await fetchUsers();

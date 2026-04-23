@@ -227,7 +227,7 @@ export default function AdminTable<T>({
         <div className="loading">{t("loading")}</div>
       ) : !hasFetched ? (
         <div className="loading">
-          No data loaded. Click Refresh to load data.
+          {t("noDataLoaded")}. {t("clickRefreshToLoad")}
         </div>
       ) : data.length === 0 ? (
         emptyState ? (
@@ -237,7 +237,7 @@ export default function AdminTable<T>({
             message={emptyState.message}
           />
         ) : (
-          <DefaultEmptyState title="No data available" />
+          <DefaultEmptyState title={t("noDataLoaded")} />
         )
       ) : (
         <div

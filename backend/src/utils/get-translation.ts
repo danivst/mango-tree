@@ -4,13 +4,7 @@
  * Supports bilingual content (English and Bulgarian) throughout the application.
  */
 
-/**
- * Translation object containing both English and Bulgarian text.
- */
-export interface Translation {
-  bg: string;
-  en: string;
-}
+import { Translation } from "@mangotree/shared";
 
 /**
  * Selects the appropriate translation string.

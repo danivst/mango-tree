@@ -1,93 +1,13 @@
 import { Document, Types } from "mongoose";
-import { RoleType } from "../enums/role-type";
-import { ThemeType } from "../enums/theme-type";
-import { LanguageType } from "../enums/language-type";
+import { IUser as SharedIUser } from "@mangotree/shared";
 
 /**
  * @interface IUser
  * @description Mongoose document interface for User model.
- * Represents a registered user in the MangoTree application.
- *
- * @property {Types.ObjectId} _id - Unique identifier (MongoDB ObjectId)
- * @property {string} username - Unique username (min 3 characters, trimmed)
- * @property {string} email - Unique email address (lowercase, trimmed)
- * @property {string} passwordHash - Bcrypt-hashed password
- * @property {RoleType} role - User role (USER or ADMIN)
- * @property {string} [resetToken] - Optional password reset token
- * @property {Date} [resetTokenExpiry] - Optional password reset token expiry
- * @property {string} [profileImage] - Optional profile image URL (default: "")
- * @property {string} [bio] - Optional user biography (max 100 chars, default: "")
- * @property {boolean} [isApproved] - Whether user is approved (default: true)
- * @property {boolean} [isBanned] - Whether user is banned (default: false)
- * @property {Object} translations - Bilingual translations for user content
- * @property {ThemeType} [theme] - Preferred UI theme (default: "mango")
- * @property {LanguageType} [language] - Preferred language (default: "en")
- * @property {boolean} [twoFactorEnabled] - Whether 2FA is enabled
- * @property {string} [twoFactorCode] - Current 2FA verification code
- * @property {Date} [twoFactorCodeExpiry] - 2FA code expiry timestamp
- * @property {Date} createdAt - Account creation timestamp
- * @property {Types.ObjectId[]} followers - Array of user IDs who follow this user
- * @property {Types.ObjectId[]} following - Array of user IDs this user follows
- * @property {Array} pastUsernames - History of previous usernames and change dates
+ * Extends the shared IUser interface with Mongoose Document.
  */
-export interface IUser extends Document {
+export interface IUser extends Document, Omit<SharedIUser, '_id' | 'followers' | 'following'> {
   _id: Types.ObjectId;
-  username: string;
-  email: string;
-  passwordHash: string;
-  role: RoleType;
-  resetToken?: string;
-  resetTokenExpiry?: Date;
-  profileImage?: string;
-  bio?: string;
-  isApproved?: boolean;
-  isBanned?: boolean;
-  translations: {
-    bio: {
-      bg: string;
-      en: string;
-    };
-  };
-  theme?: ThemeType;
-  language?: LanguageType;
-  twoFactorEnabled?: boolean;
-  twoFactorCode?: string;
-  twoFactorCodeExpiry?: Date;
-  createdAt: Date;
   followers: Types.ObjectId[];
   following: Types.ObjectId[];
-  pastUsernames: {
-    username: string;
-    changedAt: Date;
-  }[];
-}
-
-/**
- * @interface Translation
- * @description Bilingual translation structure for dynamically stored text.
- * Used to store both Bulgarian (bg) and English (en) versions of content.
- * 
- * @property {string} bg - Bulgarian content
- * @property {string} en - English content
- */
-export interface Translation {
-  bg: string;
-  en: string;
-}
-
-/**
- * @interface NotificationPreferences
- * @description User preferences for receiving notifications.
- * Controls delivery channels for various system activities.
- * 
- * @property {boolean} emailReports - Email notifications for reports
- * @property {boolean} emailComments - Email notifications for comments
- * @property {boolean} inAppReports - In-app notifications for reports
- * @property {boolean} inAppComments - In-app notifications for comments
- */
-export interface NotificationPreferences {
-  emailReports: boolean;
-  emailComments: boolean;
-  inAppReports: boolean;
-  inAppComments: boolean;
 }

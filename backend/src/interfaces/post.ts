@@ -1,69 +1,15 @@
 import { Document, Types } from "mongoose";
+import { IPost as SharedIPost } from "@mangotree/shared";
 
 /**
  * @interface IPost
  * @description Mongoose document interface for Post model.
- * Represents a user's post in the MangoTree application.
- *
- * @property {Types.ObjectId} _id - Unique identifier (MongoDB ObjectId)
- * @property {string} title - Post title
- * @property {string} content - Post content/description
- * @property {Object} translations - Bilingual translations for content and title
- * @property {string[]} image - Array of image URLs (base64 or file paths)
- * @property {Types.ObjectId} authorId - Reference to the User who created this post
- * @property {Types.ObjectId} category - Reference to the Category document
- * @property {Types.ObjectId[]} tags - Array of tag strings for categorization
- * @property {Types.ObjectId[]} likes - Array of user IDs who liked this post
- * @property {Date} createdAt - Post creation timestamp
- * @property {Date} updatedAt - Last modification timestamp
- * @property {boolean} isApproved - Whether post has been approved (for moderation)
- * @property {boolean} isVisible - Whether post is publicly visible
+ * Extends the shared IPost interface with Mongoose Document.
  */
-export interface IPost extends Document {
+export interface IPost extends Document, Omit<SharedIPost, '_id' | 'authorId' | 'category' | 'tags' | 'likes'> {
   _id: Types.ObjectId;
-  title: string;
-  content: string;
-  translations: {
-    title: {
-      bg: string;
-      en: string;
-    };
-    content: {
-      bg: string;
-      en: string;
-    };
-  };
-  image: string[];
   authorId: Types.ObjectId;
   category: Types.ObjectId;
   tags: Types.ObjectId[];
   likes: Types.ObjectId[];
-  createdAt: Date;
-  updatedAt: Date;
-  isApproved: boolean;
-  isVisible: boolean;
-}
-
-/**
- * @interface PostTranslations
- * @description Translation structure for post content.
- * Used during the creation and update process to handle bilingual data.
- *
- * @property {Object} title - English and Bulgarian titles
- * @property {Object} content - English and Bulgarian content body
- * @property {Object} tags - Optional arrays of translated tag names
- */
-export interface PostTranslations {
-  title: {
-    bg: string;
-    en: string;
-  };
-  content: {
-    bg: string;
-    en: string;
-  };
-  tags?: {
-    bg: string[];
-    en: string[];
-  };
 }

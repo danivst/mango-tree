@@ -1,16 +1,5 @@
-/**
- * @file language-type.ts
- * @description Language preference enumeration.
- * Supported locales for the application interface and content.
- */
+// Re-export from shared package for backward compatibility
+export { LanguageType, LanguageTypeValue } from "@mangotree/shared";
 
-const LanguageTypeValue = {
-  /** English language */
-  EN: 'en' as const,
-  /** Bulgarian language */
-  BG: 'bg' as const
-};
-
-export type LanguageType = typeof LanguageTypeValue[keyof typeof LanguageTypeValue];
-
-export default LanguageTypeValue;
+// Maintain default export for backward compatibility
+export { LanguageTypeValue as default } from "@mangotree/shared";

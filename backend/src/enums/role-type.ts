@@ -1,19 +1,5 @@
-/**
- * @file role-type.ts
- * @description User role enumeration.
- * Defines the two possible roles in the application: regular USER and ADMIN.
- */
+// Re-export from shared package for backward compatibility
+export { RoleType, RoleTypeValue } from "@mangotree/shared";
 
-/**
- * User roles for access control.
- */
-const RoleTypeValue = {
-  /** Regular user with basic permissions */
-  USER: 'user' as const,
-  /** Administrator with elevated permissions */
-  ADMIN: 'admin' as const
-};
-
-export type RoleType = typeof RoleTypeValue[keyof typeof RoleTypeValue];
-
-export default RoleTypeValue;
+// Maintain default export for backward compatibility
+export { RoleTypeValue as default } from "@mangotree/shared";

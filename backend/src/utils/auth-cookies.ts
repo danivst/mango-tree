@@ -1,14 +1,39 @@
+/**
+ * @file auth-cookies.ts
+ * @description Utility for managing authentication cookies (JWT and Refresh tokens).
+ * Handles cross-environment cookie configuration for security and compatibility.
+ *
+ * Features:
+ * - Dynamic SameSite/Secure configuration based on environment
+ * - Standardized cookie names for access and refresh tokens
+ * - Helper functions for setting and clearing auth state on the client
+ */
+
 import type { CookieOptions, Response } from "express";
 
 type SameSiteOption = "lax" | "none";
 
+/**
+ * Environment check to determine if the application is running in production.
+ */
 const isProd = process.env.NODE_ENV === "production";
 
+/**
+ * Constant identifiers for authentication cookies to ensure consistency 
+ * across set, get, and clear operations.
+ */
 export const AUTH_COOKIE_NAMES = {
   access: "token",
   refresh: "refreshToken",
 } as const;
 
+/**
+ * Generates the base configuration for authentication cookies.
+ * Adjusts security settings based on the environment to ensure cookies are 
+ * accepted in both local development and production (cross-origin) setups.
+ *
+ * @returns {CookieOptions} Express cookie options with httpOnly, secure, and sameSite set
+ */
 export function getAuthCookieOptions(): CookieOptions {
   // In production, frontend/backend may be on different origins, so we need
   // SameSite=None; Secure for cookies to be accepted by modern browsers.
@@ -25,6 +50,19 @@ export function getAuthCookieOptions(): CookieOptions {
   };
 }
 
+/**
+ * Attaches authentication tokens to the Express response object as cookies.
+ * Sets appropriate expiration times: 24 hours for access and 7 days for refresh.
+ *
+ * @param res - Express response object
+ * @param token - The JWT access token string
+ * @param refreshToken - The refresh token string
+ *
+ * @example
+ * ```typescript
+ * setAuthCookies(res, "header.payload.sig", "refresh-uuid");
+ * ```
+ */
 export function setAuthCookies(res: Response, token: string, refreshToken: string) {
   const base = getAuthCookieOptions();
 
@@ -39,6 +77,13 @@ export function setAuthCookies(res: Response, token: string, refreshToken: strin
   });
 }
 
+/**
+ * Removes authentication cookies from the client.
+ * Uses the base cookie options to ensure the browser matches the attributes 
+ * (path, sameSite) required to successfully delete the cookies.
+ *
+ * @param res - Express response object
+ */
 export function clearAuthCookies(res: Response) {
   const base = getAuthCookieOptions();
 
@@ -47,4 +92,3 @@ export function clearAuthCookies(res: Response) {
   res.clearCookie(AUTH_COOKIE_NAMES.access, base);
   res.clearCookie(AUTH_COOKIE_NAMES.refresh, base);
 }
-
