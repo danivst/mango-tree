@@ -19,7 +19,6 @@ import { useThemeLanguage } from "../../../context/ThemeLanguageContext";
 import { getTranslation } from "../../../utils/translations";
 import "./LandingPage.css";
 import "../../../styles/shared.css";
-import logo from "../../../../public/mangotree-logo.png";
 import Footer from "../../../components/global/Footer";
 
 // MUI Icon Import
@@ -43,7 +42,7 @@ const LandingPage = () => {
       <header className="landing-header">
         <div className="header-content">
           <div className="header-logo">
-            <img src={logo} alt="MangoTree" className="header-logo-img" />
+            <img src="/mangotree-logo.png" alt="MangoTree" className="header-logo-img" />
             <span className="header-title">MangoTree</span>
           </div>
           <div className="header-actions">

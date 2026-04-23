@@ -18,7 +18,6 @@ import { getTranslation } from "../../utils/translations";
 import { useNotifications } from "../../context/NotificationContext";
 import { Theme, Language } from "../../utils/types";
 import { useSnackbar } from "../../utils/snackbar";
-import { setAuthTokens } from "../../utils/auth";
 import { 
   validateUsername, 
   validatePassword, 
@@ -64,7 +63,45 @@ const Login = () => {
 
   // Get redirect URL from query params to resume previous navigation after login
   const redirectPath =
-    new URLSearchParams(location.search).get("redirect") || "/home";
+    new URLSearchParams(location.search).get("redirect");
+  const routeState = location.state as
+    | { from?: { pathname?: string; search?: string; hash?: string } }
+    | undefined;
+  const stateRedirectPath = routeState?.from?.pathname
+    ? `${routeState.from.pathname}${routeState.from.search || ""}${routeState.from.hash || ""}`
+    : null;
+
+  const resolveRedirectTarget = (fallback: string) => {
+    const candidates = [redirectPath, stateRedirectPath];
+
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+
+      let decoded = candidate;
+      try {
+        decoded = decodeURIComponent(candidate);
+      } catch {
+        decoded = candidate;
+      }
+
+      // Accept relative in-app paths only.
+      if (decoded.startsWith("/")) {
+        return decoded;
+      }
+
+      // If a full URL is passed (e.g. copied link), allow it only when same-origin.
+      try {
+        const parsed = new URL(decoded);
+        if (parsed.origin === window.location.origin) {
+          return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        }
+      } catch {
+        // ignore malformed redirect candidate and continue
+      }
+    }
+
+    return fallback;
+  };
 
   /**
    * State: Active view tab (Login vs Sign-up).
@@ -185,7 +222,7 @@ const Login = () => {
 
   /**
    * Logic: Handle Login Submission.
-   * Orchestrates 2FA redirection, credential validation, token storage, and redirection.
+   * Orchestrates 2FA redirection, credential validation, cookie-based session login, and redirection.
    * Handles specific error codes like 403 (Banned) and 401 (Unauthorized).
    */
   const handleLogin = async (e: React.FormEvent) => {
@@ -222,16 +259,10 @@ const Login = () => {
 
       showSuccess(t("successfullyLoggedIn"));
 
-      if (response.token && response.refreshToken) {
-        setAuthTokens(response.token, response.refreshToken, rememberMe);
-      }
-
       await loadUserPreferences();
       await refreshUnreadCount();
 
-      const redirectTo = redirectPath
-        ? decodeURIComponent(redirectPath)
-        : response.redirectTo || "/home";
+      const redirectTo = resolveRedirectTarget(response.redirectTo || "/home");
       setTimeout(() => {
         navigate(redirectTo);
       }, 1000);
@@ -354,10 +385,6 @@ const Login = () => {
       const response = await authAPI.verify2FA(twoFAUserId, twoFACode);
       showSuccess(t("twoFACodeVerified"));
 
-      if (response.token && response.refreshToken) {
-        setAuthTokens(response.token, response.refreshToken);
-      }
-
       await loadUserPreferences();
       await refreshUnreadCount();
 
@@ -365,9 +392,7 @@ const Login = () => {
       setTwoFAUserId(null);
       setTwoFACode("");
 
-      const redirectTo = redirectPath
-        ? decodeURIComponent(redirectPath)
-        : response.redirectTo || "/home";
+      const redirectTo = resolveRedirectTarget(response.redirectTo || "/home");
       setTimeout(() => {
         navigate(redirectTo);
       }, 1000);
@@ -411,16 +436,12 @@ const Login = () => {
     }
 
     try {
-      const response = await authAPI.register(
+      await authAPI.register(
         username.trim(),
         signinEmail.trim(),
         signinPassword,
       );
       showSuccess(t("successfullyCreatedAccount"));
-
-      if (response.token && response.refreshToken) {
-        setAuthTokens(response.token, response.refreshToken);
-      }
 
       await loadUserPreferences();
       await refreshUnreadCount();
@@ -429,9 +450,7 @@ const Login = () => {
       setSigninEmail("");
       setSigninPassword("");
 
-      const redirectTo = redirectPath
-        ? decodeURIComponent(redirectPath)
-        : "/home";
+      const redirectTo = resolveRedirectTarget("/home");
       setTimeout(() => {
         navigate(redirectTo);
       }, 1000);

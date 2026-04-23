@@ -28,8 +28,11 @@ import tagRoutes from "./routes/tag-routes";
 import notificationRoutes from "./routes/notification-routes";
 import adminRoutes from "./routes/admin-routes";
 import translateRoutes from "./routes/translate-routes";
+import cookieParser from 'cookie-parser';
 
 const app: Application = express();
+
+app.use(cookieParser());
 
 /**
  * Middleware configuration
@@ -44,6 +47,7 @@ app.use(cors({
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 }));
 
 // Parse JSON request bodies with 10MB limit (for large base64 images)

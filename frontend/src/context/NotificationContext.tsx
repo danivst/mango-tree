@@ -7,7 +7,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { Notification } from "../services/api";
 import { notificationsAPI } from "../services/api";
-import { getToken, getUserRole } from "../utils/auth";
+import { useAuth } from "../utils/useAuth";
 
 /**
  * @interface NotificationContextProps
@@ -62,14 +62,15 @@ const NotificationContext = createContext<NotificationContextProps | undefined>(
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const { isAuthenticated, user, loading } = useAuth();
 
   /**
    * Core fetch function for unread notification count.
    * Checks authentication and role before making API request.
-   * Only non-admin users with valid token receive notifications.
+   * Only non-admin users with valid authentication receive notifications.
    *
    * Flow:
-   * 1. Check for token (authenticated?)
+   * 1. Check authentication status
    * 2. Check role (admin? skip)
    * 3. Fetch notifications from API
    * 4. Filter to unread and update state
@@ -78,12 +79,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
    * refreshUnreadCount which handles its own error UI in parent components if needed.
    */
   const fetchUnreadCount = useCallback(async () => {
-    // Only fetch if user is authenticated (has token) and is NOT an admin
-    if (!getToken()) {
+    // Only fetch if user is authenticated and is NOT an admin
+    if (!isAuthenticated || loading || !user) {
       return;
     }
-    const role = getUserRole();
-    if (role === 'admin') {
+    if (user.role === 'admin') {
       // Admins don't need notifications, skip fetching entirely
       return;
     }
@@ -95,7 +95,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.error("Failed to fetch unread notifications count:", error);
       // Keep previous count; don't set to zero on error
     }
-  }, []);
+  }, [isAuthenticated, loading, user]);
 
   /**
    * Public method to manually refresh the unread count.
@@ -155,8 +155,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
    */
   useEffect(() => {
     // Skip polling entirely for admin users
-    const role = getUserRole();
-    if (role === 'admin') {
+    if (user?.role === 'admin') {
       return;
     }
 

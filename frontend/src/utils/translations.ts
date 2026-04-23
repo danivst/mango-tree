@@ -212,6 +212,9 @@ export const translations: Record<Language, Record<string, string>> = {
     adminSettings: "Admin Settings",
     adminSettingsDescription:
       "This page will contain various administrative settings such as global configurations moderation tools etc",
+    userBannedSuccessfully: "User banned successfully",
+    noDataLoaded: "No data loaded",
+    clickRefreshToLoad: "Click Refresh to load data",
 
     // Admin Dashboard
     toReview: "To Review",
@@ -819,6 +822,9 @@ export const translations: Record<Language, Record<string, string>> = {
     adminSettingsPlaceholder: "Настройки на администратора",
     adminSettingsDescription:
       "Тази страница съдържа административни и модераторски настройки",
+    userBannedSuccessfully: "Потребителят е блокиран успешно",
+    noDataLoaded: "Няма заредени данни",
+    clickRefreshToLoad: "Натиснете Refresh за да заредите данни",
     unableToEditUsername: "Вашата роля не ви позволява да редактирате потребителското си име.",
 
     // Admin Dashboard

@@ -7,7 +7,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { setCookie, getCookie } from "../utils/cookies";
 import { usersAPI, UserProfile } from "../services/api";
-import { getToken } from "../utils/auth";
+import { useAuth } from "../utils/useAuth";
 
 /**
  * @enum Theme
@@ -96,6 +96,7 @@ const ThemeLanguageContext = createContext<ThemeLanguageContextProps | undefined
 export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { isAuthenticated } = useAuth();
   /**
    * Theme state initialization: check cookie first, fallback to 'cream'
    * Uses lazy initializer function to only read cookie on initial render (performance).
@@ -120,8 +121,8 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   useEffect(() => {
     const fetchUserPreferences = async () => {
-      // Only fetch if there's a token (user might be logged in)
-      if (!getToken()) {
+      // Only fetch if user is authenticated
+      if (!isAuthenticated) {
         return;
       }
       try {
@@ -221,8 +222,8 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const setTheme = (t: Theme) => {
     setThemeState(t);
-    // Sync to backend if user is logged in (has token)
-    if (getToken()) {
+    // Sync to backend if user is authenticated
+    if (isAuthenticated) {
       syncPreferenceToBackend({ theme: t });
     }
   };
@@ -246,8 +247,8 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const setLanguage = (l: Language) => {
     setLanguageState(l);
-    // Sync to backend if user is logged in (has token)
-    if (getToken()) {
+    // Sync to backend if user is authenticated
+    if (isAuthenticated) {
       syncPreferenceToBackend({ language: l });
     }
   };

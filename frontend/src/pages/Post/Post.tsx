@@ -26,7 +26,7 @@ import "../../styles/shared.css";
 import "./Post.css";
 import "../user/upload/Upload.css";
 import Snackbar from "../../components/snackbar/Snackbar";
-import { getCurrentUserId } from "../../utils/auth";
+import { useAuth } from "../../utils/useAuth";
 import { useSnackbar } from "../../utils/snackbar";
 import { detectLanguage } from "../../utils/language";
 import { formatTimeAgo } from "../../utils/display";
@@ -54,8 +54,9 @@ const Post = () => {
   const navigate = useNavigate();
   const { language } = useThemeLanguage();
   const { refreshUnreadCount } = useNotifications();
+  const { user } = useAuth();
   const t = (key: string) => getTranslation(language, key);
-  const currentUserId = useMemo(() => getCurrentUserId(), []);
+  const currentUserId = user?._id || null;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

@@ -5,7 +5,6 @@
  */
 import React, { useState } from "react";
 import api from "../../services/api";
-import { clearAuth } from "../../utils/auth";
 import { useNavigate } from "react-router-dom";
 
 /**
@@ -28,7 +27,6 @@ const DeleteAccount: React.FC<any> = ({ user, isAdmin, t, showError }) => {
     try {
       const url = isAdmin ? `/users/${user._id}?reason=${encodeURIComponent(deleteReason)}` : `/users/${user._id}`;
       await api.delete(url);
-      clearAuth();
       sessionStorage.setItem("accountDeleted", "true");
       navigate("/login");
     } catch {
@@ -38,8 +36,10 @@ const DeleteAccount: React.FC<any> = ({ user, isAdmin, t, showError }) => {
   };
 
   return (
-    <div className="form-group">
-      {!isAdmin && <button className="btn-danger" onClick={() => setShowDeleteModal(true)}>{t("deleteAccount")}</button>}
+    <>
+      <div className="form-group">
+        {!isAdmin && <button className="btn-danger" onClick={() => setShowDeleteModal(true)}>{t("deleteAccount")}</button>}
+      </div>
       
       {showDeleteModal && (
         <div className="modal-overlay">
@@ -58,7 +58,7 @@ const DeleteAccount: React.FC<any> = ({ user, isAdmin, t, showError }) => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

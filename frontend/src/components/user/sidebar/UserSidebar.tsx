@@ -10,10 +10,8 @@ import { useRefresh } from "../../../context/RefreshContext";
 import { getTranslation } from "../../../utils/translations";
 import { useSnackbar } from "../../../utils/snackbar";
 import { authAPI } from "../../../services/api";
-import { clearAuth } from "../../../utils/auth";
 
 import "./UserSidebar.css";
-import logo from "../../../../public/mangotree-logo.png";
 
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -60,7 +58,6 @@ const UserSidebar = () => {
         console.error("Logout API call failed:", error);
       }
     } finally {
-      clearAuth();
       localStorage.removeItem("lastActiveMenuItem");
       showSuccess(t("successfullyLoggedOut"));
       setTimeout(() => {
@@ -350,7 +347,8 @@ const UserSidebar = () => {
   }
 
   // Fallback to last manually clicked item if no route match (e.g., /users/:id pages)
-  if (!activeItem && lastActiveItemId) {
+  // But don't show "upload" as active when viewing posts or profiles
+  if (!activeItem && lastActiveItemId && lastActiveItemId !== "upload") {
     activeItem = menuItems.find((item) => item.id === lastActiveItemId);
   }
 
@@ -369,7 +367,7 @@ const UserSidebar = () => {
           {!isCollapsed && (
             <>
               <div className="sidebar-logo">
-                <img src={logo} alt="MangoTree" className="logo-placeholder" />
+                <img src="/mangotree-logo.png" alt="MangoTree" className="logo-placeholder" />
                 <h2 className="sidebar-title">MangoTree</h2>
               </div>
               <div className="sidebar-divider"></div>

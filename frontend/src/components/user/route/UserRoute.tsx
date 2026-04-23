@@ -13,7 +13,7 @@
  */
 
 import { Navigate, useLocation } from "react-router-dom";
-import { getUserRole } from "../../../utils/auth";
+import { useAuth } from "../../../utils/useAuth";
 
 /**
  * @interface UserRouteProps
@@ -31,13 +31,20 @@ interface UserRouteProps {
  * Share pages are public-facing pages that users might share links to. Admins should
  * not access these directly; they should use the admin interface for moderation tasks.
  *
- * @requires getUserRole - Utility to get current user's role from decoded JWT token
+ * @requires useAuth - Custom hook for authentication state
  * @requires Navigate - React Router navigation component for redirects
  * @requires useLocation - React Router hook to determine current pathname
  */
 const UserRoute = ({ children }: UserRouteProps) => {
   const location = useLocation();
-  const role = getUserRole();
+  const { user, loading } = useAuth();
+
+  /**
+   * Show loading state while checking authentication
+   */
+  if (loading) {
+    return <div>Loading...</div>; // You might want to use a proper loading component
+  }
 
   /**
    * Paths that are considered "share pages" - public-facing content that should
@@ -61,7 +68,7 @@ const UserRoute = ({ children }: UserRouteProps) => {
    * Admins have separate management interface. They should not access
    * regular user routes, especially share pages. Redirect them appropriately.
    */
-  if (role === "admin") {
+  if (user?.role === "admin") {
     // Share pages → 404
     if (isSharePage) {
       return <Navigate to="/404" replace />;

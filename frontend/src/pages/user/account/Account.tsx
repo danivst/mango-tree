@@ -13,7 +13,7 @@ import { useThemeLanguage } from "../../../context/ThemeLanguageContext";
 import { getTranslation } from "../../../utils/translations";
 import UserSidebar from "../../../components/user/sidebar/UserSidebar";
 import Snackbar from "../../../components/snackbar/Snackbar";
-import { getCurrentUserId } from "../../../utils/auth";
+import { useAuth } from "../../../utils/useAuth";
 import { useSnackbar } from "../../../utils/snackbar";
 import PostCard from "../../../components/post/PostCard";
 import ShareButton from "../../../components/buttons/share/ShareButton";
@@ -68,8 +68,9 @@ interface Category {
 const Account = () => {
   const navigate = useNavigate();
   const { language } = useThemeLanguage();
+  const { user: authUser } = useAuth();
   const t = (key: string) => getTranslation(language, key);
-  const currentUserId = getCurrentUserId();
+  const currentUserId = authUser?._id;
 
   const [user, setUser] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);

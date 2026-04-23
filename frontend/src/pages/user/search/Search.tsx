@@ -14,7 +14,7 @@ import "../../../styles/shared.css";
 import "./Search.css";
 import Snackbar from "../../../components/snackbar/Snackbar";
 import UserSidebar from "../../../components/user/sidebar/UserSidebar";
-import { getCurrentUserId } from "../../../utils/auth";
+import { useAuth } from "../../../utils/useAuth";
 import { useSnackbar } from "../../../utils/snackbar";
 import Footer from "../../../components/global/Footer";
 import UserCard from "../../../components/user/card/UserCard";
@@ -63,9 +63,10 @@ const Search = () => {
   const [loading, setLoading] = useState(true);
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const { language } = useThemeLanguage();
+  const { user } = useAuth();
   const t = (key: string) => getTranslation(language, key);
 
-  const currentUserId = getCurrentUserId();
+  const currentUserId = user?._id;
 
   useEffect(() => {
     fetchUsers();

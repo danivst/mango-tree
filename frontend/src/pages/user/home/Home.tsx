@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useThemeLanguage } from "../../../context/ThemeLanguageContext";
 import { getTranslation } from "../../../utils/translations";
-import { getCurrentUserId } from "../../../utils/auth";
+import { useAuth } from "../../../utils/useAuth";
 import { postsAPI, Post } from "../../../services/api";
 import PostCard from "../../../components/post/PostCard";
 import UserSidebar from "../../../components/user/sidebar/UserSidebar";
@@ -52,6 +52,7 @@ import SearchOffIcon from '@mui/icons-material/SearchOff';
  */
 const Home = () => {
   const { language } = useThemeLanguage();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Memoize translations function
@@ -60,8 +61,8 @@ const Home = () => {
     [language],
   );
 
-  // Get current user ID from token
-  const currentUserId = getCurrentUserId();
+  // Get current user ID from auth hook
+  const currentUserId = user?._id;
 
   // Feed state
   const [feedPosts, setFeedPosts] = useState<Post[]>([]);

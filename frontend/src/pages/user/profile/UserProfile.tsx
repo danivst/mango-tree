@@ -11,7 +11,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import UserSidebar from "../../../components/user/sidebar/UserSidebar";
 import { useThemeLanguage } from "../../../context/ThemeLanguageContext";
 import { getTranslation } from "../../../utils/translations";
-import { getCurrentUserId } from "../../../utils/auth";
+import { useAuth } from "../../../utils/useAuth";
 
 import api, {
   UserProfile as IUserProfile,
@@ -59,9 +59,10 @@ const UserProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { language } = useThemeLanguage();
+  const { user: currentUser } = useAuth();
   const t = (key: string) => getTranslation(language, key);
 
-  const currentUserId = getCurrentUserId();
+  const currentUserId = currentUser?._id;
 
   /**
    * Sub-component: LoadingSpinner

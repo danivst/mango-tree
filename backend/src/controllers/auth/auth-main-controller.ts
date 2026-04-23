@@ -28,6 +28,7 @@ import { logActivity } from "../../utils/activity-logger";
 import logger from "../../utils/logger";
 import z from "zod";
 import { isDisposableEmail } from "../../utils/disposable-email";
+import { clearAuthCookies, setAuthCookies } from "../../utils/auth-cookies";
 
 /**
  * Regular expression for basic email validation.
@@ -65,7 +66,7 @@ const registerSchema = z.object({
  *
  * @param req - AuthRequest with body { username, email, password }
  * @param res - Express response object
- * @returns Response with 201 status on success, includes JWT tokens
+ * @returns Response with 201 status on success; auth tokens are set in HttpOnly cookies
  * @throws {Error} Database error if save fails
  * @throws {BadRequestError} If credentials fail validation or are already in use
  *
@@ -78,7 +79,6 @@ const registerSchema = z.object({
  * ```json
  * {
  * "message": "Registration successful.",
- * "token": "...",
  * "user": { "id": "...", "username": "JohnDoe" }
  * }
  * ```
@@ -196,10 +196,11 @@ export const registerUser = async (
   }
 
   // --- Response ---
+  setAuthCookies(res, token, refreshToken);
+
   return res.status(201).json({
     message: "Registration successful.",
-    token,
-    refreshToken,
+
     user: {
       id: user._id,
       username: user.username,
@@ -216,7 +217,7 @@ export const registerUser = async (
  *
  * @param req - AuthRequest with body { username, password }
  * @param res - Express response object
- * @returns Response with tokens or 2FA requirement flag
+ * @returns Response with user/session metadata; tokens are set in HttpOnly cookies when login completes
  * @throws {Error} Database error
  * @throws {ForbiddenError} If account is banned
  *
@@ -227,7 +228,7 @@ export const registerUser = async (
  * ```
  * @response
  * ```json
- * { "message": "Successfully logged in!", "token": "...", "refreshToken": "..." }
+ * { "message": "Successfully logged in!", "user": { "id": "...", "username": "JohnDoe" } }
  * ```
  */
 export const loginUser = async (
@@ -397,10 +398,10 @@ export const loginUser = async (
     logger.error(notifErr, "Failed to create login notification");
   }
 
+  setAuthCookies(res, token, refreshToken);
+
   return res.json({
     message: "Successfully logged in!",
-    token,
-    refreshToken,
     user: {
       id: user._id,
       username: user.username,
@@ -438,9 +439,16 @@ export const logoutUser = async (
   try {
     // Log the logout event for audit
     await logActivity(req, "LOGOUT");
+
+    clearAuthCookies(res);
+
     return res.json({ message: "Logged out successfully." });
   } catch (error: any) {
     logger.error(error, "Logout error");
+
+    // Still clear cookies even if logging fails
+    clearAuthCookies(res);
+
     return res.json({ message: "Logged out." });
   }
 };

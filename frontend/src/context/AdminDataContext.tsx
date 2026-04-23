@@ -18,7 +18,7 @@ import {
 import { useThemeLanguage } from "./ThemeLanguageContext";
 import { getTranslation } from "../utils/translations";
 import { useRefresh } from "./RefreshContext";
-import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../utils/useAuth";
 
 /**
  * @template T
@@ -148,6 +148,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { language } = useThemeLanguage();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const isAdminUser = isAuthenticated && user?.role === "admin";
   const t = (key: string) => getTranslation(language, key);
 
   // ========== DATA ARRAYS ==========
@@ -335,6 +337,10 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
    * to allow Dashboard to handle partial failures gracefully.
    */
   const initialize = useCallback(async () => {
+    if (!isAdminUser) {
+      return;
+    }
+
     await Promise.all([
       fetchCategories(),
       fetchTags(),
@@ -344,6 +350,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       fetchFlaggedContent(),
     ]);
   }, [
+    isAdminUser,
     fetchCategories,
     fetchTags,
     fetchUsers,
@@ -352,22 +359,41 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchFlaggedContent,
   ]);
 
+  // ========== INITIALIZE ON ADMIN LOGIN ==========
+  useEffect(() => {
+    if (authLoading || !isAdminUser) {
+      return;
+    }
+
+    // Initialize admin data when user becomes admin (e.g., after login)
+    initialize().catch((err: any) => {
+      // During role/session transitions, this provider can briefly attempt
+      // admin refresh before auth state fully settles. Ignore permission errors.
+      if (err?.response?.status === 403) {
+        return;
+      }
+      console.error("Failed to initialize admin data on login:", err);
+    });
+  }, [isAdminUser, initialize, authLoading]);
+
   // ========== AUTO-REFRESH ON SIDEBAR CLICK ==========
   const { refreshTrigger } = useRefresh();
 
   useEffect(() => {
-    if (refreshTrigger === 0) return;
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    try {
-      const decoded = jwtDecode<any>(token);
-      if (decoded.role === 'admin') {
-        initialize().catch(err => console.error('Failed to refresh admin data:', err));
-      }
-    } catch (e) {
-      console.error('Failed to decode token for admin refresh:', e);
+    if (authLoading || !isAdminUser) {
+      return;
     }
-  }, [refreshTrigger, initialize]);
+
+    if (refreshTrigger === 0) return;
+    initialize().catch((err: any) => {
+      // During role/session transitions, this provider can briefly attempt
+      // admin refresh before auth state fully settles. Ignore permission errors.
+      if (err?.response?.status === 403) {
+        return;
+      }
+      console.error("Failed to refresh admin data:", err);
+    });
+  }, [refreshTrigger, initialize, authLoading, isAdminUser]);
 
   // ========== CONTEXT VALUE ==========
   /**

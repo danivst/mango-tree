@@ -7,7 +7,6 @@
 import { useThemeLanguage } from "../../../context/ThemeLanguageContext";
 import { getTranslation } from "../../../utils/translations";
 import { useNavigate } from "react-router-dom";
-import logo from "../../../../public/mangotree-logo.png";
 import Footer from "../../../components/global/Footer";
 import "./NotFound.css";
 import "../../../styles/shared.css";
@@ -26,7 +25,7 @@ const NotFound = () => {
       <div className="not-found-content">
         {/* Logo and Brand */}
         <div className="logo-container">
-          <img src={logo} alt="MangoTree" className="not-found-logo" />
+          <img src="/mangotree-logo.png" alt="MangoTree" className="not-found-logo" />
           <p className="brand-name">MangoTree</p>
         </div>
         {/* 404 Number */}

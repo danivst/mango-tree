@@ -13,7 +13,7 @@ import { getTranslation } from "../../../../utils/translations";
 import UserSidebar from "../../../../components/user/sidebar/UserSidebar";
 import Snackbar from "../../../../components/snackbar/Snackbar";
 import GoBackButton from "../../../../components/buttons/back/GoBackButton";
-import { getCurrentUserId } from "../../../../utils/auth";
+import { useAuth } from "../../../../utils/useAuth";
 import { useSnackbar } from "../../../../utils/snackbar";
 import "../../../../styles/shared.css";
 import "./Following.css";
@@ -68,8 +68,9 @@ interface User {
 const Following = () => {
   const navigate = useNavigate();
   const { language } = useThemeLanguage();
+  const { user } = useAuth();
   const t = (key: string) => getTranslation(language, key);
-  const currentUserId = getCurrentUserId();
+  const currentUserId = user?._id;
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
   const [following, setFollowing] = useState<User[]>([]);

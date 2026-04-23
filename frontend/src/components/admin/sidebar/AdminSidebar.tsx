@@ -10,14 +10,11 @@ import { getTranslation } from "../../../utils/translations";
 import { useSnackbar } from "../../../utils/snackbar";
 import { useRefresh } from "../../../context/RefreshContext";
 import { authAPI } from "../../../services/api";
-import { clearAuth } from "../../../utils/auth";
 
 import "./AdminSidebar.css";
-import logo from "../../../../public/mangotree-logo.png";
 
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 import Snackbar from "../../snackbar/Snackbar";
 
 // MUI Icon Imports
@@ -35,24 +32,10 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 
 /**
- * @interface TokenPayload
- * @description Type definition for decoded JWT token payload.
- * Defines the expected structure of authentication tokens issued by the backend.
- *
- * @property {string} userId - Unique user identifier
- * @property {string} username - Username (may be optional depending on token version)
- * @property {string} role - User role (e.g., "admin", "user")
- * @property {number} exp - Token expiration timestamp (Unix epoch seconds)
- * @property {number} iat - Token issued-at timestamp (Unix epoch seconds)
+ * @interface SidebarItem
+ * @description Interface defining a navigation item in the admin sidebar menu.
+ * Used to configure admin navigation routes with labels and icons.
  */
-interface TokenPayload {
-  userId: string;
-  username?: string;
-  role: string;
-  exp: number;
-  iat: number;
-}
-
 /**
  * @interface SidebarItem
  * @description Interface defining a navigation item in the admin sidebar menu.
@@ -77,7 +60,7 @@ interface SidebarItem {
  * - Collapsible/expandable sidebar (desktop and mobile)
  * - Responsive design (auto-collapses on viewports < 768px)
  * - Active route detection with highlighting
- * - Username display from JWT token or API fallback
+ * - Username display from authenticated user API
  * - Mango theme support with special gradient styling
  * - Mobile overlay and close button
  * - Logout with confirmation snackbar
@@ -88,7 +71,7 @@ interface SidebarItem {
  * @requires useNavigate - React Router navigation hook
  * @requires useLocation - React Router location hook for active route detection
  * @requires useThemeLanguage - Context for language and theme settings
- * @requires jwtDecode - Library for decoding JWT tokens without verification
+ * @requires /users/me API - Retrieves current authenticated user details
  * @requires Snackbar - Toast notification component for logout feedback
  * @requires SettingsIcon - Material UI icon for settings menu item
  */
@@ -119,8 +102,8 @@ const AdminSidebar = () => {
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   /**
-   * State: admin username displayed in sidebar header
-   * Initially empty; populated from JWT token or fetched via API if token lacks username
+   * State: admin username displayed in sidebar header.
+   * Initially empty; populated from /users/me after session validation.
    */
   const [username, setUsername] = useState<string>("");
 
@@ -130,31 +113,14 @@ const AdminSidebar = () => {
   const { snackbar, showSuccess, closeSnackbar } = useSnackbar();
 
   /**
-   * Effect: On mount, extract username from JWT token.
-   * If username is not in token, fetch user info from API.
+   * Effect: On mount, fetch current authenticated user info.
    */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode<TokenPayload>(token);
-        if (decoded.username) {
-          setUsername(decoded.username);
-        } else {
-          // Username not in token, fetch from API
-          fetchUserInfo();
-        }
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error decoding token:", error);
-        }
-      }
-    }
+    fetchUserInfo();
   }, []);
 
   /**
    * Fetches current user's info from /users/me endpoint.
-   * Used when username is not available in the JWT token.
    */
   const fetchUserInfo = async () => {
     try {
@@ -165,7 +131,7 @@ const AdminSidebar = () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error("Error decoding token:", error);
+        console.error("Error fetching current user info:", error);
       }
     }
   };
@@ -394,7 +360,6 @@ const AdminSidebar = () => {
         console.error("Logout API call failed:", error);
       }
     } finally {
-      clearAuth();
       showSuccess(t("successfullyLoggedOut"));
       setTimeout(() => {
         navigate("/login");
@@ -420,7 +385,7 @@ const AdminSidebar = () => {
           {!isCollapsed && (
             <>
               <div className="sidebar-logo">
-                <img src={logo} alt="MangoTree" className="logo-placeholder" />
+                <img src="/mangotree-logo.png" alt="MangoTree" className="logo-placeholder" />
                 <h2 className="sidebar-title">MangoTree</h2>
               </div>
               {username && (

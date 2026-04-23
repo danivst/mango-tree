@@ -5,7 +5,6 @@
  */
 
 import React from 'react';
-import logo from '../../../public/mangotree-logo.png';
 
 /**
  * @interface LoginHeaderProps
@@ -32,7 +31,7 @@ const LoginHeader: React.FC<LoginHeaderProps> = ({ onNavigate }) => {
         type="button"
         aria-label="Navigate to landing page"
       >
-        <img src={logo} alt="MangoTree Logo" className="logo-placeholder" />
+        <img src="/mangotree-logo.png" alt="MangoTree Logo" className="logo-placeholder" />
         <h1 className="login-title">MangoTree</h1>
       </button>
     </div>

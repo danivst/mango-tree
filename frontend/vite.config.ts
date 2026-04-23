@@ -10,7 +10,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://192.168.0.21:3000',
         changeOrigin: true,
         secure: false,
         // Ensure the proxy rewrites the URL correctly

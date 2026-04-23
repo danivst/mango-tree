@@ -1,7 +1,7 @@
 /**
  * @file auth.ts
  * @description Authentication middleware and utilities for JWT-based authorization.
- * Provides request authentication and role-based access control.
+ * Provides request authentication and role-based access control with Cookie and Bearer support.
  */
 
 import { Response, NextFunction } from "express";
@@ -11,20 +11,8 @@ import { RoleType } from "../enums/role-type";
 import { JwtPayload, AuthRequest } from "../interfaces/auth";
 
 /**
- * Authenticates incoming requests via JWT.
- * Validates the Bearer token in the Authorization header. On success, attaches user payload to the request.
- *
- * @param req - AuthRequest (Express request with user property)
- * @param res - Express response object
- * @param next - Express next function
- * @returns void
- * @throws {UnauthorizedError} 401 if token is missing
- * @throws {ForbiddenError} 403 if token is invalid or expired
- *
- * @example
- * ```typescript
- * router.get("/profile", auth, profileHandler);
- * ```
+ * Authenticates incoming requests.
+ * Checks for token in HttpOnly Cookies (secure) or Bearer header (fallback).
  */
 export const auth = (
   req: AuthRequest,
@@ -33,20 +21,27 @@ export const auth = (
 ): void => {
   logger.info({ method: req.method, path: req.path }, "[auth] Middleware called");
 
-  // Allow OPTIONS requests (CORS preflight) to pass through without auth
   if (req.method === 'OPTIONS') {
     return next();
   }
 
-  const authHeader = req.headers.authorization;
+  // 1. Try to read token from HttpOnly cookies (XSS-resistant path)
+  // Note: Requires 'cookie-parser' to be configured in app/server.
+  let token = req.cookies?.token;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    logger.warn({ path: req.path }, "[auth] No token provided");
-    res.status(401).json({ message: 'No token, authorization denied' });
-    return;
+  // 2. Legacy fallback to Authorization header
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
   }
 
-  const token = authHeader.split(' ')[1];
+  if (!token) {
+    logger.warn({ path: req.path }, "[auth] No token provided");
+    res.status(401).json({ message: "Unauthorized. Please sign in to continue." });
+    return;
+  }
 
   try {
     const decoded = jwt.verify(
@@ -59,30 +54,25 @@ export const auth = (
     next();
   } catch (err: any) {
     logger.warn({ error: err.message }, "[auth] Token invalid or expired");
-    res.status(403).json({ message: 'Invalid or expired token' });
+    
+    // Return 401 on invalid/expired tokens so the frontend can redirect to login.
+    res.status(401).json({ message: "Session expired. Please sign in again." });
     return;
   }
 };
 
 /**
  * Enforces role-based permissions.
- * Factory function that returns a middleware checking if req.user.role matches allowed values.
- *
- * @param roles - List of RoleType enums allowed to access the route
- * @returns Middleware function
- * @throws {ForbiddenError} 403 if user role is insufficient
- *
- * @example
- * ```typescript
- * router.delete("/user/:id", auth, requireRole(RoleType.ADMIN), deleteHandler);
- * ```
  */
 export const requireRole =
   (...roles: RoleType[]) =>
   (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role)) {
-      logger.warn({ userId: req.user?.userId, role: req.user?.role, required: roles }, "Access denied: insufficient permissions");
-      res.status(403).json({ message: 'Access denied' });
+      logger.warn(
+        { userId: req.user?.userId, requiredRoles: roles, userRole: req.user?.role },
+        "[auth] Insufficient permissions"
+      );
+      res.status(403).json({ message: "You do not have permission to perform this action." });
       return;
     }
     next();

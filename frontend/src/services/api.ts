@@ -1,12 +1,11 @@
 /**
  * @file api.ts
  * @description Central HTTP client and API service definitions for the MangoTree application.
- * Configures Axios with interceptors for JWT injection, token expiration handling, 
+ * Configures Axios with interceptors for cookie-based session handling, 
  * and account status redirection.
  */
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { clearAuth, isTokenValid } from "../utils/auth";
 import type {
   LoginResponse,
   Notification,
@@ -22,27 +21,27 @@ import type {
  * Base URL: http://localhost:3000/api
  * Features:
  * - 10-second timeout
- * - Automatic JWT authorization header injection
+ * - Cookie-based auth via withCredentials (no client-side token injection)
  * - Token expiry handling and account suspension detection
  * - Special handling for auth endpoints to prevent redirect loops
  *
  * @type {axios.AxiosInstance}
  */
 const api = axios.create({
-  baseURL: "http://192.168.0.21:3000/api",
+  baseURL:
+    import.meta.env.DEV && typeof window !== 'undefined'
+      ? "/api"
+      : "http://192.168.0.21:3000/api",
   headers: {
     "Content-Type": "application/json",
   },
   timeout: 10000, // 10 second timeout
+  withCredentials: true, // Send cookies with requests
 });
 
-// Request interceptor - add token to headers
+// Request interceptor - no Authorization header needed for HttpOnly cookie auth
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem("token");
-    if (token && isTokenValid()) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {
@@ -50,7 +49,7 @@ api.interceptors.request.use(
   },
 );
 
-// Response interceptor - handle token expiry and account suspension
+// Response interceptor - handle session expiry and account suspension
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
@@ -85,7 +84,6 @@ api.interceptors.response.use(
           (message.includes("suspended") || message.includes("terminated"))
         ) {
           // Account was deleted/suspended - show modal
-          clearAuth();
           sessionStorage.setItem("accountSuspended", "true");
           sessionStorage.setItem("suspensionReason", message);
           window.location.href = "/login";
@@ -99,9 +97,13 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // Token expired or invalid (401 or other 403)
-      clearAuth();
-      // Store expiry message in sessionStorage to show on redirect
+      // Normal 403s can be permission checks (e.g. non-admin hitting admin API).
+      // Do NOT treat those as expired sessions.
+      if (error.response?.status === 403) {
+        return Promise.reject(error);
+      }
+
+      // 401 means the session is invalid/expired.
       sessionStorage.setItem("sessionExpired", "true");
       window.location.href = "/login";
     }
@@ -121,7 +123,7 @@ export const authAPI = {
    *
    * @param {string} username - The user's username
    * @param {string} password - The user's password
-   * @returns {Promise<LoginResponse>} The login response containing token, user data, and optional 2FA flag
+   * @returns {Promise<LoginResponse>} The login response containing user data and optional 2FA flag
    * @throws {Error} Throws error if request fails (network error or invalid credentials)
    *
    * @example
@@ -155,7 +157,7 @@ export const authAPI = {
    * @async
    * @param {string} userId - The user's ID (provided after initial login attempt)
    * @param {string} code - The 6-digit verification code from email
-   * @returns {Promise<LoginResponse>} The verified login response with token and user data
+   * @returns {Promise<LoginResponse>} The verified login response with user data
    */
   verify2FA: async (userId: string, code: string): Promise<LoginResponse> => {
     console.log("API: Making POST request to /api/auth/2fa/verify");
@@ -257,7 +259,7 @@ export const authAPI = {
 
   /**
    * Log out the authenticated user and record activity on the server.
-   * Client should still clear tokens and local storage after calling this.
+   * Server clears auth cookies; client only clears local UI/auth flags if needed.
    *
    * @async
    * @returns {Promise<{ message: string }>} Response with confirmation message

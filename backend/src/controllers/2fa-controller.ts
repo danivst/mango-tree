@@ -17,6 +17,7 @@ import { get2FAEmailTemplate } from "../utils/email-templates";
 import { getLocalizedText } from "../utils/get-translation";
 import { logActivity } from "../utils/activity-logger";
 import logger from "../utils/logger";
+import { setAuthCookies } from "../utils/auth-cookies";
 
 /**
  * Initiates the 2FA enablement process.
@@ -136,7 +137,7 @@ export const enable2FA = async (
  *
  * @param req - Request with body { userId, code }
  * @param res - Express response object
- * @returns Response with JWT tokens and user data
+ * @returns Response with user data; auth tokens are set in HttpOnly cookies
  * @throws {Error} Database or JWT signing errors
  *
  * @example
@@ -148,8 +149,6 @@ export const enable2FA = async (
  * ```json
  * {
  * "message": "successfully logged in!",
- * "token": "...",
- * "refreshToken": "...",
  * "user": { "id": "...", "username": "..." },
  * "redirectTo": "/home"
  * }
@@ -225,11 +224,10 @@ export const verify2FA = async (
     const refreshToken = jwt.sign({ userId: user._id }, JWT_REFRESH_SECRET, {
       expiresIn: "7d",
     });
+    setAuthCookies(res, token, refreshToken);
 
     return res.json({
       message: "successfully logged in!",
-      token,
-      refreshToken,
       user: {
         id: user._id,
         username: user.username,

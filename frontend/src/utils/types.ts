@@ -492,11 +492,12 @@ export interface JwtPayload {
 
 /**
  * Response structure for successful login/registration.
+ * With HttpOnly cookies, tokens are no longer returned in the response.
  *
  * @interface LoginResponse
  * @property {string} [message] - Optional message (e.g., success notice)
- * @property {string} [token] - JWT access token (if any)
- * @property {string} [refreshToken] - Refresh token (if any)
+ * @property {string} [token] - JWT access token (for fallback)
+ * @property {string} [refreshToken] - JWT refresh token (for fallback)
  * @property {{ id: string; username: string; role: RoleType; bio?: string; translations?: any }} user - Authenticated user data
  * @property {string} [redirectTo] - Optional redirect path after login
  * @property {boolean} [twoFactorRequired] - Whether 2FA verification is needed

@@ -39,7 +39,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user, setUser, t, s
 
   /**
    * @function handleVerifySettings2FA
-   * @description Verifies the 6-digit code to finalize 2FA activation and updates local storage tokens.
+   * @description Verifies the 6-digit code to finalize 2FA activation.
    * @param {React.FormEvent} e - The form submission event.
    */
   const handleVerifySettings2FA = async (e: React.FormEvent) => {
@@ -49,11 +49,8 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user, setUser, t, s
 
     setSettingsVerifying2FA(true);
     try {
-      const response = await authAPI.verify2FA(user._id, settingsTwoFACode);
-      if (response.token && response.refreshToken) {
-        localStorage.setItem("token", response.token);
-        localStorage.setItem("refreshToken", response.refreshToken);
-      }
+      await authAPI.verify2FA(user._id, settingsTwoFACode);
+      // With HttpOnly cookies, tokens are set server-side automatically
       setUser({ ...user, twoFactorEnabled: true });
       setShowEnable2FAModal(false);
       setSettingsTwoFACode("");

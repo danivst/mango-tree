@@ -21,61 +21,79 @@
  * ```
  *
  * @interface UseAuthReturn
- * @property {string | null} userId - Current user's MongoDB ObjectId (from JWT)
+ * @property {string | null} userId - Current user's MongoDB ObjectId
  * @property {boolean} isAuthenticated - Whether user is logged in with valid token
  * @property {string | null} role - User's role ('user' | 'admin' | null)
- * @property {string | null} token - Current JWT access token
- * @property {boolean} tokenValid - Whether the token is valid (not expired)
- * @property {() => void} clearAuth - Clear all auth data (logout)
- * @property {(token: string, refreshToken: string, rememberMe?: boolean) => void} setAuthTokens - Store auth tokens
- * @property {() => string | null} getUsername - Get username from token (may return null)
+ * @property {string | null} token - Always null since tokens are in HttpOnly cookies
+ * @property {boolean} tokenValid - Whether the token is valid (user data available)
+ * @property {boolean} loading - Whether user data is being fetched
+ * @property {string | null} error - Error message if authentication failed
+ * @property {UserProfile | null} user - Full user profile data
+ * @property {() => void} clearAuth - Clear auth state (actual logout happens server-side)
+ * @property {(token: string, refreshToken: string, rememberMe?: boolean) => void} setAuthTokens - No-op since tokens are server-side
+ * @property {() => string | null} getUsername - Get username from user data
  */
 
-import { useMemo } from 'react';
-import {
-  getCurrentUserId,
-  getToken,
-  isTokenValid,
-  getUserRole,
-  clearAuth as clearAuthStorage,
-  setAuthTokens as storeAuthTokens
-} from './auth';
+import { useMemo, useState, useEffect } from 'react';
+import { usersAPI } from '../services/api';
+import type { UserProfile, RoleType } from './types';
 
 /**
  * Custom hook for authentication state and operations.
- * Memoizes computed values to prevent unnecessary recalculations.
+ * Fetches user data from /users/me endpoint since tokens are in HttpOnly cookies.
  *
  * @function useAuth
  * @returns {UseAuthReturn} Authentication state and utility functions
  */
 export const useAuth = () => {
-  // Memoize token retrieval
-  const token = useMemo(() => getToken(), []);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Memoize userId extraction
-  const userId = useMemo(() => getCurrentUserId(), []);
+  // Fetch user data on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const userData = await usersAPI.getCurrentUser();
+        setUser(userData);
+        setError(null);
+      } catch (err) {
+        // If we get 401, user is not authenticated
+        setUser(null);
+        setError('Not authenticated');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Memoize role extraction
-  const role = useMemo(() => getUserRole(), []);
-
-  // Memoize authentication status
-  const isAuthenticated = useMemo(() => {
-    return !!token && isTokenValid();
-  }, [token]);
-
-  // Memoize token validity
-  const tokenValid = useMemo(() => {
-    return isTokenValid();
+    fetchUser();
   }, []);
+
+  // Memoize computed values
+  const userId = useMemo(() => user?._id || null, [user]);
+  const isAuthenticated = useMemo(() => !!user && !loading, [user, loading]);
+  const role = useMemo(() => (user?.role as RoleType) || null, [user]);
+  const tokenValid = useMemo(() => !!user, [user]); // If we have user data, token is valid
 
   return {
     userId,
     isAuthenticated,
     role,
-    token,
+    token: null, // Tokens are not accessible client-side
     tokenValid,
-    clearAuth: clearAuthStorage,
-    setAuthTokens: storeAuthTokens
+    loading,
+    error,
+    user,
+    clearAuth: () => {
+      setUser(null);
+      setError(null);
+      // Note: Actual logout happens server-side when calling /auth/logout
+    },
+    setAuthTokens: () => {
+      // Tokens are set server-side, no client-side action needed
+    },
+    getUsername: () => user?.username || null,
   };
 };
 
