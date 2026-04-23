@@ -76,11 +76,14 @@ export const translations: Record<Language, Record<string, string>> = {
     emailNotFound: "No account with this email exists",
     emailExists: "Email already in use",
     incorrectPassword: "Incorrect password",
-    invalidPassword: "Password must be at least 8 characters long, and must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+    invalidPassword:
+      "Password must be at least 8 characters long, and must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     passwordsDoNotMatch: "Passwords do not match",
     emailCannotBeEdited: "Email cannot be edited",
-    passwordCannotBeEdited: "Password cannot be edited directly. Use change password button.",
-    unableToLoadResetForm: "Unable to load password reset form. Please request a new password reset.",
+    passwordCannotBeEdited:
+      "Password cannot be edited directly. Use change password button.",
+    unableToLoadResetForm:
+      "Unable to load password reset form. Please request a new password reset.",
 
     // User Profile
     memberSince: "Member Since",
@@ -143,7 +146,8 @@ export const translations: Record<Language, Record<string, string>> = {
     categoryDeleteFailed: "Failed to delete category",
     categoryUpdateFailed: "Failed to update category",
     deleteCategoryError: "Failed to delete category",
-    deleteCategoryWarning: "Are you sure you want to delete this category? This action cannot be undone",
+    deleteCategoryWarning:
+      "Are you sure you want to delete this category? This action cannot be undone",
     tagNameEmpty: "Tag name cannot be empty",
     tagNameTooLong: "Tag name cannot be longer than 20 characters",
     tagCreated: "Tag created successfully",
@@ -267,19 +271,20 @@ export const translations: Record<Language, Record<string, string>> = {
     activityUnbanUser: "Unbanned user {username}",
     activity2faEnable: "Enabled two-factor authentication",
     activity2faDisable: "Disabled two-factor authentication",
-    activityCategoryCreate: "Created category \"{name}\"",
-    activityCategoryUpdate: "Updated category \"{name}\"",
-    activityCategoryDelete: "Deleted category \"{name}\"",
-    activityTagCreate: "Created tag \"{name}\"",
-    activityTagUpdate: "Updated tag \"{name}\"",
-    activityTagDelete: "Deleted tag \"{name}\"",
+    activityCategoryCreate: 'Created category "{name}"',
+    activityCategoryUpdate: 'Updated category "{name}"',
+    activityCategoryDelete: 'Deleted category "{name}"',
+    activityTagCreate: 'Created tag "{name}"',
+    activityTagUpdate: 'Updated tag "{name}"',
+    activityTagDelete: 'Deleted tag "{name}"',
     activityReportStatusUpdate: "Updated report {id} status to {status}",
     activityReportItemDelete: "Deleted reported {targetType} {targetId}",
 
     // Security Notifications
     newLoginTitle: "New login detected",
     newLoginMessage: "New login at {time} from {location}",
-    newLoginWarning: "If this wasn't you, please secure your account immediately.",
+    newLoginWarning:
+      "If this wasn't you, please secure your account immediately.",
 
     // Reports
     report: "Report",
@@ -419,7 +424,8 @@ export const translations: Record<Language, Record<string, string>> = {
     confirmRemoveFollowerMessage:
       "Are you sure you want to remove {username} as a follower? They will not be notified",
     followerRemoved: "Follower removed successfully",
-    suspensionMessage: "Your account is temporarily suspended. Reason: {reason}. Suspension will be lifted on {unbanDate}. Please check your email for more information.",
+    suspensionMessage:
+      "Your account is temporarily suspended. Reason: {reason}. Suspension will be lifted on {unbanDate}. Please check your email for more information.",
 
     // Post Upload
     uploadPost: "Upload a post",
@@ -446,7 +452,8 @@ export const translations: Record<Language, Record<string, string>> = {
     postRejectedPrefix: "Post rejected. Reason: {reason}",
     postNotCooking: "Post rejected. Reason: Post is not cooking-related.",
     postInappropriate: "Post rejected. Reason: Content is inappropriate.",
-    postAIServerError: "Post rejected. Reason: AI server error. Please try again later.",
+    postAIServerError:
+      "Post rejected. Reason: AI server error. Please try again later.",
     postPendingAdminReview:
       "Your post has been submitted and is pending admin review due to AI service limitations.",
     postPublishedSuccess: "Post published successfully!",
@@ -456,7 +463,8 @@ export const translations: Record<Language, Record<string, string>> = {
     // Comment Moderation Errors
     commentRejectedPrefix: "Comment rejected. Reason: {reason}",
     commentInappropriate: "Comment rejected. Reason: Comment is inappropriate.",
-    commentAIServerError: "Comment rejected. Reason: AI server error. Please try again later.",
+    commentAIServerError:
+      "Comment rejected. Reason: AI server error. Please try again later.",
     commentRejected: "Comment rejected.",
 
     // Account Settings
@@ -592,7 +600,8 @@ export const translations: Record<Language, Record<string, string>> = {
     verifying2FA: "Verifying...",
     twoFACodeSent: "Verification code sent to your email",
     twoFACodeVerified: "2FA verified successfully",
-    failedToSendVerificationCode: "Failed to send verification code. Please try again.",
+    failedToSendVerificationCode:
+      "Failed to send verification code. Please try again.",
     twoFAEnabledSuccess: "Two-factor authentication enabled successfully",
     twoFADisabledSuccess: "Two-factor authentication disabled successfully",
     twoFACodeLabel: "6-digit code",
@@ -681,13 +690,16 @@ export const translations: Record<Language, Record<string, string>> = {
     emailNotFound: "Не съществува акаунт с този имейл",
     emailExists: "Имейлът вече се използва",
     incorrectPassword: "Грешна парола",
-    invalidPassword: "Паролата трябва да е поне 8 символа и да съдържа поне една главна буква, една малка буква, една цифра и един специален символ",
+    invalidPassword:
+      "Паролата трябва да е поне 8 символа и да съдържа поне една главна буква, една малка буква, една цифра и един специален символ",
     passwordMinLength:
       "Паролата трябва да е поне 8 символа и да съдържа поне една главна буква, една малка буква, едно число и един специален символ",
     passwordsDoNotMatch: "Паролите не съвпадат",
     emailCannotBeEdited: "Имейлът не може да бъде редактиран",
-    passwordCannotBeEdited: "Паролата не може да бъде променена директно. Използвайте бутона за промяна на парола.",
-    unableToLoadResetForm: "Неуспешно зареждане на формата за промяна на парола. Моля, поискайте нова промяна на паролата.",
+    passwordCannotBeEdited:
+      "Паролата не може да бъде променена директно. Използвайте бутона за промяна на парола.",
+    unableToLoadResetForm:
+      "Неуспешно зареждане на формата за промяна на парола. Моля, поискайте нова промяна на паролата.",
 
     // User Profile
     memberSince: "Член от",
@@ -752,7 +764,8 @@ export const translations: Record<Language, Record<string, string>> = {
     categoryDeleteFailed: "Неуспешно изтриване на категория",
     categoryUpdateFailed: "Неуспешно обновяване на категория",
     deleteCategoryError: "Неуспешно изтриване на категория",
-    deleteCategoryWarning: "Сигурни ли сте, че искате да изтриете тази категория? Това действие е необратимо",
+    deleteCategoryWarning:
+      "Сигурни ли сте, че искате да изтриете тази категория? Това действие е необратимо",
     tagNameEmpty: "Името на тага не може да е празно",
     tagNameTooLong: "Името на тага не може да е по-дълго от 20 символа",
     tagCreated: "Тагът е създаден успешно",
@@ -825,7 +838,8 @@ export const translations: Record<Language, Record<string, string>> = {
     userBannedSuccessfully: "Потребителят е блокиран успешно",
     noDataLoaded: "Няма заредени данни",
     clickRefreshToLoad: "Натиснете Refresh за да заредите данни",
-    unableToEditUsername: "Вашата роля не ви позволява да редактирате потребителското си име.",
+    unableToEditUsername:
+      "Вашата роля не ви позволява да редактирате потребителското си име.",
 
     // Admin Dashboard
     toReview: "За преглед",
@@ -870,7 +884,8 @@ export const translations: Record<Language, Record<string, string>> = {
     activityUnlikePost: "Премахнато харесване на публикация {id}",
     activityLikeComment: "Хареса коментар {id}",
     activityUnlikeComment: "Премахнато харесване на коментар {id}",
-    activityReportSubmit: "Докладвано {targetType} {targetId}. Причина: {reason}",
+    activityReportSubmit:
+      "Докладвано {targetType} {targetId}. Причина: {reason}",
     activityReportResolve: "Докладът беше разрешен от администратор",
     activityContentApprove: "Одобрен {type} {id}",
     activityContentReject: "Отхвърлен {type} {id}. Причина: {reason}",
@@ -878,12 +893,12 @@ export const translations: Record<Language, Record<string, string>> = {
     activityUnbanUser: "Разблокиран потребител {username}",
     activity2faEnable: "Включена двуфакторна автентикация",
     activity2faDisable: "Изключена двуфакторна автентикация",
-    activityCategoryCreate: "Създадена категория \"{name}\"",
-    activityCategoryUpdate: "Обновена категория \"{name}\"",
-    activityCategoryDelete: "Изтрита категория \"{name}\"",
-    activityTagCreate: "Създаден таг \"{name}\"",
-    activityTagUpdate: "Обновен таг \"{name}\"",
-    activityTagDelete: "Изтрит таг \"{name}\"",
+    activityCategoryCreate: 'Създадена категория "{name}"',
+    activityCategoryUpdate: 'Обновена категория "{name}"',
+    activityCategoryDelete: 'Изтрита категория "{name}"',
+    activityTagCreate: 'Създаден таг "{name}"',
+    activityTagUpdate: 'Обновен таг "{name}"',
+    activityTagDelete: 'Изтрит таг "{name}"',
     activityReportStatusUpdate: "Обновен статус на доклад {id} на {status}",
     activityReportItemDelete: "Изтрит докобан {targetType} {targetId}",
 
@@ -937,7 +952,8 @@ export const translations: Record<Language, Record<string, string>> = {
     commentCannotBeEmpty: "Коментарът не може да бъде празен",
     mustBeLoggedInToComment:
       "Моля, влезте в системата, за да оставите коментар",
-    confirmDeleteComment: "Сигурни ли сте, че искате да изтриете този коментар?",
+    confirmDeleteComment:
+      "Сигурни ли сте, че искате да изтриете този коментар?",
 
     // Content Approval
     approve: "Одобри",
@@ -1032,7 +1048,8 @@ export const translations: Record<Language, Record<string, string>> = {
     accountDeletedBody:
       "Вашият акаунт беше перманентно изтрит от MangoTree. Това действие беше направено от администратор.",
     accountDeletedSuccessfully: "Акаунтът е изтрит успешно",
-    suspensionMessage: "Вашият акаунт е временно блокиран. Причина: {reason}. Блокировката ще бъде отменена на {unbanDate}. Моля, проверете имейла си за повече информация.",
+    suspensionMessage:
+      "Вашият акаунт е временно блокиран. Причина: {reason}. Блокировката ще бъде отменена на {unbanDate}. Моля, проверете имейла си за повече информация.",
 
     // Post Upload
     uploadPost: "Качване на публикация",
@@ -1057,9 +1074,12 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Moderation Errors
     postRejectedPrefix: "Публикацията е отхвърлена. Причина: {reason}",
-    postNotCooking: "Публикацията е отхвърлена. Причина: Публикацията не е свързана с готвене.",
-    postInappropriate: "Публикацията е отхвърлена. Причина: Съдържанието е неуместно.",
-    postAIServerError: "Публикацията е отхвърлена. Причина: Грешка в AI сървъра. Моля, опитайте по-късно.",
+    postNotCooking:
+      "Публикацията е отхвърлена. Причина: Публикацията не е свързана с готвене.",
+    postInappropriate:
+      "Публикацията е отхвърлена. Причина: Съдържанието е неуместно.",
+    postAIServerError:
+      "Публикацията е отхвърлена. Причина: Грешка в AI сървъра. Моля, опитайте по-късно.",
     postPendingAdminReview:
       "Публикацията ви беше изпратена и чака одобрение от администратор поради ограничения в AI услугата.",
     postPublishedSuccess: "Публикацията беше публикувана успешно!",
@@ -1068,8 +1088,10 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Comment Moderation Errors
     commentRejectedPrefix: "Коментарът е отхвърлен. Причина: {reason}",
-    commentInappropriate: "Коментарът е отхвърлен. Причина: Коментарът е неуместен.",
-    commentAIServerError: "Коментарът е отхвърлен. Причина: Грешка в AI сървъра. Моля, опитайте по-късно.",
+    commentInappropriate:
+      "Коментарът е отхвърлен. Причина: Коментарът е неуместен.",
+    commentAIServerError:
+      "Коментарът е отхвърлен. Причина: Грешка в AI сървъра. Моля, опитайте по-късно.",
     commentRejected: "Коментарът е отхвърлен.",
 
     // Account Settings
@@ -1156,7 +1178,8 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Generic
     actionFailed: "Действието не беше успешно",
-    mustBeLoggedIn: "Трябва да сте влезли в системата, за да извършите това действие",
+    mustBeLoggedIn:
+      "Трябва да сте влезли в системата, за да извършите това действие",
     verify: "Потвърди",
 
     // Generic errors
@@ -1198,7 +1221,8 @@ export const translations: Record<Language, Record<string, string>> = {
     verifying2FA: "Потвърждаване...",
     twoFACodeSent: "Код за потвърждение изпратен на имейла",
     twoFACodeVerified: "2FA потвърдена успешно",
-    failedToSendVerificationCode: "Неуспешно изпращане на код за верификация. Моля, опитайте отново.",
+    failedToSendVerificationCode:
+      "Неуспешно изпращане на код за верификация. Моля, опитайте отново.",
     twoFAEnabledSuccess: "Двуфакторната автентикация е активирана успешно",
     twoFADisabledSuccess: "Двуфакторната автентикация е деактивирана успешно",
     twoFACodeLabel: "6-цифрен код",
@@ -1221,7 +1245,11 @@ export const translations: Record<Language, Record<string, string>> = {
  * @param {Record<string, string>} params - Optional parameters for interpolation
  * @returns {string} The translated string with parameters replaced, or the key if not found
  */
-export const getTranslation = (language: Language, key: string, params?: Record<string, string>): string => {
+export const getTranslation = (
+  language: Language,
+  key: string,
+  params?: Record<string, string>,
+): string => {
   const translation = translations[language][key] || key;
 
   if (!params) return translation;

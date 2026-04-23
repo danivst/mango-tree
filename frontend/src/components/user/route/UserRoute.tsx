@@ -52,17 +52,19 @@ const UserRoute = ({ children }: UserRouteProps) => {
    * Admins should use the admin pages (e.g., /admin/dashboard) for management.
    */
   const sharePagePatterns = [
-    /^\/posts\/[^\/]+$/,           // /posts/:id
-    /^\/users\/[^\/]+$/,           // /users/:id (profiles)
-    /^\/account$/,                 // /account
-    /^\/account\/followers/,       // /account/followers
-    /^\/account\/following/,       // /account/following
+    /^\/posts\/[^\/]+$/, // /posts/:id
+    /^\/users\/[^\/]+$/, // /users/:id (profiles)
+    /^\/account$/, // /account
+    /^\/account\/followers/, // /account/followers
+    /^\/account\/following/, // /account/following
   ];
 
   /**
    * Check if current path matches any share page pattern
    */
-  const isSharePage = sharePagePatterns.some(pattern => pattern.test(location.pathname));
+  const isSharePage = sharePagePatterns.some((pattern) =>
+    pattern.test(location.pathname),
+  );
 
   /**
    * Admins have separate management interface. They should not access

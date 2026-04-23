@@ -21,8 +21,8 @@ import Footer from "../../../../components/global/Footer";
 import UserCard from "../../../../components/user/card/UserCard";
 
 // MUI Icon Imports
-import PersonOffIcon from '@mui/icons-material/PersonOff';
-import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
+import PersonOffIcon from "@mui/icons-material/PersonOff";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 
 /**
  * @interface User
@@ -242,13 +242,11 @@ const Followers = () => {
                 username={user.username}
                 profileImage={user.profileImage}
                 createdAt={user.createdAt}
-                isFollowing={isFollowing(user._id)} 
+                isFollowing={isFollowing(user._id)}
                 onToggleFollow={handleToggleFollow}
                 onUserClick={handleUserClick}
                 size="md"
-                
-                showActions={false} 
-                
+                showActions={false}
                 additionalActions={
                   <button
                     className="btn-danger btn-sm icon-btn"

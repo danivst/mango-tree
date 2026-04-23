@@ -1,7 +1,7 @@
 /**
  * @file Home.tsx
- * @description Main feed page for authenticated users. 
- * Orchestrates dual-mode content delivery ("Followed" vs "Suggested"), 
+ * @description Main feed page for authenticated users.
+ * Orchestrates dual-mode content delivery ("Followed" vs "Suggested"),
  * real-time feed searching with debouncing, and infinite pagination.
  */
 
@@ -20,8 +20,8 @@ import Footer from "../../../components/global/Footer";
 import { useSnackbar } from "../../../utils/snackbar";
 
 // MUI Icon Imports
-import RefreshIcon from '@mui/icons-material/Refresh';
-import SearchOffIcon from '@mui/icons-material/SearchOff';
+import RefreshIcon from "@mui/icons-material/Refresh";
+import SearchOffIcon from "@mui/icons-material/SearchOff";
 
 /**
  * @component Home
@@ -249,7 +249,15 @@ const Home = () => {
     } finally {
       setFeedLoading(false);
     }
-  }, [feedPage, feedLoading, feedHasMore, isSearching, activeSection, t, showError]);
+  }, [
+    feedPage,
+    feedLoading,
+    feedHasMore,
+    isSearching,
+    activeSection,
+    t,
+    showError,
+  ]);
 
   // Load more search results
   const loadMoreSearch = useCallback(async () => {

@@ -5,8 +5,8 @@
  * Used for login, register, and password reset pages to prevent logged-in users from accessing them.
  */
 
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../utils/useAuth';
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../utils/useAuth";
 
 /**
  * @interface PublicRouteProps
@@ -29,9 +29,9 @@ const PublicRoute = ({ children }: PublicRouteProps) => {
   const location = useLocation();
   const { isAuthenticated, loading } = useAuth();
 
-  const redirectParam = new URLSearchParams(location.search).get('redirect');
+  const redirectParam = new URLSearchParams(location.search).get("redirect");
   const redirectTarget =
-    redirectParam && redirectParam.startsWith('/') ? redirectParam : '/home';
+    redirectParam && redirectParam.startsWith("/") ? redirectParam : "/home";
 
   /**
    * Show loading state while checking authentication

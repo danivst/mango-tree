@@ -21,7 +21,13 @@ interface SecuritySettingsProps {
  * @component SecuritySettings
  * @description UI section for managing 2FA security settings.
  */
-const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user, setUser, t, showError, showSuccess }) => {
+const SecuritySettings: React.FC<SecuritySettingsProps> = ({
+  user,
+  setUser,
+  t,
+  showError,
+  showSuccess,
+}) => {
   const [showEnable2FAModal, setShowEnable2FAModal] = useState(false);
   const [settingsTwoFACode, setSettingsTwoFACode] = useState("");
   const [settingsVerifying2FA, setSettingsVerifying2FA] = useState(false);
@@ -34,7 +40,9 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user, setUser, t, s
     try {
       await authAPI.enable2FA();
       setShowEnable2FAModal(true);
-    } catch { showError(t("failedToSendVerificationCode")); }
+    } catch {
+      showError(t("failedToSendVerificationCode"));
+    }
   };
 
   /**
@@ -55,8 +63,11 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user, setUser, t, s
       setShowEnable2FAModal(false);
       setSettingsTwoFACode("");
       showSuccess(t("twoFAEnabledSuccess"));
-    } catch { showError(t("actionFailed")); }
-    finally { setSettingsVerifying2FA(false); }
+    } catch {
+      showError(t("actionFailed"));
+    } finally {
+      setSettingsVerifying2FA(false);
+    }
   };
 
   return (
@@ -66,13 +77,27 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user, setUser, t, s
         <p className="twofa-description">{t("twoFactorDescription")}</p>
         {user?.twoFactorEnabled ? (
           <>
-            <span className="twofa-status-enabled text-nowrap">{t("twoFAEnabled")}</span>
-            <button className="btn-secondary btn-sm text-nowrap" onClick={() => authAPI.disable2FA().then(() => setUser({...user, twoFactorEnabled: false}))}>
+            <span className="twofa-status-enabled text-nowrap">
+              {t("twoFAEnabled")}
+            </span>
+            <button
+              className="btn-secondary btn-sm text-nowrap"
+              onClick={() =>
+                authAPI
+                  .disable2FA()
+                  .then(() => setUser({ ...user, twoFactorEnabled: false }))
+              }
+            >
               {t("disable2FA")}
             </button>
           </>
         ) : (
-          <button className="btn-primary btn-sm text-nowrap" onClick={handleEnable2FA}>{t("enable2FA")}</button>
+          <button
+            className="btn-primary btn-sm text-nowrap"
+            onClick={handleEnable2FA}
+          >
+            {t("enable2FA")}
+          </button>
         )}
       </div>
 
@@ -90,15 +115,32 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user, setUser, t, s
                   maxLength={6}
                   className="form-input twofa-code-input"
                   value={settingsTwoFACode}
-                  onChange={(e) => setSettingsTwoFACode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={(e) =>
+                    setSettingsTwoFACode(
+                      e.target.value.replace(/\D/g, "").slice(0, 6),
+                    )
+                  }
                   placeholder={t("twoFACodePlaceholder")}
                   autoFocus
                   disabled={settingsVerifying2FA}
                 />
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowEnable2FAModal(false)} disabled={settingsVerifying2FA}>{t("cancel")}</button>
-                <button type="submit" className="btn-primary" disabled={settingsVerifying2FA || settingsTwoFACode.length !== 6}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowEnable2FAModal(false)}
+                  disabled={settingsVerifying2FA}
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={
+                    settingsVerifying2FA || settingsTwoFACode.length !== 6
+                  }
+                >
                   {settingsVerifying2FA ? t("verifying2FA") : t("verify")}
                 </button>
               </div>

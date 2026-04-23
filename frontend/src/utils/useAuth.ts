@@ -34,9 +34,9 @@
  * @property {() => string | null} getUsername - Get username from user data
  */
 
-import { useMemo, useState, useEffect } from 'react';
-import { usersAPI } from '../services/api';
-import type { UserProfile, RoleType } from './types';
+import { useMemo, useState, useEffect } from "react";
+import { usersAPI } from "../services/api";
+import type { UserProfile, RoleType } from "./types";
 
 /**
  * Custom hook for authentication state and operations.
@@ -61,7 +61,7 @@ export const useAuth = () => {
       } catch (err) {
         // If we get 401, user is not authenticated
         setUser(null);
-        setError('Not authenticated');
+        setError("Not authenticated");
       } finally {
         setLoading(false);
       }

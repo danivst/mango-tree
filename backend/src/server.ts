@@ -28,7 +28,7 @@ import tagRoutes from "./routes/tag-routes";
 import notificationRoutes from "./routes/notification-routes";
 import adminRoutes from "./routes/admin-routes";
 import translateRoutes from "./routes/translate-routes";
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
 
 const app: Application = express();
 
@@ -39,19 +39,21 @@ app.use(cookieParser());
  */
 
 // CORS: Allow frontend origins to access the API
-app.use(cors({
-  origin: [
-    "http://192.168.0.21:5173",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: [
+      "http://192.168.0.21:5173",
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 
 // Parse JSON request bodies with 10MB limit (for large base64 images)
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
 
 // Structured request logging middleware using pino
 app.use((req, res, next) => {
@@ -65,8 +67,8 @@ app.use((req, res, next) => {
  */
 
 // Health check endpoint
-app.get('/api/test', (req, res) =>
-  res.json({ ok: true, message: 'Backend works!' })
+app.get("/api/test", (req, res) =>
+  res.json({ ok: true, message: "Backend works!" }),
 );
 
 // Router mounts
@@ -94,12 +96,15 @@ app.use(errorHandler);
  */
 connectDB()
   .then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, "0.0.0.0", () => {
       logger.info(`Server running on port ${PORT}`);
     });
   })
   .catch((error) => {
-    logger.error(error, "Failed to start server due to MongoDB connection error");
+    logger.error(
+      error,
+      "Failed to start server due to MongoDB connection error",
+    );
     process.exit(1);
   });
 

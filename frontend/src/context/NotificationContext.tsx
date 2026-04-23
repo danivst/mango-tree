@@ -4,7 +4,13 @@
  * Handles fetching, caching, and updating unread notification counts in real-time.
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { Notification } from "../services/api";
 import { notificationsAPI } from "../services/api";
 import { useAuth } from "../utils/useAuth";
@@ -29,7 +35,9 @@ interface NotificationContextProps {
   clearUnreadCount: () => void;
 }
 
-const NotificationContext = createContext<NotificationContextProps | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextProps | undefined>(
+  undefined,
+);
 
 /**
  * @file NotificationContext.tsx
@@ -60,7 +68,9 @@ const NotificationContext = createContext<NotificationContextProps | undefined>(
  * @requires getToken / getUserRole - Auth utilities for determining if user should receive notifications
  */
 
-export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const { isAuthenticated, user, loading } = useAuth();
 
@@ -83,7 +93,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!isAuthenticated || loading || !user) {
       return;
     }
-    if (user.role === 'admin') {
+    if (user.role === "admin") {
       // Admins don't need notifications, skip fetching entirely
       return;
     }
@@ -155,7 +165,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
    */
   useEffect(() => {
     // Skip polling entirely for admin users
-    if (user?.role === 'admin') {
+    if (user?.role === "admin") {
       return;
     }
 
@@ -187,7 +197,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, [fetchUnreadCount]);
 
   return (
-    <NotificationContext.Provider value={{ unreadCount, refreshUnreadCount, markAllAsRead, decrementUnreadCount, clearUnreadCount }}>
+    <NotificationContext.Provider
+      value={{
+        unreadCount,
+        refreshUnreadCount,
+        markAllAsRead,
+        decrementUnreadCount,
+        clearUnreadCount,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );
@@ -202,7 +220,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 export const useNotifications = () => {
   const ctx = useContext(NotificationContext);
   if (!ctx) {
-    throw new Error("useNotifications must be used within NotificationProvider");
+    throw new Error(
+      "useNotifications must be used within NotificationProvider",
+    );
   }
   return ctx;
 };

@@ -1,6 +1,6 @@
 /**
  * @file auth-main-controller.ts
- * @description Core authentication controller managing user lifecycle events: 
+ * @description Core authentication controller managing user lifecycle events:
  * registration, secure login with 2FA support, and session termination.
  * Integrates geolocation tracking for security notifications and automated bilingual emails.
  */
@@ -32,7 +32,7 @@ import { clearAuthCookies, setAuthCookies } from "../../utils/auth-cookies";
 
 /**
  * Regular expression for basic email validation.
- * Ensures the string contains characters before and after the '@' symbol 
+ * Ensures the string contains characters before and after the '@' symbol
  * and includes a domain extension (e.g., .com, .org).
  * @constant {RegExp}
  */
@@ -52,12 +52,20 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters long."),
-  email: z.string().regex(emailRegex, "Invalid email format.").email("Invalid email format."),
-  password: z.string().min(8, "Password must be at least 8 characters long.")
+  email: z
+    .string()
+    .regex(emailRegex, "Invalid email format.")
+    .email("Invalid email format."),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long.")
     .regex(/[A-Z]/, "Password must contain at least one capital letter.")
     .regex(/[a-z]/, "Password must contain at least one lower case letter.")
     .regex(/[0-9]/, "Password must contain at least one number.")
-    .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character."),
+    .regex(
+      /[!@#$%^&*(),.?":{}|<>]/,
+      "Password must contain at least one special character.",
+    ),
 });
 
 /**

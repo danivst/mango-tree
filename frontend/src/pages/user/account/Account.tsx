@@ -23,10 +23,10 @@ import "./Account.css";
 import Footer from "../../../components/global/Footer";
 
 // MUI Icon Imports
-import TranslateIcon from '@mui/icons-material/Translate';
-import LanguageIcon from '@mui/icons-material/Language';
-import EditIcon from '@mui/icons-material/Edit';
-import ArticleIcon from '@mui/icons-material/Article';
+import TranslateIcon from "@mui/icons-material/Translate";
+import LanguageIcon from "@mui/icons-material/Language";
+import EditIcon from "@mui/icons-material/Edit";
+import ArticleIcon from "@mui/icons-material/Article";
 
 /**
  * @interface Category
@@ -50,8 +50,8 @@ interface Category {
 
 /**
  * @component Account
- * @description Renders the personal account dashboard. 
- * Handles complex logic for profile image previews, bio translation toggles, and 
+ * @description Renders the personal account dashboard.
+ * Handles complex logic for profile image previews, bio translation toggles, and
  * category-based post filtering.
  * * Features:
  * - View personal profile (username, email, role)
@@ -122,7 +122,8 @@ const Account = () => {
       if (import.meta.env.DEV) {
         console.error("Failed to fetch categories:", error);
       }
-      showError(t("failedLoadCategories"));}
+      showError(t("failedLoadCategories"));
+    }
   };
 
   const handleProfileImageClick = () => {

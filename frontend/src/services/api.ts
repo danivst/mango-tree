@@ -1,7 +1,7 @@
 /**
  * @file api.ts
  * @description Central HTTP client and API service definitions for the MangoTree application.
- * Configures Axios with interceptors for cookie-based session handling, 
+ * Configures Axios with interceptors for cookie-based session handling,
  * and account status redirection.
  */
 
@@ -29,7 +29,7 @@ import type {
  */
 const api = axios.create({
   baseURL:
-    import.meta.env.DEV && typeof window !== 'undefined'
+    import.meta.env.DEV && typeof window !== "undefined"
       ? "/api"
       : "http://192.168.0.21:3000/api",
   headers: {
@@ -276,7 +276,9 @@ export const authAPI = {
    * @returns {Promise<{ message: string }>} Response with confirmation message
    */
   enable2FA: async (): Promise<{ message: string }> => {
-    const response = await api.post<{ message: string }>("/users/me/2fa/enable");
+    const response = await api.post<{ message: string }>(
+      "/users/me/2fa/enable",
+    );
     return response.data;
   },
 
@@ -287,7 +289,9 @@ export const authAPI = {
    * @returns {Promise<{ message: string }>} Response with confirmation message
    */
   disable2FA: async (): Promise<{ message: string }> => {
-    const response = await api.post<{ message: string }>("/users/me/2fa/disable");
+    const response = await api.post<{ message: string }>(
+      "/users/me/2fa/disable",
+    );
     return response.data;
   },
 };
@@ -317,9 +321,7 @@ export const notificationsAPI = {
    * @param {string} notificationId - The ID of the notification to mark
    * @returns {Promise<{ message: string }>} Response with confirmation message
    */
-  markAsRead: async (
-    notificationId: string,
-  ): Promise<{ message: string }> => {
+  markAsRead: async (notificationId: string): Promise<{ message: string }> => {
     const response = await api.put(`/notifications/${notificationId}/read`, {});
     return response.data;
   },
@@ -482,11 +484,13 @@ export const postsAPI = {
    */
   translatePost: async (
     postId: string,
-    targetLang: 'en' | 'bg',
+    targetLang: "en" | "bg",
   ): Promise<{ title: string; content: string; tags?: string[] }> => {
-    const response = await api.post<{ title: string; content: string; tags?: string[] }>(
-      `/posts/${postId}/translate?targetLang=${targetLang}`,
-    );
+    const response = await api.post<{
+      title: string;
+      content: string;
+      tags?: string[];
+    }>(`/posts/${postId}/translate?targetLang=${targetLang}`);
     return response.data;
   },
 
@@ -500,7 +504,7 @@ export const postsAPI = {
    */
   translateComment: async (
     commentId: string,
-    targetLang: 'en' | 'bg',
+    targetLang: "en" | "bg",
   ): Promise<{ text: string }> => {
     const response = await api.post<{ text: string }>(
       `/comments/${commentId}/translate?targetLang=${targetLang}`,
@@ -656,9 +660,7 @@ export const usersAPI = {
    * @param {string} followerId - The user ID to remove from followers
    * @returns {Promise<{ message: string }>} Response with confirmation message
    */
-  removeFollower: async (
-    followerId: string,
-  ): Promise<{ message: string }> => {
+  removeFollower: async (followerId: string): Promise<{ message: string }> => {
     const response = await api.delete(`/users/followers/${followerId}`);
     return response.data;
   },
@@ -694,7 +696,7 @@ export const reportsAPI = {
    * @returns {Promise<{ message: string }>} Response with confirmation message
    */
   createReport: async (
-    targetType: 'post' | 'comment' | 'user',
+    targetType: "post" | "comment" | "user",
     targetId: string,
     reason: string,
   ): Promise<{ message: string }> => {

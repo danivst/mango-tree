@@ -113,11 +113,9 @@ export const enable2FA = async (
       user.twoFactorCode = undefined;
       user.twoFactorCodeExpiry = undefined;
       await user.save();
-      return res
-        .status(500)
-        .json({
-          message: "failed to send verification email. please try again.",
-        });
+      return res.status(500).json({
+        message: "failed to send verification email. please try again.",
+      });
     }
 
     return res.json({
@@ -189,11 +187,9 @@ export const verify2FA = async (
       user.twoFactorCode = undefined;
       user.twoFactorCodeExpiry = undefined;
       await user.save();
-      return res
-        .status(400)
-        .json({
-          message: "verification code has expired. please log in again.",
-        });
+      return res.status(400).json({
+        message: "verification code has expired. please log in again.",
+      });
     }
 
     // Compare provided code against stored code

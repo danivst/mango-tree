@@ -25,7 +25,9 @@ const DeleteAccount: React.FC<any> = ({ user, isAdmin, t, showError }) => {
     if (!user) return;
     setDeleting(true);
     try {
-      const url = isAdmin ? `/users/${user._id}?reason=${encodeURIComponent(deleteReason)}` : `/users/${user._id}`;
+      const url = isAdmin
+        ? `/users/${user._id}?reason=${encodeURIComponent(deleteReason)}`
+        : `/users/${user._id}`;
       await api.delete(url);
       sessionStorage.setItem("accountDeleted", "true");
       navigate("/login");
@@ -38,20 +40,44 @@ const DeleteAccount: React.FC<any> = ({ user, isAdmin, t, showError }) => {
   return (
     <>
       <div className="form-group">
-        {!isAdmin && <button className="btn-danger" onClick={() => setShowDeleteModal(true)}>{t("deleteAccount")}</button>}
+        {!isAdmin && (
+          <button
+            className="btn-danger"
+            onClick={() => setShowDeleteModal(true)}
+          >
+            {t("deleteAccount")}
+          </button>
+        )}
       </div>
-      
+
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal modal-danger">
-            <h2 className="modal-title">{isAdmin ? t("reasonForDeletion") : t("deleteAccount")}</h2>
+            <h2 className="modal-title">
+              {isAdmin ? t("reasonForDeletion") : t("deleteAccount")}
+            </h2>
             <p className="modal-text">{t("deleteAccountWarning")}</p>
             {isAdmin && (
-              <textarea className="form-textarea" value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)} required placeholder={t("reasonForDeletionPlaceholder")} />
+              <textarea
+                className="form-textarea"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                required
+                placeholder={t("reasonForDeletionPlaceholder")}
+              />
             )}
             <div className="modal-actions mt-5">
-              <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>{t("cancel")}</button>
-              <button className="btn-danger" onClick={handleDelete} disabled={deleting || (isAdmin && !deleteReason)}>
+              <button
+                className="btn-secondary"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                {t("cancel")}
+              </button>
+              <button
+                className="btn-danger"
+                onClick={handleDelete}
+                disabled={deleting || (isAdmin && !deleteReason)}
+              >
                 {deleting ? t("loading") : t("delete")}
               </button>
             </div>

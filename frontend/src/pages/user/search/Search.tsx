@@ -20,8 +20,8 @@ import Footer from "../../../components/global/Footer";
 import UserCard from "../../../components/user/card/UserCard";
 
 // MUI Icon Imports
-import RefreshIcon from '@mui/icons-material/Refresh';
-import PersonOffIcon from '@mui/icons-material/PersonOff';
+import RefreshIcon from "@mui/icons-material/Refresh";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
 
 /**
  * @interface User
@@ -41,8 +41,8 @@ interface User {
 
 /**
  * @component Search
- * @description Renders the user search interface. 
- * Manages complex filtering logic that prioritizes followed users in search results 
+ * @description Renders the user search interface.
+ * Manages complex filtering logic that prioritizes followed users in search results
  * and provides immediate UI feedback for social actions.
  * * Features:
  * - Debounced search input
@@ -137,9 +137,10 @@ const Search = () => {
           return user;
         }),
       );
-      
+
       const targetUser = users.find((u) => u._id === userId);
-      const isCurrentlyFollowing = targetUser?.followers.includes(currentUserId);
+      const isCurrentlyFollowing =
+        targetUser?.followers.includes(currentUserId);
       showSuccess(
         isCurrentlyFollowing
           ? t("successfullyUnfollowedUser")
@@ -239,18 +240,18 @@ const Search = () => {
         ) : (
           <div className="cards-grid">
             {filteredUsers.map((user) => (
-    <UserCard
-      key={user._id}
-      userId={user._id}
-      username={user.username}
-      profileImage={user.profileImage}
-      createdAt={user.createdAt}
-      isFollowing={!!isFollowing(user)}
-      onToggleFollow={toggleFollow}
-      onUserClick={handleUsernameClick}
-      size="md" // or 'lg' if you prefer the larger look from your current Search page
-    />
-  ))}
+              <UserCard
+                key={user._id}
+                userId={user._id}
+                username={user.username}
+                profileImage={user.profileImage}
+                createdAt={user.createdAt}
+                isFollowing={!!isFollowing(user)}
+                onToggleFollow={toggleFollow}
+                onUserClick={handleUsernameClick}
+                size="md" // or 'lg' if you prefer the larger look from your current Search page
+              />
+            ))}
           </div>
         )}
 

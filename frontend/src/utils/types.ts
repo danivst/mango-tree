@@ -13,39 +13,53 @@
  * User roles for access control.
  * @typedef {'user' | 'admin'} RoleType
  */
-export type RoleType = 'user' | 'admin';
+export type RoleType = "user" | "admin";
 
 /**
  * Types of notifications that can be sent to users.
  * @typedef {'like' | 'comment' | 'reply' | 'follow' | 'report_feedback' | 'post_deleted' | 'system'} NotificationType
  */
-export type NotificationType = 'like' | 'comment' | 'reply' | 'follow' | 'report_feedback' | 'deleted' | 'fail' | 'success' | 'system' | 'new_login';
+export type NotificationType =
+  | "like"
+  | "comment"
+  | "reply"
+  | "follow"
+  | "report_feedback"
+  | "deleted"
+  | "fail"
+  | "success"
+  | "system"
+  | "new_login";
 
 /**
  * Content types that can be reported.
  * @typedef {'post' | 'comment' | 'user'} ReportTargetType
  */
-export type ReportTargetType = 'post' | 'comment' | 'user';
+export type ReportTargetType = "post" | "comment" | "user";
 
 /**
  * Status values for content reports.
  * @typedef {'pending' | 'reviewed' | 'rejected' | 'action_taken'} ReportStatusType
  */
-export type ReportStatusType = 'pending' | 'reviewed' | 'rejected' | 'action_taken';
+export type ReportStatusType =
+  | "pending"
+  | "reviewed"
+  | "rejected"
+  | "action_taken";
 
 /**
  * Supported UI theme names.
  * @typedef {'dark' | 'purple' | 'cream' | 'light' | 'mango'} Theme
  */
-export type Theme = typeof ThemeValues[number];
-export const ThemeValues = ['dark', 'purple', 'cream', 'light', 'mango'];
+export type Theme = (typeof ThemeValues)[number];
+export const ThemeValues = ["dark", "purple", "cream", "light", "mango"];
 
 /**
  * Supported language codes.
  * @typedef {'en' | 'bg'} Language
  */
-export type Language = typeof LanguageValues[number];
-export const LanguageValues = ['en', 'bg'];
+export type Language = (typeof LanguageValues)[number];
+export const LanguageValues = ["en", "bg"];
 
 // ============================================================================
 // Translation Types
@@ -250,7 +264,7 @@ export interface Tag {
   _id: string;
   name: string;
   translations?: TagTranslations;
-  type?: 'meal_time' | 'cuisine' | 'difficulty' | 'meal_type';
+  type?: "meal_time" | "cuisine" | "difficulty" | "meal_type";
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -430,7 +444,7 @@ export interface BannedUser {
  */
 export interface FlaggedContent {
   _id: string;
-  type: 'post' | 'comment' | 'image';
+  type: "post" | "comment" | "image";
   content: any;
   authorId: {
     _id: string;

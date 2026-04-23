@@ -2,7 +2,7 @@
  * @file UserProfile.tsx
  * @description Public user profile page showing another user's profile and posts.
  * Displays user info (username, bio, join date, stats) and their published posts.
- * Provides interactive features such as following/unfollowing, reporting users, 
+ * Provides interactive features such as following/unfollowing, reporting users,
  * and category-based post filtering.
  */
 
@@ -30,19 +30,19 @@ import PastUsernames from "../../../components/user/PastUsernames";
 import Footer from "../../../components/global/Footer";
 
 // MUI Icon Imports
-import RefreshIcon from '@mui/icons-material/Refresh';
-import ErrorIcon from '@mui/icons-material/Error';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
-import WarningIcon from '@mui/icons-material/Warning';
-import TranslateIcon from '@mui/icons-material/Translate';
-import LanguageIcon from '@mui/icons-material/Language';
-import ArticleIcon from '@mui/icons-material/Article';
+import RefreshIcon from "@mui/icons-material/Refresh";
+import ErrorIcon from "@mui/icons-material/Error";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
+import WarningIcon from "@mui/icons-material/Warning";
+import TranslateIcon from "@mui/icons-material/Translate";
+import LanguageIcon from "@mui/icons-material/Language";
+import ArticleIcon from "@mui/icons-material/Article";
 
 /**
  * @component UserProfile
  * @description Renders the profile view of a specific user based on the route parameter.
- * Handles data fetching for user metadata and authored posts, while managing 
+ * Handles data fetching for user metadata and authored posts, while managing
  * social interaction states like following and reporting.
  * * Features:
  * - Publicly accessible profile data
@@ -70,7 +70,10 @@ const UserProfile = () => {
    */
   const LoadingSpinner = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => (
     <div className={`loading-spinner loading-spinner-${size}`}>
-      <RefreshIcon className="spin" sx={{ fontSize: size === 'sm' ? 20 : size === 'md' ? 32 : 48 }} />
+      <RefreshIcon
+        className="spin"
+        sx={{ fontSize: size === "sm" ? 20 : size === "md" ? 32 : 48 }}
+      />
     </div>
   );
 
@@ -313,7 +316,11 @@ const UserProfile = () => {
     const order = ["recipe", "question", "flex"];
     return categories
       .filter((cat) => order.includes(cat.name.toLowerCase()))
-      .sort((a, b) => order.indexOf(a.name.toLowerCase()) - order.indexOf(b.name.toLowerCase()));
+      .sort(
+        (a, b) =>
+          order.indexOf(a.name.toLowerCase()) -
+          order.indexOf(b.name.toLowerCase()),
+      );
   }, [categories]);
 
   const filteredPosts = useMemo(() => {
@@ -358,7 +365,7 @@ const UserProfile = () => {
           <div className="mb-6">
             <GoBackButton />
           </div>
-          
+
           <div className="profile-header">
             <div className="profile-pic-container">
               {user.profileImage ? (
@@ -389,7 +396,9 @@ const UserProfile = () => {
                     <button
                       onClick={handleToggleFollow}
                       className={`btn-secondary post-action-btn ${isFollowing(user._id) ? "btn-following" : ""}`}
-                      title={isFollowing(user._id) ? t("unfollow") : t("follow")}
+                      title={
+                        isFollowing(user._id) ? t("unfollow") : t("follow")
+                      }
                     >
                       {isFollowing(user._id) ? (
                         <PersonRemoveIcon sx={{ fontSize: 18 }} />
@@ -423,11 +432,15 @@ const UserProfile = () => {
                   <div className="stat-label">{t("posts")}</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-value">{user.followers?.length || 0}</div>
+                  <div className="stat-value">
+                    {user.followers?.length || 0}
+                  </div>
                   <div className="stat-label">{t("followers")}</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-value">{user.following?.length || 0}</div>
+                  <div className="stat-value">
+                    {user.following?.length || 0}
+                  </div>
                   <div className="stat-label">{t("following")}</div>
                 </div>
               </div>
@@ -450,7 +463,9 @@ const UserProfile = () => {
                         <LanguageIcon sx={{ fontSize: 16 }} />
                       )}
                       <span>
-                        {showBioTranslation ? t("viewOriginal") : t("translate")}
+                        {showBioTranslation
+                          ? t("viewOriginal")
+                          : t("translate")}
                       </span>
                     </button>
                   )}
@@ -464,7 +479,10 @@ const UserProfile = () => {
           )}
 
           {user.pastUsernames && user.pastUsernames.length > 0 && (
-            <PastUsernames pastUsernames={user.pastUsernames} className="mb-6" />
+            <PastUsernames
+              pastUsernames={user.pastUsernames}
+              className="mb-6"
+            />
           )}
 
           <hr className="page-divider" />
@@ -492,7 +510,9 @@ const UserProfile = () => {
           {filteredPosts.length === 0 ? (
             <EmptyState
               icon={<ArticleIcon sx={{ fontSize: 48, opacity: 0.5 }} />}
-              title={selectedCategoryId ? t("noPostsFound") : t("noPostsAvailable")}
+              title={
+                selectedCategoryId ? t("noPostsFound") : t("noPostsAvailable")
+              }
             />
           ) : (
             <div className="cards-grid posts-grid">
@@ -507,7 +527,10 @@ const UserProfile = () => {
           isOpen={showReportModal}
           type="warning"
           title={t("reportUsername")}
-          message={t("confirmReportUser").replace("{username}", `@${user?.username || ""}`)}
+          message={t("confirmReportUser").replace(
+            "{username}",
+            `@${user?.username || ""}`,
+          )}
           confirmText={reportSubmitting ? t("loading") : t("yes")}
           cancelText={t("no")}
           onConfirm={handleReportUser}

@@ -25,7 +25,11 @@ const NotFound = () => {
       <div className="not-found-content">
         {/* Logo and Brand */}
         <div className="logo-container">
-          <img src="/mangotree-logo.png" alt="MangoTree" className="not-found-logo" />
+          <img
+            src="/mangotree-logo.png"
+            alt="MangoTree"
+            className="not-found-logo"
+          />
           <p className="brand-name">MangoTree</p>
         </div>
         {/* 404 Number */}
@@ -33,7 +37,8 @@ const NotFound = () => {
         {/* Message */}
         <h2 className="not-found-title">{t("pageNotFound")}</h2>
         <p className="not-found-message">
-          {t("pageNotFoundMessage") || "The page you're looking for doesn't exist."}
+          {t("pageNotFoundMessage") ||
+            "The page you're looking for doesn't exist."}
         </p>
         {/* Action */}
         <button className="btn-primary not-found-button" onClick={handleGoHome}>

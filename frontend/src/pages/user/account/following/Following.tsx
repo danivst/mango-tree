@@ -21,7 +21,7 @@ import Footer from "../../../../components/global/Footer";
 import UserCard from "../../../../components/user/card/UserCard";
 
 // MUI Icon Imports
-import PersonOffIcon from '@mui/icons-material/PersonOff';
+import PersonOffIcon from "@mui/icons-material/PersonOff";
 
 /**
  * @interface User

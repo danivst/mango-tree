@@ -367,7 +367,11 @@ const UserSidebar = () => {
           {!isCollapsed && (
             <>
               <div className="sidebar-logo">
-                <img src="/mangotree-logo.png" alt="MangoTree" className="logo-placeholder" />
+                <img
+                  src="/mangotree-logo.png"
+                  alt="MangoTree"
+                  className="logo-placeholder"
+                />
                 <h2 className="sidebar-title">MangoTree</h2>
               </div>
               <div className="sidebar-divider"></div>

@@ -22,7 +22,7 @@ import "../../../styles/shared.css";
 import Footer from "../../../components/global/Footer";
 
 // MUI Icon Import
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import LanguageSwitcher from "../../login/LanguageSwitcher";
 
 /**
@@ -42,7 +42,11 @@ const LandingPage = () => {
       <header className="landing-header">
         <div className="header-content">
           <div className="header-logo">
-            <img src="/mangotree-logo.png" alt="MangoTree" className="header-logo-img" />
+            <img
+              src="/mangotree-logo.png"
+              alt="MangoTree"
+              className="header-logo-img"
+            />
             <span className="header-title">MangoTree</span>
           </div>
           <div className="header-actions">
@@ -61,7 +65,10 @@ const LandingPage = () => {
               {t("signin")}
             </button>
             {/* Language Switcher: Toggles between English and Bulgarian */}
-            <LanguageSwitcher language={language} onLanguageChange={setLanguage}  />
+            <LanguageSwitcher
+              language={language}
+              onLanguageChange={setLanguage}
+            />
           </div>
         </div>
       </header>

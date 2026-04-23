@@ -55,9 +55,9 @@ interface ThemeLanguageContextProps {
   setLanguageImmediate: (lang: Language) => void;
 }
 
-const ThemeLanguageContext = createContext<ThemeLanguageContextProps | undefined>(
-  undefined,
-);
+const ThemeLanguageContext = createContext<
+  ThemeLanguageContextProps | undefined
+>(undefined);
 
 /**
  * @file ThemeLanguageContext.tsx
@@ -135,7 +135,9 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
           setLanguageState(user.language as Language);
         }
       } catch (error) {
-        console.log("[ThemeLanguage] Error fetching preferences, using defaults");
+        console.log(
+          "[ThemeLanguage] Error fetching preferences, using defaults",
+        );
       }
     };
 
@@ -179,7 +181,10 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
         root.style.setProperty("--theme-bg", "#FFFFFF"); // White background for main content
         root.style.setProperty("--theme-accent", "#FFFFFF"); // White for cards, buttons
         root.style.setProperty("--theme-text", "#E77728"); // Orange for text
-        root.style.setProperty("--theme-sidebar-bg", "linear-gradient(to bottom, #ffd151, #ffbc40)"); // Yellow-orange gradient for sidebar
+        root.style.setProperty(
+          "--theme-sidebar-bg",
+          "linear-gradient(to bottom, #ffd151, #ffbc40)",
+        ); // Yellow-orange gradient for sidebar
         break;
     }
   }, [theme]);
@@ -202,14 +207,20 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
    * @param {Theme} [updates.theme] - Optional theme to update
    * @param {Language} [updates.language] - Optional language to update
    */
-  const syncPreferenceToBackend = async (updates: { theme?: Theme; language?: Language }) => {
+  const syncPreferenceToBackend = async (updates: {
+    theme?: Theme;
+    language?: Language;
+  }) => {
     try {
       await usersAPI.updateProfile({
         theme: updates.theme,
         language: updates.language,
       } as any);
     } catch (error) {
-      console.error("[ThemeLanguage] Failed to sync preference to backend:", error);
+      console.error(
+        "[ThemeLanguage] Failed to sync preference to backend:",
+        error,
+      );
       // Non-critical: continue; cookie already saved
     }
   };
@@ -266,7 +277,14 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <ThemeLanguageContext.Provider
-      value={{ theme, setTheme, language, setLanguage, setThemeImmediate, setLanguageImmediate }}
+      value={{
+        theme,
+        setTheme,
+        language,
+        setLanguage,
+        setThemeImmediate,
+        setLanguageImmediate,
+      }}
     >
       {children}
     </ThemeLanguageContext.Provider>

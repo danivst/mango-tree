@@ -5,7 +5,13 @@
  * Implements a consistent pattern: each entity has raw data + loading/error/fetched state.
  */
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import {
   adminAPI,
   Category,
@@ -174,7 +180,9 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [usersError, setUsersError] = useState<string | null>(null);
   const [bannedUsersError, setBannedUsersError] = useState<string | null>(null);
   const [reportsError, setReportsError] = useState<string | null>(null);
-  const [flaggedContentError, setFlaggedContentError] = useState<string | null>(null);
+  const [flaggedContentError, setFlaggedContentError] = useState<string | null>(
+    null,
+  );
 
   // ========== FETCHED FLAGS ==========
   const [categoriesFetched, setCategoriesFetched] = useState(false);
