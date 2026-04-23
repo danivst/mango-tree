@@ -6,7 +6,8 @@ import { Category as SharedCategory } from "@mangotree/shared";
  * @description Mongoose document interface for Category model.
  * Extends the shared Category interface with Mongoose Document.
  */
-export interface ICategory extends Document, Omit<SharedCategory, '_id' | 'createdAt' | 'updatedAt'> {
+export interface ICategory
+  extends Document, Omit<SharedCategory, "_id" | "createdAt" | "updatedAt"> {
   _id: mongoose.Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;

@@ -5,4 +5,4 @@
  */
 
 // Re-export all shared types
-export * from '@mangotree/shared';
+export * from "@mangotree/shared";

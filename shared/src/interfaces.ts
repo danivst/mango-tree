@@ -4,7 +4,18 @@
  * These interfaces are simplified for cross-platform compatibility.
  */
 
-import { RoleType, ThemeType, LanguageType, NotificationType, ReportTargetType, ReportStatusType, Translation, NotificationPreferences, CategoryTranslations, TagTranslations } from './types';
+import {
+  RoleType,
+  ThemeType,
+  LanguageType,
+  NotificationType,
+  ReportTargetType,
+  ReportStatusType,
+  Translation,
+  NotificationPreferences,
+  CategoryTranslations,
+  TagTranslations,
+} from "./types";
 
 // ============================================================================
 // User Interfaces

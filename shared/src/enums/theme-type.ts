@@ -6,18 +6,18 @@
 
 const ThemeTypeValue = {
   /** Dark mode theme */
-  DARK: 'dark' as const,
+  DARK: "dark" as const,
   /** Purple accent theme */
-  PURPLE: 'purple' as const,
+  PURPLE: "purple" as const,
   /** Cream/Neutral theme */
-  CREAM: 'cream' as const,
+  CREAM: "cream" as const,
   /** Standard Light mode theme */
-  LIGHT: 'light' as const,
+  LIGHT: "light" as const,
   /** Default MangoTree brand theme */
-  MANGO: 'mango' as const
+  MANGO: "mango" as const,
 };
 
-export type ThemeType = typeof ThemeTypeValue[keyof typeof ThemeTypeValue];
+export type ThemeType = (typeof ThemeTypeValue)[keyof typeof ThemeTypeValue];
 
 export { ThemeTypeValue };
 export default ThemeTypeValue;

@@ -9,28 +9,29 @@
  */
 const NotificationType = {
   /** Post received a like */
-  LIKE: 'like' as const,
+  LIKE: "like" as const,
   /** Post received a new comment */
-  COMMENT: 'comment' as const,
+  COMMENT: "comment" as const,
   /** Comment received a reply */
-  REPLY: 'reply' as const,
+  REPLY: "reply" as const,
   /** User started following you */
-  FOLLOW: 'follow' as const,
+  FOLLOW: "follow" as const,
   /** Report received an admin's decision/response */
-  REPORT_FEEDBACK: 'report_feedback' as const,
+  REPORT_FEEDBACK: "report_feedback" as const,
   /** Post was deleted */
-  DELETED: 'deleted' as const,
+  DELETED: "deleted" as const,
   /** Post/comment was successfully uploaded */
-  SUCCESS: 'success' as const,
+  SUCCESS: "success" as const,
   /** Post/comment was unsuccessfully uploaded */
-  FAIL: 'fail' as const,
+  FAIL: "fail" as const,
   /** System announcement or alert */
-  SYSTEM: 'system' as const,
+  SYSTEM: "system" as const,
   /** New login to account detected */
-  NEW_LOGIN: 'new_login' as const
+  NEW_LOGIN: "new_login" as const,
 };
 
-export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+export type NotificationType =
+  (typeof NotificationType)[keyof typeof NotificationType];
 
 export { NotificationType as NotificationTypeValue };
 export default NotificationType;

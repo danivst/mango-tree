@@ -9,14 +9,15 @@
  */
 const ReportTargetType = {
   /** A post is being reported */
-  POST: 'post' as const,
+  POST: "post" as const,
   /** A comment is being reported */
-  COMMENT: 'comment' as const,
+  COMMENT: "comment" as const,
   /** A user account is being reported */
-  USER: 'user' as const
+  USER: "user" as const,
 };
 
-export type ReportTargetType = typeof ReportTargetType[keyof typeof ReportTargetType];
+export type ReportTargetType =
+  (typeof ReportTargetType)[keyof typeof ReportTargetType];
 
 export { ReportTargetType as ReportTargetTypeValue };
 export default ReportTargetType;

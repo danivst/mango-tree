@@ -6,12 +6,13 @@
 
 const LanguageTypeValue = {
   /** English language */
-  EN: 'en' as const,
+  EN: "en" as const,
   /** Bulgarian language */
-  BG: 'bg' as const
+  BG: "bg" as const,
 };
 
-export type LanguageType = typeof LanguageTypeValue[keyof typeof LanguageTypeValue];
+export type LanguageType =
+  (typeof LanguageTypeValue)[keyof typeof LanguageTypeValue];
 
 export { LanguageTypeValue };
 export default LanguageTypeValue;

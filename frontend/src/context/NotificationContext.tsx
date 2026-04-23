@@ -103,7 +103,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
       try {
         const notifications = await notificationsAPI.getNotifications();
-        const unread = notifications.filter((n: Notification) => !n.read).length;
+        const unread = notifications.filter(
+          (n: Notification) => !n.read,
+        ).length;
         setUnreadCount(unread);
       } catch (error) {
         console.error("Failed to fetch unread notifications count:", error);

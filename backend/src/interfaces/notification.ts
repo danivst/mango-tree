@@ -6,7 +6,8 @@ import { INotification as SharedINotification } from "@mangotree/shared";
  * @description Mongoose document interface for Notification model.
  * Extends the shared INotification interface with Mongoose Document.
  */
-export interface INotification extends Document, Omit<SharedINotification, '_id' | 'userId'> {
+export interface INotification
+  extends Document, Omit<SharedINotification, "_id" | "userId"> {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
 }

@@ -6,7 +6,8 @@ import { IUser as SharedIUser } from "@mangotree/shared";
  * @description Mongoose document interface for User model.
  * Extends the shared IUser interface with Mongoose Document.
  */
-export interface IUser extends Document, Omit<SharedIUser, '_id' | 'followers' | 'following'> {
+export interface IUser
+  extends Document, Omit<SharedIUser, "_id" | "followers" | "following"> {
   _id: Types.ObjectId;
   followers: Types.ObjectId[];
   following: Types.ObjectId[];

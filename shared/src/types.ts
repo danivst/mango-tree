@@ -2,12 +2,21 @@
 // Enums and Basic Types
 // ============================================================================
 
-import { RoleType, RoleTypeValue } from './enums/role-type';
-import { ThemeType, ThemeTypeValue } from './enums/theme-type';
-import { LanguageType, LanguageTypeValue } from './enums/language-type';
-import { NotificationType, NotificationTypeValue } from './enums/notification-type';
-import { ReportTargetType, ReportTargetTypeValue } from './enums/report-target-type';
-import { ReportStatusType, ReportStatusTypeValue } from './enums/report-status-type';
+import { RoleType, RoleTypeValue } from "./enums/role-type";
+import { ThemeType, ThemeTypeValue } from "./enums/theme-type";
+import { LanguageType, LanguageTypeValue } from "./enums/language-type";
+import {
+  NotificationType,
+  NotificationTypeValue,
+} from "./enums/notification-type";
+import {
+  ReportTargetType,
+  ReportTargetTypeValue,
+} from "./enums/report-target-type";
+import {
+  ReportStatusType,
+  ReportStatusTypeValue,
+} from "./enums/report-status-type";
 
 // Re-export for convenience
 export { RoleType, RoleTypeValue };
@@ -28,7 +37,8 @@ export const ThemeValues = Object.values(ThemeTypeValue);
  * Supported language codes.
  * @typedef {'en' | 'bg'} Language
  */
-export type Language = (typeof LanguageTypeValue)[keyof typeof LanguageTypeValue];
+export type Language =
+  (typeof LanguageTypeValue)[keyof typeof LanguageTypeValue];
 export const LanguageValues = Object.values(LanguageTypeValue);
 
 // ============================================================================
