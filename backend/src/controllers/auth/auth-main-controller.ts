@@ -14,7 +14,7 @@ import BannedUser from "../../models/banned-user-model";
 import Notification from "../../models/notification-model";
 import NotificationType from "../../enums/notification-type";
 import { sendEmail } from "../../utils/email";
-import { JWT_SECRET, JWT_REFRESH_SECRET, CLIENT_URL } from "../../config/env";
+import { JWT_SECRET, CLIENT_URL } from "../../config/env";
 import RoleTypeValue from "../../enums/role-type";
 import { getDualTranslation } from "../../utils/translation";
 import { getLocalizedText } from "../../utils/get-translation";
@@ -26,7 +26,6 @@ import {
 } from "../../utils/email-templates";
 import { logActivity } from "../../utils/activity-logger";
 import logger from "../../utils/logger";
-import z from "zod";
 import { isDisposableEmail } from "../../utils/disposable-email";
 import { clearAuthCookies, setAuthCookies } from "../../utils/auth-cookies";
 
@@ -38,35 +37,44 @@ import { clearAuthCookies, setAuthCookies } from "../../utils/auth-cookies";
  */
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * Zod validation schema for user registration.
- * Defines strict requirements for username, email, and password complexity.
- * * @typedef {Object} RegisterSchema
- * @property {string} username - Minimum 3 characters.
- * @property {string} email - Must match {@link emailRegex} and standard email format.
- * @property {string} password - Minimum 8 characters, requiring:
- * - At least one uppercase letter
- * - At least one lowercase letter
- * - At least one numeric digit
- * - At least one special character (e.g., !@#$%^&*)
- */
-const registerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters long."),
-  email: z
-    .string()
-    .regex(emailRegex, "Invalid email format.")
-    .email("Invalid email format."),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters long.")
-    .regex(/[A-Z]/, "Password must contain at least one capital letter.")
-    .regex(/[a-z]/, "Password must contain at least one lower case letter.")
-    .regex(/[0-9]/, "Password must contain at least one number.")
-    .regex(
-      /[!@#$%^&*(),.?":{}|<>]/,
-      "Password must contain at least one special character.",
-    ),
-});
+type RegisterValidationError = { message: string; field: string };
+
+const validateRegisterBody = (body: unknown): RegisterValidationError | null => {
+  if (!body || typeof body !== "object") {
+    return { message: "Invalid request body.", field: "body" };
+  }
+
+  const b = body as Record<string, unknown>;
+  const username = b.username;
+  const email = b.email;
+  const password = b.password;
+
+  if (typeof username !== "string" || username.trim().length < 3) {
+    return { message: "Username must be at least 3 characters long.", field: "username" };
+  }
+
+  if (typeof email !== "string" || !emailRegex.test(email) || !email.includes("@")) {
+    return { message: "Invalid email format.", field: "email" };
+  }
+
+  if (typeof password !== "string" || password.length < 8) {
+    return { message: "Password must be at least 8 characters long.", field: "password" };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { message: "Password must contain at least one capital letter.", field: "password" };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { message: "Password must contain at least one lower case letter.", field: "password" };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { message: "Password must contain at least one number.", field: "password" };
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    return { message: "Password must contain at least one special character.", field: "password" };
+  }
+
+  return null;
+};
 
 /**
  * Registers a new user account.
@@ -95,14 +103,9 @@ export const registerUser = async (
   req: Request,
   res: Response,
 ): Promise<Response> => {
-  // --- Input Validation via Zod ---
-  try {
-    registerSchema.parse(req.body);
-  } catch (error: any) {
-    return res.status(400).json({
-      message: error.errors[0].message,
-      field: error.errors[0].path[0],
-    });
+  const validationError = validateRegisterBody(req.body);
+  if (validationError) {
+    return res.status(400).json(validationError);
   }
 
   const { username, email, password } = req.body;
@@ -167,10 +170,6 @@ export const registerUser = async (
     { expiresIn: "24h" },
   );
 
-  const refreshToken = jwt.sign({ userId: user._id }, JWT_REFRESH_SECRET, {
-    expiresIn: "7d",
-  });
-
   // --- Post-Registration: Welcome Email ---
   const userLang = user.language || "en";
 
@@ -204,7 +203,7 @@ export const registerUser = async (
   }
 
   // --- Response ---
-  setAuthCookies(res, token, refreshToken);
+  setAuthCookies(res, token);
 
   return res.status(201).json({
     message: "Registration successful.",
@@ -353,10 +352,6 @@ export const loginUser = async (
     },
   );
 
-  const refreshToken = jwt.sign({ userId: user._id }, JWT_REFRESH_SECRET, {
-    expiresIn: "7d",
-  });
-
   // Log successful login (explicit userId since auth middleware not used)
   await logActivity(req, "LOGIN", { userId: user._id.toString() });
 
@@ -406,7 +401,7 @@ export const loginUser = async (
     logger.error(notifErr, "Failed to create login notification");
   }
 
-  setAuthCookies(res, token, refreshToken);
+  setAuthCookies(res, token);
 
   return res.json({
     message: "Successfully logged in!",

@@ -210,6 +210,15 @@ const Reports = () => {
     return t(targetType);
   };
 
+  // Fetch reports on initial load (avoid requiring manual refresh)
+  useEffect(() => {
+    if (!hasFetched && !loading) {
+      fetchReports().catch(() => {
+        // error state handled by context; page also renders `error` if present
+      });
+    }
+  }, [hasFetched, loading, fetchReports]);
+
   // Load selected report when reportId param changes
   useEffect(() => {
     if (reportId) {
@@ -539,7 +548,7 @@ const Reports = () => {
         <div className="loading">{t("loading")}</div>
       ) : !hasFetched ? (
         <div className="loading">
-          No data loaded. Click Refresh to load data.
+          {t("noDataLoaded")}. {t("clickRefreshToLoad")}.
         </div>
       ) : reports.length === 0 ? (
         <EmptyState

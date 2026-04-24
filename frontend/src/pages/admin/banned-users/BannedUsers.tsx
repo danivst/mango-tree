@@ -31,6 +31,15 @@ const BannedUsers = () => {
   const { bannedUsers, bannedUsersState, fetchBannedUsers } = useAdminData();
   const { loading, error, hasFetched } = bannedUsersState;
 
+  // Fetch banned users on initial load (avoid requiring manual refresh)
+  useEffect(() => {
+    if (!hasFetched && !loading) {
+      fetchBannedUsers().catch(() => {
+        // error state handled by context; page also renders `error` if present
+      });
+    }
+  }, [hasFetched, loading, fetchBannedUsers]);
+
   // Local UI state for filtering and searching
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFrom, setDateFrom] = useState("");

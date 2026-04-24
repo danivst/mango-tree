@@ -9,7 +9,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/user-model";
 import { sendEmail } from "../utils/email";
-import { JWT_SECRET, JWT_REFRESH_SECRET } from "../config/env";
+import { JWT_SECRET } from "../config/env";
 import RoleTypeValue from "../enums/role-type";
 import { getDualTranslation } from "../utils/translation";
 import { AuthRequest } from "../interfaces/auth";
@@ -216,11 +216,7 @@ export const verify2FA = async (
       JWT_SECRET,
       { expiresIn: "24h" },
     );
-
-    const refreshToken = jwt.sign({ userId: user._id }, JWT_REFRESH_SECRET, {
-      expiresIn: "7d",
-    });
-    setAuthCookies(res, token, refreshToken);
+    setAuthCookies(res, token);
 
     return res.json({
       message: "successfully logged in!",

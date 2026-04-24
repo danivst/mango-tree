@@ -40,7 +40,6 @@ export const MONGO_URI = requireEnv("MONGO_URI");
  * Authentication configuration
  */
 export const JWT_SECRET = requireEnv("JWT_SECRET");
-export const JWT_REFRESH_SECRET = requireEnv("JWT_REFRESH_SECRET");
 
 /**
  * Client configuration

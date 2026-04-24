@@ -37,6 +37,15 @@ const Tags = () => {
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
 
+  // Fetch tags on initial load (avoid requiring manual refresh)
+  useEffect(() => {
+    if (!hasFetched && !loading) {
+      fetchTags().catch(() => {
+        // error state handled by context; page also renders `error` if present
+      });
+    }
+  }, [hasFetched, loading, fetchTags]);
+
   // States
   const [searchQuery, setSearchQuery] = useState("");
   const [sortState, setSortState] = useState<SortState>({

@@ -55,6 +55,15 @@ const Users = () => {
   const t = (key: string) => getTranslation(language, key);
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
+  // Fetch users on initial load (avoid requiring manual refresh)
+  useEffect(() => {
+    if (!hasFetched && !loading) {
+      fetchUsers().catch(() => {
+        // error state handled by context; page also renders `error` if present
+      });
+    }
+  }, [hasFetched, loading, fetchUsers]);
+
   // Local UI states
   const [searchQuery, setSearchQuery] = useState("");
   const [sortState, setSortState] = useState<SortState>({

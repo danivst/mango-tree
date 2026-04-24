@@ -87,6 +87,15 @@ const ToReview = () => {
     return t(type);
   };
 
+  // Fetch flagged content on initial load (avoid requiring manual refresh)
+  useEffect(() => {
+    if (!hasFetched && !loading) {
+      fetchFlaggedContent().catch(() => {
+        // error state handled by context; page also renders `error` if present
+      });
+    }
+  }, [hasFetched, loading, fetchFlaggedContent]);
+
   // Load selected content when contentId param changes
   useEffect(() => {
     if (contentId) {
@@ -360,7 +369,7 @@ const ToReview = () => {
 
       {!hasFetched ? (
         <div className="loading">
-          No data loaded. Click Refresh to load data.
+          {t("noDataLoaded")}. {t("clickRefreshToLoad")}.
         </div>
       ) : flaggedContent.length === 0 ? (
         <EmptyState

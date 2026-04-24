@@ -32,6 +32,15 @@ const Categories = () => {
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
 
+  // Fetch categories on initial load (avoid requiring manual refresh)
+  useEffect(() => {
+    if (!hasFetched && !loading) {
+      fetchCategories().catch(() => {
+        // error state handled by context; page also renders `error` if present
+      });
+    }
+  }, [hasFetched, loading, fetchCategories]);
+
   // States
   const [searchQuery, setSearchQuery] = useState("");
   const [sortState, setSortState] = useState<SortState>({
