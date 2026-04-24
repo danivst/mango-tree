@@ -9,6 +9,11 @@ services:
       - DATABASE_URL=mongodb://mongo:27017/mangotree
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend:/app/backend         
+      - /app/backend/node_modules  
+      - /app/backend/dist             
+      - ./shared:/app/shared
 
   frontend:
     build:
