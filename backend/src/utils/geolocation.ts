@@ -1,22 +1,24 @@
 /**
  * @file geolocation.ts
  * @description Utility for getting geographical location from an IP address.
- * Uses the free ipapi.co service (no API key required for basic usage).
+ * Uses the ip-api.com service to support localized city and country names.
  */
 
 import axios from "axios";
 import logger from "../utils/logger";
 
 /**
- * Interface for geolocation response from ipapi.co
+ * Interface for geolocation response from ip-api.com
  */
 export interface GeoLocation {
+  status: string;
   city: string;
-  region: string;
-  country_name: string;
-  country_code: string;
-  latitude: number;
-  longitude: number;
+  country: string;
+  countryCode: string;
+  regionName: string;
+  lat: number;
+  lon: number;
+  message?: string;
 }
 
 /**
@@ -24,41 +26,51 @@ export interface GeoLocation {
  * Skips lookups for local/private IP ranges. Returns a formatted string "City, Country".
  *
  * @param ipAddress - The target IPv4 or IPv6 address
+ * @param lang - Target language for location names ('en' or 'bg')
  * @returns Promise resolving to formatted location string or "Unknown location"
  * @throws {Error} Internal service errors are caught and return a fallback string
  *
  * @example
  * ```typescript
- * const loc = await getLocationFromIP("8.8.8.8");
- * // returns "Mountain View, United States"
+ * const loc = await getLocationFromIP("8.8.8.8", "bg");
+ * // returns "Маунтин Вю, Съединени щати"
  * ```
  */
-export const getLocationFromIP = async (ipAddress: string): Promise<string> => {
+export const getLocationFromIP = async (ipAddress: string, lang: string = 'en'): Promise<string> => {
   // Don't query for localhost/private IPs
-  if (!ipAddress || ipAddress === 'unknown' || ipAddress === '::1' || ipAddress === '127.0.0.1' || ipAddress.startsWith('192.168.') || ipAddress.startsWith('10.') || ipAddress.startsWith('172.')) {
-    return 'Local connection';
+  if (
+    !ipAddress || 
+    ipAddress === 'unknown' || 
+    ipAddress === '::1' || 
+    ipAddress === '127.0.0.1' || 
+    ipAddress.startsWith('192.168.') || 
+    ipAddress.startsWith('10.') || 
+    ipAddress.startsWith('172.')
+  ) {
+    return lang === 'bg' ? 'Локална връзка' : 'Local connection';
   }
 
   try {
-    // Using ipapi.co - free tier: 1000 requests/day, no API key required
-    const response = await axios.get<GeoLocation>(`https://ipapi.co/${ipAddress}/json/`, {
+    /**
+     * Using ip-api.com
+     * Supports 'lang' parameter: en (default), bg (Bulgarian), etc.
+     */
+    const response = await axios.get<GeoLocation>(`http://ip-api.com/json/${ipAddress}`, {
+      params: { lang },
       timeout: 3000, // 3 second timeout to avoid delaying login
-      headers: {
-        'User-Agent': 'MangoTree/1.0.0'
-      }
     });
 
     const data = response.data;
 
-    if (data.city && data.country_name) {
-      return `${data.city}, ${data.country_name}`;
-    } else if (data.country_name) {
-      return data.country_name;
+    if (data.status === 'success' && data.city && data.country) {
+      return `${data.city}, ${data.country}`;
+    } else if (data.status === 'success' && data.country) {
+      return data.country;
     } else {
-      return 'Unknown location';
+      return lang === 'bg' ? 'Неизвестно местоположение' : 'Unknown location';
     }
   } catch (error: any) {
     logger.warn({ ip: ipAddress, message: error?.message }, "Geolocation lookup failed");
-    return 'Unknown location';
+    return lang === 'bg' ? 'Неизвестно местоположение' : 'Unknown location';
   }
 };

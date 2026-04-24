@@ -29,14 +29,14 @@ import type {
  */
 const api = axios.create({
   baseURL:
-    import.meta.env.DEV && typeof window !== "undefined"
+    import.meta.env.MODE === "development"
       ? "/api"
-      : "http://192.168.0.21:3000/api",
+      : "http://localhost:3000/api", // Use localhost so the browser can find the mapped port 3000
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000, // 10 second timeout
-  withCredentials: true, // Send cookies with requests
+  timeout: 10000,
+  withCredentials: true,
 });
 
 // Request interceptor - no Authorization header needed for HttpOnly cookie auth

@@ -1,15 +1,18 @@
-version: '3.8'
 services:
   backend:
-    build: ./backend
+    build: 
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - USE_SECURE_COOKIES=false
+      - DATABASE_URL=mongodb://mongo:27017/mangotree
     ports:
       - "3000:3000"
-    environment:
-      - DATABASE_URL=mongodb://mongo:27017/mangotree
 
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     ports:
       - "5173:80"
-    depends_on:
-      - backend

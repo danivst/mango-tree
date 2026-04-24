@@ -368,7 +368,7 @@ export const loginUser = async (
     const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
 
     // Get location (city, country) from IP using geolocation service
-    const location = await getLocationFromIP(ipAddress);
+    const location = await getLocationFromIP(ipAddress, userLang);
 
     // Get current time in user's locale
     const loginTime = new Date().toLocaleString(

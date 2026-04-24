@@ -2,8 +2,7 @@
  * @file App.tsx
  * @description Main application entry point and root routing configuration.
  * Orchestrates the application's React Router hierarchy, global Context Providers
- * (Theme, Notifications, Admin Data), and route-level access control (Public,
- * Protected, Admin, and User routes).
+ * (Theme, Notifications, Admin Data), and route-level access control.
  */
 
 import {
@@ -16,7 +15,6 @@ import { Suspense, lazy } from "react";
 import { ThemeLanguageProvider } from "./context/ThemeLanguageContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { AdminDataProvider } from "./context/AdminDataContext";
-import { useRefresh } from "./context/RefreshContext";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import PublicRoute from "./components/routes/PublicRoute";
 import AdminRoute from "./components/admin/route/AdminRoute";
@@ -55,252 +53,86 @@ const ActivityLog = lazy(() => import("./pages/admin/logs/ActivityLog"));
 const NotFound = lazy(() => import("./pages/global/not-found/NotFound"));
 
 function App() {
-  const { refreshTrigger } = useRefresh();
-
   return (
     <ErrorBoundary>
       <ThemeLanguageProvider>
         <NotificationProvider>
           <AdminDataProvider>
             <Router>
-              {/* Suspense fallback prevents the app from crashing while loading chunks */}
-              <Suspense
-                fallback={<div className="loading-screen">Loading...</div>}
-              >
+              <Suspense fallback={<div className="loading-screen">Loading...</div>}>
                 <Routes>
                   {/* PUBLIC ROUTES */}
-                  <Route
-                    path="/"
-                    element={
-                      <PublicRoute key={refreshTrigger}>
-                        <LandingPage />
-                      </PublicRoute>
-                    }
-                  />
-                  <Route
-                    path="/login"
-                    element={
-                      <PublicRoute key={refreshTrigger}>
-                        <Login />
-                      </PublicRoute>
-                    }
-                  />
-                  <Route
-                    path="/signin"
-                    element={
-                      <PublicRoute key={refreshTrigger}>
-                        <Login />
-                      </PublicRoute>
-                    }
-                  />
-                  <Route
-                    path="/reset-password"
-                    element={<ResetPassword key={refreshTrigger} />}
-                  />
-                  <Route
-                    path="/setup-password"
-                    element={<SetupPassword key={refreshTrigger} />}
-                  />
+                  <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+                  <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                  <Route path="/signin" element={<PublicRoute><Login /></PublicRoute>} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/setup-password" element={<SetupPassword />} />
 
                   {/* USER ROUTES */}
-                  <Route
-                    path="/home"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <Home />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/home/suggested"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <Home />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/upload"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <Upload />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/settings"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <Settings />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/notifications"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <Notifications />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/search"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <Search />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/posts/:id"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <Post />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/users/:id"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <UserProfile />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/account"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <Account />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  />
+                  <Route path="/home" element={
+                    <ProtectedRoute><UserRoute><Home /></UserRoute></ProtectedRoute>
+                  } />
+                  <Route path="/home/suggested" element={
+                    <ProtectedRoute><UserRoute><Home /></UserRoute></ProtectedRoute>
+                  } />
+                  <Route path="/upload" element={
+                    <ProtectedRoute><UserRoute><Upload /></UserRoute></ProtectedRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <ProtectedRoute><UserRoute><Settings /></UserRoute></ProtectedRoute>
+                  } />
+                  <Route path="/notifications" element={
+                    <ProtectedRoute><UserRoute><Notifications /></UserRoute></ProtectedRoute>
+                  } />
+                  <Route path="/search" element={
+                    <ProtectedRoute><UserRoute><Search /></UserRoute></ProtectedRoute>
+                  } />
+                  <Route path="/posts/:id" element={
+                    <ProtectedRoute><UserRoute><Post /></UserRoute></ProtectedRoute>
+                  } />
+                  <Route path="/users/:id" element={
+                    <ProtectedRoute><UserRoute><UserProfile /></UserRoute></ProtectedRoute>
+                  } />
+                  <Route path="/account" element={
+                    <ProtectedRoute><UserRoute><Account /></UserRoute></ProtectedRoute>
+                  } />
 
-                  {/* Nested User Routes */}
-                  <Route
-                    path="/account/followers"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <Followers />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route
-                      path=":userId"
-                      element={<Followers key={refreshTrigger} />}
-                    />
+                  {/* Followers/Following with Optional UserID */}
+                  <Route path="/account/followers" element={
+                    <ProtectedRoute><UserRoute><Followers /></UserRoute></ProtectedRoute>
+                  }>
+                    <Route path=":userId" element={<Followers />} />
                   </Route>
 
-                  <Route
-                    path="/account/following"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <UserRoute>
-                          <Following />
-                        </UserRoute>
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route
-                      path=":userId"
-                      element={<Following key={refreshTrigger} />}
-                    />
+                  <Route path="/account/following" element={
+                    <ProtectedRoute><UserRoute><Following /></UserRoute></ProtectedRoute>
+                  }>
+                    <Route path=":userId" element={<Following />} />
                   </Route>
 
                   {/* ADMIN DASHBOARD (Nested) */}
-                  <Route
-                    path="/admin/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <AdminRoute>
-                          <Dashboard />
-                        </AdminRoute>
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route
-                      path="users"
-                      element={<Users key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="admins"
-                      element={<Admins key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="banned-users"
-                      element={<BannedUsers key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="tags"
-                      element={<Tags key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="categories"
-                      element={<Categories key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="review"
-                      element={<ToReview key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="review/:contentId"
-                      element={<ToReview key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="reports"
-                      element={<Reports key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="reports/:reportId"
-                      element={<Reports key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="reports/:reportId/preview"
-                      element={<ReportPostPreview key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="settings"
-                      element={<Settings key={refreshTrigger} />}
-                    />
-                    <Route
-                      path="logs"
-                      element={<ActivityLog key={refreshTrigger} />}
-                    />
-                    <Route
-                      index
-                      element={<Navigate to="/admin/dashboard/users" replace />}
-                    />
+                  <Route path="/admin/dashboard" element={
+                    <ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>
+                  }>
+                    <Route path="users" element={<Users />} />
+                    <Route path="admins" element={<Admins />} />
+                    <Route path="banned-users" element={<BannedUsers />} />
+                    <Route path="tags" element={<Tags />} />
+                    <Route path="categories" element={<Categories />} />
+                    <Route path="review" element={<ToReview />} />
+                    <Route path="review/:contentId" element={<ToReview />} />
+                    <Route path="reports" element={<Reports />} />
+                    <Route path="reports/:reportId" element={<Reports />} />
+                    <Route path="reports/:reportId/preview" element={<ReportPostPreview />} />
+                    <Route path="settings" element={<Settings />} />
+                    <Route path="logs" element={<ActivityLog />} />
+                    <Route index element={<Navigate to="users" replace />} />
                   </Route>
 
                   {/* 404 CATCH-ALL */}
-                  <Route
-                    path="*"
-                    element={
-                      <ProtectedRoute key={refreshTrigger}>
-                        <NotFound />
-                      </ProtectedRoute>
-                    }
-                  />
+                  <Route path="*" element={
+                    <ProtectedRoute><NotFound /></ProtectedRoute>
+                  } />
                 </Routes>
               </Suspense>
             </Router>

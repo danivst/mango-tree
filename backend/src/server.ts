@@ -47,7 +47,6 @@ app.use(
       "http://127.0.0.1:5173",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   }),
 );
@@ -70,6 +69,13 @@ app.use((req, res, next) => {
 app.get("/api/test", (req, res) =>
   res.json({ ok: true, message: "Backend works!" }),
 );
+
+/**
+ * Express configuration to trust reverse proxy headers.
+ * Necessary for accurate client IP detection when running behind Nginx or in a Docker container.
+ * This allows req.ip to return the real user IP instead of the internal network IP.
+ */
+app.set('trust proxy', true);
 
 // Router mounts
 app.use("/api/auth", authRoutes);

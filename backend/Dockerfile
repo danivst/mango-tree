@@ -2,16 +2,22 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package*.json ./
-RUN npm install
+# Build Shared
+COPY shared/ ./shared/
+RUN cd shared && npm install && npm run build
 
-# Copy source code and build TypeScript
-COPY . .
+# Setup Backend
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm install
+COPY backend/ ./
+
+# Build (This creates the 'dist' folder)
 RUN npm run build
 
-# Expose the port your backend runs on
+# EXPOSE AND RUN
 EXPOSE 3000
 
-# Start the compiled JS code
-CMD ["node", "dist/server.js"]
+# Use the npm start script instead of direct node command
+# This ensures tsconfig-paths/register is loaded to find @mangotree/shared
+CMD ["npm", "start"]

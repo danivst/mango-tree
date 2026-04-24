@@ -14,9 +14,11 @@ import type { CookieOptions, Response } from "express";
 type SameSiteOption = "lax" | "none";
 
 /**
- * Environment check to determine if the application is running in production.
+ * Enhanced environment check.
+ * We only want 'Secure' and 'SameSite=None' if we are on a real HTTPS production server.
+ * In local Docker/localhost, USE_SECURE_COOKIES should be "false".
  */
-const isProd = process.env.NODE_ENV === "production";
+const isRealProd = process.env.NODE_ENV === "production" && process.env.USE_SECURE_COOKIES === "true";
 
 /**
  * Constant identifiers for authentication cookies to ensure consistency 
@@ -37,10 +39,9 @@ export const AUTH_COOKIE_NAMES = {
 export function getAuthCookieOptions(): CookieOptions {
   // In production, frontend/backend may be on different origins, so we need
   // SameSite=None; Secure for cookies to be accepted by modern browsers.
-  // In local dev, we usually rely on Vite proxy (same-origin to the browser),
-  // so SameSite=Lax keeps cookies working over plain http.
-  const sameSite: SameSiteOption = isProd ? "none" : "lax";
-  const secure = isProd;
+  // In local dev, we rely on Lax and No-Secure to keep cookies working over plain http.
+  const sameSite: SameSiteOption = isRealProd ? "none" : "lax";
+  const secure = isRealProd;
 
   return {
     httpOnly: true,
