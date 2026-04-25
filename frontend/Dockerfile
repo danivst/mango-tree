@@ -11,9 +11,6 @@ RUN cd shared && npm install && npm run build
 # Setup Frontend
 WORKDIR /app/frontend
 
-# --- ADDED: Copy .env from root to frontend ---
-COPY .env ./
-
 # Copy package files
 COPY frontend/package*.json ./
 

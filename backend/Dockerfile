@@ -9,9 +9,6 @@ RUN cd shared && npm install && npm run build
 # Setup Backend
 WORKDIR /app/backend
 
-# Copy .env from root to backend ---
-COPY .env ./
-
 COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
