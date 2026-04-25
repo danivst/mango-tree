@@ -18,7 +18,7 @@ import type {
 
 /**
  * Axios HTTP client configured for MangoTree API.
- * Base URL: http://localhost:3000/api
+ * Base URL: /api
  * Features:
  * - 10-second timeout
  * - Cookie-based auth via withCredentials (no client-side token injection)
@@ -28,10 +28,7 @@ import type {
  * @type {axios.AxiosInstance}
  */
 const api = axios.create({
-  baseURL:
-    import.meta.env.MODE === "development"
-      ? "/api"
-      : "http://localhost:3000/api", // Use localhost so the browser can find the mapped port 3000
+  baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
   },
