@@ -11,6 +11,10 @@ RUN cd shared && npm install && npm run build
 # Setup Frontend
 WORKDIR /app/frontend
 
+ARG VITE_BASE_API_URL
+
+ENV VITE_BASE_API_URL=$VITE_BASE_API_URL
+
 # Copy package files
 COPY frontend/package*.json ./
 
