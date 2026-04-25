@@ -8,9 +8,11 @@ COPY shared/package*.json ./shared/
 COPY shared/ ./shared/
 RUN cd shared && npm install && npm run build
 
-
 # Setup Frontend
 WORKDIR /app/frontend
+
+# --- ADDED: Copy .env from root to frontend ---
+COPY .env ./
 
 # Copy package files
 COPY frontend/package*.json ./
@@ -27,10 +29,7 @@ RUN npm run build
 # Stage 2: Serve the app with Nginx
 FROM nginx:alpine
 
-# Copy  custom nginx configuration
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy the built files from the build stage
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
 
 EXPOSE 80
