@@ -13,7 +13,7 @@
 import "./config/env";
 import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
-import { PORT } from "./config/env";
+import { PORT, CLIENT_URL } from "./config/env";
 import { connectDB } from "./config/db";
 import logger from "./utils/logger";
 import { errorHandler } from "./middleware/error-middleware";
@@ -42,11 +42,9 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      "http://192.168.0.21:5173",
+      CLIENT_URL,
       "http://localhost:5173",
       "http://127.0.0.1:5173",
-      "http://164.90.219.7:5173",
-      "https://mangotreeofficial.com",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
