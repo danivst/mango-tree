@@ -1,10 +1,12 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
+export let BASE_API_URL: string;
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-
+  BASE_API_URL = env.BASE_API_URL;
   return {
     plugins: [react()],
     logLevel: "info",
@@ -13,7 +15,6 @@ export default defineConfig(({ mode }) => {
       host: true,
       proxy: {
         "/api": {
-          // Access the variable from the 'env' object created above
           target: env.BASE_API_URL,
           changeOrigin: true,
           secure: false,
