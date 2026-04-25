@@ -16,9 +16,10 @@ import type {
   Language,
 } from "../utils/types";
 
+import { BASE_API_URL } from "../utils/env";
 /**
  * Axios HTTP client configured for MangoTree API.
- * Base URL: /api
+ * Base URL: BASE_API_URL/api
  * Features:
  * - 10-second timeout
  * - Cookie-based auth via withCredentials (no client-side token injection)
@@ -28,7 +29,7 @@ import type {
  * @type {axios.AxiosInstance}
  */
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: `${BASE_API_URL}/api`,
   headers: {
     "Content-Type": "application/json",
   },

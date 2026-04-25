@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+import { BASE_API_URL } from "./src/utils/env";
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -10,10 +12,9 @@ export default defineConfig({
     host: true,
     proxy: {
       "/api": {
-        target: "http://164.90.219.7:3000",
+        target: BASE_API_URL,
         changeOrigin: true,
         secure: false,
-        // Ensure the proxy rewrites the URL correctly
         rewrite: (path) => path,
       },
     },
