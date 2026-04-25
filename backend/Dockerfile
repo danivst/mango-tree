@@ -12,7 +12,6 @@ COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 
-COPY .env ./
 
 # Build (This creates the 'dist' folder)
 RUN npm run build
