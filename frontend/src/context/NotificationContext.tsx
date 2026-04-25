@@ -95,7 +95,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!forceFetch && (!isAuthenticated || loading || !user)) {
         return;
       }
-      console.log(user);
+
       if (user?.role === "admin") {
         // Admins don't need notifications, skip fetching entirely
         return;
