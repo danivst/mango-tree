@@ -8,6 +8,8 @@ COPY shared/package*.json ./shared/
 COPY shared/ ./shared/
 RUN cd shared && npm install && npm run build
 
+COPY .env ./
+
 # Setup Frontend
 WORKDIR /app/frontend
 
