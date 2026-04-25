@@ -5,10 +5,6 @@
  * All required variables are validated at load time; missing variables throw errors.
  */
 
-import dotenv from "dotenv";
-
-dotenv.config();
-
 /**
  * Validates and retrieves an environment variable.
  *
