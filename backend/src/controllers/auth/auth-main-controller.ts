@@ -165,11 +165,11 @@ export const registerUser = async (
     { expiresIn: "24h" },
   );
 
-  await logActivity(req, "ACCOUNT_CREATE", { 
+  await logActivity(req, "ACCOUNT_CREATE", {
     userId: user._id.toString(),
     targetId: user._id.toString(),
     targetType: "user",
-    description: `Created account with username: ${user.username} and email: ${user.email}`,
+    description: `Created account ${user.username}`,
   });
 
   const userLang = user.language || "en";
@@ -360,7 +360,8 @@ export const loginUser = async (
   await logActivity(req, "LOGIN", { userId: user._id.toString() });
 
   try {
-    const userLang = user.language || "en";
+    const rawUserLang = String(user.language || "en").trim().toLowerCase();
+    const userLang = rawUserLang.startsWith("bg") ? "bg" : "en";
 
     const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
     const location = await getLocationFromIP(ipAddress, userLang);
@@ -386,7 +387,7 @@ export const loginUser = async (
 
     const messageEn = `New login detected at ${loginTime} from ${location}. If this wasn't you, please secure your account immediately.`;
     const messageBg = `Открито ново влизане на ${loginDateBg} в ${loginClockBg} от ${location}. Ако това не сте вие, моля незабавно защитете акаунта си.`;
-    
+
     await Notification.create({
       userId: user._id,
       type: NotificationType.NEW_LOGIN,

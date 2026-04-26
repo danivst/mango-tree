@@ -8,6 +8,8 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/user-model";
+import Notification from "../models/notification-model";
+import NotificationType from "../enums/notification-type";
 import { sendEmail } from "../utils/email";
 import { JWT_SECRET } from "../config/env";
 import RoleTypeValue from "../enums/role-type";
@@ -15,12 +17,10 @@ import { getDualTranslation } from "../utils/translation";
 import { AuthRequest } from "../interfaces/auth";
 import { get2FAEmailTemplate } from "../utils/email-templates";
 import { getLocalizedText } from "../utils/get-translation";
+import { getLocationFromIP } from "../utils/geolocation";
 import { logActivity } from "../utils/activity-logger";
 import logger from "../utils/logger";
 import { setAuthCookies } from "../utils/auth-cookies";
-import { getLocationFromIP } from "../utils/geolocation";
-import Notification from "../models/notification-model";
-import NotificationType from "../enums/notification-type";
 
 /**
  * Initiates the 2FA enablement process.
@@ -200,7 +200,8 @@ export const verify2FA = async (
       await logActivity(req, "LOGIN", { userId: user._id.toString() });
 
       try {
-        const userLang = user.language || "en";
+        const rawUserLang = String(user.language || "en").trim().toLowerCase();
+        const userLang = rawUserLang.startsWith("bg") ? "bg" : "en";
         const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
         const location = await getLocationFromIP(ipAddress, userLang);
         const now = new Date();
