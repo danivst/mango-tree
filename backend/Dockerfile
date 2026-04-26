@@ -7,5 +7,6 @@ COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 RUN npm run build
+RUN npm link ../shared
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "-r", "tsconfig-paths/register", "dist/backend/src/server.js"]

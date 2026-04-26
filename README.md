@@ -2,6 +2,8 @@
 
 **Interactive Web Platform for Sharing Culinary Experiences and Building an Online Community**
 
+
+
 ---
 
 ## Project Overview
@@ -83,6 +85,8 @@ The ultimate goal is a functioning website that promotes the cultural value of c
 
 ## How to Start the Project
 
+**Please note: In order to start this project, you need to have npm, Node.js (v20+) and TypeScript installed. If you are hosting it, you have to have Docker installed as well.**
+
 ### 1. Installation
 
    First, you need to clone the repository:
@@ -95,107 +99,116 @@ The ultimate goal is a functioning website that promotes the cultural value of c
    cd mango-tree
    ```
 
-### 3. Setting environmental variables
+### 2. Setting environmental variables
 
-   This project needs **.env** files that contain configuration regarding the services. **Please note: Without having them configured, the project will not build, nor run.**
+   This project needs a **.env** file that contains configuration regarding the services. **Please note: Without having them configured, the project will not build, nor run.**
 
-   To create these files, create a new file named .env in the main directory of the folder.
-
-   The values needed are:
+   To create this file, copy the existing **.env.example** file:
    ```bash
-   PORT={port_number_for_backend} // This value by default is set to 3000 in the backend/src/config/env.ts file if it is missing in the .env file.
-   MONGO_URI={mongodb_uri} // Required and has no default value
-   JWT_SECRET={jwt_secret_key} // Required and has no default value
-   DEEPL_API_KEY={deepl_api_key} // Required and has no default value
-   CLIENT_URL={url_for_client}  // Required and has no default value. Please note: If launching in local host you can just enter http://localhost:{client_port}.
-   BASE_API_URL={url_for_api}  // Required and has no default value. Please note: If launching in local host you can just enter http://localhost:{server_port}.
-   VITE_BASE_API_URL={url_for_api} // Required by Vite for frontend configuration and has no default value. Please note: Set this value to the same one you set for BASE_API_URL.
-   GEMINI_API_KEY={gemini_api_key} // Required and has no default value
-   GEMINI_MODEL_DEFAULT={preferred_gemini_model} // This value by default is set to gemini-2.5-flash-lite in the backend/src/config/env.ts file if it is missing in the .env file.
-   RESEND_API_KEY={resend_api_key} // This value has no default value set but if it is missing in the .env file the project can launch. Please note: If you do not set this value, the functionality related to sending emails will NOT work.
-   RESEND_FROM_EMAIL={email_address_to_send_emails_from} // This value by default is set to support@mangotreeofficial.com in the backend/src/config/env.ts file if it is missing in the .env file, which is the official MangoTree email address. Please note: If you configure your own Resend API key, you need to set this value to the email address which you created the Resend account with, UNLESS you are using your own domain in the account. If that's the case, you need to set this value to your own official domain email.
+   cp .env.example
    ```
 
-   If the project is unable to launch with this .env file, try copying the file twice in each directory by navigating to backend and frontend separately and copy and pasting the file in each one. 
+   Rename it to just .env and configure the values with your own.
+
+   **Please note: When launching the project locally, you need to creare .env files in both frontend and backend directory. You can just make a copy of the existing .env file you just created and paste it directly in both directories. If you are launching using Docker, DO NOT create other .env files.**
 
 ### 3. Development
 
-   You must start both the backend and the frontend. First, open three terminal windows.
+   ### 3.1. Launching locally
 
-   Navigate to the shared folder:
-   ```bash
-   cd shared
-   ```
+      You must start both the backend and the frontend. First, open three terminal windows and then complete this commands in the provided order.
+      **Please note: If you do not follow the provided order of commands, the project is prone to build errors.**
 
-   Install dependencies and packages:
-   ```bash
-   npm install
-   ```
+      Navigate to the shared folder:
+      ```bash
+      cd shared
+      ```
 
-   Ensure there are no build errors:
-   ```bash
-   npm run build
-   ```
+      Install dependencies and packages:
+      ```bash
+      npm install
+      ```
 
-   **Please note: This directory contains shared types and interfaces used by both client and server and is NOT intended to be launched on its own. It only needs the required packages installed.**
+      Ensure there are no build errors:
+      ```bash
+      npm run build
+      ```
 
-   Navigate to the backend folder: 
-   ```bash
-   cd ../backend
-   ```
+      **Please note: This directory contains shared types and interfaces used by both client and server and is NOT intended to be launched on its own. It only needs the required packages installed.**
 
-   Install dependencies and packages:
-   ```bash
-   npm install
-   ```
+      Navigate to the backend folder: 
+      ```bash
+      cd ../backend
+      ```
 
-   Ensure there are no build errors:
-   ```bash
-   npm run build
-   ```
+      Install dependencies and packages:
+      ```bash
+      npm install
+      ```
 
-   To start the server, run:
-   ```bash
-   npm run dev
-   ```
-   If successful, in the terminal there should be logs, indicating that the server is running on port **3000**.
+      Ensure there are no build errors:
+      ```bash
+      npm run build
+      ```
 
-   The next step is to navigate back to the frontend folder:
-   ```bash
-   cd ../frontend
-   ```
+      To start the server, run:
+      ```bash
+      npm run dev
+      ```
 
-   Install dependencies and packages:
-   ```bash
-   npm install
-   ```
-   
-   Ensure there are no build errors:
-   ```bash
-   npm run build
-   ```
+      If successful, in the terminal there should be logs, indicating that the server is running on the port you set to the variable PORT in the **.env** file (which by default is set to **3000**).
 
-   To run the client, run:
-   ```bash
-   npm run dev
-   ```
+      The next step is to navigate back to the frontend folder:
+      ```bash
+      cd ../frontend
+      ```
 
-   If successful, in the terminal should appear a link to **localhost:5173**.
-   **Please note: If port 5173 is not free to use, the frontend will be launched using a free port. This requires manual configuration in **backend/src/server.ts** in order to allow communication between the client and the server, so CORS allows the requests to pass, like so:**
-   ```backend/src/server.ts
-   app.use(cors({
-      origin: [
-         "http://localhost:{your_port}",
-         "http://127.0.0.1:{your_port}",
-      ],
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"],
-   }));
-   ```
+      Install dependencies and packages:
+      ```bash
+      npm install
+      ```
+      
+      Ensure there are no build errors:
+      ```bash
+      npm run build
+      ```
 
-   **Please note: The provided origins are for local host ONLY. If you launch the project and try to access it from a network IP address, you need to add the IP with the same port as shown above to allow the requests to be sent to the backend.**
+      To run the client, run:
+      ```bash
+      npm run dev
+      ```
 
-   To view and open the website, click on that link, which should automatically redirect you to the landing page in your preferred browser.
+      If successful, in the terminal should appear a link to **localhost:5173**.
+      **Please note: If port 5173 is not free to use, the frontend will be launched using a free port. This requires manual configuration in **backend/.env** in order to allow communication between the client and the server, so CORS allows the requests to pass, like so:**
+      ```backend/.env
+      CLIENT_URL={your_frontend_url}
+      ```
+
+      To view and open the website, click on that link, which should automatically redirect you to the landing page in your preferred browser.
+
+   ### 3.2. Launching using Docker
+
+      Once you have connected to your desired host server, you have to clone the repository:
+      ```bash
+      git clone https://github.com/danivst/mango-tree
+      ```
+
+      Then, navigate to the folder: 
+      ```bash
+      cd mango-tree
+      ```
+
+      Then, run this to build the docker images:
+      ```bash
+      docker compose build
+      ```
+
+      And this to create the containers:
+      ```bash
+      docker compose up -d
+      ```
+
+      After this, you can visit your server's IP address in the browser, followed by the port the frontend is using, which should display the working website.
 
 ### 4. Running tests
 

@@ -1,4 +1,16 @@
 services:
+  npm:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: npm
+    restart: unless-stopped
+    ports:
+      - '80:80'   
+      - '81:81'   
+      - '443:443' 
+    volumes:
+      - ./npm/data:/data
+      - ./npm/letsencrypt:/etc/letsencrypt
+
   backend:
     build:
       context: .
@@ -6,7 +18,7 @@ services:
     env_file:
       - .env
     ports:
-      - "3000:3000"
+      - "3000:3000" 
     volumes:
       - ./backend:/app/backend
       - /app/backend/node_modules
