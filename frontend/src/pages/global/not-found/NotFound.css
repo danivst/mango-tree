@@ -57,7 +57,6 @@
   margin: 0;
   opacity: 0.9;
   font-family: "Poppins", sans-serif;
-  -webkit-text-stroke: 1px #000;
 }
 
 @keyframes float {

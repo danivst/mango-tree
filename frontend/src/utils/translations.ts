@@ -69,7 +69,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Validation
     passwordMinLength:
-      "Password must be at least 8 characters long, and must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+      "Password must be at least 8 characters long and must contain at least one uppercase letter, one lowercase letter, one number and one special character",
     usernameExists: "Username already exists",
     usernameMinLength: "Username must be at least 3 characters long",
     emailMustContain: "Email must contain @ symbol",
@@ -77,7 +77,7 @@ export const translations: Record<Language, Record<string, string>> = {
     emailExists: "Email already in use",
     incorrectPassword: "Incorrect password",
     invalidPassword:
-      "Password must be at least 8 characters long, and must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+      "Password must be at least 8 characters long and must contain at least one uppercase letter, one lowercase letter, one number and one special character",
     passwordsDoNotMatch: "Passwords do not match",
     emailCannotBeEdited: "Email cannot be edited",
     passwordCannotBeEdited:
@@ -94,6 +94,7 @@ export const translations: Record<Language, Record<string, string>> = {
     noPostsFound: "No posts found in this category",
     noPostsAvailable: "No posts available",
     pageNotFound: "Page not found",
+    pleaseWait: "Please wait.",
     goHome: "Go Home",
     pageNotFoundMessage: "The page you're looking for doesn't exist.",
     noFollowersFound: "No followers yet",
@@ -574,19 +575,19 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Landing Page
     landingWelcome: "Welcome to MangoTree",
-    landingTagline: "Connect, share, and grow with a community that matters.",
+    landingTagline: "Connect, share and grow with a community that matters.",
     landingDescription:
-      "MangoTree is a social platform where you can share your thoughts, discover new content, and connect with like-minded people. Join our community today and start your journey.",
+      "MangoTree is a social platform where you can share your recipes, discover new ideas and connect with like-minded people. Join our community today and start your journey.",
     getStarted: "Get Started",
     feature1Title: "Share Your Voice",
     feature1Desc:
-      "Create posts, express your ideas, and let your creativity shine.",
+      "Create posts, express your way of cooking and let your creativity shine.",
     feature2Title: "Discover Content",
     feature2Desc:
       "Browse through personalized feeds and explore content curated just for you.",
     feature3Title: "Connect & Engage",
     feature3Desc:
-      "Follow users, comment on posts, and build meaningful connections.",
+      "Follow users, comment on posts and build meaningful connections.",
     landingFooter: "Already have an account? Log in to continue.",
 
     // 2FA (Two-Factor Authentication)
@@ -711,6 +712,7 @@ export const translations: Record<Language, Record<string, string>> = {
     noPostsFound: "Няма публикации в тази категория",
     noPostsAvailable: "Няма публикации",
     pageNotFound: "Страницата не е намерена",
+    pleaseWait: "Моля, изчакайте.",
     goHome: "Към началната страница",
     pageNotFoundMessage: "Страницата, която търсите, не съществува.",
     noFollowersFound: "Все още няма последователи",
@@ -1195,21 +1197,16 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Landing Page
     landingWelcome: "Добре дошли в MangoTree",
-    landingTagline:
-      "Свързвай се, споделяй и расти с общност, която има значение.",
-    landingDescription:
-      "MangoTree е социална платформа, в която можеш да споделяш мислите си, да откриваш ново съдържание и да се свързваш с хора с подобни интереси. Присъедини се към общността ни днес!",
-    getStarted: "Започни",
-    feature1Title: "Сподели креативността и мнението си",
-    feature1Desc:
-      "Създавай публикации, изразявай идеите си и нека креативността ти блесне.",
-    feature2Title: "Открий съдържание",
-    feature2Desc:
-      "Разглеждай персонализирано съдържание и изследвай такова, създадено специално за вас.",
-    feature3Title: "Свързвай се с другите",
-    feature3Desc:
-      "Следвай потребители, коментирай публикации и изграждай значими връзки.",
-    landingFooter: "Вече имате акаунт? Влезте в системата, за да продължите.",
+    landingTagline: "Свързвайте се, споделяйте и растете с общност, която има значение.",
+    landingDescription: "MangoTree е социална платформа, където можете да споделяте своите рецепти, да откривате нови идеи и да се свързвате с хора със сходни интереси. Присъединете се към нашата общност днес и започнете вашето пътешествие.",
+    getStarted: "Започнете",
+    feature1Title: "Споделете гласа си",
+    feature1Desc: "Създавайте публикации, изразете своя стил на готвене и оставете креативността си да блесне.",
+    feature2Title: "Открivайте съдържание",
+    feature2Desc: "Разглеждайте персонализирани новини и изследвайте съдържание, подбрано специално за вас.",
+    feature3Title: "Свързвайте се и общувайте",
+    feature3Desc: "Последвайте потребители, коментирайте публикации и изграждайте смислени връзки.",
+    landingFooter: "Вече имате профил? Влезте, за да продължите.",
 
     // 2FA (Two-Factor Authentication)
     twoFactorAuth: "Двуфакторна автентикация",

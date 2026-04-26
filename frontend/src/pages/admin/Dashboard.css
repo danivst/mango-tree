@@ -53,10 +53,22 @@
 /* Mobile */
 @media (max-width: 768px) {
   .dashboard-main {
-    top: 20px;
-    bottom: 20px;
-    left: var(--sidebar-offset, 0);
-    right: 20px;
+    top: 12px;
+    bottom: 12px;
+    left: max(0px, calc(var(--sidebar-offset, 0px) - 8px));
+    right: 12px;
+    height: calc(100vh - 24px);
     padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-main {
+    top: 8px;
+    bottom: 8px;
+    left: max(0px, calc(var(--sidebar-offset, 0px) - 8px));
+    right: 8px;
+    height: calc(100vh - 16px);
+    padding: 16px;
   }
 }

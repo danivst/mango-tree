@@ -150,12 +150,13 @@
 /* Small Tablets / Large Phones (480px - 767px) */
 @media (max-width: 767px) {
   .page-container {
-    padding: 16px;
-    top: 20px;
-    bottom: 20px;
-    left: var(--sidebar-offset, 0);
-    right: var(--sidebar-gap, 16px);
-    border-radius: 16px;
+    padding: 14px;
+    top: 12px;
+    bottom: 12px;
+    left: max(0px, calc(var(--sidebar-offset, 0px) - 8px));
+    right: 12px;
+    border-radius: 14px;
+    height: calc(100vh - 24px);
   }
 
   .sidebar {
@@ -169,55 +170,118 @@
     gap: 12px;
   }
 
+  .page-header,
+  .page-container-header {
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+
+  .page-title,
+  .page-container-title {
+    font-size: 22px;
+  }
+
+  .content-card,
+  .section-card,
+  .modal {
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .section-title,
+  .modal-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
   .profile-header {
-    gap: 16px;
+    gap: 14px;
   }
 
   .profile-pic-container {
-    width: 100px;
-    height: 100px;
+    width: 88px;
+    height: 88px;
+  }
+
+  .profile-pic-fallback,
+  .profile-pic-placeholder {
+    font-size: 36px;
   }
 
   .profile-info {
     width: 100%;
   }
 
-  .profile-username {
-    font-size: 24px;
+  .profile-username,
+  .username-heading,
+  .text-2xl {
+    font-size: 22px;
   }
 
-  .username-heading {
-    font-size: 24px;
-  }
-
-  .profile-meta {
-    font-size: 12px;
-  }
-
+  .profile-meta,
   .stat-label {
     font-size: 12px;
   }
 
-  .text-2xl {
-    font-size: 24px;
-  }
-
   .category-tab {
-    padding: 10px 12px;
-    font-size: 14px;
+    padding: 8px 10px;
+    font-size: 13px;
     flex: 1 1 auto;
-    min-width: 100px;
+    min-width: 88px;
   }
 
-  .page-title {
-    font-size: 24px;
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label,
+  .form-input,
+  .form-textarea,
+  .form-select,
+  .search-input,
+  .empty-state-message,
+  .empty-state-title {
+    font-size: 13px;
+  }
+
+  .form-input,
+  .form-textarea,
+  .form-select,
+  .search-input {
+    padding: 10px 12px;
   }
 
   .btn-primary,
   .btn-secondary,
-  .btn-danger {
-    padding: 10px 16px;
-    font-size: 14px;
+  .btn-danger,
+  .btn-admin-action,
+  .btn-back,
+  .tab-button {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .btn-sm,
+  .btn-primary.btn-sm,
+  .btn-secondary.btn-sm,
+  .post-action-btn {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  .btn-translate {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .empty-state {
+    gap: 12px;
+    padding: 40px 16px;
+  }
+
+  .empty-state .material-icons,
+  .flag-icon {
+    font-size: 44px;
   }
 
   .page-actions,
@@ -230,6 +294,7 @@
   .page-actions .search-input,
   .page-container-actions .search-input {
     width: 100%;
+    min-width: 0;
   }
 
   .page-actions .btn-secondary,
@@ -244,12 +309,13 @@
 /* Extra Small Phones (< 480px) */
 @media (max-width: 479px) {
   .page-container {
-    padding: 12px;
-    top: 20px;
-    bottom: 20px;
-    left: var(--sidebar-offset, 0);
-    right: var(--sidebar-gap, 16px);
-    border-radius: 0;
+    padding: 10px;
+    top: 8px;
+    bottom: 8px;
+    left: max(0px, calc(var(--sidebar-offset, 0px) - 8px));
+    right: 8px;
+    border-radius: 12px;
+    height: calc(100vh - 16px);
   }
 
   .sidebar {
@@ -273,7 +339,7 @@
   .profile-header {
     flex-direction: column;
     text-align: center;
-    gap: 16px;
+    gap: 14px;
   }
 
   .profile-info {
@@ -296,30 +362,92 @@
   }
 
   .category-tab {
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 8px 10px;
+    font-size: 12px;
     flex: 1 1 auto;
-    min-width: 80px;
+    min-width: 72px;
   }
 
+  .page-title,
+  .page-container-title,
+  .profile-username,
   .username-heading {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .profile-pic-container {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
+  }
+
+  .profile-pic-fallback,
+  .profile-pic-placeholder {
+    font-size: 32px;
+  }
+
+  .profile-meta,
+  .stat-label {
+    font-size: 12px;
+  }
+
+  .d-flex.gap-8,
+  .d-flex.gap-12 {
+    gap: 16px !important;
+  }
+
+  .user-card,
+  .follower-card {
+    gap: 12px;
+  }
+
+  .user-card .btn-secondary,
+  .follower-card .btn-secondary {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .avatar-lg {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .content-card,
+  .section-card,
+  .modal {
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  .section-title,
+  .modal-title {
+    font-size: 18px;
+  }
+
+  .form-input,
+  .form-textarea,
+  .form-select,
+  .search-input {
+    padding: 9px 11px;
+    font-size: 13px;
+  }
+
+  .btn-translate {
+    padding: 4px 8px;
+    font-size: 11px;
   }
 
   .page-actions,
-  .page-container-actions {
+  .page-container-actions,
+  .modal-actions {
     flex-direction: column;
     width: 100%;
     gap: 10px;
   }
 
   .page-actions .search-input,
-  .page-container-actions .search-input {
+  .page-container-actions .search-input,
+  .modal-actions button {
     width: 100%;
   }
 
@@ -331,80 +459,3 @@
     justify-content: center;
   }
 }
-  
-  .profile-pic-container {
-    width: 80px;
-    height: 80px;
-  }
-  
-  .profile-pic-fallback,
-  .profile-pic-placeholder {
-    font-size: 32px;
-  }
-  
-  .profile-username {
-    font-size: 20px;
-  }
-  
-  .username-heading {
-    font-size: 20px;
-  }
-  
-  .profile-meta {
-    font-size: 12px;
-  }
-  
-  .stat-label {
-    font-size: 12px;
-  }
-  
-  .category-tab {
-    padding: 8px 10px;
-    font-size: 13px;
-    min-width: 80px;
-  }
-  
-  .d-flex.gap-8,
-  .d-flex.gap-12 {
-    gap: 16px !important;
-  }
-  
-  .user-card,
-  .follower-card {
-    gap: 12px;
-  }
-  
-  .user-card .btn-secondary,
-  .follower-card .btn-secondary {
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-  
-  .avatar-lg {
-    width: 50px;
-    height: 50px;
-    font-size: 20px;
-  }
-  
-  .btn-translate {
-    padding: 4px 8px;
-    font-size: 11px;
-  }
-
-  .modal {
-    padding: 20px;
-    margin: 12px;
-    max-width: none;
-  }
-  
-  .modal-title {
-    font-size: 20px;
-  }
-  
-  .modal-actions {
-    flex-direction: column;
-  }
-  
-  .modal-actions button {
-    width: 100%;
-  }

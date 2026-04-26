@@ -276,21 +276,25 @@
 @media (max-width: 768px) {
   .sidebar {
     border-radius: 16px;
+    top: 12px;
+    bottom: 12px;
+    height: calc(100vh - 24px);
+    max-height: calc(100vh - 24px);
   }
   
   .sidebar.mobile {
     position: fixed;
-    top: 20px;
-    bottom: 20px;
-    width: 60px;
-    padding: 16px 8px;
+    top: 12px;
+    bottom: 12px;
+    width: 52px;
+    padding: 14px 6px;
     transition: width 0.3s ease, padding 0.3s ease;
     overflow-y: auto;
   }
 
   .sidebar.mobile.collapsed {
-    width: 60px;
-    padding: 16px 8px;
+    width: 52px;
+    padding: 14px 6px;
     left: var(--sidebar-left, 0) !important;
   }
 
@@ -526,6 +530,21 @@
   }
 
   @media (max-width: 480px) {
+    .sidebar {
+      top: 8px;
+      bottom: 8px;
+      height: calc(100vh - 16px);
+      max-height: calc(100vh - 16px);
+    }
+
+    .sidebar.mobile,
+    .sidebar.mobile.collapsed {
+      width: 48px;
+      padding: 12px 5px;
+      top: 8px;
+      bottom: 8px;
+    }
+
     .sidebar-expand {
       top: 10px;
     }

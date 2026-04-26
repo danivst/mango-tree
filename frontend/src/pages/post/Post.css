@@ -598,11 +598,38 @@
 }
 
 @media (max-width: 600px) {
+  .post-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .post-header-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .page-title {
+    font-size: 24px !important;
+  }
+
+  .image-carousel {
+    max-height: 300px;
+  }
+
+  .post-image {
+    height: auto; 
+    object-fit: contain;
+  }
+
   .comment-actions {
     margin-left: 0;
     width: 100%;
-    margin-top: 4px;
+    margin-top: 8px;
     justify-content: flex-start;
+    gap: 4px;
   }
 
   .hide-on-mobile {
@@ -612,5 +639,6 @@
   .btn-comment-action {
     padding: 4px 6px;
     min-width: unset;
+    font-size: 11px;
   }
 }

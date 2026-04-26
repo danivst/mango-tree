@@ -83,8 +83,8 @@ const LandingPage = () => {
             <p>{t("feature3Desc")}</p>
           </div>
         </div>
+        <Footer />
       </main>
-      <Footer />
     </div>
   );
 };

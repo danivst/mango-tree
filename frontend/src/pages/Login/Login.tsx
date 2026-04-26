@@ -3,12 +3,6 @@
  * @description Login page container component.
  * Orchestrates high-level authentication flows including login, registration, 
  * Two-Factor Authentication (2FA) and password recovery.
- * 
- * Responsibilities:
- * - Manages centralized state for multiple auth forms and modals.
- * - Handles session-based notifications (account deletion, expiration, suspension).
- * - Synchronizes UI state (tabs) with browser routing (/login vs /signup).
- * - Loads and applies persistent user preferences (theme, language) post-auth.
  */
 
 import { useState, useEffect } from "react";

@@ -15,10 +15,12 @@
 .landing-container .page-footer {
   color: #666 !important;
   border-top-color: #666 !important;
-  max-width: 940px;
+  max-width: 1000px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .landing-header {
@@ -136,7 +138,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: 20px;
   max-width: 1000px;
   margin: 0 auto;
   width: 100%;

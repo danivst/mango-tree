@@ -151,7 +151,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   </button>
                 )}
                 {isCurrentUserOwner && <button className="btn-comment-action btn-delete" onClick={() => onDelete(comment._id)} style={{ fontSize: isNested ? "10px" : "12px" }} title={t("delete")}><DeleteIcon sx={{ fontSize: isNested ? 12 : 16 }} /></button>}
-                <div className="btn-comment-action" style={{ fontSize: isNested ? "10px" : "12px", padding: '2px 4px' }}><ShareButton url={`${window.location.origin}/posts/${postId}#comment-${comment._id}`} title={`Comment by @${comment.userId?.username}`} description={comment.text} /></div>
+                <ShareButton 
+                  url={`${window.location.origin}/posts/${postId}#comment-${comment._id}`} 
+                  title={`Comment by @${comment.userId?.username}`} 
+                  description={comment.text} 
+                  minimal={true}
+                  className="btn-comment-action"
+                />
               </div>
             </div>
             <div className="comment-content" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

@@ -193,6 +193,8 @@ The ultimate goal is a functioning website that promotes the cultural value of c
    }));
    ```
 
+   **Please note: The provided origins are for local host ONLY. If you launch the project and try to access it from a network IP address, you need to add the IP with the same port as shown above to allow the requests to be sent to the backend.**
+
    To view and open the website, click on that link, which should automatically redirect you to the landing page in your preferred browser.
 
 ### 4. Running tests

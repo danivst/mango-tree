@@ -157,3 +157,88 @@
   background: transparent !important;
 }
 
+@media (max-width: 767px) {
+  .table-container {
+    border-radius: 10px;
+  }
+
+  .table {
+    min-width: 640px;
+    font-size: 13px;
+  }
+
+  .table th {
+    padding: 10px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .table td {
+    padding: 10px 12px;
+    font-size: 12px;
+    vertical-align: top;
+  }
+
+  .table-actions {
+    gap: 4px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .table-actions .btn-admin-action,
+  .table-actions .btn-danger,
+  .table-actions .btn-primary,
+  .table-actions .btn-secondary {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .pagination {
+    gap: 10px;
+    padding: 12px 0;
+    flex-wrap: wrap;
+  }
+
+  .pagination-btn,
+  .pagination-button {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  .pagination-info {
+    font-size: 12px;
+    text-align: center;
+    width: 100%;
+    order: 3;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-container {
+    margin-left: -2px;
+    margin-right: -2px;
+  }
+
+  .table {
+    min-width: 560px;
+    font-size: 12px;
+  }
+
+  .table th {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .table td {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .table-actions .btn-admin-action,
+  .table-actions .btn-danger,
+  .table-actions .btn-primary,
+  .table-actions .btn-secondary {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+}

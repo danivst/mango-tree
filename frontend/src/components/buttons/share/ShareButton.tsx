@@ -18,6 +18,7 @@ interface ShareButtonProps {
   title: string;
   description?: string;
   className?: string;
+  minimal?: boolean;
 }
 
 type ShareOption = "copy" | "email" | "twitter" | "facebook" | "whatsapp" | "telegram" | "reddit" | "messenger";
@@ -28,16 +29,17 @@ type ShareOption = "copy" | "email" | "twitter" | "facebook" | "whatsapp" | "tel
  * @param {string} title - The title of the content being shared
  * @param {string} [description] - Optional brief description of the content
  * @param {string} [className] - Optional CSS class for container styling
+ * @param {boolean} [minimal] - Whether to use a minimal style (no border/padding)
  * @example
  * ```tsx
  * <ShareButton 
- * url="[https://mangotreeofficial.com/posts/123](https://mangotreeofficial.com/posts/123)" 
+ * url="https://mangotreeofficial.com/posts/123" 
  * title="Check out this recipe!" 
  * description="A delicious mango smoothie."
  * />
  * ```
  */
-const ShareButton: React.FC<ShareButtonProps> = ({ url, title, description = "", className = "" }) => {
+const ShareButton: React.FC<ShareButtonProps> = ({ url, title, description = "", className = "", minimal = false }) => {
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
@@ -173,7 +175,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({ url, title, description = "",
 
   return (
     <div className={`share-button-container ${className}`}>
-      <button className="btn-share" onClick={toggleMenu} title={t("share")}>
+      <button 
+        className={`btn-share ${minimal ? "btn-share-minimal" : ""}`} 
+        onClick={toggleMenu} 
+        title={t("share")}
+      >
         <span className="material-icons">share</span>
       </button>
       {showMenu && (

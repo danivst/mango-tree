@@ -7,8 +7,8 @@
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 import Footer from "./Footer";
-import "./NotFound.css"; // Use the same styles as the NotFound page for consistent layout
-import "../../../styles/shared.css";
+import "../../pages/global/not-found/NotFound.css"; // Use the same styles as the NotFound page for consistent layout
+import "../../styles/shared.css";
 
 const Loading = () => {
   const { language } = useThemeLanguage();
