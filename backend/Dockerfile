@@ -6,7 +6,7 @@ WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
-COPY .env ./
 RUN npm run build
+RUN npm link ../shared
 EXPOSE 3000
-CMD ["node", "dist/index.js"]
+CMD ["node", "-r", "tsconfig-paths/register", "dist/backend/src/server.js"]
