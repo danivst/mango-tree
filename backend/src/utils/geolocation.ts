@@ -37,6 +37,16 @@ export interface GeoLocation {
  * ```
  */
 export const getLocationFromIP = async (ipAddress: string, lang: string = 'en'): Promise<string> => {
+  const normalizedLang = String(lang || "")
+    .trim()
+    .toLowerCase();
+  const geoApiLang =
+    normalizedLang === "bg" ||
+    normalizedLang === "bg-bg" ||
+    normalizedLang === "bulgarian"
+      ? "bg"
+      : "en";
+
   // Don't query for localhost/private IPs
   if (
     !ipAddress || 
@@ -47,7 +57,7 @@ export const getLocationFromIP = async (ipAddress: string, lang: string = 'en'):
     ipAddress.startsWith('10.') || 
     ipAddress.startsWith('172.')
   ) {
-    return lang === 'bg' ? 'Локална връзка' : 'Local connection';
+    return geoApiLang === 'bg' ? 'Локална връзка' : 'Local connection';
   }
 
   try {
@@ -56,7 +66,7 @@ export const getLocationFromIP = async (ipAddress: string, lang: string = 'en'):
      * Supports 'lang' parameter: en (default), bg (Bulgarian), etc.
      */
     const response = await axios.get<GeoLocation>(`http://ip-api.com/json/${ipAddress}`, {
-      params: { lang },
+      params: { lang: geoApiLang },
       timeout: 3000, // 3 second timeout to avoid delaying login
     });
 
@@ -67,10 +77,10 @@ export const getLocationFromIP = async (ipAddress: string, lang: string = 'en'):
     } else if (data.status === 'success' && data.country) {
       return data.country;
     } else {
-      return lang === 'bg' ? 'Неизвестно местоположение' : 'Unknown location';
+      return geoApiLang === 'bg' ? 'Неизвестно местоположение' : 'Unknown location';
     }
   } catch (error: any) {
     logger.warn({ ip: ipAddress, message: error?.message }, "Geolocation lookup failed");
-    return lang === 'bg' ? 'Неизвестно местоположение' : 'Unknown location';
+    return geoApiLang === 'bg' ? 'Неизвестно местоположение' : 'Unknown location';
   }
 };
