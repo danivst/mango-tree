@@ -114,99 +114,99 @@ The ultimate goal is a functioning website that promotes the cultural value of c
 
    ### 3.1. Launching locally
 
-      You must start both the backend and the frontend. First, open three terminal windows and then complete this commands in the provided order.
-      **Please note: If you do not follow the provided order of commands, the project is prone to build errors.**
+   You must start both the backend and the frontend. First, open three terminal windows and then complete this commands in the provided order.
+   **Please note: If you do not follow the provided order of commands, the project is prone to build errors.**
 
-      Navigate to the shared folder:
-      ```bash
-      cd shared
-      ```
+   Navigate to the shared folder:
+   ```bash
+   cd shared
+   ```
 
-      Install dependencies and packages:
-      ```bash
-      npm install
-      ```
+   Install dependencies and packages:
+   ```bash
+   npm install
+   ```
 
-      Ensure there are no build errors:
-      ```bash
-      npm run build
-      ```
+   Ensure there are no build errors:
+   ```bash
+   npm run build
+   ```
 
-      **Please note: This directory contains shared types and interfaces used by both client and server and is NOT intended to be launched on its own. It only needs the required packages installed.**
+   **Please note: This directory contains shared types and interfaces used by both client and server and is NOT intended to be launched on its own. It only needs the required packages installed.**
 
-      Navigate to the backend folder: 
-      ```bash
-      cd ../backend
-      ```
+   Navigate to the backend folder: 
+   ```bash
+   cd ../backend
+   ```
 
-      Install dependencies and packages:
-      ```bash
-      npm install
-      ```
+   Install dependencies and packages:
+   ```bash
+   npm install
+   ```
 
-      Ensure there are no build errors:
-      ```bash
-      npm run build
-      ```
+   Ensure there are no build errors:
+   ```bash
+   npm run build
+   ```
 
-      To start the server, run:
-      ```bash
-      npm run dev
-      ```
+   To start the server, run:
+   ```bash
+   npm run dev
+   ```
 
-      If successful, in the terminal there should be logs, indicating that the server is running on the port you set to the variable PORT in the **.env** file (which by default is set to **3000**).
+   If successful, in the terminal there should be logs, indicating that the server is running on the port you set to the variable PORT in the **.env** file (which by default is set to **3000**).
 
-      The next step is to navigate back to the frontend folder:
-      ```bash
-      cd ../frontend
-      ```
+   The next step is to navigate back to the frontend folder:
+   ```bash
+   cd ../frontend
+   ```
 
-      Install dependencies and packages:
-      ```bash
-      npm install
-      ```
+   Install dependencies and packages:
+   ```bash
+   npm install
+   ```
       
-      Ensure there are no build errors:
-      ```bash
-      npm run build
-      ```
+   Ensure there are no build errors:
+   ```bash
+   npm run build
+   ```
 
-      To run the client, run:
-      ```bash
-      npm run dev
-      ```
+   To run the client, run:
+   ```bash
+   npm run dev
+   ```
 
-      If successful, in the terminal should appear a link to **localhost:5173**.
-      **Please note: If port 5173 is not free to use, the frontend will be launched using a free port. This requires manual configuration in **backend/.env** in order to allow communication between the client and the server, so CORS allows the requests to pass, like so:**
-      ```backend/.env
-      CLIENT_URL={your_frontend_url}
-      ```
+   If successful, in the terminal should appear a link to **localhost:5173**.
+   **Please note: If port 5173 is not free to use, the frontend will be launched using a free port. This requires manual configuration in **backend/.env** in order to allow communication between the client and the server, so CORS allows the requests to pass, like so:**
+   ```backend/.env
+   CLIENT_URL={your_frontend_url}
+   ```
 
-      To view and open the website, click on that link, which should automatically redirect you to the landing page in your preferred browser.
+   To view and open the website, click on that link, which should automatically redirect you to the landing page in your preferred browser.
 
    ### 3.2. Launching using Docker
 
-      Once you have connected to your desired host server, you have to clone the repository:
-      ```bash
-      git clone https://github.com/danivst/mango-tree
-      ```
+   Once you have connected to your desired host server, you have to clone the repository:
+   ```bash
+   git clone https://github.com/danivst/mango-tree
+   ```
 
-      Then, navigate to the folder: 
-      ```bash
-      cd mango-tree
-      ```
+   Then, navigate to the folder: 
+   ```bash
+   cd mango-tree
+   ```
 
-      Then, run this to build the docker images:
-      ```bash
-      docker compose build
-      ```
+   Then, run this to build the docker images:
+   ```bash
+   docker compose build
+   ```
 
-      And this to create the containers:
-      ```bash
-      docker compose up -d
-      ```
+   And this to create the containers:
+   ```bash
+   docker compose up -d
+   ```
 
-      After this, you can visit your server's IP address in the browser, followed by the port the frontend is using, which should display the working website.
+   After this, you can visit your server's IP address in the browser, followed by the port the frontend is using, which should display the working website.
 
 ### 4. Running tests
 
