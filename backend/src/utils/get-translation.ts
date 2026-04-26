@@ -24,5 +24,13 @@ export const getLocalizedText = (
   userLang: string,
   translations: Translation,
 ): string => {
-  return userLang === "bg" ? translations.bg : translations.en;
+  const normalizedLang = String(userLang || "").trim().toLowerCase();
+
+  const prefersBulgarian = normalizedLang === "bg" || normalizedLang === "bulgarian" || normalizedLang === "bg-bg";
+
+  if (prefersBulgarian) {
+    return translations.bg || translations.en || "";
+  } 
+
+  return translations.en || translations.bg || "";
 };

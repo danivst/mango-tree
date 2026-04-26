@@ -67,7 +67,7 @@ const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
       <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
         <h2 className="login-modal-title">{t("twoFactorAuth")}</h2>
         <p className="login-modal-subtitle">
-          {t("twoFactorDescription")}
+          {t("twoFACodePlaceholder")}
         </p>
         <form onSubmit={onSubmit} className="login-modal-form">
           <div className="login-form-group">

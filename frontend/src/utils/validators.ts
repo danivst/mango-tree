@@ -83,7 +83,7 @@ export const validateEmail = (email: string): ValidationResult => {
  * @errorKeys
  * - "passwordRequired" (when empty)
  * - "passwordMinLength" (when < 8)
- * - "passwordComplexityRequirement" (when missing character types)
+ * - "invalidPassword" (when missing character types)
  */
 export const validatePassword = (password: string): ValidationResult => {
   if (!password) {
@@ -99,7 +99,7 @@ export const validatePassword = (password: string): ValidationResult => {
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
   if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
-    return 'passwordComplexityRequirement';
+    return 'invalidPassword';
   }
   return null;
 };

@@ -224,6 +224,8 @@ const renderTarget = (entry: ActivityLogEntry) => {
       REPORT_RESOLVE: "activityReportResolve",
       REPORT_STATUS_UPDATE: "activityReportStatusUpdate",
       REPORT_ITEM_DELETE: "activityReportItemDelete",
+      ACCOUNT_CREATE: "activityAccountCreate",
+      ACCOUNT_DELETE: "activityAccountDelete",
     };
 
     let key = keyMap[actionType];

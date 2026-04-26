@@ -68,6 +68,12 @@
   flex-wrap: wrap;
 }
 
+.profile-actions .post-action-btn,
+.profile-actions .btn-share {
+  height: 40px;
+  box-sizing: border-box;
+}
+
 .member-since {
   font-size: 13px;
   opacity: 0.8;

@@ -20,6 +20,8 @@ import {
 } from "../../utils/email-templates";
 import logger from "../../utils/logger";
 import LanguageTypeValue from "../../enums/language-type";
+import { log } from "console";
+import { logActivity } from "../../utils/activity-logger";
 
 /**
  * Retrieves all regular users.
@@ -238,6 +240,19 @@ export const deleteUser = async (
     }
 
     // Final account purge
+    const deletedUserId = user._id.toString();
+    const isSelfDeletionAction = req.user!.userId === deletedUserId;
+    const deletionDescription = isSelfDeletionAction      
+      ? `User ${user.username} (${deletedUserId}) deleted their own account.`
+      : `Admin ${req.user!.userId} deleted user ${user.username} (${deletedUserId}) account.`;
+
+    await logActivity(req, "ACCOUNT_DELETE", { 
+      userId: isSelfDeletionAction ? deletedUserId : req.user!.userId,
+      targetId: deletedUserId,
+      targetType: "user",
+      description: deletionDescription,
+    });
+    
     await BannedUserModel.deleteOne({ original_user_id: id });
     await User.findByIdAndDelete(id);
 

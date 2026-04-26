@@ -188,6 +188,17 @@ const Login = () => {
     }
   };
 
+  const persistLoginLanguagePreference = async () => {
+    try {
+      await usersAPI.updateProfile({ language });
+      setLanguageImmediate(language);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Failed to persist language preference", error);
+      }
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -219,6 +230,7 @@ const Login = () => {
 
       showSuccess(t("successfullyLoggedIn"));
 
+      await persistLoginLanguagePreference();
       await loadUserPreferences();
       await refreshUnreadCount();
 
@@ -333,6 +345,7 @@ const Login = () => {
       const response = await authAPI.verify2FA(twoFAUserId, twoFACode, rememberMe);
       showSuccess(t("twoFACodeVerified"));
 
+      await persistLoginLanguagePreference();
       await loadUserPreferences();
       await refreshUnreadCount();
 

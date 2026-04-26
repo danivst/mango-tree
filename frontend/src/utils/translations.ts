@@ -281,6 +281,8 @@ export const translations: Record<Language, Record<string, string>> = {
     activityTagDelete: 'Deleted tag "{name}"',
     activityReportStatusUpdate: "Updated report {id} status to {status}",
     activityReportItemDelete: "Deleted reported {targetType} {targetId}",
+    activityAccountCreate: "Created account",
+    activityAccountDelete: "Deleted account",
 
     // Security Notifications
     newLoginTitle: "New login detected",
@@ -594,6 +596,8 @@ export const translations: Record<Language, Record<string, string>> = {
     twoFactorAuth: "Two-Factor Authentication",
     twoFactorDescription:
       "Add an extra layer of security to your account. When enabled, you'll receive a 6-digit verification code via email each time you log in.",
+    twoFactorDisabledDescription: "To disable two-factor authentication, please verify your identity by entering a 6-digit code sent to your email.",
+    twoFactorEnabledDescription: "To enable two-factor authentication, please verify your identity by entering a 6-digit code sent to your email.",
     enable2FA: "Enable 2FA",
     disable2FA: "Disable 2FA",
     twoFAEnabled: "2FA is currently enabled",
@@ -905,6 +909,8 @@ export const translations: Record<Language, Record<string, string>> = {
     activityTagDelete: 'Изтрит таг "{name}"',
     activityReportStatusUpdate: "Обновен статус на доклад {id} на {status}",
     activityReportItemDelete: "Изтрит докобан {targetType} {targetId}",
+    activityAccountCreation: "Потребителски акаунт създаден",
+    activityAccountDeletion: "Потребителски акаунт изтрит",
 
     // Security Notifications
     newLoginTitle: "Открито ново влизане",
@@ -1145,7 +1151,7 @@ export const translations: Record<Language, Record<string, string>> = {
     like: "Харесай",
     unlike: "Отхаресай",
     likes: "Харесвания",
-    likeCount: "харесване", // singular count
+    likeCount: "харесване",
     role: "Роля",
     created: "Създаден на",
     actions: "Действия",
@@ -1212,6 +1218,8 @@ export const translations: Record<Language, Record<string, string>> = {
     twoFactorAuth: "Двуфакторна автентикация",
     twoFactorDescription:
       "Добавете допълнителен слой сигурност към акаунта си. Когато е активирана, ще получавате 6-цифрен код на имейл при всяко влизане.",
+    twoFactorEnabledDescription: "За да активирате двуфакторната автентикация, моля, въведете 6-цифрен код, изпратен на вашия имейл.",
+    twoFactorDisabledDescription: "За да деактивирате двуфакторната автентикация, моля, въведете 6-цифрен код, изпратен на вашия имейл.",
     enable2FA: "Активирай 2FA",
     disable2FA: "Деактивирай 2FA",
     twoFAEnabled: "2FA е активирана",

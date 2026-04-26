@@ -24,7 +24,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 40px;
-  height: 36px;
+  height: 40px;
+  box-sizing: border-box;
 }
 
 .btn-share:hover {
@@ -39,6 +40,14 @@
   height: unset !important;
   background: transparent !important;
   color: inherit !important;
+}
+
+.btn-comment-action .btn-share-minimal {
+  height: 32px !important;
+  min-width: 32px !important;
+  display: inline;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .btn-share-minimal:hover {

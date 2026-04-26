@@ -446,12 +446,16 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 12px;
+  justify-content: center;
+  padding: 0px 10px;
   min-width: auto;
   border: 1px solid rgba(0,0,0,0.1);
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
+  height: 32px;
+  box-sizing: border-box;
+  line-height: 1;
 }
 
 .btn-comment-action.button-disabled {
@@ -495,6 +499,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  justify-content: center;
   padding: 6px 12px;
   border: 2px solid var(--theme-accent);
   background: var(--theme-accent);
@@ -505,6 +510,8 @@
   font-weight: 500;
   flex-shrink: 0;
   font-family: 'Poppins', sans-serif;
+  height: 40px;
+  box-sizing: border-box;
 }
 
 .sticky-top {
@@ -637,8 +644,9 @@
   }
 
   .btn-comment-action {
-    padding: 4px 6px;
+    padding: 0px 6px;
     min-width: unset;
     font-size: 11px;
+    height: 30px;
   }
 }

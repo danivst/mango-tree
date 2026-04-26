@@ -165,6 +165,13 @@ export const registerUser = async (
     { expiresIn: "24h" },
   );
 
+  await logActivity(req, "ACCOUNT_CREATE", { 
+    userId: user._id.toString(),
+    targetId: user._id.toString(),
+    targetType: "user",
+    description: `Created account with username: ${user.username} and email: ${user.email}`,
+  });
+  
   const userLang = user.language || "en";
 
   const [titleTrans, greetingTrans, bodyTrans, signatureTrans] =
