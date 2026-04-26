@@ -75,14 +75,12 @@ const ProfileSettings: React.FC<any> = ({
             )}
           </div>
         </div>
-
         <div className="form-group">
           <label className="form-label">{t("email")}</label>
           <div className="relative">
             <input type="email" className="form-input" value={user.email} disabled />
           </div>
         </div>
-
         <PasswordSettings t={t} showError={showError} showSuccess={showSuccess} />
         <SecuritySettings user={user} setUser={setUser} t={t} showError={showError} showSuccess={showSuccess} />
         <DeleteAccount user={user} isAdmin={isAdmin} t={t} showError={showError} />

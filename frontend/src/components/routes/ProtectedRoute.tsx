@@ -7,6 +7,7 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../utils/useAuth";
+import Loading from "../global/Loading";
 
 /**
  * @interface ProtectedRouteProps
@@ -40,7 +41,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
    * Show loading state while checking authentication
    */
   if (loading) {
-    return null; // Or return a loading spinner
+    return <Loading />; 
   }
 
   /**

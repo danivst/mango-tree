@@ -8,9 +8,6 @@
 import logger from "../utils/logger";
 import { TranslationResult } from "../interfaces/translation";
 
-/**
- * DeepL API configuration
- */
 const DEEPL_API_KEY = process.env.DEEPL_API_KEY;
 const DEEPL_URL = "https://api-free.deepl.com/v2/translate";
 
@@ -22,7 +19,6 @@ if (!DEEPL_API_KEY) {
   logger.warn("DEEPL_API_KEY is not defined in environment variables. Translation features will fail.");
 }
 
-// Re-export the TranslationResult interface for consumers of this utility
 export type { TranslationResult } from "../interfaces/translation";
 
 /**
@@ -42,6 +38,7 @@ export const getDualTranslation = async (
   text: string
 ): Promise<TranslationResult> => {
   if (!text) { throw new Error("No text provided for translation."); }
+
   /**
    * Helper function to translate text to a specific target language.
    *
@@ -71,7 +68,6 @@ export const getDualTranslation = async (
   };
   try {
     const result: TranslationResult = { bg: "", en: "" };
-    // Execute both translation requests in parallel for optimal performance
     const [bgRes, enRes] = await Promise.all([ translate("BG"), translate("EN-US"), ]);
     result.bg = bgRes;
     result.en = enRes;

@@ -188,7 +188,7 @@ const processQueue = async (): Promise<void> => {
 
 /**
  * Moderates complex content (Posts).
- * Validates text, title, and images for both safety and cooking relevance.
+ * Validates text, title and images for both safety and cooking relevance.
  *
  * @param title - The post title
  * @param content - The post description

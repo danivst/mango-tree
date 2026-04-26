@@ -1,18 +1,6 @@
 /**
  * @file PostAuthorActions.tsx
- * @description Sub-component of the Post page that handles author-related metadata and primary social actions.
- * Provides UI for author identification, following, liking, and administrative controls like reporting or deleting.
- * * Features:
- * - Author profile summary with avatar and username
- * - Follow/Unfollow toggle with loading states and user-specific styling
- * - Like/Unlike toggle with real-time count display
- * - Category badge display with dynamic theme-based styling
- * - Post deletion trigger for post owners
- * - Post reporting trigger for non-owners
- * * Architecture:
- * - Stateless functional component receiving logic and state via props from Post.tsx
- * - Utilizes shared display utilities for category formatting and styling
- * - Conditional rendering based on currentUserId and ownership status
+ * @description Component that renders author metadata and post interaction controls.
  */
 
 import React from "react";
@@ -20,9 +8,10 @@ import { getCategoryDisplayName, getCategoryStyle } from "../../utils/display";
 
 /**
  * @component
- * @requires getCategoryDisplayName - Formats category name for display
- * @requires getCategoryStyle - Returns CSS variables for category-specific colors
- * @param {PostAuthorActionsProps} props - Component props
+ * @description Renders author metadata plus follow, like, report, edit, and delete actions.
+ * @requires getCategoryDisplayName - Formats category names for display.
+ * @requires getCategoryStyle - Returns category-specific styling.
+ * @param {PostAuthorActionsProps} props - Component props.
  */
 interface PostAuthorActionsProps {
   post: any;
@@ -68,7 +57,6 @@ const PostAuthorActions: React.FC<PostAuthorActionsProps> = ({
           )}
           <span className="author-username">@{post.authorId.username}</span>
         </div>
-
         {currentUserId && currentUserId !== post.authorId._id && (
           <button
             className={`btn-secondary post-action-btn ${isFollowing ? "unfollow" : ""}`}
@@ -92,7 +80,6 @@ const PostAuthorActions: React.FC<PostAuthorActionsProps> = ({
             )}
           </button>
         )}
-
         <button
           onClick={handleLike}
           disabled={actionLoading.like}
@@ -112,8 +99,6 @@ const PostAuthorActions: React.FC<PostAuthorActionsProps> = ({
           )}
           <span>{likesCount} {likesCount === 1 ? t("likeCount") : t("likes")}</span>
         </button>
-
-        {/* Edit Button - Visible only to owner */}
         {currentUserId && currentUserId === post.authorId._id && (
         <button 
             onClick={onEdit} 
@@ -123,14 +108,12 @@ const PostAuthorActions: React.FC<PostAuthorActionsProps> = ({
             <span>{t("edit")}</span>
         </button>
         )}
-        
         {currentUserId && currentUserId === post.authorId._id && (
           <button onClick={handleDeletePostClick} disabled={actionLoading.delete} className="btn-secondary post-action-btn btn-delete">
             {actionLoading.delete ? <span className="material-icons spin text-base">refresh</span> : <span className="material-icons text-base">delete</span>}
             <span>{t("deletePost")}</span>
           </button>
         )}
-
         {currentUserId && currentUserId !== post.authorId._id && (
           <button onClick={() => setReportModalOpen(true)} disabled={actionLoading.report} className="btn-secondary post-action-btn btn-report">
             {actionLoading.report ? <span className="material-icons spin text-base">refresh</span> : <span className="material-icons text-lg">warning</span>}
@@ -138,7 +121,6 @@ const PostAuthorActions: React.FC<PostAuthorActionsProps> = ({
           </button>
         )}
       </div>
-
       <span
         className="category-badge"
         style={{

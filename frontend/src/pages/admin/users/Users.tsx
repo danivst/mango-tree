@@ -2,8 +2,8 @@
  * @file Users.tsx
  * @description Administrative user management dashboard. 
  * Provides a comprehensive interface for administrators to search, filter, and manage user accounts.
- * Includes functionality for banning/unbanning users, permanent account deletion, and 
- * a detailed profile preview modal showing user statistics, past usernames, and published posts.
+ * Includes functionality for banning/unbanning users, permanent account deletion and 
+ * a detailed profile preview modal showing user statistics, past usernames and published posts.
  */
 
 import { useState, useEffect, useMemo } from "react";
@@ -31,7 +31,6 @@ import {
   ColumnDef,
 } from "../../../components/admin/table";
 
-// MUI Icon Imports
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ArticleIcon from "@mui/icons-material/Article";
@@ -55,7 +54,6 @@ const Users = () => {
   const t = (key: string) => getTranslation(language, key);
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
-  // Fetch users on initial load (avoid requiring manual refresh)
   useEffect(() => {
     if (!hasFetched && !loading) {
       fetchUsers().catch(() => {
@@ -64,7 +62,6 @@ const Users = () => {
     }
   }, [hasFetched, loading, fetchUsers]);
 
-  // Local UI states
   const [searchQuery, setSearchQuery] = useState("");
   const [sortState, setSortState] = useState<SortState>({
     column: null,
@@ -73,7 +70,6 @@ const Users = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Modals state
   const [deleteStep, setDeleteStep] = useState<DeleteStep>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState("");
@@ -83,7 +79,6 @@ const Users = () => {
   const [banReason, setBanReason] = useState("");
   const [unbanTarget, setUnbanTarget] = useState<any | null>(null);
 
-  // User Profile Preview states
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [userPosts, setUserPosts] = useState<PostType[]>([]);
@@ -92,9 +87,6 @@ const Users = () => {
     string | null
   >(null);
 
-  /**
-   * Effect: Reset to page 1 whenever search query changes.
-   */
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
@@ -181,9 +173,6 @@ const Users = () => {
     );
   }, [filteredData, sortState]);
 
-  /**
-   * Slices data for pagination.
-   */
   const paginatedData = useMemo(() => {
     return paginateData(sortedData, currentPage, itemsPerPage);
   }, [sortedData, currentPage]);
@@ -217,8 +206,6 @@ const Users = () => {
       showError(t("failedToLoadUsers"));
     }
   };
-
-  // --- Modal Handlers ---
 
   const handleDeleteClick = (userId: string) => {
     setDeleteUserId(userId);
@@ -350,9 +337,6 @@ const Users = () => {
     ? users.find((u) => u._id === deleteUserId)
     : null;
 
-  /**
-   * Table column configurations.
-   */
   const columns: ColumnDef<any>[] = [
     {
       key: "username",
@@ -381,9 +365,6 @@ const Users = () => {
     },
   ];
 
-  /**
-   * Preview link column.
-   */
   const viewProfileColumn: ColumnDef<any> = {
     key: "viewProfile",
     label: t("viewProfile"),
@@ -410,7 +391,6 @@ const Users = () => {
   return (
     <div>
       <h1 className="page-container-title">{t("users")}</h1>
-
       <AdminTable<any>
         data={paginatedData}
         currentPage={currentPage}
@@ -453,8 +433,6 @@ const Users = () => {
           </div>
         )}
       />
-
-      {/* Delete Modal */}
       {deleteStep && userToDelete && (
         <div className="modal-overlay">
           <div className="modal modal-danger">
@@ -543,8 +521,6 @@ const Users = () => {
           </div>
         </div>
       )}
-
-      {/* Ban Modal */}
       {banUnbanStep && banUserId && userToBan && (
         <div className="modal-overlay">
           <div className="modal modal-danger">
@@ -633,8 +609,6 @@ const Users = () => {
           </div>
         </div>
       )}
-
-      {/* Unban Modal */}
       {banUnbanStep === "unban_confirm" && banUserId && userToUnban && (
         <div className="modal-overlay">
           <div className="modal modal-danger">
@@ -662,8 +636,6 @@ const Users = () => {
           </div>
         </div>
       )}
-
-      {/* User Profile Preview Modal */}
       {selectedUser && (
         <div className="modal-overlay z-index-high">
           <div className="modal modal-preview">
@@ -835,7 +807,6 @@ const Users = () => {
           </div>
         </div>
       )}
-
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

@@ -1,14 +1,6 @@
 /**
  * @file ResetPassword.tsx
- * @description Password reset page for users who forgot their password.
- * User receives an email with a reset token link. This page validates the token and allows password reset.
- *
- * Flow:
- * 1. Extract token from URL query params.
- * 2. Fetch user's email associated with token via /api/auth/reset-token/:token.
- * 3. If valid, show password reset form.
- * 4. Submit new password to /api/auth/reset-password.
- * 5. On success, show message and redirect to login.
+ * @description Password reset page for users who arrive with a reset token.
  */
 
 import { useState, useEffect } from "react";
@@ -17,32 +9,23 @@ import { getTranslation } from "../../../../utils/translations";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSnackbar } from "../../../../utils/snackbar";
 import Snackbar from "../../../../components/snackbar/Snackbar";
+import Loading from "../../../../components/global/Loading";
 import { validatePassword, validatePasswordMatch } from "../../../../utils/validators";
 import "./ResetPassword.css";
 import "../../Login.css";
 
-// MUI Icon Imports
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import LanguageSwitcher from "../../LanguageSwitcher";
 
 /**
  * @component ResetPassword
- * @description Component for resetting account password using a unique secure token.
- * * Features:
- * - Token validation (redirects to login if missing/invalid).
- * - Email display (read-only) fetched from token lookup.
- * - Password complexity validation (Upper, Lower, Number, Special Character).
- * - Show/hide password toggles for both password and confirmation fields.
- * - Language switcher support (EN/BG).
- *
- * Route: /reset-password?token=...
- * Access: Public (requires valid reset token from email).
- *
- * @requires useSearchParams - Get reset token from URL.
- * @requires useNavigate - Redirect after completion or on error.
- * @requires useThemeLanguage - Translations and language switching.
- * @requires useSnackbar - Feedback message management.
- * @returns {JSX.Element} The rendered reset password view.
+ * @description Renders the password reset flow for a validated reset token.
+ * @requires useSearchParams - Reads the reset token from the URL.
+ * @requires useNavigate - Redirects after completion or invalid access.
+ * @requires useThemeLanguage - Provides translations and language switching.
+ * @requires useSnackbar - Shows feedback messages.
+ * @returns {JSX.Element} The rendered reset password page.
  */
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -63,12 +46,7 @@ const ResetPassword = () => {
     confirmPassword?: string;
   }>({});
 
-  /**
-   * Effect: Fetch email from token and verify access on mount.
-   * Ensures the user has a valid reset link before showing the form.
-   */
   useEffect(() => {
-    // Require reset token for all access
     if (!token) {
       showError(t("invalidResetLink"));
       setTimeout(() => {
@@ -78,7 +56,6 @@ const ResetPassword = () => {
       return;
     }
 
-    // Fetch email from reset token
     const fetchEmail = async () => {
       try {
         const response = await fetch(`/api/auth/reset-token/${token}`);
@@ -121,7 +98,6 @@ const ResetPassword = () => {
     setLoading(true);
     setErrors({});
 
-    // Use Centralized Password Validator
     const passwordError = validatePassword(password);
     if (passwordError) {
       setErrors({
@@ -131,7 +107,6 @@ const ResetPassword = () => {
       return;
     }
 
-    // Use Centralized Password Match Validator
     const matchError = validatePasswordMatch(password, confirmPassword);
     if (matchError) {
       setErrors({ confirmPassword: t(matchError) });
@@ -178,38 +153,16 @@ const ResetPassword = () => {
 
   return (
     <div className="login-container">
-      {/* Language Toggle */}
-      <div className="language-switcher">
-        <button
-          type="button"
-          className={`lang-button ${language === "en" ? "lang-active" : ""}`}
-          onClick={() => setLanguage("en")}
-        >
-          EN
-        </button>
-        <button
-          type="button"
-          className={`lang-button ${language === "bg" ? "lang-active" : ""}`}
-          onClick={() => setLanguage("bg")}
-        >
-          БГ
-        </button>
-      </div>
-
+      <LanguageSwitcher language={language} onLanguageChange={setLanguage} />
       <div className="login-box">
         <div className="login-header">
           <img src="/mangotree-logo.png" alt="MangoTree" className="logo-placeholder" />
           <h1 className="login-title">MangoTree</h1>
         </div>
-
         {fetchingEmail ? (
-          <div className="loading-state">
-            <p>Loading...</p>
-            <p>Verifying reset token...</p>
-          </div>
+          <Loading />
         ) : email ? (
           <form onSubmit={handleReset} className="login-form">
-            {/* Read-only Email Field */}
             <div className="form-group">
               <label htmlFor="email" className="form-label">
                 {t("email")}
@@ -224,8 +177,6 @@ const ResetPassword = () => {
                 title="Email for resetting password cannot be edited"
               />
             </div>
-
-            {/* New Password Field */}
             <div className="form-group">
               <label
                 htmlFor="password"
@@ -264,8 +215,6 @@ const ResetPassword = () => {
                 <span className="error-message">{errors.password}</span>
               )}
             </div>
-
-            {/* Confirm Password Field */}
             <div className="form-group">
               <label
                 htmlFor="confirmPassword"
@@ -306,8 +255,6 @@ const ResetPassword = () => {
                 <span className="error-message">{errors.confirmPassword}</span>
               )}
             </div>
-
-            {/* Form Actions */}
             <div className="form-actions">
               <button type="button" className="invisible" disabled aria-hidden="true">
                 Placeholder
@@ -322,7 +269,6 @@ const ResetPassword = () => {
             <p>{t("unableToLoadResetForm")}</p>
           </div>
         )}
-
         <Snackbar
           message={snackbar.message}
           type={snackbar.type}

@@ -1,33 +1,29 @@
-/* ============================================
-   USER SIDEBAR COMPONENT
-   ============================================ */
+/**
+ * @file UserSidebar.css
+ * @description Styles for the user sidebar component
+ */
 
-/* Note: Uses .sidebar, .sidebar-header, .sidebar-nav, etc. from AdminSidebar.css */
-/* Only defines the .sidebar-logout-text color override */
+/* Uses .sidebar, .sidebar-header, .sidebar-nav, etc. from AdminSidebar.css */
+/* Defines the .sidebar-logout-text color override */
 @import url('../../admin/sidebar/AdminSidebar.css');
 
-/* Logout text color */
 .sidebar-logout-text {
   color: #a50104;
 }
 
-/* Icon sizing - default menu item icons */
 .sidebar-icon .material-icons {
   font-size: 20px;
 }
 
-/* Larger icons for close and menu buttons */
 .sidebar-close .material-icons,
 .sidebar-expand .material-icons {
   font-size: 24px;
 }
 
-/* Notifications badge wrapper */
 .notifications-icon-wrapper {
   position: relative;
 }
 
-/* Notification badge (unread count) */
 .notification-badge {
   position: absolute;
   top: -6px;

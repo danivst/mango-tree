@@ -1,8 +1,8 @@
-/* ============================================
-   FORM COMPONENTS
-   ============================================ */
+/**
+ * @file forms.css
+ * @description Styles for the forms
+ */
 
-/* Forms */
 .form-group {
   margin-bottom: 20px;
 }
@@ -26,14 +26,12 @@
   margin-bottom: 8px;
 }
 
-/* Settings/User Profile form layout */
 .settings-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* Section containers used in Settings and User Profile */
 .section-card {
   background: linear-gradient(180deg, var(--theme-bg), var(--theme-accent));
   border-radius: 12px;
@@ -84,7 +82,6 @@
   opacity: 0.6 !important;
 }
 
-/* Search input - consistent outline at all times */
 .search-input {
   width: 250px;
   min-width: 200px;
@@ -110,7 +107,6 @@
   box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb), 0.2) !important;
 }
 
-/* Ensure search input maintains outline in all states */
 .search-input:hover {
   border-color: var(--theme-text);
 }
@@ -132,7 +128,6 @@
   margin-top: 8px;
 }
 
-/* 2FA code input - large code, normal placeholder */
 .twofa-code-input {
   font-size: 24px !important;
   letter-spacing: 8px !important;
@@ -146,7 +141,6 @@
   text-align: center !important;
 }
 
-/* Form layout for horizontal groups */
 .form-horizontal-group {
   display: flex;
   gap: 12px;
@@ -157,7 +151,6 @@
   flex: 1;
 }
 
-/* Password input wrapper */
 .password-input-wrapper {
   position: relative;
 }
@@ -166,7 +159,6 @@
   padding-right: 40px;
 }
 
-/* Form select (custom appearance) */
 .form-select {
   width: 100%;
   padding: 12px 16px;
@@ -193,7 +185,6 @@
   border-color: #d32f2f !important;
 }
 
-/* Disabled input styling */
 .form-input:disabled,
 .form-input.disabled {
   background: rgba(0, 0, 0, 0.1) !important;

@@ -1,8 +1,8 @@
-/* ============================================
-   POST CARD COMPONENT
-   ============================================ */
+/**
+ * @file PostCard.css
+ * @description Styles for the post card component
+ */
 
-/* Base post card container */
 .post-card {
   padding: 16px;
   display: flex;
@@ -11,7 +11,6 @@
   cursor: pointer;
 }
 
-/* Image container - maintains 16:9 aspect ratio */
 .post-card-image-container {
   position: relative;
   padding-top: 56.25%;
@@ -115,7 +114,6 @@
   font-size: 14px;
 }
 
-/* Share button in post card - using the ShareButton component */
 .post-card-actions .btn-share {
   padding: 6px 10px;
   min-height: 28px;

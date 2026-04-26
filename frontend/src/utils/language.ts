@@ -8,11 +8,6 @@
  */
 
 /**
- * Supported language codes
- * @typedef {'en' | 'bg'} SupportedLanguage
- */
-
-/**
  * Simple language detection based on character sets.
  * Checks for Cyrillic characters to identify Bulgarian text.
  *
@@ -31,8 +26,6 @@ export const detectLanguage = (text: string): 'en' | 'bg' => {
     return 'en';
   }
 
-  // Check for Cyrillic characters (Bulgarian alphabet range)
-  // Matches characters in the ranges: А-я (Cyrillic)
   if (/[а-яА-Я]/.test(text)) {
     return 'bg';
   }

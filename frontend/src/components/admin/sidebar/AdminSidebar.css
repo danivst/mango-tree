@@ -1,6 +1,7 @@
-/* ============================================
-   ADMIN SIDEBAR COMPONENT
-   ============================================ */
+/**
+ * @file AdminSidebar.css
+ * @description Styles for the admin sidebar component
+ */
 
 .sidebar {
   position: fixed;
@@ -193,7 +194,6 @@
   height: 20px;
 }
 
-/* Material icons sizing inside sidebar */
 .sidebar-icon .material-icons {
   font-size: 20px;
 }
@@ -208,7 +208,6 @@
   display: none;
 }
 
-/* Center icons and buttons in collapsed sidebar (desktop and mobile) */
 .sidebar.collapsed .sidebar-item,
 .sidebar.mobile.collapsed .sidebar-item,
 .sidebar.collapsed .sidebar-logout,
@@ -266,7 +265,7 @@
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .sidebar {
-    width: 280px; /* Match the value from the JS function */
+    width: 280px; 
   }
 
   .sidebar.collapsed {
@@ -275,7 +274,6 @@
 }
 
 @media (max-width: 768px) {
-  /* Base mobile sidebar - respects desktop border-radius (16px) */
   .sidebar {
     border-radius: 16px;
   }
@@ -290,14 +288,12 @@
     overflow-y: auto;
   }
 
-  /* Collapsed state (default on mobile): 60px wide, respects --sidebar-left */
   .sidebar.mobile.collapsed {
     width: 60px;
     padding: 16px 8px;
     left: var(--sidebar-left, 0) !important;
   }
 
-  /* Expanded state: full-screen overlay covering everything */
   .sidebar.mobile:not(.collapsed) {
     width: 100%;
     padding: 24px;
@@ -529,20 +525,17 @@
     background: rgba(0, 0, 0, 0.1);
   }
 
-  /* On very small screens, keep at 16px but ensure it's not hidden by notch */
   @media (max-width: 480px) {
     .sidebar-expand {
       top: 10px;
     }
   }
 
-  /* Collapsed sidebar: push nav items down to separate from expand button */
   .sidebar.collapsed .sidebar-nav {
     margin-top: 20px;
   }
 }
 
-/* Mango theme: darker unselected items */
 .sidebar.mango-theme .sidebar-item {
   opacity: 0.8;
 }

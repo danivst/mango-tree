@@ -19,16 +19,14 @@ export class AppError extends Error {
   constructor(message: string, status: number = 500) {
     super(message);
     this.status = status;
-    this.isOperational = true; // Marks it as a handled business logic error
-
-    // Capture the stack trace for easier debugging in dev
+    this.isOperational = true;
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
 /**
  * Global Error Handler Middleware.
- * Captures all errors passed to next(), logs them, and returns a standardized JSON response.
+ * Captures all errors passed to next(), logs them and returns a standardized JSON response.
  *
  * @param err - Error or AppError instance
  * @param req - Express request object
@@ -52,22 +50,18 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  // Determine the status code
   const status = err instanceof AppError ? err.status : 500;
   
-  // Log the error (Structured Logging)
   if (status === 500) {
     logger.error(err, `[CRITICAL] ${req.method} ${req.path}`);
   } else {
     logger.warn({ path: req.path, message: err.message }, `[API_ERROR] ${status}`);
   }
 
-  // Construct the response envelope (Task 8.4)
   const response = {
     success: false,
     error: err.message || 'Internal server error',
     timestamp: new Date().toISOString(),
-    // Include stack trace only in development
     ...(IS_DEV && { stack: err.stack }),
   };
 

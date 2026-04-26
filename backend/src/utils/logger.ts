@@ -8,9 +8,9 @@ import pino from "pino";
 
 /**
  * Core logging instance.
- * Configures logging levels, pretty-printing for development environments, 
+ * Configures logging levels, pretty-printing for development environments
  * and automatic redaction of sensitive security credentials (tokens, passwords).
- * * @example
+ * @example
  * ```typescript
  * logger.info("Server started on port 3000");
  * logger.error(err, "Critical system failure");

@@ -1,6 +1,7 @@
-/* ============================================
-   GLOBAL STYLES & CSS VARIABLES
-   ============================================ */
+/**
+ * @file globals.css
+ * @description Styles for the global variables and layout
+ */
 
 :root {
   --theme-bg: #f1f0cc;
@@ -8,8 +9,8 @@
   --theme-text: #250b24;
   --sidebar-width: 280px;
   --sidebar-collapsed-width: 80px;
-  --sidebar-gap: 20px;
-  --sidebar-left: 20px;
+  --sidebar-gap: 16px;
+  --sidebar-left: 16px;
 }
 
 * {
@@ -38,7 +39,6 @@ body {
   scrollbar-color: var(--theme-text) var(--theme-accent);
 }
 
-/* WebKit (Chrome, Safari, Edge) scrollbar */
 body::-webkit-scrollbar {
   width: 10px;
 }
@@ -87,7 +87,7 @@ body {
 /* Mobile Breakpoint */
 @media (max-width: 767px) {
   :root {
-    --sidebar-width: 100%; /* Full screen overlay */
+    --sidebar-width: 100%;
     --sidebar-collapsed-width: 60px;
   }
 }

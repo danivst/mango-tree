@@ -48,12 +48,10 @@ export function updateInTree<T extends TreeNode<T>>(
   updater: (item: T) => T
 ): T[] {
   return items.map(item => {
-    // If this is the item we're looking for, apply the updater
     if (item._id === itemId) {
       return updater(item);
     }
 
-    // If this item has children, recursively search them
     if (item.replies && item.replies.length > 0) {
       return {
         ...item,
@@ -61,7 +59,6 @@ export function updateInTree<T extends TreeNode<T>>(
       };
     }
 
-    // Item not found in this branch, return unchanged
     return item;
   });
 }
@@ -158,7 +155,6 @@ export function filterTree<T extends TreeNode<T>>(
   predicate: (item: T) => boolean
 ): T[] {
   return items.filter(item => {
-    // If item matches, keep it and recursively filter its children
     if (predicate(item)) {
       if (item.replies && item.replies.length > 0) {
         return {
@@ -169,8 +165,6 @@ export function filterTree<T extends TreeNode<T>>(
       return item;
     }
 
-    // If item doesn't match, check if any children match
-    // If yes, keep this item with filtered children
     if (item.replies && item.replies.length > 0) {
       const filteredChildren = filterTree(item.replies, predicate);
       if (filteredChildren.length > 0) {
@@ -181,7 +175,6 @@ export function filterTree<T extends TreeNode<T>>(
       }
     }
 
-    // Item and all children filtered out
     return false;
   });
 }
@@ -202,11 +195,9 @@ export function removeFromTree<T extends TreeNode<T>>(
 ): T[] {
   return items.reduce<T[]>((acc, item) => {
     if (item._id === itemId) {
-      // Skip this item (remove it)
       return acc;
     }
 
-    // Recursively filter children
     if (item.replies && item.replies.length > 0) {
       return [
         ...acc,
@@ -217,12 +208,10 @@ export function removeFromTree<T extends TreeNode<T>>(
       ];
     }
 
-    // Keep item unchanged
     return [...acc, item];
   }, []);
 }
 
-// Convenience re-export of Comment-specific functions
 export const commentUtils = {
   /**
    * Update a comment in the comment tree (convenience wrapper)

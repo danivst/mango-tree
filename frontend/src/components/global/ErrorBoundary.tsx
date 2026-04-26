@@ -25,14 +25,14 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren, ErrorBounda
   }
 
   /**
-   * Updates state to render fallback UI on error.
+   * Updates state to render fallback UI on error
    */
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
   /**
-   * Logs error details. Planned: Replace with central logger (Task 5.1).
+   * Logs error details
    */
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     if (import.meta.env.DEV) {

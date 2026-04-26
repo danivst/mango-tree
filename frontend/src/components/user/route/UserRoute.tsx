@@ -14,6 +14,7 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../../utils/useAuth";
+import Loading from "../../global/Loading";
 
 /**
  * @interface UserRouteProps
@@ -43,7 +44,7 @@ const UserRoute = ({ children }: UserRouteProps) => {
    * Show loading state while checking authentication
    */
   if (loading) {
-    return <div>Loading...</div>; // You might want to use a proper loading component
+    return <Loading />; 
   }
 
   /**
@@ -71,15 +72,12 @@ const UserRoute = ({ children }: UserRouteProps) => {
    * regular user routes, especially share pages. Redirect them appropriately.
    */
   if (user?.role === "admin") {
-    // Share pages → 404
     if (isSharePage) {
       return <Navigate to="/404" replace />;
     }
-    // Settings → admin-specific settings
     if (location.pathname === "/settings") {
       return <Navigate to="/admin/dashboard/admin-settings" replace />;
     }
-    // Other user pages → admin dashboard
     return <Navigate to="/admin/dashboard" replace />;
   }
 

@@ -38,22 +38,19 @@ export const logActivity = async (
   req: any,
   actionType: string,
   options: {
-    userId?: string; // Allow explicit userId for cases where req.user is not set (e.g., login)
+    userId?: string;
     targetId?: string;
     targetType?: string;
     description?: string;
   } = {},
 ) => {
   try {
-    // Use explicit userId if provided, otherwise fall back to req.user
     const userId = options.userId || req.user?.userId;
     if (!userId) {
-      // No user identifier, skip logging
       logger.info({ actionType }, "Activity logging skipped: No user ID found");
       return;
     }
 
-    // Extract IP address: check common proxy headers first, fallback to connection
     const ip =
       req.ip ||
       req.connection?.remoteAddress ||
@@ -61,7 +58,6 @@ export const logActivity = async (
       (req.headers["x-real-ip"] as string) ||
       "unknown";
 
-    // Extract user agent
     const userAgent = req.headers["user-agent"] || "unknown";
 
     const logEntry = {
@@ -79,6 +75,5 @@ export const logActivity = async (
     await ActivityLog.create(logEntry);
   } catch (err) {
     logger.error(err, "Failed to log activity");
-    // Do not throw – logging should never break the primary flow
   }
 };

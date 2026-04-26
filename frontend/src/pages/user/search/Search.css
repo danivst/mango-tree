@@ -1,6 +1,7 @@
-/* ============================================
-   SEARCH PAGE
-   ============================================ */
+/**
+ * @file Search.css
+ * @description Styles for the search page
+ */
 
 .search-container {
   display: flex;

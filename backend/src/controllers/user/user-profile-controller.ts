@@ -67,7 +67,6 @@ export const getUserProfile = async (
     const user = await User.findById(id).select("-passwordHash");
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Check if user is banned: only self, admin, or non-banned users can view
     const isSelf = req.user!.userId === id;
     const isAdmin = req.user!.role === RoleTypeValue.ADMIN;
     if (!isSelf && !isAdmin && user.isBanned) {
@@ -96,26 +95,21 @@ export const updateProfile = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    // Support both /users/:id and /users/me
     const paramId = req.params.id;
-    const userId = paramId || req.user!.userId; // If no ID param, use logged-in user
+    const userId = paramId || req.user!.userId;
 
     const { bio, username, profileImage, theme, language } = req.body;
 
-    // Authorization: user can update their own profile, or admin can update any
     if (req.user!.userId !== userId && req.user!.role !== RoleTypeValue.ADMIN) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    // Fetch the existing user to track past usernames and apply updates
     const existingUser = await User.findById(userId);
     if (!existingUser)
       return res.status(404).json({ message: "User not found" });
 
-    // Capture the old username before any updates
     const oldUsername = existingUser.username;
 
-    // Check Username uniqueness if being changed
     if (username && username !== oldUsername) {
       const exists = await User.findOne({ username, _id: { $ne: userId } });
       if (exists) {
@@ -123,9 +117,7 @@ export const updateProfile = async (
       }
     }
 
-    // Apply updates to the user document
     if (username && username !== oldUsername) {
-      // Push the old username to pastUsernames before updating
       existingUser.pastUsernames.push({
         username: oldUsername,
         changedAt: new Date(),
@@ -151,10 +143,8 @@ export const updateProfile = async (
       existingUser.language = language;
     }
 
-    // Save all changes
     await existingUser.save();
 
-    // Log profile updates (non-username, which is logged separately)
     if (profileImage) {
       await logActivity(req, "PROFILE_IMAGE_CHANGE", {
         targetId: userId.toString(),
@@ -184,18 +174,15 @@ export const updateProfile = async (
       });
     }
 
-    // Return the updated user without passwordHash
     const updatedUser = await User.findById(userId).select("-passwordHash");
     if (!updatedUser)
       return res.status(404).json({ message: "User not found" });
 
-    // If username was changed, create a notification
     if (username && username !== oldUsername) {
       const userLang = updatedUser.language || "en";
       const messageEn = `Your username has been changed to "${username}".`;
       const messageBg = `Вашието потребителско име беше променено на "${username}".`;
 
-      // Wrap translation in try/catch to avoid failures
       let titleTrans, bodyTrans;
       try {
         [titleTrans, bodyTrans] = await Promise.all([
@@ -228,7 +215,6 @@ export const updateProfile = async (
         logger.error(notifErr, "Failed to create username change notification:");
       }
 
-      // Log username change for audit
       await logActivity(req, "USERNAME_CHANGE", {
         targetId: userId.toString(),
         targetType: "user",

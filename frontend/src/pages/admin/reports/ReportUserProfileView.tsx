@@ -73,20 +73,16 @@ const ReportUserProfileView: React.FC<ReportUserProfileViewProps> = ({
           </div>
         </div>
       </div>
-
       {user.bio && (
         <div className="mb-24">
           <h3 className="preview-bio-title">{t("bio")}</h3>
           <p className="preview-bio-content">{user.bio}</p>
         </div>
       )}
-
       {user.pastUsernames && user.pastUsernames.length > 0 && (
         <PastUsernames pastUsernames={user.pastUsernames} className="mb-24" />
       )}
-
       <hr className="preview-divider" />
-
       {specialCategories.length > 0 && (
         <div className="preview-category-tabs">
           <button
@@ -106,7 +102,6 @@ const ReportUserProfileView: React.FC<ReportUserProfileViewProps> = ({
           ))}
         </div>
       )}
-
       {filteredPosts.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">

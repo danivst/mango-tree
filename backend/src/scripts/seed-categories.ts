@@ -12,9 +12,8 @@ import Category from '../models/category-model';
 const seedCategories = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log('✅ MongoDB connected for category seeding');
+    console.log('MongoDB connected for category seeding');
 
-    // clear existing categories
     await Category.deleteMany({});
 
     const categories = ['question', 'flex', 'recipe'];
@@ -23,10 +22,10 @@ const seedCategories = async () => {
       categories.map((name) => ({ name }))
     );
 
-    console.log('✅ Categories seeded successfully');
+    console.log('Categories seeded successfully');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Category seeding failed:', err);
+    console.error('Category seeding failed:', err);
     process.exit(1);
   }
 };

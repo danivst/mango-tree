@@ -62,7 +62,6 @@ export const registerAdmin = async (
   // Extract username from email (part before @)
   const username = email.split("@")[0];
 
-  // Check if username already exists
   const existingUsername = await User.findOne({ username });
   if (existingUsername) {
     return res.status(400).json({
@@ -71,11 +70,10 @@ export const registerAdmin = async (
     });
   }
 
-  // Generate default password: username + "123!@#"
-  const defaultPassword = `${username}123!@#`;
+  // Generate default password: Username + "123!@#"
+  const defaultPassword = `${username.charAt(0).toUpperCase() + username.slice(1)}123!@#`;
   const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
-  // Create admin user with default password
   const user = await User.create({
     username,
     email,
@@ -86,7 +84,6 @@ export const registerAdmin = async (
     },
   });
 
-  // Determine user's language (default to English)
   const userLang = user.language || "en";
 
   // Get translations for email

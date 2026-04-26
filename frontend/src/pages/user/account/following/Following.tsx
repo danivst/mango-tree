@@ -1,7 +1,7 @@
 /**
  * @file Following.tsx
  * @description User account page showing the list of users the current user follows.
- * Displays followees in a grid with avatar, username, join date, and follow/unfollow buttons.
+ * Displays followees in a grid with avatar, username, join date and follow/unfollow buttons.
  * Provides real-time updates and management of the user's following list.
  */
 
@@ -20,7 +20,6 @@ import "./Following.css";
 import Footer from "../../../../components/global/Footer";
 import UserCard from "../../../../components/user/card/UserCard";
 
-// MUI Icon Imports
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 
 /**
@@ -52,18 +51,10 @@ interface User {
 
 /**
  * @component Following
- * @description User account page showing the list of users the current user follows.
- *
- * Features:
- * - View all followed users
- * - Toggle follow/unfollow status directly from the list
- * - Refetching logic to maintain data integrity
- * - Grid-based layout for user cards
- *
- * Route: /account/following
- * @requires useSnackbar - Custom hook for managing standardized notifications
- * @requires useThemeLanguage - Context for handling UI language and theme variants
- * @returns {JSX.Element} The rendered Following page
+ * @description User account page showing the users the current user follows.
+ * @requires useSnackbar - Shows standardized notifications.
+ * @requires useThemeLanguage - Provides UI translations and theme state.
+ * @returns {JSX.Element} The rendered following page.
  */
 const Following = () => {
   const navigate = useNavigate();
@@ -76,10 +67,6 @@ const Following = () => {
   const [following, setFollowing] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * Effect: fetch following list when currentUserId becomes available.
-   * Runs once on mount if user is authenticated.
-   */
   useEffect(() => {
     if (currentUserId) {
       fetchFollowing();
@@ -120,7 +107,6 @@ const Following = () => {
       const targetUser = following.find((u) => u._id === targetId);
       const wasFollowing = targetUser?.followers.includes(currentUserId!);
       await api.post("/users/follow", { targetId });
-      // Refresh the list to reflect changes
       await fetchFollowing();
       showSuccess(wasFollowing ? t("unfollowed") : t("followed"));
     } catch (error: any) {
@@ -169,7 +155,6 @@ const Following = () => {
             {t("following")}
           </h1>
         </div>
-
         {following.length === 0 ? (
           <div className="empty-state">
             <PersonOffIcon sx={{ fontSize: 40, opacity: 0.5 }} />
@@ -192,7 +177,6 @@ const Following = () => {
             ))}
           </div>
         )}
-
         <Snackbar
           message={snackbar.message}
           type={snackbar.type}

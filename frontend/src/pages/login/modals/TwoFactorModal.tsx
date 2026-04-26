@@ -2,7 +2,7 @@
  * @file TwoFactorModal.tsx
  * @description Two-Factor Authentication verification modal.
  * Prompts user to enter the 6-digit numeric security code sent to their registered email address.
- * Handles numeric-only input validation, auto-focus, and loading states during verification.
+ * Handles numeric-only input validation, auto-focus and loading states during verification.
  */
 
 import React from 'react';
@@ -10,7 +10,7 @@ import React from 'react';
 /**
  * @interface TwoFactorModalProps
  * @description Props for the TwoFactorModal component.
- * * @property {boolean} open - Controls the visibility of the modal overlay and content.
+ * @property {boolean} open - Controls the visibility of the modal overlay and content.
  * @property {string} code - The current 6-digit string value entered by the user.
  * @property {boolean} verifying - State to disable inputs and show loading text during API calls.
  * @property {string} [error] - Optional validation or server error message to display.
@@ -54,7 +54,8 @@ const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
   /**
    * Handles and sanitizes the input change.
    * Forces the input to be numeric only and limits the length to 6 characters.
-   * * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+   * 
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
    */
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -68,7 +69,6 @@ const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
         <p className="login-modal-subtitle">
           {t("twoFactorDescription")}
         </p>
-        
         <form onSubmit={onSubmit} className="login-modal-form">
           <div className="login-form-group">
             <label
@@ -89,10 +89,8 @@ const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
               autoFocus
               disabled={verifying}
             />
-            {/* Error message display for failed 2FA attempts */}
             {error && <span className="login-error-message">{error}</span>}
           </div>
-
           <div className="login-form-actions">
             <button
               type="button"

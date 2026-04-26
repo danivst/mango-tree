@@ -27,7 +27,10 @@ import logger from "../utils/logger";
  * { "translation": "Здравей" }
  * ```
  */
-export const translateText = async (req: Request, res: Response): Promise<Response> => {
+export const translateText = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
     const { text, sourceLang, targetLang } = req.body;
 
@@ -35,16 +38,13 @@ export const translateText = async (req: Request, res: Response): Promise<Respon
       return res.status(400).json({ message: "Text is required for translation." });
     }
 
-    // Validate target language
-    if (!targetLang || !['en', 'bg'].includes(targetLang)) {
+    if (!targetLang || !["en", "bg"].includes(targetLang)) {
       return res.status(400).json({ message: "Invalid target language. Use 'en' or 'bg'." });
     }
 
-    // Get translations for both languages
     const translation = await getDualTranslation(text);
 
-    // Return only the target language translation
-    return res.json({ translation: translation[targetLang as 'en' | 'bg'] });
+    return res.json({ translation: translation[targetLang as "en" | "bg"] });
   } catch (error: any) {
     logger.error(error, "Translation error");
     return res.status(500).json({ message: error.message || "Translation failed" });

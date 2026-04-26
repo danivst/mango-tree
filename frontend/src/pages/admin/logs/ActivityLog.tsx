@@ -2,7 +2,7 @@
  * @file ActivityLog.tsx
  * @description Administrative interface for viewing and filtering system-wide activity logs.
  * Provides detailed tracking of user and admin actions (login, content creation, moderation)
- * with support for server-side pagination, date range filtering, and action type categorization.
+ * with support for server-side pagination, date range filtering and action type categorization.
  */
 
 import { useState, useEffect, useMemo } from "react";
@@ -16,7 +16,6 @@ import Footer from "../../../components/global/Footer";
 import { useSnackbar } from "../../../utils/snackbar";
 import { AdminTable, ColumnDef } from "../../../components/admin/table";
 
-// MUI Icon Imports
 import HistoryIcon from "@mui/icons-material/History";
 
 interface ActivityLogEntry {
@@ -38,20 +37,17 @@ const ActivityLog = () => {
     getTranslation(language, key, params);
   const { showError } = useSnackbar();
 
-  // State
   const [logs, setLogs] = useState<ActivityLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 50;
 
-  // Filters
   const [search, setSearch] = useState("");
   const [actionType, setActionType] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // Sorting state
   const [sortState, setSortState] = useState<SortState>({
     column: "createdAt",
     direction: "desc",
@@ -60,7 +56,8 @@ const ActivityLog = () => {
   /**
    * Fetches activity logs from the admin API with current filter and pagination state.
    * Updates local logs state and total pages for pagination.
-   * * @async
+   * 
+   * @async
    * @returns {Promise<void>}
    */
   const fetchLogs = async () => {
@@ -93,7 +90,8 @@ const ActivityLog = () => {
   /**
    * Updates the table sorting configuration.
    * Cycle logic: asc -> desc -> null.
-   * * @param {string} column - The column key to sort by.
+   * 
+   * @param {string} column - The column key to sort by.
    */
   const handleSort = (column: string) => {
     setSortState((prev: SortState) => {
@@ -136,7 +134,8 @@ const ActivityLog = () => {
 
   /**
    * Formats ISO date strings to localized readable format including time.
-   * * @param {string} dateString - ISO date string
+   *  
+   * @param {string} dateString - ISO date string
    * @returns {string} Formatted date string
    */
   const formatDate = (dateString: string) => {
@@ -152,10 +151,10 @@ const ActivityLog = () => {
     );
   };
 
-  /**
+/**
  * Renders a consistent, non-clickable label for the target of the log entry.
  * Displays only a truncated version of the ID for visual consistency.
- * * @param {ActivityLogEntry} entry - The log entry object
+ * @param {ActivityLogEntry} entry - The log entry object
  * @returns {React.ReactNode}
  */
 const renderTarget = (entry: ActivityLogEntry) => {
@@ -174,7 +173,8 @@ const renderTarget = (entry: ActivityLogEntry) => {
   /**
    * Translates raw activity log descriptions into localized strings with parameters.
    * Extracts dynamic data (usernames, titles, reasons) from raw descriptions using RegEx.
-   * * @param {string} actionType - Raw action enum from backend
+   *  
+   * @param {string} actionType - Raw action enum from backend
    * @param {string} description - Raw description from backend
    * @param {string} [targetType] - Type of item acted upon
    * @returns {string} Localized and interpolated description
@@ -422,7 +422,6 @@ const renderTarget = (entry: ActivityLogEntry) => {
   return (
     <div>
       <h1 className="page-container-title">{t("activityLog")}</h1>
-
       <AdminTable<ActivityLogEntry>
         data={sortedLogs}
         currentPage={page}
@@ -482,7 +481,6 @@ const renderTarget = (entry: ActivityLogEntry) => {
           </>
         }
       />
-
       <Footer />
     </div>
   );

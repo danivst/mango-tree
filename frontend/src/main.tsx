@@ -4,7 +4,6 @@ import App from './App.tsx'
 import { RefreshProvider } from './context/RefreshContext'
 import './styles/globals.css'
 
-// Initialize theme on app load
 const initializeTheme = () => {
   const savedTheme = localStorage.getItem('appTheme') as 'dark' | 'purple' | 'cream' | 'light'
   const theme = savedTheme && ['dark', 'purple', 'cream', 'light', 'mango'].includes(savedTheme) ? savedTheme : 'mango'
@@ -42,7 +41,6 @@ const initializeTheme = () => {
 
 initializeTheme()
 
-// Initialize language on app load
 const initializeLanguage = () => {
   const savedLanguage = localStorage.getItem('appLanguage') as 'en' | 'bg'
   const lang = savedLanguage && (savedLanguage === 'en' || savedLanguage === 'bg') ? savedLanguage : 'en'

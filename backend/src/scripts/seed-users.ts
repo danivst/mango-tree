@@ -5,7 +5,7 @@
  * 1. Clears existing collections (Users, Posts, Comments, Reports, Notifications).
  * 2. Generates 50 users with hashed passwords and profile images.
  * 3. Randomizes 'Following' and 'Followers' relationships between users.
- * * Run via: `npm run seed:users` or `ts-node src/scripts/seed-users.ts`
+ * Run via: `npm run seed:users` or `ts-node src/scripts/seed-users.ts`
  */
 
 import mongoose from "mongoose";
@@ -37,9 +37,8 @@ const USERNAMES = [
 const seedUsers = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected for user seeding");
+    console.log("MongoDB connected for user seeding");
 
-    // Clear existing data as requested
     console.log("Cleaning up existing data...");
     await User.deleteMany({});
     await Post.deleteMany({});
@@ -47,8 +46,6 @@ const seedUsers = async () => {
     await Report.deleteMany({});
     await Notification.deleteMany({});
     await BannedUser.deleteMany({});
-    // Following/Followers and Likes are embedded in User and Post models respectively, 
-    // so clearing User and Post models handles them.
 
     const users = [];
     for (const username of USERNAMES) {
@@ -75,7 +72,7 @@ const seedUsers = async () => {
     }
 
     const createdUsers = await User.insertMany(users);
-    console.log(`✅ Created ${createdUsers.length} users`);
+    console.log(`Created ${createdUsers.length} users`);
 
     // Add random follow relations
     console.log("Generating follow relations...");
@@ -94,14 +91,13 @@ const seedUsers = async () => {
       }
     }
 
-    // Save all users with their new follow relations
     await Promise.all(createdUsers.map(u => u.save()));
-    console.log("✅ Follow relations seeded");
+    console.log("Follow relations seeded");
 
     await mongoose.disconnect();
     process.exit(0);
   } catch (err) {
-    console.error("❌ User seeding failed:", err);
+    console.error("User seeding failed:", err);
     process.exit(1);
   }
 };

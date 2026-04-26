@@ -1,6 +1,7 @@
-/* ============================================
-   SHARE BUTTON COMPONENT
-   ============================================ */
+/**
+ * @file ShareButton.css
+ * @description Styles for the share button component
+ */
 
 .share-button-container {
   position: relative;

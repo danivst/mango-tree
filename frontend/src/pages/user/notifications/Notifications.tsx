@@ -2,7 +2,7 @@
  * @file Notifications.tsx
  * @description Notifications center where users view and manage all system notifications.
  * Displays a scrollable list of notifications with color-coded icons based on type,
- * providing real-time updates for user interactions, reports, and system alerts.
+ * providing real-time updates for user interactions, reports and system alerts.
  */
 
 import { useState, useEffect } from "react";
@@ -17,7 +17,6 @@ import "../../../styles/shared.css";
 import "./Notifications.css";
 import Footer from "../../../components/global/Footer";
 
-// MUI Icon Imports
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CommentIcon from '@mui/icons-material/Comment';
@@ -35,7 +34,8 @@ import CloseIcon from '@mui/icons-material/Close';
  * @description Renders the notifications management page.
  * Orchestrates fetching, marking as read, and deleting notifications while
  * updating the global unread count badge in the application context.
- * * @requires useThemeLanguage - Current UI language for localization
+ *
+ * @requires useThemeLanguage - Current UI language for localization
  * @requires useNotifications - Global notification context for badge management
  * @requires notificationsAPI - Backend interaction for notification lifecycle
  * @returns {JSX.Element} The rendered notifications dashboard
@@ -241,7 +241,6 @@ const Notifications = () => {
               )}
             </div>
           </div>
-
           {loading ? (
             <div className="loading">{t("loading")}</div>
           ) : notifications.length === 0 ? (
@@ -286,7 +285,6 @@ const Notifications = () => {
               })}
             </div>
           )}
-
           <Snackbar
             message={snackbar.message}
             type={snackbar.type}
@@ -296,7 +294,6 @@ const Notifications = () => {
           <Footer />
         </div>
       </div>
-
       {showConfirmModal && (
         <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
           <div className="modal confirm-dialog" onClick={(e) => e.stopPropagation()}>

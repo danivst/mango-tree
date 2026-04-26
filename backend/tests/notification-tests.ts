@@ -39,8 +39,9 @@ Notification.deleteMany = mockDeleteMany;
 
 /**
  * Helper function to create a mock Mongoose query object.
- * Supports chaining for common query operations like sort, limit, and skip.
- * * @param {any} result - The data to be returned by the mocked query.
+ * Supports chaining for common query operations like sort, limit and skip.
+ *  
+ * @param {any} result - The data to be returned by the mocked query.
  * @returns {object} A mocked query object compatible with Mongoose.
  */
 function createMockQuery(result) {

@@ -1,7 +1,7 @@
 /**
  * @file report-controller.ts
  * @description Handles user reports against posts, comments, and users. 
- * Includes administrative tools for reviewing reports, updating status, 
+ * Includes administrative tools for reviewing reports, updating status
  * and performing content take-downs with automated bilingual notifications.
  */
 
@@ -83,7 +83,6 @@ export const createReport = async (
       createdAt: new Date(),
     });
 
-    // Log report submission
     await logActivity(req, "REPORT_SUBMIT", {
       targetId,
       targetType: targetType as any,
@@ -184,7 +183,6 @@ export const updateReportStatus = async (
         (report.reportedBy as any)._id?.toString() ||
         report.reportedBy.toString();
 
-      // Use raw admin reason for English, translate only for Bulgarian
       const translated = await getDualTranslation(reason);
 
       const rejectMessageEn = `Your report was reviewed and not marked as disruptive. Reason: ${reason}`;
@@ -204,7 +202,6 @@ export const updateReportStatus = async (
       });
     }
 
-    // Log report status update
     await logActivity(req, "REPORT_STATUS_UPDATE", {
       targetId: report.id.toString(),
       targetType: "report",
@@ -219,7 +216,7 @@ export const updateReportStatus = async (
 
 /**
  * Deletes content associated with a report.
- * Deletes the post/comment, notifies the violator with a translated reason, and thanks the reporter. restricted to Admins.
+ * Deletes the post/comment, notifies the violator with a translated reason and thanks the reporter. Restricted to Admins.
  *
  * @param req - AuthRequest with params { id } and body { reason }
  * @param res - Express response object
@@ -253,7 +250,6 @@ export const deleteReportedItem = async (
       .populate("targetId");
     if (!report) return res.status(404).json({ message: "Report not found." });
 
-    // Translate the removal reason for the violator
     const translatedReason = await getDualTranslation(reason);
     const targetType = report.targetType as ReportTargetType;
 
@@ -307,7 +303,6 @@ export const deleteReportedItem = async (
       }
     }
 
-    // Fixed messages for the reporter
     const reporterNotify = await getDualTranslation(
       "Your report has been helpful and the item has been taken down.",
     );
@@ -332,7 +327,6 @@ export const deleteReportedItem = async (
       status: ReportStatusTypeValue.ACTION_TAKEN,
     });
 
-    // Log reported item deletion
     await logActivity(req, "REPORT_ITEM_DELETE", {
       targetId: report.targetId.toString(),
       targetType: report.targetType as any,

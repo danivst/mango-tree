@@ -38,7 +38,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Auth
     login: "Log in",
-    signin: "Sign in",
+    signup: "Sign up",
     username: "Username",
     email: "Email",
     password: "Password",
@@ -655,7 +655,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Auth
     login: "Влизане",
-    signin: "Регистрация",
+    signup: "Регистрация",
     username: "Потребителско име",
     email: "Имейл",
     password: "Парола",

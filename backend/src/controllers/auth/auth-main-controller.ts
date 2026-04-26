@@ -1,7 +1,7 @@
 /**
  * @file auth-main-controller.ts
  * @description Core authentication controller managing user lifecycle events:
- * registration, secure login with 2FA support, and session termination.
+ * registration, secure login with 2FA support and session termination.
  * Integrates geolocation tracking for security notifications and automated bilingual emails.
  */
 
@@ -78,7 +78,7 @@ const validateRegisterBody = (body: unknown): RegisterValidationError | null => 
 
 /**
  * Registers a new user account.
- * Validates input strength, checks ban status, creates the user, and sends a welcome email.
+ * Validates input strength, checks ban status, creates the user and sends a welcome email.
  *
  * @param req - AuthRequest with body { username, email, password }
  * @param res - Express response object
@@ -110,7 +110,6 @@ export const registerUser = async (
 
   const { username, email, password } = req.body;
 
-  // --- Disposable Email Check ---
   if (isDisposableEmail(email)) {
     return res.status(400).json({
       message: "Disposable email addresses are not allowed.",
@@ -118,7 +117,6 @@ export const registerUser = async (
     });
   }
 
-  // --- Business Logic: Banned Users Check ---
   const bannedByEmail = await BannedUser.findOne({ email });
   if (bannedByEmail) {
     return res.status(400).json({
@@ -135,7 +133,6 @@ export const registerUser = async (
     });
   }
 
-  // --- Business Logic: Duplicate Checks ---
   const existingEmail = await User.findOne({ email });
   if (existingEmail) {
     return res
@@ -150,7 +147,6 @@ export const registerUser = async (
       .json({ message: "Username already in use.", field: "username" });
   }
 
-  // --- User Creation ---
   const passwordHash = await bcrypt.hash(password, 10);
 
   const user = await User.create({
@@ -163,14 +159,12 @@ export const registerUser = async (
     },
   });
 
-  // --- Token Generation ---
   const token = jwt.sign(
     { userId: user._id, username: user.username, role: user.role },
     JWT_SECRET,
     { expiresIn: "24h" },
   );
 
-  // --- Post-Registration: Welcome Email ---
   const userLang = user.language || "en";
 
   const [titleTrans, greetingTrans, bodyTrans, signatureTrans] =
@@ -202,7 +196,6 @@ export const registerUser = async (
     logger.error(error, "Failed to send welcome email");
   }
 
-  // --- Response ---
   setAuthCookies(res, token);
 
   return res.status(201).json({
@@ -220,7 +213,7 @@ export const registerUser = async (
 
 /**
  * Authenticates a user and starts a session.
- * Checks passwords, ban status, and triggers 2FA if enabled. Issues session tokens on success.
+ * Checks passwords, ban status and triggers 2FA if enabled. Issues session tokens on success.
  *
  * @param req - AuthRequest with body { username, password }
  * @param res - Express response object
@@ -242,7 +235,11 @@ export const loginUser = async (
   req: Request,
   res: Response,
 ): Promise<Response> => {
-  const { username, password } = req.body;
+  const { username, password, rememberMe } = req.body as {
+    username?: string;
+    password?: string;
+    rememberMe?: boolean;
+  };
 
   if (!username || username.length < 2) {
     return res
@@ -257,13 +254,18 @@ export const loginUser = async (
       .json({ message: "Username does not exist", field: "username" });
   }
 
-  // Check if user is banned
   const bannedUser = await BannedUser.findOne({ original_user_id: user._id });
   if (bannedUser) {
     return res.status(403).json({
       message: "accountBanned",
       reason: bannedUser.banReason,
     });
+  }
+
+  if (typeof password !== "string") {
+    return res
+      .status(400)
+      .json({ message: "Incorrect password", field: "password" });
   }
 
   const isMatch = await bcrypt.compare(password, user.passwordHash);
@@ -273,18 +275,14 @@ export const loginUser = async (
       .json({ message: "Incorrect password", field: "password" });
   }
 
-  // Check if 2FA is enabled
   if (user.twoFactorEnabled) {
-    // Generate a 6-digit 2FA code
     const twoFactorCode = crypto.randomInt(100000, 999999).toString();
-    const twoFactorCodeExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const twoFactorCodeExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Save the code to the user
     user.twoFactorCode = twoFactorCode;
     user.twoFactorCodeExpiry = twoFactorCodeExpiry;
     await user.save();
 
-    // Send 2FA code via email
     const userLang = user.language || "en";
 
     const [
@@ -322,7 +320,6 @@ export const loginUser = async (
       await sendEmail(user.email, title, emailHtml);
     } catch (error: any) {
       logger.error(error, "Failed to send 2FA email");
-      // Clear the code if email fails
       user.twoFactorCode = undefined;
       user.twoFactorCodeExpiry = undefined;
       await user.save();
@@ -331,7 +328,6 @@ export const loginUser = async (
       });
     }
 
-    // Return response indicating 2FA is required (no tokens issued yet)
     return res.json({
       twoFactorRequired: true,
       userId: user._id,
@@ -343,29 +339,24 @@ export const loginUser = async (
     });
   }
 
-  // No 2FA enabled - issue tokens normally
+  const tokenExpiresIn = rememberMe ? "7d" : "24h";
+  const cookieMaxAgeMs = (rememberMe ? 7 : 1) * 24 * 60 * 60 * 1000;
+
   const token = jwt.sign(
     { userId: user._id, username: user.username, role: user.role },
     JWT_SECRET,
     {
-      expiresIn: "24h",
+      expiresIn: tokenExpiresIn,
     },
   );
 
-  // Log successful login (explicit userId since auth middleware not used)
   await logActivity(req, "LOGIN", { userId: user._id.toString() });
 
-  // Create a security notification for the user about this login
   try {
     const userLang = user.language || "en";
 
-    // Get IP address
     const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
-
-    // Get location (city, country) from IP using geolocation service
     const location = await getLocationFromIP(ipAddress, userLang);
-
-    // Get current time in user's locale
     const loginTime = new Date().toLocaleString(
       userLang === "bg" ? "bg-BG" : "en-US",
       {
@@ -378,7 +369,6 @@ export const loginUser = async (
       },
     );
 
-    // Directly create English and Bulgarian messages
     const messageEn = `New login detected at ${loginTime} from ${location}. If this wasn't you, please secure your account immediately.`;
     const messageBg = `Открито ново влизане на ${loginTime} от ${location}. Ако това не сте вие, моля незабавно защитете акаунта си.`;
 
@@ -401,7 +391,7 @@ export const loginUser = async (
     logger.error(notifErr, "Failed to create login notification");
   }
 
-  setAuthCookies(res, token);
+  setAuthCookies(res, token, cookieMaxAgeMs);
 
   return res.json({
     message: "Successfully logged in!",
@@ -440,7 +430,6 @@ export const logoutUser = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    // Log the logout event for audit
     await logActivity(req, "LOGOUT");
 
     clearAuthCookies(res);
@@ -449,7 +438,6 @@ export const logoutUser = async (
   } catch (error: any) {
     logger.error(error, "Logout error");
 
-    // Still clear cookies even if logging fails
     clearAuthCookies(res);
 
     return res.json({ message: "Logged out." });

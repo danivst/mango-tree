@@ -2,7 +2,7 @@
  * @file post-routes.ts
  * @description Post management and discovery API routes.
  * Handles CRUD operations for posts, social interactions (likes), content feeds,
- * search functionality, and post translation.
+ * search functionality and post translation.
  *
  * Base path: /api/posts
  */
@@ -13,18 +13,11 @@ import { auth } from "../utils/auth";
 
 const router: Router = express.Router();
 
-/**
- * Request logging middleware for debugging.
- */
 router.use((req, res, next) => {
   console.log(`[post-routes] ${req.method} ${req.path}`);
   next();
 });
 
-/**
- * Post creation and feed discovery routes.
- * Most require authentication.
- */
 /**
  * @route POST /
  * @description Create a new post
@@ -63,9 +56,6 @@ router.get("/followed", auth, postController.getFollowedPosts);
 router.get("/suggested", auth, postController.getSuggestedPosts);
 
 /**
- * General post retrieval routes.
- */
-/**
  * @route GET /
  * @description Get all visible posts (public endpoint)
  */
@@ -87,9 +77,6 @@ router.get("/author/:authorId", auth, postController.getPostsByAuthor);
 router.get("/:id", postController.getPostById);
 
 /**
- * Post management routes (require ownership or admin privileges).
- */
-/**
  * @route PUT /:id
  * @description Update a post
  * @param {string} id - Post ID
@@ -106,9 +93,6 @@ router.put("/:id", auth, postController.updatePost);
  */
 router.delete("/:id", auth, postController.deletePost);
 
-/**
- * Social interaction and utility routes.
- */
 /**
  * @route POST /:id/like
  * @description Like a post

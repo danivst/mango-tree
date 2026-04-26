@@ -11,7 +11,8 @@ import "../global/landing-page/LandingPage.css";
 /**
  * @interface LanguageSwitcherProps
  * @description Props for the LanguageSwitcher component.
- * * @property {string} language - Current active language code (e.g., 'en' | 'bg')
+ * 
+ * @property {string} language - Current active language code (e.g., 'en' | 'bg')
  * @property {(lang: 'en' | 'bg') => void} onLanguageChange - Callback function triggered when a language button is clicked
  */
 interface LanguageSwitcherProps {
@@ -23,7 +24,8 @@ interface LanguageSwitcherProps {
  * @component LanguageSwitcher
  * @description Presentational component that renders toggle buttons for language selection.
  * Highlights the active language and propagates selection changes to the parent context or state.
- * * @param {LanguageSwitcherProps} props - Component props
+ * 
+ * @param {LanguageSwitcherProps} props - Component props
  * @returns {JSX.Element} The rendered language switcher buttons
  */
 const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
@@ -32,7 +34,6 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
 }) => {
   return (
     <div className="language-switcher">
-      {/* English Toggle Button */}
       <button
         type="button"
         className={`lang-button ${language === "en" ? "lang-active" : ""}`}
@@ -41,8 +42,6 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
       >
         EN
       </button>
-      
-      {/* Bulgarian Toggle Button */}
       <button
         type="button"
         className={`lang-button ${language === "bg" ? "lang-active" : ""}`}

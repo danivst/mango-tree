@@ -1,6 +1,6 @@
 /**
  * @file notification-controller.ts
- * @description Manages user notifications, including retrieval, status updates (read/unread), 
+ * @description Manages user notifications, including retrieval, status updates (read/unread) 
  * and deletion of all of them.
  */
 

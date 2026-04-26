@@ -1,6 +1,7 @@
-/* ============================================
-   RESPONSIVE BREAKPOINTS
-   ============================================ */
+/**
+ * @file responsive.css
+ * @description Styles for the responsive design
+ */
 
 /* Extra Large Screens (1440px+) */
 @media (min-width: 1440px) {
@@ -219,7 +220,6 @@
     font-size: 14px;
   }
 
-  /* Stack admin actions vertically on mobile */
   .page-actions,
   .page-container-actions {
     flex-direction: column;
@@ -258,7 +258,6 @@
     max-height: none;
     position: relative;
     top: 0;
-    /* Keep border-radius from base styles */
   }
 
   .sidebar-overlay {
@@ -271,7 +270,6 @@
     gap: 10px;
   }
 
-  /* Mobile-first profile layout */
   .profile-header {
     flex-direction: column;
     text-align: center;
@@ -313,7 +311,6 @@
     height: 100px;
   }
 
-  /* Stack admin actions vertically on extra small screens */
   .page-actions,
   .page-container-actions {
     flex-direction: column;

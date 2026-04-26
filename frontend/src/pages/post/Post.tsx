@@ -1,19 +1,8 @@
 /**
  * @file Post.tsx
  * @description Single post detail page providing a comprehensive view of post content and threaded discussions.
- * Integrates markdown rendering, multi-image carousels, and an AI-moderated comment system.
+ * Integrates markdown rendering, multi-image carousels and an AI-moderated comment system.
  * Includes in-place editing capabilities, multi-image management, and AI moderation logic.
- *
- * Features:
- * - Dynamic post content loading with Markdown support
- * - In-place editing: Title, category, description, tags, and images
- * - Interactive image gallery with carousel navigation and upload/remove logic
- * - Real-time engagement: Like/Unlike and Author Follow/Unfollow
- * - Multilingual Support: On-demand translation for both post content and individual comments (EN/BG)
- * - Threaded Conversations: Nested comment replies with recursive rendering via CommentItem
- * - Content Integrity: Reporting system for posts and comments, and AI-driven moderation feedback
- * - Thread Management: Persistent collapse/expand state for comment replies
- * - Deep Linking: Automatic smooth scroll and highlight for comment anchor IDs
  */
 
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -37,7 +26,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import { useNotifications } from "../../context/NotificationContext";
 
-// Sub-components
 import CommentItem from "./CommentItem";
 import ReportModal from "./ReportModal";
 import PostHeader from "./PostHeader";
@@ -66,7 +54,6 @@ const Post = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { snackbar, showSuccess, showError, showWarning, closeSnackbar } = useSnackbar();
 
-  // --- Edit States ---
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -88,7 +75,6 @@ const Post = () => {
   const [likesCount, setLikesCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
 
-  // Post Translation State
   const [showTranslation, setShowTranslation] = useState(false);
   const [translationCache, setTranslationCache] = useState<{
     title: string;
@@ -97,7 +83,6 @@ const Post = () => {
   } | null>(null);
   const [translating, setTranslating] = useState(false);
 
-  // Comment Translation State
   const [translatedCommentId, setTranslatedCommentId] = useState<string | null>(null);
   const [commentTranslationCache, setCommentTranslationCache] = useState<Record<string, string>>({});
   const [translatingComment, setTranslatingComment] = useState<string | null>(null);
@@ -175,7 +160,6 @@ const Post = () => {
     } catch (e) { showError(t("failedToLoadTags")); }
   };
 
-  // --- Edit Logic ---
   const startEditing = () => {
     if (categories.length === 0) fetchCategories();
     if (allTags.length === 0) fetchTags();
@@ -430,7 +414,6 @@ const Post = () => {
     <div className="post-container">
       <UserSidebar />
       <div className="page-container">
-        {/* --- STICKY EDIT CONTROLS --- */}
         {isEditing && (
             <div className="d-flex gap-2 justify-content-end mb-4 sticky-top bg-theme-bg py-2 z-10" style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
                 <button className="btn-secondary" onClick={() => setIsEditing(false)} disabled={updating}>{t("close")}</button>
@@ -441,8 +424,6 @@ const Post = () => {
                 )}
             </div>
         )}
-
-        {/* --- HEADER SECTION --- */}
         {isEditing ? (
           <div className="mb-4">
             <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="form-input" style={{ fontSize: '2rem', fontWeight: 'bold', width: '100%' }} placeholder={t("title")} />
@@ -450,8 +431,6 @@ const Post = () => {
         ) : (
           <PostHeader post={post} displayTitle={displayTitle} showTranslation={showTranslation} translating={translating} isPostInUserLanguage={detectLanguage(post.title!) === language} isWaitingForApproval={post.isApproved === false} actionLoadingReport={actionLoading.report} handleTranslate={handleTranslate} t={t} />
         )}
-
-        {/* --- ACTIONS / CATEGORY --- */}
         {isEditing ? (
           <div className="edit-mode-category mb-4">
             <label className="form-label">{t("category")}</label>
@@ -462,8 +441,6 @@ const Post = () => {
         ) : (
           <PostAuthorActions post={post} currentUserId={currentUserId} isFollowing={isFollowing} isLiked={isLiked} likesCount={likesCount} actionLoading={actionLoading} handleFollow={handleFollow} handleLike={handleLike} navigate={navigate} handleDeletePostClick={() => setDeletePostId(post._id)} setReportModalOpen={setReportModalOpen} t={t} onEdit={startEditing} />
         )}
-
-        {/* --- IMAGES SECTION --- */}
         <div className="image-carousel-wrapper" style={{ position: 'relative' }}>
           <PostImageCarousel images={isEditing ? editImages : post.image} currentIndex={currentImageIndex} displayTitle={displayTitle} handlePrev={() => setCurrentImageIndex(p => (p - 1 + (isEditing ? editImages.length : post.image.length)) % (isEditing ? editImages.length : post.image.length))} handleNext={() => setCurrentImageIndex(p => (p + 1) % (isEditing ? editImages.length : post.image.length))} setIndex={setCurrentImageIndex} />
           {isEditing && (
@@ -474,8 +451,6 @@ const Post = () => {
             </div>
           )}
         </div>
-
-        {/* --- TAGS SECTION --- */}
         <div className="mt-4 mb-4">
             {isEditing ? (
                 <div className="tags-container" style={{ minHeight: '40px' }}>
@@ -505,8 +480,6 @@ const Post = () => {
                 displayTags && displayTags.length > 0 && <div className="tags-container">{displayTags.map((tag: string, i: number) => <span key={i} className="tag">#{tag}</span>)}</div>
             )}
         </div>
-
-        {/* --- CONTENT AREA --- */}
         <div className="content-area mt-4">
           {isEditing ? (
             <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="form-textarea mb-4" rows={12} placeholder={t("description")} />
@@ -516,9 +489,7 @@ const Post = () => {
             </div>
           )}
         </div>
-
         <hr className="divider" />
-        {/* --- COMMENTS SECTION --- */}
         {currentUserId ? (
           <form onSubmit={handleSubmitComment} className="mb-8">
             <textarea value={newComment} onChange={e => setNewComment(e.target.value)} placeholder={t("writeComment")} rows={3} className="form-textarea mb-3" />
@@ -534,12 +505,9 @@ const Post = () => {
             {comments.map(c => <CommentItem key={c._id} comment={c} currentUserId={currentUserId} depth={0} onLike={handleLikeComment} onDelete={id => setDeleteCommentId(id)} onReport={id => { setReportingCommentId(id); setReportModalOpen(true); }} onTranslate={handleTranslateComment} onReply={handleReply} onEditComment={handleEditComment} updatingCommentId={updatingCommentId} translatedCommentId={translatedCommentId} commentTranslationCache={commentTranslationCache} translatingComment={translatingComment} replyingToCommentId={replyingToCommentId} replyTexts={replyTexts} submittingReply={submittingReply} likingComment={likingComment} onStartReply={id => setReplyingToCommentId(id)} onCancelReply={() => setReplyingToCommentId(null)} onReplyTextChange={(id, txt) => setReplyTexts(p => ({ ...p, [id]: txt }))} hiddenReplies={hiddenReplies} toggleRepliesVisibility={id => setHiddenReplies(p => ({ ...p, [id]: !p[id] }))} t={t} language={language} formatCommentTime={d => formatTimeAgo(d, language, t)} navigate={navigate} postId={post._id} />)}
           </div>
         )}
-
         <Snackbar message={snackbar.message} type={snackbar.type} open={snackbar.open} onClose={closeSnackbar} />
         <Footer />
         <ReportModal open={reportModalOpen} reason={reportReason} onReasonChange={setReportReason} reportingCommentId={reportingCommentId} loading={actionLoading.report} onReport={handleReport} onCancel={() => { setReportModalOpen(false); setReportReason(""); setReportingCommentId(null); }} t={t} />
-
-        {/* DELETE MODALS */}
         {deleteCommentId && (
           <div className="modal-overlay" onClick={() => setDeleteCommentId(null)}>
             <div className="modal modal-danger" onClick={e => e.stopPropagation()}>
@@ -551,7 +519,6 @@ const Post = () => {
             </div>
           </div>
         )}
-
         {deletePostId && (
           <div className="modal-overlay" onClick={() => setDeletePostId(null)}>
             <div className="modal modal-danger" onClick={e => e.stopPropagation()}>

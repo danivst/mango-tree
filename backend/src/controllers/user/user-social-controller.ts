@@ -1,7 +1,7 @@
 /**
  * @file user-social-controller.ts
  * @description Manages social relationships between users, including follow/unfollow 
- * logic, follower/following retrieval with administrative overrides, and 
+ * logic, follower/following retrieval with administrative overrides and 
  * manual removal of followers from a user's profile.
  */
 
@@ -50,7 +50,6 @@ export const toggleFollow = async (
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Prevent following banned users
     if (target.isBanned) {
       return res.status(400).json({ message: "Cannot follow this user" });
     }
@@ -93,7 +92,6 @@ export const toggleFollow = async (
     await user.save();
     await target.save();
 
-    // Log follow/unfollow action for audit
     await logActivity(req, isFollowing ? "UNFOLLOW" : "FOLLOW", {
       targetId: targetId,
       targetType: "user",
@@ -123,20 +121,15 @@ export const getFollowers = async (
     const userId = req.params.id as string;
     const requesterId = req.user!.userId;
 
-    // Ensure the user exists
     const targetUser = await User.findById(userId);
     if (!targetUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Only allow fetching followers of:
-    // - yourself
-    // - another user if you are an admin
     if (userId !== requesterId && req.user!.role !== RoleTypeValue.ADMIN) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    // Populate followers' user details (exclude banned users)
     const followers = await User.find({
       _id: { $in: targetUser.followers },
       $or: [{ isBanned: false }, { isBanned: { $exists: false } }],
@@ -165,20 +158,15 @@ export const getFollowing = async (
     const userId = req.params.id as string;
     const requesterId = req.user!.userId;
 
-    // Ensure the user exists
     const targetUser = await User.findById(userId);
     if (!targetUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Only allow fetching following of:
-    // - yourself
-    // - another user if you are an admin
     if (userId !== requesterId && req.user!.role !== RoleTypeValue.ADMIN) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    // Populate following users' details (exclude banned users)
     const following = await User.find({
       _id: { $in: targetUser.following },
       $or: [{ isBanned: false }, { isBanned: { $exists: false } }],
@@ -207,7 +195,6 @@ export const removeFollower = async (
     const { followerId } = req.params;
     const userId = req.user!.userId;
 
-    // The current user (profile owner) and the follower to remove
     const currentUser = await User.findById(userId);
     const follower = await User.findById(followerId);
 
@@ -218,7 +205,6 @@ export const removeFollower = async (
       return res.status(404).json({ message: "Follower not found" });
     }
 
-    // Check if the follower is indeed following the current user
     const isFollowing = currentUser.followers.some(
       (id) => id.toString() === followerId,
     );
@@ -228,13 +214,11 @@ export const removeFollower = async (
         .json({ message: "This user is not following you" });
     }
 
-    // Remove currentUser from follower's following list
     follower.following = follower.following.filter(
       (id) => id.toString() !== userId,
     );
     await follower.save();
 
-    // Remove follower from currentUser's followers list
     currentUser.followers = currentUser.followers.filter(
       (id) => id.toString() !== followerId,
     );

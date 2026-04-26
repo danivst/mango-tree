@@ -1,18 +1,11 @@
 /**
  * @file report-target-type.ts
- * @description Report target type enumeration.
- * Indicates what kind of content is being reported.
+ * @description Shared report target values.
  */
 
-/**
- * Content types that can be reported.
- */
 const ReportTargetType = {
-  /** A post is being reported */
   POST: "post" as const,
-  /** A comment is being reported */
   COMMENT: "comment" as const,
-  /** A user account is being reported */
   USER: "user" as const,
 };
 

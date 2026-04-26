@@ -1,8 +1,8 @@
-/* ============================================
-   MODAL COMPONENTS
-   ============================================ */
+/**
+ * @file modal.css
+ * @description Styles for the modals
+ */
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -91,7 +91,6 @@
   margin-top: 24px;
 }
 
-/* Modal Variants */
 .modal.confirm-dialog {
   border-radius: 12px;
   padding: 24px;

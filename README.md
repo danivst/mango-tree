@@ -95,23 +95,63 @@ The ultimate goal is a functioning website that promotes the cultural value of c
    cd mango-tree
    ```
 
-   To install all dependencies and packages run:
+### 3. Setting environmental variables
+
+   This project needs **.env** files that contain configuration regarding the services. **Please note: Without having them configured, the project will not build, nor run.**
+
+   To create these files, create a new file named .env in the main directory of the folder.
+
+   The values needed are:
    ```bash
-   npm install
+   PORT={port_number_for_backend} // This value by default is set to 3000 in the backend/src/config/env.ts file if it is missing in the .env file.
+   MONGO_URI={mongodb_uri} // Required and has no default value
+   JWT_SECRET={jwt_secret_key} // Required and has no default value
+   DEEPL_API_KEY={deepl_api_key} // Required and has no default value
+   CLIENT_URL={url_for_client}  // Required and has no default value. Please note: If launching in local host you can just enter http://localhost:{client_port}.
+   BASE_API_URL={url_for_api}  // Required and has no default value. Please note: If launching in local host you can just enter http://localhost:{server_port}.
+   VITE_BASE_API_URL={url_for_api} // Required by Vite for frontend configuration and has no default value. Please note: Set this value to the same one you set for BASE_API_URL.
+   GEMINI_API_KEY={gemini_api_key} // Required and has no default value
+   GEMINI_MODEL_DEFAULT={preferred_gemini_model} // This value by default is set to gemini-2.5-flash-lite in the backend/src/config/env.ts file if it is missing in the .env file.
+   RESEND_API_KEY={resend_api_key} // This value has no default value set but if it is missing in the .env file the project can launch. Please note: If you do not set this value, the functionality related to sending emails will NOT work.
+   RESEND_FROM_EMAIL={email_address_to_send_emails_from} // This value by default is set to support@mangotreeofficial.com in the backend/src/config/env.ts file if it is missing in the .env file, which is the official MangoTree email address. Please note: If you configure your own Resend API key, you need to set this value to the email address which you created the Resend account with, UNLESS you are using your own domain in the account. If that's the case, you need to set this value to your own official domain email.
    ```
 
-### 2. Development
+   If the project is unable to launch with this .env file, try copying the file twice in each directory by navigating to backend and frontend separately and copy and pasting the file in each one. 
 
-   You must start both the backend and the frontend. First, open two terminal windows.
+### 3. Development
 
-   Navigate to the backend folder: 
+   You must start both the backend and the frontend. First, open three terminal windows.
+
+   Navigate to the shared folder:
    ```bash
-   cd backend
+   cd shared
    ```
 
    Install dependencies and packages:
    ```bash
    npm install
+   ```
+
+   Ensure there are no build errors:
+   ```bash
+   npm run build
+   ```
+
+   **Please note: This directory contains shared types and interfaces used by both client and server and is NOT intended to be launched on its own. It only needs the required packages installed.**
+
+   Navigate to the backend folder: 
+   ```bash
+   cd ../backend
+   ```
+
+   Install dependencies and packages:
+   ```bash
+   npm install
+   ```
+
+   Ensure there are no build errors:
+   ```bash
+   npm run build
    ```
 
    To start the server, run:
@@ -128,6 +168,11 @@ The ultimate goal is a functioning website that promotes the cultural value of c
    Install dependencies and packages:
    ```bash
    npm install
+   ```
+   
+   Ensure there are no build errors:
+   ```bash
+   npm run build
    ```
 
    To run the client, run:
@@ -150,7 +195,7 @@ The ultimate goal is a functioning website that promotes the cultural value of c
 
    To view and open the website, click on that link, which should automatically redirect you to the landing page in your preferred browser.
 
-### 3. Running tests
+### 4. Running tests
 
    To run the two testing files for users and notifications, navigate to the backend directory with: 
    ```bash
@@ -163,7 +208,7 @@ The ultimate goal is a functioning website that promotes the cultural value of c
 
    **Please note: In order to execute this command, the server must be stopped.**
 
-### 4. Database seeding
+### 5. Database seeding
 
    If you want to test the logic and see how it looks, instead of manually creating posts and accounts you can execute the seeding files in the **backend/src/scripts** folder. For this, you have to navigate to the backend folder:
    ```bash

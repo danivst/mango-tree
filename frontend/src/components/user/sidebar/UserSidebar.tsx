@@ -184,9 +184,7 @@ const UserSidebar = () => {
     }
   }, [isMobile]);
 
-  /* ==========================================
-      SIDEBAR OFFSET CALCULATION
-      ========================================== */
+  /* Sidebar Offset Calculation */
 
   /**
    * Computes the target sidebar width for a given state and viewport width.
@@ -229,7 +227,6 @@ const UserSidebar = () => {
         return;
       }
 
-      // Mobile expanded: full overlay, no offset
       if (isMobile && !isCollapsed) {
         document.documentElement.style.setProperty("--sidebar-offset", "0px");
         return;
@@ -313,7 +310,6 @@ const UserSidebar = () => {
   const handleItemClick = (item: SidebarItem) => {
     localStorage.setItem("lastActiveMenuItem", item.id);
     setLastActiveItemId(item.id);
-    // Always trigger refresh before navigation to ensure fresh content
     triggerRefresh();
     navigate(item.path);
     if (isMobile) {
@@ -354,7 +350,6 @@ const UserSidebar = () => {
 
   return (
     <>
-      {/* Mobile overlay: when sidebar is open on mobile, clicking overlay closes it */}
       {isMobile && !isCollapsed && (
         <div className="sidebar-overlay" onClick={() => setIsCollapsed(true)} />
       )}
@@ -363,7 +358,6 @@ const UserSidebar = () => {
         className={`sidebar ${isCollapsed ? "collapsed" : ""} ${isMobile ? "mobile" : ""} ${theme === "mango" ? "mango-theme" : ""}`}
       >
         <div className="sidebar-header">
-          {/* Collapsed state hides logo/title; expanded shows them */}
           {!isCollapsed && (
             <>
               <div className="sidebar-logo">
@@ -377,7 +371,6 @@ const UserSidebar = () => {
               <div className="sidebar-divider"></div>
             </>
           )}
-          {/* Mobile close button appears when sidebar is expanded on mobile */}
           {isMobile && !isCollapsed && (
             <button
               className="sidebar-close"
@@ -394,7 +387,7 @@ const UserSidebar = () => {
               key={item.id}
               className={`sidebar-item ${activeItem?.id === item.id ? "active" : ""}`}
               onClick={() => handleItemClick(item)}
-              title={isCollapsed ? item.label : undefined} // Tooltip when collapsed
+              title={isCollapsed ? item.label : undefined}
             >
               <span className="sidebar-icon">{item.icon}</span>
               {!isCollapsed && (
@@ -403,7 +396,6 @@ const UserSidebar = () => {
             </button>
           ))}
         </nav>
-        {/* Logout button at bottom of sidebar */}
         <button
           className="sidebar-logout"
           onClick={handleLogout}
@@ -416,7 +408,6 @@ const UserSidebar = () => {
             <span className="sidebar-logout-text">{t("logout")}</span>
           )}
         </button>
-        {/* Mobile expand button: visible when sidebar is collapsed on mobile */}
         {isMobile && isCollapsed && (
           <button
             className="sidebar-expand"
@@ -427,7 +418,6 @@ const UserSidebar = () => {
           </button>
         )}
       </div>
-      {/* Snackbar for logout success feedback */}
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

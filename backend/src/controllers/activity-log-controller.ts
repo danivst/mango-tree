@@ -1,7 +1,7 @@
 /**
  * @file activity-log-controller.ts
  * @description Controller for retrieving activity logs.
- * Provides admin-only access to audit logs with filtering, search, and pagination.
+ * Provides admin-only access to audit logs with filtering, search and pagination.
  */
 
 import { Response } from "express";
@@ -12,7 +12,7 @@ import logger from "../utils/logger";
 
 /**
  * Retrieves a paginated list of activity logs.
- * Restricted to Admins. Supports filtering by user, action type, date range, and text search.
+ * Restricted to Admins. Supports filtering by user, action type, date range and text search.
  *
  * @param req - AuthRequest with query parameters { page, limit, userId, actionType, startDate, endDate, search }
  * @param res - Express response object
@@ -38,7 +38,6 @@ export const getActivityLogs = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    // Admin only
     if (req.user!.role !== RoleTypeValue.ADMIN) {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -63,30 +62,23 @@ export const getActivityLogs = async (
       if (endDate) query.createdAt.$lte = new Date(endDate as string);
     }
 
-    // Handle search using aggregation or text index if needed.
     if (search) {
       const q = (search as string).trim();
       if (q) {
-        // Search in description field (case insensitive)
         query.description = { $regex: q, $options: "i" };
       }
     }
 
-    // Build base find
     const logsQuery = ActivityLog.find(query)
       .populate("userId", "username")
       .sort({ createdAt: -1 });
 
-    // Get total count for pagination (before search username filter, because we may need to adjust)
     let total = await ActivityLog.countDocuments(query);
 
-    // Apply pagination
     const skip = (Number(page) - 1) * Number(limit);
     const limitNum = Number(limit);
     let logs = await logsQuery.skip(skip).limit(limitNum).exec();
 
-    // If search is provided, we might need to filter further by username if not captured by description regex.
-    // Because we can't easily join in find, we'll do client-side filter on the populated username.
     if (search) {
       const q = (search as string).toLowerCase();
       logs = logs.filter(

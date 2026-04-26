@@ -21,13 +21,12 @@ dotenv.config();
 const createUser = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected");
+    console.log("MongoDB connected");
 
     const userEmail = "user@mangotreeofficial.com";
     const userPassword = "User123!@#";
     const userUsername = "user";
 
-    // check if it exists
     const existingUser = await User.findOne({ email: userEmail });
 
     if (existingUser) {
@@ -38,7 +37,7 @@ const createUser = async () => {
       return;
     }
 
-    // create user
+    // Create user
     const passwordHash = await bcrypt.hash(userPassword, 10);
 
     await User.create({
@@ -50,14 +49,14 @@ const createUser = async () => {
       theme: "cream"
     });
 
-    console.log("✅ User account created successfully!");
+    console.log("User account created successfully!");
     console.log(`Email: ${userEmail}`);
     console.log(`Username: ${userUsername}`);
     console.log(`Password: ${userPassword}`);
 
     await mongoose.disconnect();
   } catch (err) {
-    console.error("❌ Error creating user:", err);
+    console.error("Error creating user:", err);
     await mongoose.disconnect();
     process.exit(1);
   }

@@ -1,8 +1,8 @@
-/* ============================================
-   USERS ADMIN PAGE
-   ============================================ */
+/**
+ * @file Users.css
+ * @description Styles for the users page
+ */
 
-/* User link in table (underline) */
 .user-profile-link {
   background: transparent;
   border: none;
@@ -15,8 +15,6 @@
   font-family: 'Poppins', sans-serif;
 }
 
-/* User Preview Modal */
-
 .preview-header {
   display: flex;
   align-items: center;
@@ -24,7 +22,6 @@
   margin-bottom: 24px;
 }
 
-/* Preview Avatar */
 .preview-avatar-container {
   position: relative;
   width: 120px;
@@ -63,7 +60,6 @@
   box-sizing: border-box;
 }
 
-/* Preview Info */
 .preview-info {
   flex: 1;
 }
@@ -82,7 +78,6 @@
   color: var(--theme-text);
 }
 
-/* Preview Stats */
 .preview-stats {
   display: flex;
   gap: 32px;
@@ -104,7 +99,6 @@
   opacity: 0.8;
 }
 
-/* Preview Bio */
 .preview-bio-section {
   margin-bottom: 24px;
 }
@@ -124,7 +118,6 @@
   color: var(--theme-text);
 }
 
-/* Preview Past Usernames */
 .preview-section-title {
   margin: 0 0 12px 0;
   font-size: 18px;
@@ -149,7 +142,6 @@
   opacity: 0.9;
 }
 
-/* Preview Divider */
 .preview-divider {
   border: 0;
   border-top: 1px solid var(--theme-text);
@@ -157,7 +149,6 @@
   margin: 32px 0;
 }
 
-/* Preview Category Tabs */
 .preview-category-tabs {
   display: flex;
   gap: 16px;
@@ -187,7 +178,6 @@
   opacity: 0.6;
 }
 
-/* Preview Post Card */
 .preview-post-card {
   padding: 16px;
   display: flex;
@@ -241,7 +231,6 @@
   font-size: 18px;
 }
 
-/* Z-index utility */
 .z-index-high {
   z-index: 2100;
 }

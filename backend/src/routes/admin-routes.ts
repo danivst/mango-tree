@@ -1,7 +1,7 @@
 /**
  * @file admin-routes.ts
  * @description Administrative control panel routes.
- * Content moderation, user management (ban/unban), and banned user oversight.
+ * Content moderation, user management (ban/unban) and banned user oversight.
  *
  * Base path: /api/admin
  * All routes require ADMIN role.
@@ -23,10 +23,6 @@ import { requireRole } from "../utils/auth";
 
 const router: Router = express.Router();
 
-/**
- * Content moderation routes.
- * Admin reviews and approves/disapproves user-submitted content.
- */
 /**
  * @route GET /flagged
  * @description Get all posts and comments pending approval
@@ -52,9 +48,6 @@ router.put("/approve/:type/:id", auth, requireRole(RoleTypeValue.ADMIN), approve
  */
 router.put("/disapprove/:type/:id", auth, requireRole(RoleTypeValue.ADMIN), disapproveContent);
 
-/**
- * User management routes (banning and account control).
- */
 /**
  * @route POST /users/:id/ban
  * @description Ban a user (moves to banned users collection, prevents login)

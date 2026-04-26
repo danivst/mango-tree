@@ -25,7 +25,7 @@ import {
  *
  * @param params - Object containing title, intro, code, securityNote, and signature
  * @returns HTML string for the email body
- * * @example
+ * @example
  * ```typescript
  * const html = get2FAEmailTemplate({ title: "Security Code", code: "123456", ... });
  * ```
@@ -160,7 +160,7 @@ export const getSuspensionEmailTemplate = (params: GetSuspensionEmailTemplatePar
  * @param data - Parameter object matching the required interface for the chosen type
  * @returns Populated HTML string
  * @throws {Error} If an unsupported template type is provided
- * * @example
+ * @example
  * ```typescript
  * const body = buildEmailBody('welcome', { username: "ChefJohn", ... });
  * ```

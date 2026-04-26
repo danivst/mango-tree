@@ -1,7 +1,6 @@
 /**
  * @file ReportPostView.tsx
  * @description Specialized view for previewing a reported post.
- * Features: Image carousel, translation toggles, and metadata display.
  */
 
 import React from "react";

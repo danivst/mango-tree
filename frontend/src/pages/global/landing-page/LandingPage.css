@@ -1,6 +1,8 @@
-/* ============================================
-   LANDING PAGE
-   ============================================ */
+/**
+ * @file LandingPage.css
+ * @description Styles for the landing page
+ */
+
 
 .landing-container {
   min-height: 100vh;
@@ -10,7 +12,6 @@
   padding: 0;
 }
 
-/* Override footer color for landing page - use gray instead of theme color */
 .landing-container .page-footer {
   color: #666 !important;
   border-top-color: #666 !important;
@@ -20,7 +21,6 @@
   box-sizing: border-box;
 }
 
-/* Header/Navbar */
 .landing-header {
   background: linear-gradient(to bottom, #ffd151, #ffbc40);
   backdrop-filter: blur(10px);
@@ -130,7 +130,6 @@
   color: #ffd151;
 }
 
-/* Main Content */
 .landing-main {
   flex: 1;
   display: flex;
@@ -250,9 +249,7 @@
   opacity: 0.8;
 }
 
-/* Responsive Design */
-
-/* Medium screens (tablets/laptops) - stack header */
+/* Responsive */
 @media (max-width: 1023px) {
   .header-content {
     flex-direction: column;
@@ -276,7 +273,6 @@
   }
 
   .header-actions .language-switcher {
-    /* ensure language switcher doesn't take too much width */
     max-width: 200px;
   }
 
@@ -312,7 +308,6 @@
   }
 }
 
-/* Extra padding for very small laptops to ensure no overlap */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .header-content {
     flex-direction: column;
@@ -337,7 +332,6 @@
   }
 }
 
-/* Coverage for larger laptops to prevent overlap */
 @media (min-width: 1280px) and (max-width: 1439px) {
   .header-content {
     flex-direction: column;
@@ -362,7 +356,6 @@
   }
 }
 
-/* Mobile Fix for Logo/Switcher Overlap */
 @media (max-width: 600px) {
   .lang-button {
     padding: 6px 12px;

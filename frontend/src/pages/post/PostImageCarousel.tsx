@@ -1,24 +1,14 @@
 /**
  * @file PostImageCarousel.tsx
- * @description Interactive image gallery sub-component for posts.
- * Provides a carousel interface for viewing multiple post images.
- * * Features:
- * - Responsive image container with aspect ratio preservation
- * - Navigation buttons (Previous/Next) for multi-image posts
- * - Visual dot indicators for current slide position
- * - Direct navigation via clicking indicators
- * - Dynamic rendering: automatically hides controls if only one image exists
- * * Architecture:
- * - Pure presentational component
- * - Uses index-based state management passed down from Post.tsx
- * - Built-in accessibility with dynamic alt text based on post title and index
+ * @description Image carousel component for post galleries.
  */
 
 import React from "react";
 
 /**
  * @component
- * @param {PostImageCarouselProps} props - Component props
+ * @description Renders carousel navigation and image indicators for a post gallery.
+ * @param {PostImageCarouselProps} props - Component props.
  */
 interface PostImageCarouselProps {
   images: string[];

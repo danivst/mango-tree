@@ -1,17 +1,6 @@
 /**
  * @file PostHeader.tsx
- * @description Header component for the individual post page. 
- * Manages high-level navigation, titles, content translation triggers, and sharing.
- * * Features:
- * - Integrated GoBackButton for easy navigation
- * - Responsive post title display with support for translated text
- * - Real-time translation toggle ("Translate" vs "View Original")
- * - Native share API integration via ShareButton
- * - Visual "Waiting for Approval" status for pending moderation content
- * * Architecture:
- * - Simple UI wrapper that decouples header actions from the main Post logic
- * - Controlled via props from Post.tsx for translation state and loading feedback
- * - Uses Flexbox/Grid via Post.css for layout alignment of title and actions
+ * @description Header component for the individual post page.
  */
 
 import React from "react";
@@ -20,9 +9,10 @@ import ShareButton from "../../components/buttons/share/ShareButton";
 
 /**
  * @component
- * @requires GoBackButton - UI component for returning to the previous route
- * @requires ShareButton - Logic for sharing post URLs
- * @param {PostHeaderProps} props - Component props
+ * @description Renders navigation, title, translation controls, and sharing actions for a post.
+ * @requires GoBackButton - Returns the user to the previous route.
+ * @requires ShareButton - Shares the current post URL.
+ * @param {PostHeaderProps} props - Component props.
  */
 interface PostHeaderProps {
   post: any;

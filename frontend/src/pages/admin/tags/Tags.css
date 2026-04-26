@@ -1,8 +1,9 @@
-/* ============================================
-   TAGS ADMIN PAGE
-   ============================================ */
+/**
+ * @file Tags.css
+ * @description Styles for the tags page
+ */
 
-/* Refresh button spacing */
+
 .btn-refresh {
   margin-right: 8px;
   display: flex;
@@ -10,12 +11,10 @@
   gap: 4px;
 }
 
-/* Icon size 16px */
 .icon-base {
   font-size: 16px !important;
 }
 
-/* Error message box */
 .error-box {
   color: #d32f2f;
   margin-bottom: 16px;
@@ -24,18 +23,15 @@
   border-radius: 8px;
 }
 
-/* Loading with centered text and padding */
 .loading-padded {
   text-align: center;
   padding: 40px;
 }
 
-/* Edit button margin */
 .ml-8 {
   margin-left: 8px;
 }
 
-/* Character counter */
 .char-counter {
   font-size: 12px;
   color: #666;

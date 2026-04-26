@@ -1,6 +1,7 @@
-/* ============================================
-   SNACKBAR COMPONENT
-   ============================================ */
+/**
+ * @file Snackbar.css
+ * @description Styles for the snackbar component
+ */
 
 .snackbar {
   position: fixed;
@@ -52,7 +53,7 @@
   flex: 1;
 }
 
-/* Responsive Design for Snackbar */
+/* Responsive */
 @media (max-width: 768px) {
   .snackbar {
     left: 16px;

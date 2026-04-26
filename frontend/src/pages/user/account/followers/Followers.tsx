@@ -1,7 +1,7 @@
 /**
  * @file Followers.tsx
  * @description User account page showing the list of users who follow the current user.
- * Displays followers in a grid with avatar, username, join date, and action buttons.
+ * Displays followers in a grid with avatar, username, join date and action buttons.
  * Provides management tools to unfollow followers or forcefully remove them.
  */
 
@@ -20,7 +20,6 @@ import "./Followers.css";
 import Footer from "../../../../components/global/Footer";
 import UserCard from "../../../../components/user/card/UserCard";
 
-// MUI Icon Imports
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 
@@ -53,18 +52,9 @@ interface User {
 
 /**
  * @component Followers
- * @description User account page showing the list of users who follow the current user.
- *
- * Features:
- * - View all followers
- * - Unfollow followers (if currently following them back)
- * - Remove followers (forcefully delete follower relationship)
- * - Modal confirmation for remove action
- * - Real-time UI updates with refetch after actions
- *
- * Route: /account/followers
- * @requires useSnackbar - Custom hook for standardized notifications
- * @requires useThemeLanguage - Context for UI language and theme variants
+ * @description User account page showing the current user's followers.
+ * @requires useSnackbar - Shows standardized notifications.
+ * @requires useThemeLanguage - Provides UI translations and theme state.
  */
 const Followers = () => {
   const navigate = useNavigate();
@@ -138,7 +128,6 @@ const Followers = () => {
     try {
       const wasFollowing = currentUserFollowing.includes(targetId);
       await api.post("/users/follow", { targetId });
-      // Update local state
       if (wasFollowing) {
         setCurrentUserFollowing((prev) => prev.filter((id) => id !== targetId));
       } else {
@@ -227,7 +216,6 @@ const Followers = () => {
             {t("followers")}
           </h1>
         </div>
-
         {followers.length === 0 ? (
           <div className="empty-state">
             <PersonOffIcon sx={{ fontSize: 40, opacity: 0.5 }} />
@@ -263,7 +251,6 @@ const Followers = () => {
             ))}
           </div>
         )}
-
         <Snackbar
           message={snackbar.message}
           type={snackbar.type}
@@ -272,7 +259,6 @@ const Followers = () => {
         />
         <Footer />
       </div>
-
       {showRemoveModal && userToRemove && (
         <div className="modal-overlay" onClick={handleCancelRemoveFollower}>
           <div

@@ -50,7 +50,6 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch user data on mount
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -59,7 +58,6 @@ export const useAuth = () => {
         setUser(userData);
         setError(null);
       } catch (err) {
-        // If we get 401, user is not authenticated
         setUser(null);
         setError("Not authenticated");
       } finally {
@@ -70,17 +68,16 @@ export const useAuth = () => {
     fetchUser();
   }, []);
 
-  // Memoize computed values
   const userId = useMemo(() => user?._id || null, [user]);
   const isAuthenticated = useMemo(() => !!user && !loading, [user, loading]);
   const role = useMemo(() => (user?.role as RoleType) || null, [user]);
-  const tokenValid = useMemo(() => !!user, [user]); // If we have user data, token is valid
+  const tokenValid = useMemo(() => !!user, [user]);
 
   return {
     userId,
     isAuthenticated,
     role,
-    token: null, // Tokens are not accessible client-side
+    token: null,
     tokenValid,
     loading,
     error,
@@ -88,10 +85,8 @@ export const useAuth = () => {
     clearAuth: () => {
       setUser(null);
       setError(null);
-      // Note: Actual logout happens server-side when calling /auth/logout
     },
     setAuthTokens: () => {
-      // Tokens are set server-side, no client-side action needed
     },
     getUsername: () => user?.username || null,
   };

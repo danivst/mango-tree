@@ -1,6 +1,7 @@
-/* ============================================
-   LOGIN / SIGNIN PAGE
-   ============================================ */
+/**
+ * @file ResetPassword.css
+ * @description Styles for the reset password page
+ */
 
 .login-container {
   width: 100%;
@@ -14,7 +15,6 @@
   position: relative;
 }
 
-/* Footer positioning: absolute at bottom to avoid side-by-side layout */
 .login-container .page-footer {
   position: absolute;
   bottom: 0;
@@ -66,7 +66,6 @@
   text-shadow: none;
 }
 
-/* Tabs */
 .tabs-container {
   display: flex;
   border-bottom: 1px solid rgba(231, 119, 40, 0.3);
@@ -326,7 +325,6 @@
   cursor: not-allowed;
 }
 
-/* Modal Styles */
 .login-modal-overlay {
   position: fixed;
   top: 0;
@@ -371,7 +369,7 @@
   gap: 24px;
 }
 
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 768px) {
   .login-container {
     padding: 16px;
@@ -393,7 +391,7 @@
   }
 
   .login-form-input {
-    font-size: 16px; /* Prevents zoom on iOS */
+    font-size: 16px; 
     padding: 14px 16px;
   }
 
@@ -450,7 +448,6 @@
   }
 }
 
-/* Ensure password eye icon is visible on mobile */
 @media (max-width: 768px) {
   .login-form-input[type="password"],
   .login-form-input[type="text"] {
@@ -469,7 +466,6 @@
   opacity: 0.8;
 }
 
-/* Password toggle icon color (scoped to login container) */
 .login-container .password-toggle {
   color: #e77728;
 }

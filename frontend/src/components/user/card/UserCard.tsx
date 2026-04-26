@@ -9,7 +9,6 @@ import { useThemeLanguage } from "../../../context/ThemeLanguageContext";
 import { getTranslation } from "../../../utils/translations";
 import "./UserCard.css";
 
-// MUI Icon Imports
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 
@@ -46,14 +45,6 @@ interface UserCardProps {
  * @param {UserCardProps} props - Component props
  * @returns {React.ReactNode} The user card element
  *
- * Features:
- * - Avatar with fallback initials (uses Avatar component)
- * - Username and join date display
- * - Follow/unfollow toggle button
- * - Clickable card to navigate to profile
- * - Support for additional action buttons (e.g., admin actions)
- * - Multiple size variants
- *
  * @example
  * // Basic usage
  * <UserCard
@@ -84,7 +75,6 @@ const UserCard: React.FC<UserCardProps> = ({
   const [localIsFollowing, setLocalIsFollowing] = useState(isFollowing);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync with prop changes
   React.useEffect(() => {
     setLocalIsFollowing(isFollowing);
   }, [isFollowing]);

@@ -1,7 +1,7 @@
 /**
  * @file comment-controller.ts
  * @description Manages comment and reply operations including AI moderation,
- * notifications, and translation.
+ * notifications and translation.
  */
 
 import { Request, Response } from "express";
@@ -51,7 +51,6 @@ export const createComment = async (
       return res.status(404).json({ message: "Post not found" });
     }
 
-    // AI Moderation for comments (check appropriateness only)
     let moderationResult: any = null;
     let moderationError = false;
 
@@ -63,18 +62,15 @@ export const createComment = async (
         "[createComment] Moderation service error",
       );
       moderationError = true;
-      moderationResult = { flagged: false }; // Continue creating comment but flag for admin review if needed
+      moderationResult = { flagged: false };
     }
 
     if (moderationResult?.flagged) {
-      // For comments, only check isAppropriate (cooking-relatedness is not enforced)
       let reasonKey: string;
       let reasonDetail: string = moderationResult.reason || "";
 
       reasonKey = "commentInappropriate";
-      // No need to check isCookingRelated since moderateText doesn't enforce it
 
-      // Send notification to user with "Comment rejected. Reason:" prefix
       const prefixEn = "Comment rejected. Reason: ";
       const prefixBg = "Коментарът е отхвърлен. Причина: ";
       const reasonEn = moderationResult.reason || "Comment is inappropriate.";
@@ -95,7 +91,6 @@ export const createComment = async (
         link: null,
       });
 
-      // Return 200 OK with rejection info - moderation decision, not an error
       return res.json({
         error: reasonKey,
         reason: reasonDetail,
@@ -103,7 +98,6 @@ export const createComment = async (
       });
     }
 
-    // Build comment object
     const commentData: any = {
       postId,
       userId: userIdObj,
@@ -112,7 +106,6 @@ export const createComment = async (
       isVisible: true,
     };
 
-    // If parentCommentId is provided, it's a reply
     if (parentCommentId) {
       const parentComment = await Comment.findById(parentCommentId);
       if (!parentComment) {
@@ -128,13 +121,11 @@ export const createComment = async (
 
     const comment = await Comment.create(commentData);
 
-    // Populate userId before returning
     const populatedComment = await Comment.findById(comment._id).populate(
       "userId",
       "username profileImage",
     );
 
-    // Log comment creation
     await logActivity(req, "COMMENT_CREATE", {
       targetId: comment._id.toString(),
       targetType: "comment",
@@ -142,11 +133,9 @@ export const createComment = async (
     });
 
     if (!post.authorId.equals(userIdObj)) {
-      // Localize the post title for the notification if available
       const postTitleEn = post.translations?.title?.en || post.title;
       const postTitleBg = post.translations?.title?.bg || post.title;
 
-      // Fallback: if JWT lacks username, fetch from DB
       let actorUsername = req.user?.username;
       if (!actorUsername) {
         const actor = await User.findById(userId).select("username");
@@ -170,7 +159,6 @@ export const createComment = async (
       });
     }
 
-    // If this is a reply, notify the parent comment author
     if (parentCommentId) {
       const parentComment = await Comment.findById(parentCommentId).populate(
         "userId",
@@ -178,7 +166,6 @@ export const createComment = async (
       );
       const parentAuthor = parentComment?.userId;
       if (parentAuthor && !parentAuthor._id.equals(userIdObj)) {
-        // Actor username already fetched above
         let actorUsername = req.user?.username;
         if (!actorUsername) {
           const actor = await User.findById(userId).select("username");
@@ -253,7 +240,6 @@ export const toggleLikeComment = async (
 
     await comment.save();
 
-    // Log like/unlike action
     await logActivity(req, hasLiked ? "UNLIKE" : "LIKE", {
       targetId: comment.id.toString(),
       targetType: "comment",
@@ -261,7 +247,6 @@ export const toggleLikeComment = async (
     });
 
     if (!hasLiked && !comment.userId.equals(userIdObj)) {
-      // Fallback: if JWT lacks username, fetch from DB
       let actorUsername = req.user?.username;
       if (!actorUsername) {
         const actor = await User.findById(userId).select("username");
@@ -331,7 +316,6 @@ export const translateComment = async (
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    // Translate the comment text
     const translation = await getDualTranslation(comment.text);
     const isBg = targetLang === "bg";
     const translatedText = isBg ? translation.bg : translation.en;
@@ -349,7 +333,7 @@ export const translateComment = async (
 
 /**
  * Updates an existing comment.
- * Re-moderates the new text via AI and re-translates it. restricted to Owner.
+ * Re-moderates the new text via AI and re-translates it. Restricted to Owner.
  *
  * @param req - AuthRequest with params { id } and body { text }
  * @param res - Express response object
@@ -384,7 +368,6 @@ export const updateComment = async (
       return res.status(403).json({ message: "Not your comment" });
     }
 
-    // AI Moderation for comment updates (check appropriateness only)
     try {
       const moderationResult = await moderateText(text);
       if (moderationResult?.flagged) {
@@ -406,7 +389,6 @@ export const updateComment = async (
           link: `/posts/${comment.postId}#comment-${comment._id}`,
         });
 
-        // Return 200 OK with rejection info - moderation decision, not an error
         return res.json({
           flagged: true,
           reason: moderationResult.reason,
@@ -418,10 +400,8 @@ export const updateComment = async (
         moderationErr,
         "[updateComment] Moderation service error",
       );
-      // Continue with update even if moderation service fails
     }
 
-    // Re-translate updated text
     const translations = await getDualTranslation(text);
 
     comment.text = text;
@@ -429,7 +409,6 @@ export const updateComment = async (
 
     await comment.save();
 
-    // Create a notification for a successful update
     const successMsgEn = "Your comment was updated successfully.";
     const successMsgBg = "Коментарът ви беше актуализиран успешно.";
 
@@ -446,7 +425,6 @@ export const updateComment = async (
       link: `/posts/${comment.postId}#comment-${comment._id}`,
     });
 
-    // Log comment update
     await logActivity(req, "COMMENT_EDIT", {
       targetId: comment.id.toString(),
       targetType: "comment",
@@ -471,13 +449,10 @@ const deleteCommentTree = async (
   commentId: Types.ObjectId
 ): Promise<void> => {
   try {
-    // Find all direct children
     const children = await Comment.find({ parentCommentId: commentId });
-    // Recursively delete each child and its subtree
     for (const child of children) {
       await deleteCommentTree(child._id as Types.ObjectId);
     }
-    // Finally delete this comment
     await Comment.findByIdAndDelete(commentId);
   } catch (err: any) {
     logger.error(err, `Error deleting comment tree for commentId ${commentId}`);
@@ -522,10 +497,8 @@ export const deleteComment = async (
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    // Delete the comment and all its replies recursively
     await deleteCommentTree(comment._id as Types.ObjectId);
 
-    // Log comment deletion
     await logActivity(req, "COMMENT_DELETE", {
       targetId: comment.id.toString(),
       targetType: "comment",
@@ -565,19 +538,16 @@ export const getCommentsByPost = async (
   try {
     const { postId } = req.params;
 
-    // Fetch all comments for the post, sorted by createdAt ascending (oldest first for proper threading)
     const comments = await Comment.find({
       postId,
       $or: [{ isVisible: true }, { isVisible: { $exists: false } }],
     })
       .populate("userId", "username profileImage")
-      .sort({ createdAt: 1 }); // Sort oldest first for proper parent-before-child ordering
+      .sort({ createdAt: 1 });
 
-    // Build hierarchical tree structure
     const commentMap = new Map<string, any>();
     const rootComments: any[] = [];
 
-    // First pass: create map and add replies array to each comment
     comments.forEach((comment) => {
       const commentId = comment._id as Types.ObjectId;
       commentMap.set(commentId.toString(), {
@@ -586,7 +556,6 @@ export const getCommentsByPost = async (
       });
     });
 
-    // Second pass: build tree by assigning comments to their parents
     comments.forEach((comment) => {
       const commentId = comment._id as Types.ObjectId;
       const commentObj = commentMap.get(commentId.toString());
@@ -595,16 +564,13 @@ export const getCommentsByPost = async (
         comment.parentCommentId &&
         commentMap.has(comment.parentCommentId.toString())
       ) {
-        // This is a reply - add it to parent's replies array
         const parent = commentMap.get(comment.parentCommentId.toString());
         parent.replies.push(commentObj);
       } else {
-        // This is a root comment (no parent)
         rootComments.push(commentObj);
       }
     });
 
-    // Sort replies within each parent by createdAt ascending
     const sortRepliesRecursive = (commentList: any[]) => {
       commentList.forEach((comment) => {
         if (comment.replies && comment.replies.length > 0) {

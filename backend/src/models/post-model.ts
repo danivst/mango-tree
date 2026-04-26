@@ -1,7 +1,7 @@
 /**
  * @file post-model.ts
  * @description Mongoose model for Post.
- * User-generated content with AI moderation, translations, and search indexes.
+ * User-generated content with AI moderation, translations and search indexes.
  *
  * @see IPost interface for the full type definition
  */

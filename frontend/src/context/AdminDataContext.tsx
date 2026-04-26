@@ -90,7 +90,6 @@ interface AdminDataState<T> {
  */
 
 interface AdminDataContextType {
-  // Data arrays
   categories: Category[];
   tags: Tag[];
   users: User[];
@@ -98,7 +97,6 @@ interface AdminDataContextType {
   reports: Report[];
   flaggedContent: FlaggedContent[];
 
-  // State containers
   categoriesState: AdminDataState<Category>;
   tagsState: AdminDataState<Tag>;
   usersState: AdminDataState<User>;
@@ -106,7 +104,6 @@ interface AdminDataContextType {
   reportsState: AdminDataState<Report>;
   flaggedContentState: AdminDataState<FlaggedContent>;
 
-  // Fetch functions
   fetchCategories: () => Promise<void>;
   fetchTags: () => Promise<void>;
   fetchUsers: () => Promise<void>;
@@ -114,7 +111,6 @@ interface AdminDataContextType {
   fetchReports: () => Promise<void>;
   fetchFlaggedContent: () => Promise<void>;
 
-  // Initialize all
   initialize: () => Promise<void>;
 }
 
@@ -123,31 +119,10 @@ const AdminDataContext = createContext<AdminDataContextType | undefined>(
 );
 
 /**
- * @file AdminDataContext.tsx
- * @description React Context for centralized admin dashboard data management.
- * Provides state and operations for all admin-visible entities (users, reports, content review, categories, tags).
- * Implements a consistent pattern: each entity has raw data + loading/error/fetched state.
- *
- * Architecture:
- * - Separate useState hooks for each data array and its loading/error/fetched flags
- * - useCallback wraps all fetch functions to prevent unnecessary re-renders
- * - Context value exposes both raw data arrays and aggregated state containers
- * - Localized error messages via getTranslation (user's current language)
- *
- * Special Business Logic:
- * - fetchUsers: Fetches all users AND banned users in parallel, then merges ban status into user objects.
- *   Result: users array has isBanned (boolean) and banned_user_id (string | undefined) fields.
- * - fetchReports: Backend returns all reports, but we filter to only pending (status="pending") for admin view.
- * - fetchFlaggedContent: Gets AI-flagged posts/comments that require human moderation review.
- *
- * Usage:
- * - Wrap admin dashboard layout with <AdminDataProvider>
- * - Child pages call useAdminData() to access data and trigger fetches
- * - Dashboard page calls initialize() on mount to populate everything
- *
  * @component
- * @requires useThemeLanguage - Provides translation function for error messages
- * @requires adminAPI - API service for all admin data endpoints
+ * @description Provider that centralizes admin dashboard data and fetch state.
+ * @requires useThemeLanguage - Provides localized error messages.
+ * @requires adminAPI - Fetches admin-facing data.
  */
 
 export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -158,7 +133,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const isAdminUser = isAuthenticated && user?.role === "admin";
   const t = (key: string) => getTranslation(language, key);
 
-  // ========== DATA ARRAYS ==========
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -166,7 +140,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [reports, setReports] = useState<Report[]>([]);
   const [flaggedContent, setFlaggedContent] = useState<FlaggedContent[]>([]);
 
-  // ========== LOADING STATES ==========
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [tagsLoading, setTagsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -174,7 +147,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [reportsLoading, setReportsLoading] = useState(false);
   const [flaggedContentLoading, setFlaggedContentLoading] = useState(false);
 
-  // ========== ERROR STATES ==========
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [tagsError, setTagsError] = useState<string | null>(null);
   const [usersError, setUsersError] = useState<string | null>(null);
@@ -184,7 +156,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     null,
   );
 
-  // ========== FETCHED FLAGS ==========
   const [categoriesFetched, setCategoriesFetched] = useState(false);
   const [tagsFetched, setTagsFetched] = useState(false);
   const [usersFetched, setUsersFetched] = useState(false);
@@ -192,7 +163,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [reportsFetched, setReportsFetched] = useState(false);
   const [flaggedContentFetched, setFlaggedContentFetched] = useState(false);
 
-  // ========== FETCH FUNCTIONS ==========
 
   /**
    * Fetch all categories from the backend.
@@ -367,13 +337,12 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchFlaggedContent,
   ]);
 
-  // ========== INITIALIZE ON ADMIN LOGIN ==========
   useEffect(() => {
     if (authLoading || !isAdminUser) {
       return;
     }
 
-    // Initialize admin data when user becomes admin (e.g., after login)
+    // Initialize admin data when user becomes admin (after login)
     initialize().catch((err: any) => {
       // During role/session transitions, this provider can briefly attempt
       // admin refresh before auth state fully settles. Ignore permission errors.
@@ -384,7 +353,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, [isAdminUser, initialize, authLoading]);
 
-  // ========== AUTO-REFRESH ON SIDEBAR CLICK ==========
   const { refreshTrigger } = useRefresh();
 
   useEffect(() => {
@@ -403,7 +371,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, [refreshTrigger, initialize, authLoading, isAdminUser]);
 
-  // ========== CONTEXT VALUE ==========
   /**
    * Builds the context value object.
    * Exposes both raw data arrays and state container objects for each entity.

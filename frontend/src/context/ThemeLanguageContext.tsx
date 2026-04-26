@@ -60,68 +60,28 @@ const ThemeLanguageContext = createContext<
 >(undefined);
 
 /**
- * @file ThemeLanguageContext.tsx
- * @description React Context for managing application-wide theme and language settings.
- * Provides theme switching and internationalization across the entire app.
- *
- * Features:
- * - Client-side preferences persisted in cookies (1-year expiry)
- * - Server-side user preferences sync when user logs in (overrides cookie)
- * - Automatic CSS custom properties (--theme-bg, --theme-accent, --theme-text, etc.) applied to document root
- * - HTML lang attribute updates for accessibility and localization
- * - Backend API sync for authenticated users (users.updateProfile)
- *
- * Theme System:
- * Each theme maps to specific CSS variables set on :root:
- *   --theme-bg: Main background color
- *   --theme-accent: Secondary background (cards, buttons)
- *   --theme-text: Primary text color
- *   --theme-sidebar-bg: Optional sidebar background (overrides main for mango theme)
- *
- * Language System:
- * - Sets <html lang="..."> attribute
- * - Used by translation utility to determine which language string to return
- *
- * Sync Behavior:
- * - On mount: if user is logged in, fetch saved preferences from backend (overrides cookie)
- * - On change: setter updates state, writes cookie, and if authenticated, sends PATCH /users/:id to persist
- *
  * @component
- * @requires useState - Theme and language state with lazy initializers (cookie read)
- * @requires useEffect - Three effects: fetch user prefs, apply theme CSS, apply language attribute
- * @requires usersAPI - For syncing preferences to backend when authenticated
- * @requires setCookie/getCookie - Cookie persistence (1 year)
+ * @description Provider that exposes theme and language state across the app.
+ * @requires usersAPI - Syncs saved preferences for authenticated users.
+ * @requires setCookie/getCookie - Persists client-side preferences.
  */
 
 export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { isAuthenticated } = useAuth();
-  /**
-   * Theme state initialization: check cookie first, fallback to 'cream'
-   * Uses lazy initializer function to only read cookie on initial render (performance).
-   */
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = getCookie("appTheme") as Theme | null;
     return saved || "mango";
   });
 
-  /**
-   * Language state initialization: check cookie first, fallback to 'en'
-   */
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = getCookie("appLanguage") as Language | null;
     return saved || "en";
   });
 
-  /**
-   * Effect: Fetch user preferences from backend on mount.
-   * If user is logged in and has saved theme/language in profile, override cookie preferences.
-   * Silent failure: logs error but continues with cookie/defaults.
-   */
   useEffect(() => {
     const fetchUserPreferences = async () => {
-      // Only fetch if user is authenticated
       if (!isAuthenticated) {
         return;
       }
@@ -178,13 +138,13 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
         root.style.removeProperty("--theme-sidebar-bg");
         break;
       case "mango":
-        root.style.setProperty("--theme-bg", "#FFFFFF"); // White background for main content
-        root.style.setProperty("--theme-accent", "#FFFFFF"); // White for cards, buttons
-        root.style.setProperty("--theme-text", "#E77728"); // Orange for text
+        root.style.setProperty("--theme-bg", "#FFFFFF"); 
+        root.style.setProperty("--theme-accent", "#FFFFFF"); 
+        root.style.setProperty("--theme-text", "#E77728"); 
         root.style.setProperty(
           "--theme-sidebar-bg",
           "linear-gradient(to bottom, #ffd151, #ffbc40)",
-        ); // Yellow-orange gradient for sidebar
+        ); 
         break;
     }
   }, [theme]);
@@ -221,7 +181,6 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
         "[ThemeLanguage] Failed to sync preference to backend:",
         error,
       );
-      // Non-critical: continue; cookie already saved
     }
   };
 

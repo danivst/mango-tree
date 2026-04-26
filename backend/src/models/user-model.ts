@@ -1,7 +1,7 @@
 /**
  * @file user-model.ts
  * @description Mongoose model for User.
- * Core user account with authentication, profile, preferences, and social features.
+ * Core user account with authentication, profile, preferences and social features.
  *
  * @see IUser interface for the full type definition
  */

@@ -1,7 +1,7 @@
 /**
  * @file notification-routes.ts
  * @description User notification routes.
- * Manages in-app notifications, including retrieval, read status, and deletion.
+ * Manages in-app notifications, including retrieval, read status and deletion.
  *
  * Base path: /api/notifications
  * All routes require authentication.

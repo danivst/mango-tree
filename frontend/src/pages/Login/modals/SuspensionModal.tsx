@@ -10,7 +10,7 @@ import React from 'react';
 /**
  * @interface SuspensionModalProps
  * @description Props for the SuspensionModal component.
- * * @property {boolean} open - Controls the visibility of the modal overlay and content
+ * @property {boolean} open - Controls the visibility of the modal overlay and content
  * @property {string} reason - The specific administrative reason for the account suspension
  * @property {() => void} onOK - Callback function to handle acknowledgement and closure
  * @property {(key: string) => string} t - Localization function for translating UI text
@@ -43,18 +43,12 @@ const SuspensionModal: React.FC<SuspensionModalProps> = ({
     <div className="login-modal-overlay">
       <div className="login-modal-content">
         <h2 className="login-modal-title">{t("accountSuspended")}</h2>
-        
-        {/* Suspension Reason Display */}
         <p className="login-modal-subtitle mb-6 text-left">
           {t("suspensionMessage")} <strong>{reason}</strong>
         </p>
-        
-        {/* Support Instructions */}
         <p className="login-modal-subtitle mb-6 text-left">
           {t("contactSupport")}
         </p>
-        
-        {/* Action Buttons */}
         <div className="login-form-actions modal-actions-center">
           <button className="btn-solid" onClick={onOK}>
             {t("ok")}

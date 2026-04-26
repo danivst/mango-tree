@@ -1,8 +1,9 @@
-/* ============================================
-   REPORT POST PREVIEW ADMIN PAGE
-   ============================================ */
+/**
+ * @file ReportPostPreview.css
+ * @description Styles for the activity report post preview page in the admin panel
+ */
 
-/* Icon size utilities */
+
 .icon-sm {
   font-size: 14px !important;
 }
@@ -11,7 +12,6 @@
   font-size: 18px !important;
 }
 
-/* Layout Utilities */
 .flex {
   display: flex;
 }
@@ -97,7 +97,6 @@
   object-fit: cover;
 }
 
-/* Header Section (after go-back) */
 .post-preview-header {
   display: flex;
   align-items: center;
@@ -106,15 +105,10 @@
   flex-wrap: wrap;
 }
 
-/* Translate Button */
-
-
-/* Section spacing */
 .section-spacing {
   margin-bottom: 24px;
 }
 
-/* Author Info */
 .author-info {
   display: flex;
   align-items: center;
@@ -149,7 +143,6 @@
   color: var(--theme-text);
 }
 
-/* Category Badge - dynamic colors via CSS variables or specific classes */
 .category-badge {
   font-size: 13px;
   font-weight: 700;
@@ -183,7 +176,6 @@
   color: var(--theme-text);
 }
 
-/* Image Carousel */
 .image-carousel {
   position: relative;
   width: 100%;
@@ -249,7 +241,6 @@
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* Tags */
 .tags-container {
   margin-bottom: 16px;
   display: flex;
@@ -266,7 +257,6 @@
   border: 1px solid var(--theme-text);
 }
 
-/* Description Text */
 .description-text {
   font-family: 'Poppins', sans-serif;
   font-size: 14px;
@@ -275,7 +265,6 @@
   margin: 0;
 }
 
-/* Comment Styles */
 .comment-section {
   margin-bottom: 24px;
 }
@@ -336,7 +325,6 @@
   white-space: pre-wrap;
 }
 
-/* User Profile Preview Styles */
 .preview-header {
   display: flex;
   align-items: center;
@@ -418,7 +406,6 @@
   opacity: 0.8;
 }
 
-/* Responsive stats: stack on smaller screens */
 @media (max-width: 767px) {
   .preview-stats {
     flex-direction: column;
@@ -427,7 +414,6 @@
   }
 }
 
-/* Preview Bio */
 .preview-bio-section {
   margin-bottom: 24px;
 }
@@ -447,7 +433,6 @@
   color: var(--theme-text);
 }
 
-/* Preview Previous Usernames */
 .preview-section-title {
   margin: 0 0 12px 0;
   font-size: 18px;
@@ -491,7 +476,6 @@
   opacity: 0.9;
 }
 
-/* Preview Divider */
 .preview-divider {
   border: 0;
   border-top: 1px solid var(--theme-text);
@@ -499,7 +483,6 @@
   margin: 32px 0;
 }
 
-/* Preview Category Tabs - matching Account page category-tabs */
 .preview-category-tabs {
   display: flex;
   gap: 16px;
@@ -532,7 +515,7 @@
   opacity: 1;
 }
 
-/* Responsive: smaller tabs on tablets and phones */
+/* Responsive */
 @media (max-width: 768px) {
   .preview-category-tabs {
     gap: 12px;
@@ -557,7 +540,6 @@
   }
 }
 
-/* Preview Post Card */
 .preview-post-card {
   padding: 16px;
   display: flex;
@@ -610,5 +592,3 @@
 .preview-post-likes .material-icons {
   font-size: 18px;
 }
-
-/* Modal Close Button */

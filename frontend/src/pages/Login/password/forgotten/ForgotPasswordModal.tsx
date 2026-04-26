@@ -10,7 +10,8 @@ import React from 'react';
 /**
  * @interface ForgotPasswordModalProps
  * @description Props for the ForgotPasswordModal component.
- * * @property {boolean} open - Whether the modal is currently visible
+ * 
+ * @property {boolean} open - Whether the modal is currently visible
  * @property {string} email - Current email input value managed by parent state
  * @property {boolean} sending - Loading state flag to disable buttons during API request
  * @property {string} [error] - Optional validation or server error message to display
@@ -53,7 +54,8 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   /**
    * Handles clicks on the modal overlay.
    * If the click occurs directly on the overlay (not the content box), it triggers onCancel.
-   * * @param {React.MouseEvent} e - The mouse click event
+   * 
+   * @param {React.MouseEvent} e - The mouse click event
    */
   const handleClickOutside = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -66,7 +68,6 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
         <h2 className="login-modal-title">{t("forgotPasswordTitle")}</h2>
         <p className="login-modal-subtitle">{t("forgotPasswordSubtitle")}</p>
-        
         <form onSubmit={onSubmit} className="login-modal-form">
           <div className="login-form-group">
             <label
@@ -87,7 +88,6 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               <span className="login-error-message">{error}</span>
             )}
           </div>
-          
           <div className="login-form-actions">
             <button
               type="button"

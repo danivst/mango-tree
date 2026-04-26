@@ -42,10 +42,8 @@ export const auth = (
     return next();
   }
 
-  // Try to read token from HttpOnly cookies (XSS-resistant path)
   let token = req.cookies?.token;
 
-  // Legacy fallback to Authorization header
   if (!token) {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -55,7 +53,7 @@ export const auth = (
 
   if (!token) {
     logger.warn({ path: req.path }, "[auth] No token provided");
-    res.status(401).json({ message: "Unauthorized. Please sign in to continue." });
+    res.status(401).json({ message: "Unauthorized. Please sign up to continue." });
     return;
   }
 
@@ -71,8 +69,7 @@ export const auth = (
   } catch (err: any) {
     logger.warn({ error: err.message }, "[auth] Token invalid or expired");
     
-    // Return 401 on invalid/expired tokens so the frontend can redirect to login.
-    res.status(401).json({ message: "Session expired. Please sign in again." });
+    res.status(401).json({ message: "Session expired. Please sign up again." });
     return;
   }
 };
@@ -84,7 +81,7 @@ export const auth = (
  * @param roles - Spread of allowed RoleType enums
  * @returns Middleware function to validate the user's role
  * @throws {403} If the user lacks the required role or is unauthenticated
- * * @example
+ * @example
  * ```typescript
  * router.post("/admin-only", auth, requireRole(RoleType.ADMIN), controller);
  * router.get("/staff-area", auth, requireRole(RoleType.ADMIN, RoleType.STAFF), controller);

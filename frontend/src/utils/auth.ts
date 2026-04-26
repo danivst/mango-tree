@@ -15,5 +15,4 @@
  * @returns {void}
  */
 export const clearAuth = (): void => {
-  // No-op: Legacy token cleanup removed as tokens are now HttpOnly cookies
 };

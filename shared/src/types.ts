@@ -1,7 +1,3 @@
-// ============================================================================
-// Enums and Basic Types
-// ============================================================================
-
 import { RoleType, RoleTypeValue } from "./enums/role-type";
 import { ThemeType, ThemeTypeValue } from "./enums/theme-type";
 import { LanguageType, LanguageTypeValue } from "./enums/language-type";
@@ -18,7 +14,6 @@ import {
   ReportStatusTypeValue,
 } from "./enums/report-status-type";
 
-// Re-export for convenience
 export { RoleType, RoleTypeValue };
 export { ThemeType, ThemeTypeValue };
 export { LanguageType, LanguageTypeValue };
@@ -27,31 +22,25 @@ export { ReportTargetType, ReportTargetTypeValue };
 export { ReportStatusType, ReportStatusTypeValue };
 
 /**
- * Supported UI theme names.
  * @typedef {'dark' | 'purple' | 'cream' | 'light' | 'mango'} Theme
+ * @description Supported UI theme names.
  */
 export type Theme = (typeof ThemeTypeValue)[keyof typeof ThemeTypeValue];
 export const ThemeValues = Object.values(ThemeTypeValue);
 
 /**
- * Supported language codes.
  * @typedef {'en' | 'bg'} Language
+ * @description Supported language codes.
  */
 export type Language =
   (typeof LanguageTypeValue)[keyof typeof LanguageTypeValue];
 export const LanguageValues = Object.values(LanguageTypeValue);
 
-// ============================================================================
-// Translation Types
-// ============================================================================
-
 /**
- * Bilingual translation structure for dynamically stored text.
- * Stores both Bulgarian (bg) and English (en) versions of content.
- *
  * @interface Translation
- * @property {string} bg - Bulgarian translation
- * @property {string} en - English translation
+ * @description Bilingual translation structure for stored text.
+ * @property {string} bg - Bulgarian translation.
+ * @property {string} en - English translation.
  */
 export interface Translation {
   bg: string;
@@ -59,31 +48,28 @@ export interface Translation {
 }
 
 /**
- * Translation structure for category names.
- *
  * @interface CategoryTranslations
- * @property {Translation} name - Translated category name
+ * @description Translation structure for category names.
+ * @property {Translation} name - Translated category name.
  */
 export interface CategoryTranslations {
   name: Translation;
 }
 
 /**
- * Translation structure for tag names.
- *
  * @interface TagTranslations
- * @property {Translation} name - Translated tag name
+ * @description Translation structure for tag names.
+ * @property {Translation} name - Translated tag name.
  */
 export interface TagTranslations {
   name: Translation;
 }
 
 /**
- * Translation structure for comment text.
- *
  * @interface CommentTranslations
- * @property {string} bg - Bulgarian translation
- * @property {string} en - English translation
+ * @description Translation structure for comment text.
+ * @property {string} bg - Bulgarian translation.
+ * @property {string} en - English translation.
  */
 export interface CommentTranslations {
   bg: string;
@@ -91,37 +77,30 @@ export interface CommentTranslations {
 }
 
 /**
- * Translation structure for notification messages.
- *
  * @interface NotificationTranslations
- * @property {Translation} message - Translated notification message
+ * @description Translation structure for notification messages.
+ * @property {Translation} message - Translated notification message.
  */
 export interface NotificationTranslations {
   message: Translation;
 }
 
 /**
- * Translation structure for report reasons.
- *
  * @interface ReportTranslations
- * @property {Translation} reason - Translated report reason
+ * @description Translation structure for report reasons.
+ * @property {Translation} reason - Translated report reason.
  */
 export interface ReportTranslations {
   reason: Translation;
 }
 
-// ============================================================================
-// User & Profile Types
-// ============================================================================
-
 /**
- * User preferences for receiving notifications.
- *
  * @interface NotificationPreferences
- * @property {boolean} emailReports - Receive email notifications for reports
- * @property {boolean} emailComments - Receive email notifications for comments
- * @property {boolean} inAppReports - Receive in-app notifications for reports
- * @property {boolean} inAppComments - Receive in-app notifications for comments
+ * @description User notification preferences.
+ * @property {boolean} emailReports - Whether report notifications are sent by email.
+ * @property {boolean} emailComments - Whether comment notifications are sent by email.
+ * @property {boolean} inAppReports - Whether report notifications are shown in-app.
+ * @property {boolean} inAppComments - Whether comment notifications are shown in-app.
  */
 export interface NotificationPreferences {
   emailReports: boolean;

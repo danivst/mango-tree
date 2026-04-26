@@ -1,7 +1,7 @@
 /**
  * @file NotificationContext.tsx
  * @description React Context for managing user notification state across the application.
- * Handles fetching, caching, and updating unread notification counts in real-time.
+ * Handles fetching, caching and updating unread notification counts in real-time.
  */
 
 import React, {
@@ -40,32 +40,9 @@ const NotificationContext = createContext<NotificationContextProps | undefined>(
 );
 
 /**
- * @file NotificationContext.tsx
- * @description React Context for managing user notification state across the application.
- * Handles fetching, caching, and updating unread notification counts in real-time.
- *
- * Features:
- * - Auto-fetch unread count on mount for non-admin authenticated users
- * - Polling every 30 seconds to keep count current while app is open
- * - Window focus refresh listener (refetches when user returns to tab)
- * - Optimistic local updates: decrementUnreadCount and clearUnreadCount for immediate UI feedback
- * - Role-based gating: admins don't receive notifications (skip fetching)
- *
- * Performance:
- * - useCallback on fetchUnreadCount to prevent unnecessary re-renders
- * - Mounted flag prevents state updates after component unmounts
- * - All API calls are wrapped in try/catch for graceful degradation
- *
- * Integration:
- * - Used by UserSidebar to show unread badge
- * - Used by Notifications page to manage real-time state
- * - Other components can call decrementUnreadCount when a notification is actioned
- *
  * @component
- * @requires useCallback - Memoize fetchUnreadCount to prevent effect loops
- * @requires useEffect - Setup polling interval, window focus listener, and cleanup
- * @requires notificationsAPI - API service for fetching notifications and marking as read
- * @requires getToken / getUserRole - Auth utilities for determining if user should receive notifications
+ * @description Provider that keeps unread notification state in sync for authenticated users.
+ * @requires notificationsAPI - Fetches notifications and marks them as read.
  */
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -74,30 +51,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const { isAuthenticated, user, loading } = useAuth();
 
-  /**
-   * Core fetch function for unread notification count.
-   * Checks authentication and role before making API request.
-   * Only non-admin users with valid authentication receive notifications.
-   *
-   * Flow:
-   * 1. Check authentication status
-   * 2. Check role (admin? skip)
-   * 3. Fetch notifications from API
-   * 4. Filter to unread and update state
-   *
-   * Errors are logged but do not throw to caller; fetchUnreadCount is also called by
-   * refreshUnreadCount which handles its own error UI in parent components if needed.
-   */
   const fetchUnreadCount = useCallback(
     async (forceFetch = false) => {
-      // Only fetch if user is authenticated and is NOT an admin,
-      // unless a caller specifically forces a refresh (e.g. after login).
       if (!forceFetch && (!isAuthenticated || loading || !user)) {
         return;
       }
 
       if (user?.role === "admin") {
-        // Admins don't need notifications, skip fetching entirely
         return;
       }
 
@@ -109,16 +69,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         setUnreadCount(unread);
       } catch (error) {
         console.error("Failed to fetch unread notifications count:", error);
-        // Keep previous count; don't set to zero on error
       }
     },
     [isAuthenticated, loading, user],
   );
 
-  /**
-   * Public method to manually refresh the unread count.
-   * Useful after actions that might affect notification count (e.g., marking a notification read, posting a comment that triggers a notification).
-   */
   const refreshUnreadCount = async () => {
     await fetchUnreadCount(true);
   };
@@ -131,10 +86,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const markAllAsRead = async () => {
     try {
       await notificationsAPI.markAllAsRead();
-      setUnreadCount(0); // Immediately set to zero for instant feedback
+      setUnreadCount(0); 
     } catch (error) {
       console.error("Failed to mark all as read:", error);
-      // On error, refetch to get accurate count
       await fetchUnreadCount();
     }
   };
@@ -145,7 +99,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
    * Guards against negative values using Math.max(0, ...).
    * Caller should ensure this accurately reflects server state eventually.
    *
-   * Example: User clicks a notification in Notifications page → decrement count immediately.
+   * Example: User clicks a notification in Notifications page - decrement count immediately.
    */
   const decrementUnreadCount = () => {
     setUnreadCount((prev) => Math.max(0, prev - 1));
@@ -172,7 +126,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
    * - mounted flag prevents state updates after component has unmounted
    */
   useEffect(() => {
-    // Skip polling entirely for admin users
     if (user?.role === "admin") {
       return;
     }
@@ -185,13 +138,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
 
-    // Initial fetch
     fetch();
 
     // Polling every 10 seconds for faster updates
     const intervalId = setInterval(fetch, 10000);
 
-    // Refresh on window focus (user switches back to app)
     const handleFocus = () => {
       fetch();
     };

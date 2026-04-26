@@ -1,7 +1,7 @@
 /**
  * @file api.ts
  * @description Central HTTP client and API service definitions for the MangoTree application.
- * Configures Axios with interceptors for cookie-based session handling,
+ * Configures Axios with interceptors for cookie-based session handling
  * and account status redirection.
  */
 
@@ -17,6 +17,7 @@ import type {
 } from "../utils/types";
 
 import { BASE_API_URL } from "../utils/env";
+
 /**
  * Axios HTTP client configured for MangoTree API.
  * Base URL: BASE_API_URL/api
@@ -37,7 +38,6 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor - no Authorization header needed for HttpOnly cookie auth
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     return config;
@@ -47,20 +47,15 @@ api.interceptors.request.use(
   },
 );
 
-// Response interceptor - handle session expiry and account suspension
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    // Get the request path to avoid redirecting for certain endpoints
     const requestPath = error.config?.url || "";
 
-    // If this is a request to /users/me, don't redirect - let the caller handle it
-    // This prevents infinite loops when checking auth status
     if (requestPath.includes("/users/me") || requestPath.includes("/me")) {
       return Promise.reject(error);
     }
 
-    // Don't redirect for login/register endpoints - let them display errors directly
     if (
       requestPath.includes("/auth/login") ||
       requestPath.includes("/auth/register") ||
@@ -70,7 +65,6 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401 || error.response?.status === 403) {
-      // Check if it's an account suspension (account deleted, not banned)
       if (
         error.response?.data &&
         typeof error.response.data === "object" &&
@@ -81,7 +75,6 @@ api.interceptors.response.use(
           message &&
           (message.includes("suspended") || message.includes("terminated"))
         ) {
-          // Account was deleted/suspended - show modal
           sessionStorage.setItem("accountSuspended", "true");
           sessionStorage.setItem("suspensionReason", message);
           window.location.href = "/login";
@@ -89,19 +82,14 @@ api.interceptors.response.use(
         }
       }
 
-      // For banned users and other 403 errors during login, don't redirect if it's a login request
       if (requestPath.includes("/auth/login")) {
-        // Let the login page handle the error display
         return Promise.reject(error);
       }
 
-      // Normal 403s can be permission checks (e.g. non-admin hitting admin API).
-      // Do NOT treat those as expired sessions.
       if (error.response?.status === 403) {
         return Promise.reject(error);
       }
 
-      // 401 means the session is invalid/expired.
       sessionStorage.setItem("sessionExpired", "true");
       window.location.href = "/login";
     }
@@ -132,12 +120,17 @@ export const authAPI = {
    * }
    * ```
    */
-  login: async (username: string, password: string): Promise<LoginResponse> => {
+  login: async (
+    username: string,
+    password: string,
+    rememberMe?: boolean,
+  ): Promise<LoginResponse> => {
     console.log("API: Making POST request to /api/auth/login");
     try {
       const response = await api.post<LoginResponse>("/auth/login", {
         username,
         password,
+        rememberMe: !!rememberMe,
       });
       console.log("API: Response received:", response.status, response.data);
       return response.data;
@@ -157,12 +150,17 @@ export const authAPI = {
    * @param {string} code - The 6-digit verification code from email
    * @returns {Promise<LoginResponse>} The verified login response with user data
    */
-  verify2FA: async (userId: string, code: string): Promise<LoginResponse> => {
+  verify2FA: async (
+    userId: string,
+    code: string,
+    rememberMe?: boolean,
+  ): Promise<LoginResponse> => {
     console.log("API: Making POST request to /api/auth/2fa/verify");
     try {
       const response = await api.post<LoginResponse>("/auth/2fa/verify", {
         userId,
         code,
+        rememberMe: !!rememberMe,
       });
       console.log("API: Response received:", response.status, response.data);
       return response.data;
@@ -282,13 +280,17 @@ export const authAPI = {
 
   /**
    * Disable two-factor authentication for the current user.
+   * If called without a code, it triggers a verification email.
+   * If called with a code, it confirms and disables 2FA.
    *
    * @async
+   * @param {string} [code] - The 6-digit verification code (optional for the first step)
    * @returns {Promise<{ message: string }>} Response with confirmation message
    */
-  disable2FA: async (): Promise<{ message: string }> => {
+    disable2FA: async (code?: string): Promise<{ message: string }> => {
     const response = await api.post<{ message: string }>(
       "/users/me/2fa/disable",
+      { code }
     );
     return response.data;
   },

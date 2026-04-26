@@ -1,7 +1,7 @@
 /**
  * @file user-tests.ts
  * @description Unit tests for user controller.
- * Tests profile management, follow/unfollow, and account deletion.
+ * Tests profile management, follow/unfollow and account deletion.
  * Uses Jest with mocked Mongoose models and utilities.
  *
  * Run with: `npm test` or `jest`
@@ -205,7 +205,7 @@ describe("User Controller - Full Suite", () => {
       const existingUser = createMockUserDoc({ _id: userId, username: "oldname" });
       
       User.findById.mockReturnValueOnce(createMockQuery(existingUser)); 
-      User.findOne.mockResolvedValue(null); // No conflicts
+      User.findOne.mockResolvedValue(null); 
       User.findById.mockReturnValueOnce(createMockQuery(existingUser)); 
 
       const req = {

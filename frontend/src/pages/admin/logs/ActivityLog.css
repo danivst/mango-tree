@@ -1,6 +1,7 @@
-/* ============================================
-   ACTIVITY LOG ADMIN PAGE
-   ============================================ */
+/**
+ * @file ActivityLog.css
+ * @description Styles for the activity logs page
+ */
 
 .activity-log-container {
   padding: 24px;
@@ -24,9 +25,6 @@
   margin: 0;
 }
 
-/* Spin animation is imported from utilities-components.css */
-
-/* Filters Bar */
 .filters-bar {
   display: flex;
   flex-wrap: wrap;
@@ -65,7 +63,6 @@
   box-shadow: 0 0 0 3px var(--theme-accent-alpha);
 }
 
-/* Table */
 .table-container {
   overflow-x: auto;
   background: var(--theme-card-bg);
@@ -131,7 +128,6 @@
   vertical-align: middle;
 }
 
-/* Column-specific */
 .date-cell {
   white-space: nowrap;
   font-size: 13px;
@@ -187,7 +183,6 @@
   border: 1px solid var(--theme-accent);
 }
 
-/* Empty State */
 .empty-state {
   padding: 60px 24px;
   text-align: center;
@@ -200,7 +195,6 @@
   margin: 0;
 }
 
-/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
@@ -221,7 +215,6 @@
   min-width: 100px;
 }
 
-/* Loading */
 .loading-centered {
   display: flex;
   justify-content: center;
@@ -234,7 +227,6 @@
   opacity: 0.6;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .filters-bar {
     flex-direction: column;

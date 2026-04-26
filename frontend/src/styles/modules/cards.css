@@ -1,8 +1,8 @@
-/* ============================================
-   CARD COMPONENTS
-   ============================================ */
+/**
+ * @file cards.css
+ * @description Styles for the cards
+ */
 
-/* Cards */
 .card {
   background: linear-gradient(180deg, var(--theme-bg), var(--theme-accent));
   border-radius: 12px;
@@ -34,7 +34,6 @@
   margin-top: 24px;
 }
 
-/* User Card Component */
 .user-card {
   display: flex;
   gap: 16px;

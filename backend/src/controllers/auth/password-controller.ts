@@ -1,7 +1,7 @@
 /**
  * @file password-controller.ts
  * @description Manages password lifecycle operations, including secure resets via tokens, 
- * initial password setup for new accounts, and authenticated password changes with notifications.
+ * initial password setup for new accounts and authenticated password changes with notifications.
  */
 
 import { Request, Response } from "express";
@@ -124,10 +124,8 @@ export const requestPasswordReset = async (
 
   const resetLink = `${CLIENT_URL}/reset-password?token=${resetToken}`;
 
-  // Determine user's language preference (default to English)
   const userLang = user.language || "en";
 
-  // Get translations for all email content
   const [
     titleTrans,
     introTrans,
@@ -291,7 +289,6 @@ export const changePassword = async (
       });
     }
 
-    // Password complexity validation for new password
     const hasUpperCase = /[A-Z]/.test(newPassword);
     const hasLowerCase = /[a-z]/.test(newPassword);
     const hasNumber = /[0-9]/.test(newPassword);
@@ -311,13 +308,11 @@ export const changePassword = async (
       });
     }
 
-    // Find user
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Verify current password
     const passwordMatches = await bcrypt.compare(
       currentPassword,
       user.passwordHash,
@@ -328,11 +323,9 @@ export const changePassword = async (
         .json({ message: "Current password is incorrect." });
     }
 
-    // Update password
     user.passwordHash = await bcrypt.hash(newPassword, 10);
     await user.save();
 
-    // Create notification for password change
     const userLang = user.language || "en";
     const messageEn = "Your password has been changed successfully.";
     const messageBg = "Вашата парола беше променена успешно.";
@@ -353,7 +346,7 @@ export const changePassword = async (
       await Notification.create({
         userId: userId,
         type: NotificationType.SYSTEM,
-        message: getLocalizedText(userLang, bodyTrans), // Use body as message
+        message: getLocalizedText(userLang, bodyTrans),
         translations: {
           message: {
             en: bodyTrans.en,
@@ -363,10 +356,9 @@ export const changePassword = async (
         link: "/settings",
       });
     } catch (notifErr) {
-      logger.error(notifErr, "Failed to create password change notification");      // Do not fail the request because of notification error
+      logger.error(notifErr, "Failed to create password change notification");      
     }
 
-    // Log the password change for audit
     await logActivity(req, "PASSWORD_CHANGE", {
       description: "Changed password",
     });

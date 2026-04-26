@@ -1,6 +1,7 @@
-/* ============================================
-   SIDEBAR LAYOUT
-   ============================================ */
+/**
+ * @file sidebar.css
+ * @description Styles for the sidebar layout and responsiveness
+ */
 
 /* Tablet (768px - 1023px): use dynamic sidebar offset */
 @media (min-width: 768px) and (max-width: 1023px) {

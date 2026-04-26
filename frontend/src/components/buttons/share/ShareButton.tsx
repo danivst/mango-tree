@@ -2,8 +2,8 @@
  * @file ShareButton.tsx
  * @description A multi-platform sharing component that provides a unified interface for 
  * distributing content. It supports the Web Share API (native mobile sharing), 
- * clipboard copying, email, and various social media platforms (Twitter, Facebook, 
- * WhatsApp, Telegram, Reddit, and Messenger).
+ * clipboard copying, email and various social media platforms (Twitter, Facebook, 
+ * WhatsApp, Telegram, Reddit and Messenger).
  */
 
 import { useState } from "react";
@@ -24,14 +24,14 @@ type ShareOption = "copy" | "email" | "twitter" | "facebook" | "whatsapp" | "tel
 
 /**
  * ShareButton Component
- * * @param {string} url - The URL to be shared
+ * @param {string} url - The URL to be shared
  * @param {string} title - The title of the content being shared
  * @param {string} [description] - Optional brief description of the content
  * @param {string} [className] - Optional CSS class for container styling
- * * @example
+ * @example
  * ```tsx
  * <ShareButton 
- * url="[https://mangotree.com/posts/123](https://mangotree.com/posts/123)" 
+ * url="[https://mangotreeofficial.com/posts/123](https://mangotreeofficial.com/posts/123)" 
  * title="Check out this recipe!" 
  * description="A delicious mango smoothie."
  * />
@@ -70,7 +70,6 @@ const ShareButton: React.FC<ShareButtonProps> = ({ url, title, description = "",
    * Copies the URL to the system clipboard and provides snackbar feedback.
    */
   const handleCopyLink = async () => {
-    // Modern Clipboard API first (for HTTPS)
     if (navigator.clipboard && window.isSecureContext) {
       try {
         await navigator.clipboard.writeText(url);
@@ -177,61 +176,43 @@ const ShareButton: React.FC<ShareButtonProps> = ({ url, title, description = "",
       <button className="btn-share" onClick={toggleMenu} title={t("share")}>
         <span className="material-icons">share</span>
       </button>
-
       {showMenu && (
         <>
           <div className="share-menu-backdrop" onClick={closeMenu}></div>
           <div className="share-menu">
-            {/* Native Share (if available) */}
             {'share' in navigator && (
               <button className="share-menu-item" onClick={handleNativeShare}>
                 <span className="material-icons">send</span>
                 <span>{t("shareNative")}</span>
               </button>
             )}
-
-            {/* Copy Link */}
             <button className="share-menu-item" onClick={handleCopyLink}>
               <span className="material-icons">
                 {copied ? "check" : "link"}
               </span>
               <span>{copied ? t("copied") : t("copyLink")}</span>
             </button>
-
-            {/* Email */}
             <button className="share-menu-item" onClick={handleEmail}>
               <span className="material-icons">email</span>
               <span>{t("shareEmail")}</span>
             </button>
-
-            {/* Social */}
             <div className="share-social-divider"></div>
-
-            {/* Twitter */}
             <button className="share-menu-item" onClick={() => handleSocialShare("twitter")}>
               <span className="material-icons">alt_route</span>
               <span>Twitter</span>
             </button>
-
-            {/* WhatsApp */}
             <button className="share-menu-item" onClick={() => handleSocialShare("whatsapp")}>
               <span className="material-icons">call</span>
               <span>WhatsApp</span>
             </button>
-
-            {/* Telegram */}
             <button className="share-menu-item" onClick={() => handleSocialShare("telegram")}>
               <span className="material-icons">send</span>
               <span>Telegram</span>
             </button>
-
-            {/* Reddit */}
             <button className="share-menu-item" onClick={() => handleSocialShare("reddit")}>
               <span className="material-icons">public</span>
               <span>Reddit</span>
             </button>
-
-            {/* Messenger */}
             <button className="share-menu-item" onClick={() => handleSocialShare("messenger")}>
               <span className="material-icons">chat</span>
               <span>Messenger</span>
@@ -239,8 +220,6 @@ const ShareButton: React.FC<ShareButtonProps> = ({ url, title, description = "",
           </div>
         </>
       )}
-
-      {/* Snackbar for copy feedback */}
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

@@ -2,7 +2,8 @@
  * @file Dashboard.tsx
  * @description Admin dashboard layout wrapper component.
  * Provides consistent admin UI shell with sidebar navigation and outlet for nested routes.
- * * Responsibilities:
+ * 
+ * Responsibilities:
  * - Renders AdminSidebar (left navigation)
  * - Fetches all admin data on mount via AdminDataContext.initialize()
  * - Displays child routes via Outlet (react-router nested routes)

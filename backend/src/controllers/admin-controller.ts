@@ -1,6 +1,6 @@
 /**
  * @file admin-controller.ts
- * @description Administrative operations including content approval, rejection, and user ban management.
+ * @description Administrative operations including content approval, rejection and user ban management.
  */
 
 import { Response } from "express";
@@ -44,18 +44,15 @@ export const getFlaggedContent = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    // Authorization: verify the requester is an administrator
     if (req.user!.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: "access denied." });
+      return res.status(403).json({ message: "Access denied." });
     }
 
-    // Data retrieval: find all posts where isApproved is false
     const unapprovedPosts = await Post.find({ isApproved: false })
       .populate("authorId", "username")
       .populate("category", "name")
       .sort({ createdAt: -1 });
 
-    // Mapping: format the data for the frontend to easily display flagged items
     const flaggedContent = unapprovedPosts.map((post) => ({
       _id: post._id,
       type: "post",
@@ -93,7 +90,7 @@ export const getFlaggedContent = async (
  * ```
  * @response
  * ```json
- * { "message": "content approved successfully." }
+ * { "message": "Content approved successfully." }
  * ```
  */
 export const approveContent = async (
@@ -101,23 +98,20 @@ export const approveContent = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    // Authorization check
     if (req.user!.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: "access denied." });
+      return res.status(403).json({ message: "Access denied." });
     }
 
     const { type, id } = req.params;
 
-    // Branching logic: handle approval based on content type (post vs comment)
     if (type === "post") {
       const post = await Post.findByIdAndUpdate(
         id,
         { isApproved: true, isVisible: true },
         { new: true },
       );
-      if (!post) return res.status(404).json({ message: "post not found." });
+      if (!post) return res.status(404).json({ message: "Post not found." });
 
-      // Log content approval
       await logActivity(req, "CONTENT_APPROVE", {
         targetId: post.id.toString(),
         targetType: "post",
@@ -126,9 +120,8 @@ export const approveContent = async (
     } else if (type === "comment") {
       const comment = await Comment.findByIdAndUpdate(id, { isVisible: true });
       if (!comment)
-        return res.status(404).json({ message: "comment not found." });
+        return res.status(404).json({ message: "Comment not found." });
 
-      // Log content approval
       await logActivity(req, "CONTENT_APPROVE", {
         targetId: comment.id.toString(),
         targetType: "comment",
@@ -136,7 +129,7 @@ export const approveContent = async (
       });
     }
 
-    return res.json({ message: "content approved successfully." });
+    return res.json({ message: "Content approved successfully." });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
@@ -144,7 +137,7 @@ export const approveContent = async (
 
 /**
  * Rejects and deletes content.
- * Removes the item from DB, translates the reason, and notifies the author.
+ * Removes the item from DB, translates the reason and notifies the author.
  *
  * @param req - AuthRequest with params { type, id } and body { reason }
  * @param res - Express response object
@@ -158,7 +151,7 @@ export const approveContent = async (
  * ```
  * @response
  * ```json
- * { "message": "content disapproved and removed." }
+ * { "message": "Content disapproved and removed." }
  * ```
  */
 export const disapproveContent = async (
@@ -167,30 +160,27 @@ export const disapproveContent = async (
 ): Promise<Response> => {
   try {
     if (req.user!.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: "access denied." });
+      return res.status(403).json({ message: "Access denied." });
     }
 
     const { type, id } = req.params;
     const { reason } = req.body as { reason: string };
 
-    // Validation: a reason is mandatory to explain the removal to the user
     if (!reason) {
       return res
         .status(400)
-        .json({ message: "a reason for disapproval is required." });
+        .json({ message: "A reason for disapproval is required." });
     }
 
-    // Localization: translate the admin's reason to ensure the user understands it
     const translatedReason = await getDualTranslation(reason);
 
     if (type === "post") {
       const post = await Post.findById(id);
-      if (!post) return res.status(404).json({ message: "post not found." });
+      if (!post) return res.status(404).json({ message: "Post not found." });
 
       const authorId = post.authorId;
       await Post.findByIdAndDelete(id);
 
-      // Notification: create a report feedback notification for the post author
       const messageEn = `your post has been removed. reason: ${reason}`;
       const messageBg = `вашата публикация беше премахната. причина: ${translatedReason.bg}`;
 
@@ -204,7 +194,6 @@ export const disapproveContent = async (
         link: null,
       });
 
-      // Log content rejection
       await logActivity(req, "CONTENT_REJECT", {
         targetId: post.id.toString(),
         targetType: "post",
@@ -213,7 +202,7 @@ export const disapproveContent = async (
     } else if (type === "comment") {
       const comment = await Comment.findById(id);
       if (!comment)
-        return res.status(404).json({ message: "comment not found." });
+        return res.status(404).json({ message: "Comment not found." });
 
       const userId = comment.userId;
       await Comment.findByIdAndDelete(id);
@@ -231,7 +220,6 @@ export const disapproveContent = async (
         link: null,
       });
 
-      // Log content rejection
       await logActivity(req, "CONTENT_REJECT", {
         targetId: comment.id.toString(),
         targetType: "comment",
@@ -239,7 +227,7 @@ export const disapproveContent = async (
       });
     }
 
-    return res.json({ message: "content disapproved and removed." });
+    return res.json({ message: "Content disapproved and removed." });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
@@ -247,7 +235,7 @@ export const disapproveContent = async (
 
 /**
  * Bans a user from the platform.
- * Creates a ban record, hides all user content, cleans up social links, and sends a ban email.
+ * Creates a ban record, hides all user content, cleans up social links and sends a ban email.
  *
  * @param req - AuthRequest with params { id } and body { ban_reason }
  * @param res - Express response object
@@ -261,7 +249,7 @@ export const disapproveContent = async (
  * ```
  * @response
  * ```json
- * { "message": "user username banned successfully." }
+ * { "message": "User {username} banned successfully." }
  * ```
  */
 export const banUser = async (
@@ -270,30 +258,28 @@ export const banUser = async (
 ): Promise<Response> => {
   try {
     if (req.user!.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: "access denied." });
+      return res.status(403).json({ message: "Access denied." });
     }
 
     const { id } = req.params;
     const { ban_reason } = req.body;
 
     if (!ban_reason) {
-      return res.status(400).json({ message: "ban reason is required." });
+      return res.status(400).json({ message: "Ban reason is required." });
     }
 
-    // Verification: ensure user exists and isn't already blacklisted
     const userToBan = await User.findById(id);
     if (!userToBan) {
-      return res.status(404).json({ message: "user not found." });
+      return res.status(404).json({ message: "User not found." });
     }
 
     const alreadyBanned = await BannedUser.findOne({
       original_user_id: userToBan._id,
     });
     if (alreadyBanned) {
-      return res.status(400).json({ message: "user is already banned." });
+      return res.status(400).json({ message: "User is already banned." });
     }
 
-    // Blacklisting: record the user in the BannedUser collection
     await BannedUser.create({
       email: userToBan.email,
       username: userToBan.username,
@@ -302,12 +288,10 @@ export const banUser = async (
       bannedAt: new Date(),
     });
 
-    // Content suppression: hide all posts and comments from the public eye
     await Post.updateMany({ authorId: userToBan._id }, { isVisible: false });
     await Comment.updateMany({ userId: userToBan._id }, { isVisible: false });
     await Notification.deleteMany({ userId: userToBan._id });
 
-    // Relationship cleanup: pull the banned user from followers/following lists of other users
     const bannedUserId = userToBan._id;
     if (userToBan.following?.length) {
       await User.updateMany(
@@ -322,12 +306,10 @@ export const banUser = async (
       );
     }
 
-    // State update: update the user document itself
     userToBan.isApproved = false;
     userToBan.isBanned = true;
     await userToBan.save();
 
-    // Notification: send localized email informing the user of their ban
     const userLang = userToBan.language || "en";
     const [titleT, bodyT, sigT] = await Promise.all([
       getDualTranslation("Account Banned"),
@@ -347,10 +329,9 @@ export const banUser = async (
     try {
       await sendEmail(userToBan.email, title, emailHtml);
     } catch (e) {
-      logger.error("ban email failed to send.");
+      logger.error("Ban email failed to send.");
     }
 
-    // Log user ban
     await logActivity(req, "BAN_USER", {
       targetId: userToBan._id.toString(),
       targetType: "user",
@@ -358,7 +339,7 @@ export const banUser = async (
     });
 
     return res.json({
-      message: `user ${userToBan.username} banned successfully.`,
+      message: `User ${userToBan.username} banned successfully.`,
     });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -367,7 +348,7 @@ export const banUser = async (
 
 /**
  * Restores a banned user.
- * Deletes ban record, restores content visibility, and notifies the user via email.
+ * Deletes ban record, restores content visibility and notifies the user via email.
  *
  * @param req - AuthRequest with params { id } (ID of the BannedUser record)
  * @param res - Express response object
@@ -380,7 +361,7 @@ export const banUser = async (
  * ```
  * @response
  * ```json
- * { "message": "user username unbanned successfully." }
+ * { "message": "User {username} unbanned successfully." }
  * ```
  */
 export const unbanUser = async (
@@ -397,7 +378,6 @@ export const unbanUser = async (
     if (!bannedUser)
       return res.status(404).json({ message: "banned user record not found." });
 
-    // Restore original user: update flags and bring back content visibility
     const originalUser = await User.findById(bannedUser.originalUserId);
     if (originalUser) {
       originalUser.isApproved = true;
@@ -413,7 +393,6 @@ export const unbanUser = async (
         { isVisible: true },
       );
 
-      // Localization: fetch translated email content
       const userLang = originalUser.language || "en";
       const [titleT, bodyT, sigT] = await Promise.all([
         getDualTranslation("Account Unbanned"),
@@ -433,21 +412,19 @@ export const unbanUser = async (
       try {
         await sendEmail(originalUser.email, title, emailHtml);
       } catch (e) {
-        logger.error("unban email failed.");
+        logger.error("Unban email failed.");
       }
     }
 
-    // Log user unban
     await logActivity(req, "UNBAN_USER", {
       targetId: bannedUser.originalUserId.toString(),
       targetType: "user",
       description: `Unbanned user ${bannedUser.username}`,
     });
 
-    // Cleanup: remove the record from the BannedUser collection
     await BannedUser.findByIdAndDelete(id);
     return res.json({
-      message: `user ${bannedUser.username} unbanned successfully.`,
+      message: `User ${bannedUser.username} unbanned successfully.`,
     });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -480,7 +457,7 @@ export const getBannedUsers = async (
 ): Promise<Response> => {
   try {
     if (req.user!.role !== RoleTypeValue.ADMIN) {
-      return res.status(403).json({ message: "access denied." });
+      return res.status(403).json({ message: "Access denied." });
     }
     const bannedUsers = await BannedUser.find({});
     return res.json(bannedUsers);

@@ -1,8 +1,8 @@
-/* ============================================
-   MISC UI COMPONENTS
-   ============================================ */
+/**
+ * @file misc-components.css
+ * @description Styles for the misc components
+ */
 
-/* Category Tabs */
 .category-tabs {
   display: flex;
   gap: 16px;
@@ -32,7 +32,6 @@
   opacity: 1;
 }
 
-/* Search Input */
 .search-input {
   padding: 10px 16px;
   border: 2px solid var(--theme-text);
@@ -51,7 +50,6 @@
   box-shadow: 0 0 0 3px var(--theme-accent-alpha);
 }
 
-/* Theme Selector (Settings page) */
 .theme-selector {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -118,7 +116,6 @@
   font-weight: bold;
 }
 
-/* Tag/Pill styles (reusable) */
 .tag-pill {
   display: inline-flex;
   align-items: center;
@@ -151,7 +148,6 @@
   opacity: 1;
 }
 
-/* Password toggle button */
 .password-toggle {
   position: absolute;
   right: 12px;

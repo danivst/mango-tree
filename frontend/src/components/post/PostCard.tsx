@@ -41,7 +41,6 @@ const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
   const t = (key: string) => getTranslation(language, key);
 
-  // Translation states
   const [showTranslation, setShowTranslation] = useState(false);
   const [translationCache, setTranslationCache] = useState<{ title: string; content: string; tags?: string[] } | null>(null);
   const [translating, setTranslating] = useState(false);
@@ -115,7 +114,6 @@ const PostCard = ({ post }: PostCardProps) => {
 
     setTranslating(true);
     try {
-      // API call to post-interaction-controller.ts -> translatePost
       const response = await postsAPI.translatePost(post._id, language);
       setTranslationCache({
         title: response.title,
@@ -140,7 +138,7 @@ const PostCard = ({ post }: PostCardProps) => {
     : post.content;
 
   // Handle Tag objects: show translated string array if translating, 
-  // otherwise map through populated Tag objects to get names.
+  // otherwise map through populated Tag objects to get names
   const displayTags = showTranslation && translationCache?.tags
     ? translationCache.tags
     : post.tags?.map((tag: any) => (typeof tag === 'object' ? tag.name : tag));
@@ -156,7 +154,6 @@ const PostCard = ({ post }: PostCardProps) => {
       tabIndex={0} 
       onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/posts/${post._id}`); }}
     >
-      {/* Post Image */}
       {post.image && post.image.length > 0 && (
         <div className="post-card-image-container">
           <img
@@ -166,18 +163,12 @@ const PostCard = ({ post }: PostCardProps) => {
           />
         </div>
       )}
-
-      {/* Title */}
       <h3 className="post-card-title">
         {displayTitle}
       </h3>
-
-      {/* Content Preview */}
       <p className="post-card-content">
         {truncateContent(displayContent)}
       </p>
-
-      {/* Tags - Populated from Tag model */}
       {displayTags && displayTags.length > 0 && (
         <div className="post-card-tags">
           {displayTags.slice(0, 5).map((tag: string, idx: number) => (
@@ -187,15 +178,11 @@ const PostCard = ({ post }: PostCardProps) => {
           ))}
         </div>
       )}
-
-      {/* Approval Status Badge */}
       {post.isApproved === false && (
         <div className="post-card-approval-badge">
           {t("waitingForApproval")}
         </div>
       )}
-
-      {/* Action Buttons Row */}
       <div className="post-card-actions">
         {shouldShowTranslateButton && (
           <button
@@ -215,8 +202,6 @@ const PostCard = ({ post }: PostCardProps) => {
           </button>
         )}
       </div>
-
-      {/* Author & Meta Data */}
       <div className="post-card-meta">
         <div 
           className="post-card-author" 
@@ -237,17 +222,13 @@ const PostCard = ({ post }: PostCardProps) => {
             @{post.authorId.username}
           </span>
         </div>
-
         <span className="post-card-separator">•</span>
-
         {post.category && (
           <span className="post-card-category">
             {getCategoryDisplayName(post.category?.name || "", t)}
           </span>
         )}
-
         <span className="post-card-separator">•</span>
-
         <span className="post-card-date">
           {formatDate(post.createdAt)} 
           {isEdited()
@@ -255,14 +236,11 @@ const PostCard = ({ post }: PostCardProps) => {
             : ""}
         </span>
       </div>
-
-      {/* Engagement Stats */}
       <div className="post-card-stats">
         <div className="post-card-stat">
           <FavoriteIcon sx={{ fontSize: 18, mr: 0.5 }} />
           {post.likes?.length || 0}
         </div>
-
         <div className="post-card-stat">
           <ChatBubbleOutlineIcon sx={{ fontSize: 18, mr: 0.5 }} />
           {post.commentCount || 0}

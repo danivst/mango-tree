@@ -15,8 +15,6 @@ type SameSiteOption = "lax";
 
 /**
  * Enhanced environment check.
- * We only want 'Secure' and 'SameSite=None' if we are on a real HTTPS production server.
- * In local Docker/localhost, USE_SECURE_COOKIES should be "false".
  */
 const isRealProd = process.env.NODE_ENV === "production" && process.env.USE_SECURE_COOKIES === "true";
 
@@ -49,22 +47,23 @@ export function getAuthCookieOptions(): CookieOptions {
 
 /**
  * Attaches authentication tokens to the Express response object as cookies.
- * Sets appropriate expiration time: 24 hours for access token.
+ * Sets appropriate expiration time for access token.
  *
  * @param res - Express response object
  * @param token - The JWT access token string
+ * @param maxAgeMs - Optional cookie maxAge override (milliseconds)
  *
  * @example
  * ```typescript
  * setAuthCookies(res, "header.payload.sig");
  * ```
  */
-export function setAuthCookies(res: Response, token: string) {
+export function setAuthCookies(res: Response, token: string, maxAgeMs?: number) {
   const base = getAuthCookieOptions();
 
   res.cookie(AUTH_COOKIE_NAMES.access, token, {
     ...base,
-    maxAge: 24 * 60 * 60 * 1000, // 24h
+    maxAge: maxAgeMs ?? 24 * 60 * 60 * 1000, // default 24h
   });
 }
 
@@ -78,7 +77,6 @@ export function setAuthCookies(res: Response, token: string) {
 export function clearAuthCookies(res: Response) {
   const base = getAuthCookieOptions();
 
-  // Must match the original cookie attributes (at least `path`, and often
-  // `sameSite`/`secure`) or the browser may keep the old cookies.
+  // Must match the original cookie attributes
   res.clearCookie(AUTH_COOKIE_NAMES.access, base);
 }

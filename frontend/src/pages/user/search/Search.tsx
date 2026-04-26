@@ -19,7 +19,6 @@ import { useSnackbar } from "../../../utils/snackbar";
 import Footer from "../../../components/global/Footer";
 import UserCard from "../../../components/user/card/UserCard";
 
-// MUI Icon Imports
 import RefreshIcon from "@mui/icons-material/Refresh";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 
@@ -41,19 +40,12 @@ interface User {
 
 /**
  * @component Search
- * @description Renders the user search interface.
- * Manages complex filtering logic that prioritizes followed users in search results
- * and provides immediate UI feedback for social actions.
- * * Features:
- * - Debounced search input
- * - URL persistence via query parameters
- * - Automatic categorization of "Followed" vs "Suggested" matches
- * - Local state management for relationship updates
- * * @page
- * @requires useSearchParams - For syncing search state with browser history
- * @requires useSnackbar - Standardized toast notifications
- * @requires useThemeLanguage - Current UI language for translations
- * @returns {JSX.Element} The rendered Search page
+ * @description Renders the user search interface with debounced query syncing.
+ * @page
+ * @requires useSearchParams - Syncs search state with the URL.
+ * @requires useSnackbar - Shows toast notifications.
+ * @requires useThemeLanguage - Provides translations.
+ * @returns {JSX.Element} The rendered search page.
  */
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -72,9 +64,6 @@ const Search = () => {
     fetchUsers();
   }, []);
 
-  /**
-   * Fetches the global list of regular users for the search pool.
-   */
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -227,7 +216,6 @@ const Search = () => {
             />
           </div>
         </div>
-
         {filteredUsers.length === 0 ? (
           <div className="empty-state">
             <PersonOffIcon sx={{ fontSize: 40, opacity: 0.5 }} />
@@ -249,12 +237,11 @@ const Search = () => {
                 isFollowing={!!isFollowing(user)}
                 onToggleFollow={toggleFollow}
                 onUserClick={handleUsernameClick}
-                size="md" // or 'lg' if you prefer the larger look from your current Search page
+                size="md" 
               />
             ))}
           </div>
         )}
-
         <Snackbar
           message={snackbar.message}
           type={snackbar.type}

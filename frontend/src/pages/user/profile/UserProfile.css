@@ -1,20 +1,19 @@
-/* ============================================
-   USER PROFILE PAGE
-   ============================================ */
+/**
+ * @file UserProfile.css
+ * @description Styles for the user profile page
+ */
 
 .user-profile-container {
   display: flex;
   min-height: 100vh;
 }
 
-/* Content wrapper */
 .profile-content {
   padding: 0 0 24px 0;
   max-width: none;
   margin: 0;
 }
 
-/* Profile header section */
 .profile-header {
   display: flex;
   align-items: center;
@@ -22,7 +21,6 @@
   margin-bottom: 24px;
 }
 
-/* Profile picture container */
 .profile-pic-container {
   width: 120px;
   height: 120px;
@@ -58,7 +56,6 @@
   box-sizing: border-box;
 }
 
-/* Profile header user info */
 .profile-info {
   flex: 1;
 }
@@ -79,7 +76,6 @@
   white-space: nowrap;
 }
 
-/* Stats */
 .profile-stats {
   display: flex;
   gap: 32px;
@@ -101,7 +97,6 @@
   opacity: 0.8;
 }
 
-/* Bio section */
 .bio-section-header {
   display: flex;
   justify-content: space-between;
@@ -124,7 +119,6 @@
   color: var(--theme-text);
 }
 
-/* Past Usernames section */
 .profile-section-title {
   margin: 0 0 12px 0;
   font-size: 18px;
@@ -168,7 +162,6 @@
   opacity: 0.9;
 }
 
-/* Action buttons in profile */
 .btn-action-follow {
   display: flex;
   align-items: center;

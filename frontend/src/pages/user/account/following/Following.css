@@ -1,8 +1,8 @@
-/* ============================================
-   FOLLOWING PAGE
-   ============================================ */
+/**
+ * @file Following.css
+ * @description Styles for the following page
+ */
 
-/* Page layout container */
 .following-container {
   display: flex;
   min-height: 100vh;

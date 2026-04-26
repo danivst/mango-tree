@@ -1,13 +1,13 @@
-/* ============================================
-   SETTINGS PAGE
-   ============================================ */
+/**
+ * @file Settings.css
+ * @description Styles for the settings page
+ */
 
 .settings-container {
   display: flex;
   min-height: 100vh;
 }
 
-/* Settings sections with gradient background */
 .settings-section {
   background: linear-gradient(180deg, var(--theme-bg), var(--theme-accent));
   border-radius: 12px;
@@ -20,7 +20,6 @@
   margin: 0 0 24px 0;
 }
 
-/* Password change form */
 .password-change-form {
   margin-top: 16px;
   padding: 16px;
@@ -34,8 +33,7 @@
   align-items: center;
 }
 
-
-/* Username row: stack vertically on mobile */
+/* Responsive */
 @media (max-width: 767px) {
   .username-row {
     flex-direction: column;
@@ -53,7 +51,6 @@
   }
 }
 
-/* Make primary buttons smaller on mobile for other sections */
 @media (max-width: 767px) {
   .settings-section .btn-primary {
     padding: 8px 12px;
@@ -61,7 +58,6 @@
   }
 }
 
-/* Spacing modifier for sections */
 .section-spaced {
   margin-top: 48px;
 }

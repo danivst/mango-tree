@@ -10,7 +10,6 @@ import { useNavigate, useNavigationType } from "react-router-dom";
 import { useThemeLanguage } from "../../../context/ThemeLanguageContext";
 import { getTranslation } from "../../../utils/translations";
 
-// MUI Icon Import
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 /**
@@ -28,7 +27,8 @@ interface GoBackButtonProps {
 
 /**
  * GoBackButton Component
- * * Special behavior for "share pages" (posts, profiles, account):
+ * 
+ * Special behavior for "share pages" (posts, profiles, account):
  * - If user arrived via direct navigation or external link (navigation type = POP), redirects to /home
  * - If user arrived via in-app navigation (PUSH or REPLACE), uses normal browser back
  *
@@ -80,7 +80,6 @@ const GoBackButton = ({ className = "", onClick: customOnClick }: GoBackButtonPr
       }
     }
 
-    // Default: go back in history
     navigate(-1);
   };
 

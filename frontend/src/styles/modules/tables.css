@@ -1,8 +1,8 @@
-/* ============================================
-   TABLE & PAGINATION COMPONENTS
-   ============================================ */
+/**
+ * @file tables.css
+ * @description Styles for the tables
+ */
 
-/* Table */
 .table-container {
   overflow-x: auto;
   position: relative;
@@ -11,7 +11,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Custom scrollbar for table container */
 .table-container::-webkit-scrollbar {
   height: 8px;
 }
@@ -60,7 +59,6 @@
   background: transparent;
 }
 
-/* Action buttons container - keeps buttons in single row */
 .table-actions {
   display: flex;
   gap: 6px;
@@ -75,13 +73,11 @@
   white-space: nowrap;
 }
 
-/* Action buttons in admin tables should have full opacity */
 .table td .btn-admin-action,
 .table td .btn-danger {
   opacity: 1;
 }
 
-/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
@@ -116,7 +112,6 @@
   cursor: not-allowed;
 }
 
-/* Pagination button alias used in admin pages */
 .pagination-button {
   padding: 8px 16px;
   background: var(--theme-accent);
@@ -153,7 +148,6 @@
   color: var(--theme-text);
 }
 
-/* Sortable table headers */
 .sortable-header {
   user-select: none;
   cursor: pointer;

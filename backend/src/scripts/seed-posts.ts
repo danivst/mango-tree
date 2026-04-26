@@ -3,7 +3,7 @@
  * @description Database seeding script for initial Post content.
  * Populates the database with 'recipe', 'question', and 'flex' posts using 
  * reliable high-quality images from Unsplash.
- * * Run via: `npm run seed:posts` or `ts-node src/scripts/seed-posts.ts`
+ * Run via: `npm run seed:posts` or `ts-node src/scripts/seed-posts.ts`
  */
 
 import mongoose from "mongoose";
@@ -184,14 +184,14 @@ const FLEX_DATA = [
 const seedPosts = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected");
+    console.log("MongoDB connected");
 
     const users = await User.find();
     const categories = await Category.find();
     const allTags = await Tag.find();
 
     if (!users.length || !categories.length) {
-      console.error("❌ Missing Users or Categories. Seed those first!");
+      console.error("Missing Users or Categories. Seed those first!");
       process.exit(1);
     }
 
@@ -241,13 +241,12 @@ const seedPosts = async () => {
       }
     }
 
-    // Clean existing posts to prevent mixed data types (strings vs IDs)
     await Post.deleteMany({});
     
     const createdPosts = await Post.insertMany(allPosts);
     console.log(`✅ ${createdPosts.length} posts created with ObjectId references`);
 
-    // Add Random Likes
+    // Add random likes
     for (const post of createdPosts) {
       const likeCount = Math.floor(Math.random() * users.length);
       const shuffled = [...users].sort(() => 0.5 - Math.random());
@@ -255,10 +254,10 @@ const seedPosts = async () => {
       await post.save();
     }
 
-    console.log("✅ Seeding complete!");
+    console.log("Seeding complete!");
     process.exit(0);
   } catch (err) {
-    console.error("❌ Seeding failed:", err);
+    console.error("Seeding failed:", err);
     process.exit(1);
   }
 };

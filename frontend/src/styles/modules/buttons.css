@@ -1,8 +1,8 @@
-/* ============================================
-   BUTTON COMPONENTS
-   ============================================ */
+/**
+ * @file buttons.css
+ * @description Styles for the buttons
+ */
 
-/* Buttons */
 .btn-primary {
   padding: 10px 24px;
   border: none;
@@ -92,14 +92,12 @@
   cursor: not-allowed;
 }
 
-/* Small button variant */
 .btn-sm {
   padding: 8px 16px;
   font-size: 14px;
   white-space: nowrap;
 }
 
-/* Admin action buttons (Ban, Unban, Edit) */
 .btn-admin-action {
   padding: 10px 24px;
   border: none;
@@ -126,7 +124,6 @@
   cursor: not-allowed;
 }
 
-/* Post action button (used in Post page and UserProfile) */
 .post-action-btn {
   display: flex;
   align-items: center;
@@ -136,7 +133,6 @@
   flex-shrink: 0;
 }
 
-/* Translate button */
 .btn-translate {
   display: inline-flex;
   align-items: center;
@@ -166,7 +162,6 @@
   cursor: not-allowed;
 }
 
-/* Follow/Unfollow button states */
 .btn-follow {
   border-color: var(--theme-text) !important;
   color: var(--theme-text) !important;
@@ -181,7 +176,6 @@
   border-radius: 8px;
 }
 
-/* Back button style (used in Reports, ToReview, etc.) */
 .btn-back {
   display: flex;
   align-items: center;

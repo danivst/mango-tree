@@ -1,6 +1,8 @@
-/* ============================================
-   DASHBOARD PAGE
-   ============================================ */
+/**
+ * @file Dashboard.css
+ * @description Styles for the admin dashboard
+ */
+
 
 .dashboard-container {
   position: relative;
@@ -48,7 +50,7 @@
   background-color: #3a0e36;
 }
 
-/* Mobile: keep same vertical margins, adjust padding */
+/* Mobile */
 @media (max-width: 768px) {
   .dashboard-main {
     top: 20px;

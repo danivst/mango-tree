@@ -1,7 +1,7 @@
 /**
  * @file Snackbar.tsx
  * @description Toast notification component that displays temporary feedback messages at the bottom of the screen.
- * Shows success, error, or warning states with corresponding Material Design icons.
+ * Shows success, error or warning states with corresponding Material Design icons.
  * Automatically dismisses after a configurable duration and can also be manually dismissed.
  */
 

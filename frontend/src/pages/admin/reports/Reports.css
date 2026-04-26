@@ -1,8 +1,9 @@
-/* ============================================
-   REPORTS ADMIN PAGE
-   ============================================ */
+/**
+ * @file Reports.css
+ * @description Styles for the reports page
+ */
 
-/* Link-style button */
+
 .link-button {
   background: none;
   border: none;
@@ -14,7 +15,6 @@
   font-family: inherit;
 }
 
-/* Info row for flex-aligned items */
 .info-row {
   display: flex;
   align-items: center;

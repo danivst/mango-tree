@@ -1,9 +1,9 @@
-/* ============================================
-   SHARED COMPONENT STYLES - Modular Import File
-   ============================================ */
+/**
+ * @file shared.css
+ * @description Modular import of all shared styles
+ */
 
 /* Import modules in dependency order */
-@import url('./modules/variables.css');
 @import url('./modules/layout.css');
 @import url('./modules/cards.css');
 @import url('./modules/forms.css');

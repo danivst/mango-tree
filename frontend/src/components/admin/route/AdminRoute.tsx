@@ -8,6 +8,7 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../../utils/useAuth";
+import Loading from "../../global/Loading";
 
 /**
  * @interface AdminRouteProps
@@ -37,7 +38,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
    * Show loading state while checking authentication
    */
   if (loading) {
-    return <div>Loading...</div>; // You might want to use a proper loading component
+    return <Loading />;
   }
 
   /**

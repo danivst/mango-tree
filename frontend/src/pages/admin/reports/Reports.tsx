@@ -1,8 +1,6 @@
 /**
  * @file Reports.tsx
  * @description Admin page for handling user-submitted content reports.
- * Displays posts and comments reported by users for inappropriate content or violations.
- * Provides tools for reviewing, dismissing, or deleting reported items with optional user banning.
  */
 
 import { useState, useEffect } from "react";
@@ -19,57 +17,10 @@ import Footer from "../../../components/global/Footer";
 import GoBackButton from "../../../components/buttons/back/GoBackButton";
 import { useSnackbar } from "../../../utils/snackbar";
 
-// MUI Icon Imports
 import RefreshIcon from '@mui/icons-material/Refresh';
 import TranslateIcon from '@mui/icons-material/Translate';
 import LanguageIcon from '@mui/icons-material/Language';
 import FlagIcon from '@mui/icons-material/Flag';
-
-/**
- * @file Reports.tsx
- * @description Admin page for handling user-submitted content reports.
- * Displays posts and comments reported by users for inappropriate content or violations.
- *
- * Features:
- * - List reported posts and comments (filterable by type)
- * - View report details: reason, reporter, reported content
- * - Dismiss reports (mark as reviewed, no action)
- * - Delete reported content (and optionally ban author)
- * - Ban author from delete modal checkbox
- * - Translation support for report reasons (EN/BG)
- * - Direct navigation to reported content's page
- *
- * Report Types:
- * - post: User reported a post
- * - comment: User reported a comment
- *
- * Actions:
- * - Dismiss: Mark report as "reviewed" without deleting content
- * - Delete Content: Delete the reported post/comment, optionally ban author
- *
- * Data Source:
- * - Uses AdminDataContext.reports (filtered to pending only) from fetchReports()
- *
- * Access Control:
- * - Route protected by AdminRoute (admin only)
- *
- * Architecture:
- * - Uses child component ReportItem for each report entry
- * - ReportItem contains modal for delete/ban actions
- * - Internationalization: translates report reasons using stored translations or Deepl API
- *
- * @page
- * @requires useState - Reports list, selected report type filter, report preview, modal states, loading
- * @requires useMemo - Computed filtered reports by type
- * @requires useEffect - No direct mount effect; data from AdminDataContext
- * @requires useThemeLanguage - Current UI language for translations
- * @requires useAdminData - Access to reports array (pending only) and reportsState
- * @requires useNavigate - Navigate to post detail page, admin home
- * @requires adminAPI - Get reports, update report status (dismiss), delete post/comment
- * @requires api - General API for Deepl translation, deleting users (for ban)
- * @requires Snackbar - Feedback on dismiss/delete/ban
- * @requires Footer - Footer component
- */
 
 const detectLanguage = (text: string): "en" | "bg" => {
   if (!text) return "en";
@@ -101,13 +52,11 @@ const ReportCard = ({ report, language, t, getTargetTypeLabel, handleView }: any
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
 
-  // Check if we should even show the button for translating
   const isDifferentLang = detectLanguage(report.reason) !== language;
 
   const onTranslate = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Toggle logic
     if (showTranslation) {
       setShowTranslation(false);
       return;
@@ -117,11 +66,10 @@ const ReportCard = ({ report, language, t, getTargetTypeLabel, handleView }: any
       return;
     }
 
-    // API Call logic
     setIsTranslating(true);
     try {
       const source = detectLanguage(report.reason);
-      const target = language; // Translate TO the current UI language
+      const target = language; 
       
       const result = await deeplTranslate(report.reason, source, target);
       
@@ -146,7 +94,6 @@ const ReportCard = ({ report, language, t, getTargetTypeLabel, handleView }: any
         <div className="card-title" style={{ margin: 0 }}>
           {getTargetTypeLabel(report.targetType)}
         </div>
-        
         {isDifferentLang && (
           <button 
             onClick={onTranslate}
@@ -167,11 +114,9 @@ const ReportCard = ({ report, language, t, getTargetTypeLabel, handleView }: any
           </button>
         )}
       </div>
-
       <p className="text-sm mb-4">
         <strong>{t("reason")}:</strong> {truncated}
       </p>
-
       <button
         className="btn-secondary mt-auto w-full"
         onClick={() => handleView(report)}
@@ -195,7 +140,6 @@ const Reports = () => {
   const [reason, setReason] = useState("");
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
-  // Reason translation states
   const [showReasonTranslation, setShowReasonTranslation] = useState(false);
   const [reasonTranslationCache, setReasonTranslationCache] = useState<
     string | null
@@ -210,7 +154,6 @@ const Reports = () => {
     return t(targetType);
   };
 
-  // Fetch reports on initial load (avoid requiring manual refresh)
   useEffect(() => {
     if (!hasFetched && !loading) {
       fetchReports().catch(() => {
@@ -219,7 +162,6 @@ const Reports = () => {
     }
   }, [hasFetched, loading, fetchReports]);
 
-  // Load selected report when reportId param changes
   useEffect(() => {
     if (reportId) {
       const report = reports.find((r) => r._id === reportId);
@@ -239,11 +181,9 @@ const Reports = () => {
 
   const handleView = async (report: Report) => {
     setSelectedReport(report);
-    // Reset translation states when viewing a new report
     setShowReasonTranslation(false);
     setReasonTranslationCache(null);
     setReasonTranslating(false);
-    // Update URL with report ID
     navigate(`/admin/dashboard/reports/${report._id}`, { replace: true });
   };
 
@@ -492,7 +432,6 @@ const Reports = () => {
             )}
           </div>
         </div>
-
         <Snackbar
           message={snackbar.message}
           type={snackbar.type}
@@ -504,7 +443,6 @@ const Reports = () => {
     );
   }
 
-  // Local EmptyState component for no data
   const EmptyState = ({
     icon,
     title,
@@ -537,13 +475,11 @@ const Reports = () => {
           </button>
         </div>
       </div>
-
       {error && (
         <div className="error-box-colored">
           <strong>Error:</strong> {error}
         </div>
       )}
-
       {loading ? (
         <div className="loading">{t("loading")}</div>
       ) : !hasFetched ? (
@@ -569,7 +505,6 @@ const Reports = () => {
           ))}
       </div>
       )}
-
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

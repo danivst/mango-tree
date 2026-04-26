@@ -1,8 +1,8 @@
-/* ============================================
-   ADMINS ADMIN PAGE
-   ============================================ */
+/**
+ * @file Admins.css
+ * @description Styles for the admins page
+ */
 
-/* Layout container for admin pages with sidebar */
 .admins-container {
   display: flex;
   min-height: 100vh;

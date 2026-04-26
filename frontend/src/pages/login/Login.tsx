@@ -2,11 +2,12 @@
  * @file Login.tsx
  * @description Login page container component.
  * Orchestrates high-level authentication flows including login, registration, 
- * Two-Factor Authentication (2FA), and password recovery.
- * * Responsibilities:
+ * Two-Factor Authentication (2FA) and password recovery.
+ * 
+ * Responsibilities:
  * - Manages centralized state for multiple auth forms and modals.
  * - Handles session-based notifications (account deletion, expiration, suspension).
- * - Synchronizes UI state (tabs) with browser routing (/login vs /signin).
+ * - Synchronizes UI state (tabs) with browser routing (/login vs /signup).
  * - Loads and applies persistent user preferences (theme, language) post-auth.
  */
 
@@ -41,7 +42,8 @@ import "./Login.css";
  * @description The primary authentication entry point. Orchestrates the interaction 
  * between specialized forms and security modals while managing the complex business 
  * logic of the auth lifecycle.
- * * @requires useThemeLanguage - Handles real-time localization and theme application.
+ * 
+ * @requires useThemeLanguage - Handles real-time localization and theme application.
  * @requires useNotifications - Updates unread counts upon successful login.
  * @requires authAPI - Logic for backend communication (Login, Register, 2FA).
  * @requires useSnackbar - Standardized toast notifications for user feedback.
@@ -61,7 +63,6 @@ const Login = () => {
   const t = (key: string) => getTranslation(language, key);
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
-  // Get redirect URL from query params to resume previous navigation after login
   const redirectPath =
     new URLSearchParams(location.search).get("redirect");
   const routeState = location.state as
@@ -84,35 +85,27 @@ const Login = () => {
         decoded = candidate;
       }
 
-      // Accept relative in-app paths only.
       if (decoded.startsWith("/")) {
         return decoded;
       }
 
-      // If a full URL is passed (e.g. copied link), allow it only when same-origin.
       try {
         const parsed = new URL(decoded);
         if (parsed.origin === window.location.origin) {
           return `${parsed.pathname}${parsed.search}${parsed.hash}`;
         }
       } catch {
-        // ignore malformed redirect candidate and continue
       }
     }
 
     return fallback;
   };
 
-  /**
-   * State: Active view tab (Login vs Sign-up).
-   * Initialized based on current URL path.
-   */
-  const [activeTab, setActiveTab] = useState<"login" | "signin">(() => {
-    if (location.pathname === "/signin") return "signin";
+  const [activeTab, setActiveTab] = useState<"login" | "signup">(() => {
+    if (location.pathname === "/signup") return "signup";
     return "login";
   });
 
-  // Security & Modal States
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [twoFAUserId, setTwoFAUserId] = useState<string | null>(null);
   const [twoFACode, setTwoFACode] = useState("");
@@ -121,40 +114,31 @@ const Login = () => {
   const [showSuspensionModal, setShowSuspensionModal] = useState(false);
   const [suspensionReason, setSuspensionReason] = useState("");
 
-  // LoginForm-specific state
   const [loginUsername, setLoginUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // SignupForm-specific state
   const [username, setUsername] = useState("");
-  const [signinEmail, setSigninEmail] = useState("");
-  const [signinPassword, setSigninPassword] = useState("");
-  const [showSigninPassword, setShowSigninPassword] = useState(false);
-  const [signingIn, setSigningIn] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [signingUp, setSigningUp] = useState(false);
 
-  // Password Recovery state
   const [forgotEmail, setForgotEmail] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
 
-  // Validation & Server Error State
   const [errors, setErrors] = useState<{
     username?: string;
     password?: string;
-    signinEmail?: string;
-    signinPassword?: string;
+    signupEmail?: string;
+    signupPassword?: string;
     forgotEmail?: string;
     twofaCode?: string;
   }>({});
 
-  /**
-   * Effect: Check for session-based flags on mount.
-   * Handles edge cases like redirected logout, account deletion confirmation, 
-   * session expiration, and administrative suspensions.
-   */
   useEffect(() => {
     const accountDeleted = sessionStorage.getItem("accountDeleted");
     if (accountDeleted === "true") {
@@ -179,31 +163,21 @@ const Login = () => {
     }
   }, [language, showSuccess, showError, t]);
 
-  /**
-   * Effect: Sync browser URL path with the active tab state.
-   */
   useEffect(() => {
-    const path = activeTab === "login" ? "/login" : "/signin";
+    const path = activeTab === "login" ? "/login" : "/signup";
     if (location.pathname !== path) {
       navigate(path, { replace: true });
     }
   }, [activeTab, navigate, location.pathname]);
 
-  /**
-   * Effect: Sync active tab state with the browser URL path (Back/Forward navigation support).
-   */
   useEffect(() => {
-    if (location.pathname === "/signin" && activeTab !== "signin") {
-      setActiveTab("signin");
+    if (location.pathname === "/signup" && activeTab !== "signup") {
+      setActiveTab("signup");
     } else if (location.pathname === "/login" && activeTab !== "login") {
       setActiveTab("login");
     }
   }, [location.pathname, activeTab]);
 
-  /**
-   * Retrieves and applies user-specific settings (Theme/Language) upon successful login.
-   * Uses Immediate setters to bypass normal state lag and provide a seamless transition.
-   */
   const loadUserPreferences = async () => {
     try {
       const user: UserProfile = await usersAPI.getCurrentUser();
@@ -220,17 +194,11 @@ const Login = () => {
     }
   };
 
-  /**
-   * Logic: Handle Login Submission.
-   * Orchestrates 2FA redirection, credential validation, cookie-based session login, and redirection.
-   * Handles specific error codes like 403 (Banned) and 401 (Unauthorized).
-   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrors({});
 
-    // Use Centralized Validators
     const usernameError = validateUsername(loginUsername);
     if (usernameError) {
       setErrors({ username: t(usernameError) });
@@ -238,7 +206,6 @@ const Login = () => {
       return;
     }
 
-    // Manual check for password presence (Backend handles strict strength on login)
     if (!password) {
       setErrors({ password: t("passwordRequired") });
       setLoading(false);
@@ -246,9 +213,8 @@ const Login = () => {
     }
 
     try {
-      const response = await authAPI.login(loginUsername.trim(), password);
+      const response = await authAPI.login(loginUsername.trim(), password, rememberMe);
 
-      // Handle 2FA Requirement
       if (response.twoFactorRequired) {
         setTwoFAUserId(response.userId ?? null);
         setShow2FAModal(true);
@@ -272,7 +238,6 @@ const Login = () => {
       const errorField = errorData?.field;
       let errorMessage = t("serverError");
 
-      // Handle Ban Enforcement
       if (
         error.response?.status === 403 &&
         serverMessage.toLowerCase().includes("banned") &&
@@ -286,7 +251,6 @@ const Login = () => {
         return;
       }
 
-      // Specialized Error Mapping
       if (errorField === "username") {
         if (
           serverMessage.toLowerCase().includes("not found") ||
@@ -322,16 +286,11 @@ const Login = () => {
     }
   };
 
-  /**
-   * Logic: Handle Forgot Password flow.
-   * Sends recovery email and manages UI state transitions.
-   */
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setSendingEmail(true);
     setErrors({ ...errors, forgotEmail: undefined });
 
-    // Use Centralized Email Validator
     const emailError = validateEmail(forgotEmail);
     if (emailError) {
       setErrors({ ...errors, forgotEmail: t(emailError) });
@@ -365,15 +324,10 @@ const Login = () => {
     }
   };
 
-  /**
-   * Logic: Finalize 2FA Verification.
-   * Validates the security code and finishes the authentication handshake.
-   */
   const handleVerify2FA = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!twoFAUserId) return;
 
-    // Use Centralized 2FA Validator
     const codeError = validateTwoFactorCode(twoFACode);
     if (codeError) {
       showError(t(codeError));
@@ -382,7 +336,7 @@ const Login = () => {
 
     setVerifying2FA(true);
     try {
-      const response = await authAPI.verify2FA(twoFAUserId, twoFACode);
+      const response = await authAPI.verify2FA(twoFAUserId, twoFACode, rememberMe);
       showSuccess(t("twoFACodeVerified"));
 
       await loadUserPreferences();
@@ -404,42 +358,37 @@ const Login = () => {
     }
   };
 
-  /**
-   * Logic: Handle Account Registration.
-   * Manages data sanitization and backend registration lifecycle.
-   */
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSigningIn(true);
+    setSigningUp(true);
     setErrors({});
 
-    // Use Centralized Validators
     const usernameError = validateUsername(username);
     if (usernameError) {
       setErrors({ username: t(usernameError) });
-      setSigningIn(false);
+      setSigningUp(false);
       return;
     }
 
-    const emailError = validateEmail(signinEmail);
+    const emailError = validateEmail(signupEmail);
     if (emailError) {
-      setErrors({ signinEmail: t(emailError) });
-      setSigningIn(false);
+      setErrors({ signupEmail: t(emailError) });
+      setSigningUp(false);
       return;
     }
 
-    const passwordError = validatePassword(signinPassword);
+    const passwordError = validatePassword(signupPassword);
     if (passwordError) {
-      setErrors({ signinPassword: t(passwordError) });
-      setSigningIn(false);
+      setErrors({ signupPassword: t(passwordError) });
+      setSigningUp(false);
       return;
     }
 
     try {
       await authAPI.register(
         username.trim(),
-        signinEmail.trim(),
-        signinPassword,
+        signupEmail.trim(),
+        signupPassword,
       );
       showSuccess(t("successfullyCreatedAccount"));
 
@@ -447,8 +396,8 @@ const Login = () => {
       await refreshUnreadCount();
 
       setUsername("");
-      setSigninEmail("");
-      setSigninPassword("");
+      setSignupEmail("");
+      setSignupPassword("");
 
       const redirectTo = resolveRedirectTarget("/home");
       setTimeout(() => {
@@ -460,7 +409,6 @@ const Login = () => {
       const errorField = errorData?.field;
       let errorMessage = t("couldntCreateAccount");
 
-      // Handle duplicate credential conflicts
       if (errorField === "username") {
         if (
           serverMessage.toLowerCase().includes("exists") ||
@@ -476,14 +424,14 @@ const Login = () => {
         ) {
           errorMessage = t("emailExists");
         }
-        setErrors({ signinEmail: errorMessage });
+        setErrors({ signupEmail: errorMessage });
       } else if (errorField === "password") {
-        setErrors({ signinPassword: serverMessage || t("invalidPassword") });
+        setErrors({ signupPassword: t("invalidPassword") });
       } else {
         showError(serverMessage || errorMessage);
       }
     } finally {
-      setSigningIn(false);
+      setSigningUp(false);
     }
   };
 
@@ -493,7 +441,7 @@ const Login = () => {
     window.location.href = "/login";
   };
 
-  const handleTabChange = (tab: "login" | "signin") => {
+  const handleTabChange = (tab: "login" | "signup") => {
     setActiveTab(tab);
     setErrors({});
   };
@@ -501,7 +449,6 @@ const Login = () => {
   return (
     <div className="login-container">
       <LanguageSwitcher language={language} onLanguageChange={setLanguage} />
-
       <div className="login-box">
         <LoginHeader onNavigate={navigate} />
         <LoginTabs
@@ -510,7 +457,6 @@ const Login = () => {
           navigate={navigate}
           t={t}
         />
-
         {activeTab === "login" && (
           <LoginForm
             username={loginUsername}
@@ -530,31 +476,29 @@ const Login = () => {
             t={t}
           />
         )}
-
-        {activeTab === "signin" && (
+        {activeTab === "signup" && (
           <SignupForm
             username={username}
-            email={signinEmail}
-            password={signinPassword}
-            showPassword={showSigninPassword}
-            signingIn={signingIn}
+            email={signupEmail}
+            password={signupPassword}
+            showPassword={showSignupPassword}
+            signingUp={signingUp}
             errors={{
               username: errors.username,
-              signinEmail: errors.signinEmail,
-              signinPassword: errors.signinPassword,
+              signupEmail: errors.signupEmail,
+              signupPassword: errors.signupPassword,
             }}
             onFieldChange={(field, value) => {
               if (field === "username") setUsername(value);
-              if (field === "signinEmail") setSigninEmail(value);
-              if (field === "signinPassword") setSigninPassword(value);
+              if (field === "signupEmail") setSignupEmail(value);
+              if (field === "signupPassword") setSignupPassword(value);
             }}
-            onTogglePassword={() => setShowSigninPassword(!showSigninPassword)}
-            onSubmit={handleSignIn}
+            onTogglePassword={() => setShowSignupPassword(!showSignupPassword)}
+            onSubmit={handleSignUp}
             t={t}
           />
         )}
       </div>
-
       <ForgotPasswordModal
         open={showForgotModal}
         email={forgotEmail}
@@ -565,7 +509,6 @@ const Login = () => {
         onCancel={() => setShowForgotModal(false)}
         t={t}
       />
-
       <TwoFactorModal
         open={show2FAModal}
         code={twoFACode}
@@ -580,14 +523,12 @@ const Login = () => {
         }}
         t={t}
       />
-
       <SuspensionModal
         open={showSuspensionModal}
         reason={suspensionReason}
         onOK={handleSuspensionOK}
         t={t}
       />
-
       <Footer />
       <Snackbar
         message={snackbar.message}

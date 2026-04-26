@@ -2,11 +2,12 @@
  * @file PublicRoute.tsx
  * @description Route wrapper that restricts access to unauthenticated users only.
  * If user is authenticated, redirects to the home page.
- * Used for login, register, and password reset pages to prevent logged-in users from accessing them.
+ * Used for login, register and password reset pages to prevent logged-in users from accessing them.
  */
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../utils/useAuth";
+import Loading from "../global/Loading";
 
 /**
  * @interface PublicRouteProps
@@ -37,7 +38,7 @@ const PublicRoute = ({ children }: PublicRouteProps) => {
    * Show loading state while checking authentication
    */
   if (loading) {
-    return <div>Loading...</div>; // You might want to use a proper loading component
+    return <Loading />; 
   }
 
   /**

@@ -17,7 +17,6 @@ import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Snackbar from "../../snackbar/Snackbar";
 
-// MUI Icon Imports
 import SettingsIcon from "@mui/icons-material/Settings";
 import HistoryIcon from "@mui/icons-material/History";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -33,18 +32,12 @@ import CloseIcon from "@mui/icons-material/Close";
 
 /**
  * @interface SidebarItem
- * @description Interface defining a navigation item in the admin sidebar menu.
- * Used to configure admin navigation routes with labels and icons.
- */
-/**
- * @interface SidebarItem
- * @description Interface defining a navigation item in the admin sidebar menu.
- * Used to configure admin navigation routes with labels and icons.
+ * @description Navigation item configuration for the admin sidebar.
  *
- * @property {string} id - Unique identifier for the menu item (used for active state tracking)
- * @property {string} label - Display text for the menu item (localized)
- * @property {JSX.Element} icon - React element (Material UI icon) to display
- * @property {string} path - Route path to navigate to when clicked
+ * @property {string} id - Unique identifier for the menu item.
+ * @property {string} label - Localized display text.
+ * @property {JSX.Element} icon - Icon to render.
+ * @property {string} path - Route path for navigation.
  */
 interface SidebarItem {
   id: string;
@@ -54,26 +47,12 @@ interface SidebarItem {
 }
 
 /**
- * AdminSidebar component logic and structure.
- *
- * Features:
- * - Collapsible/expandable sidebar (desktop and mobile)
- * - Responsive design (auto-collapses on viewports < 768px)
- * - Active route detection with highlighting
- * - Username display from authenticated user API
- * - Mango theme support with special gradient styling
- * - Mobile overlay and close button
- * - Logout with confirmation snackbar
- *
  * @component
- * @requires useState - React hook for sidebar state (collapsed, mobile, username, snackbar)
- * @requires useEffect - React hook for initializing username, resize listener
- * @requires useNavigate - React Router navigation hook
- * @requires useLocation - React Router location hook for active route detection
- * @requires useThemeLanguage - Context for language and theme settings
- * @requires /users/me API - Retrieves current authenticated user details
- * @requires Snackbar - Toast notification component for logout feedback
- * @requires SettingsIcon - Material UI icon for settings menu item
+ * @description Admin navigation sidebar with responsive collapse behavior.
+ * @requires useNavigate - Handles route changes.
+ * @requires useLocation - Tracks the active route.
+ * @requires useThemeLanguage - Provides theme and language state.
+ * @requires Snackbar - Shows logout feedback.
  */
 const AdminSidebar = () => {
   const navigate = useNavigate();
@@ -195,7 +174,6 @@ const AdminSidebar = () => {
         return;
       }
 
-      // Mobile expanded: full overlay, offset 0
       if (isMobile && !isCollapsed) {
         document.documentElement.style.setProperty("--sidebar-offset", "0px");
         return;
@@ -339,7 +317,6 @@ const AdminSidebar = () => {
    */
   const handleItemClick = (item: SidebarItem) => {
     localStorage.setItem("lastActiveMenuItem", item.id);
-    // Always trigger refresh before navigation to ensure fresh content
     triggerRefresh();
     navigate(item.path);
     if (isMobile) {

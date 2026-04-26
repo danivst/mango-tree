@@ -1,7 +1,7 @@
 /**
  * @file user-routes.ts
  * @description User-related API routes.
- * Handles user profiles, authentication, following/followers, and account management.
+ * Handles user profiles, authentication, following/followers and account management.
  *
  * Base path: /api/users
  * Middleware: All routes require authentication unless explicitly stated otherwise.
@@ -24,10 +24,6 @@ const router: Router = express.Router();
 router.get("/check-username", auth, userController.checkUsername);
 
 /**
- * Routes for the authenticated user's own profile and settings.
- * All require authentication.
- */
-/**
  * @route GET /me
  * @description Get current user's profile
  * @access Authenticated
@@ -41,9 +37,6 @@ router.get("/me", auth, userController.getCurrentUser);
  */
 router.put("/me", auth, userController.updateProfile);
 
-/**
- * Two-factor authentication routes for authenticated user.
- */
 /**
  * @route POST /me/2fa/enable
  * @description Initiate 2FA setup (sends verification code to email)
@@ -59,9 +52,6 @@ router.post("/me/2fa/enable", auth, enable2FA);
 router.post("/me/2fa/disable", auth, disable2FA);
 
 /**
- * User discovery and admin listing routes.
- */
-/**
  * @route GET /regular
  * @description Get all regular (non-admin, non-banned) users for discovery
  * @access Authenticated
@@ -75,9 +65,6 @@ router.get("/regular", auth, userController.getRegularUsers);
  */
 router.get("/admins", auth, requireRole(RoleTypeValue.ADMIN), userController.getAllAdmins);
 
-/**
- * Social relationship routes: followers and following.
- */
 /**
  * @route GET /:id/followers
  * @description Get list of users who follow the specified user
@@ -109,9 +96,6 @@ router.delete("/followers/:followerId", auth, userController.removeFollower);
  */
 router.post("/follow", auth, userController.toggleFollow);
 
-/**
- * Generic user profile and management routes.
- */
 /**
  * @route GET /:id
  * @description Get a user's public profile by ID

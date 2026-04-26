@@ -17,41 +17,32 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const seedTags = async () => {
   try {
-    // Establish Database Connection
     await mongoose.connect(MONGO_URI);
-    console.log('✅ MongoDB connected for tag seeding');
+    console.log('MongoDB connected for tag seeding');
 
-    // Clear existing data to avoid duplicates
     await Tag.deleteMany({});
-    console.log('🗑️  Existing tags cleared from database');
+    console.log('Existing tags cleared from database');
 
-    // Define the Tag List
     const tags = [
-      // Cuisines
       { name: 'italian' }, { name: 'chinese' }, { name: 'japanese' }, { name: 'thai' },
       { name: 'mexican' }, { name: 'indian' }, { name: 'french' }, { name: 'greek' },
       { name: 'spanish' }, { name: 'turkish' }, { name: 'american' }, { name: 'korean' },
       { name: 'vietnamese' }, { name: 'lebanese' }, { name: 'moroccan' }, { name: 'caribbean' },
       { name: 'brazilian' }, { name: 'german' }, { name: 'british' }, { name: 'mediterranean' },
 
-      // Meal Times
       { name: 'breakfast' }, { name: 'brunch' }, { name: 'lunch' }, { name: 'dinner' },
       { name: 'late-night' }, { name: 'snack' },
 
-      // Meal Types
       { name: 'soup' }, { name: 'salad' }, { name: 'main course' }, { name: 'side dish' },
       { name: 'dessert' }, { name: 'appetizer' }, { name: 'drink' }, { name: 'smoothie' },
       { name: 'sandwich' }, { name: 'pasta' },
 
-      // Difficulty
       { name: 'easy' }, { name: 'medium' }, { name: 'hard' },
 
-      // Dietary & Lifestyle
       { name: 'healthy' }, { name: 'vegan' }, { name: 'vegetarian' }, { name: 'gluten-free' },
       { name: 'keto' }, { name: 'low-carb' }, { name: 'high-protein' }, { name: 'dairy-free' },
       { name: 'low-fat' }, { name: 'sugar-free' },
 
-      // Cooking Methods & Occasions
       { name: 'bbq' }, { name: 'grill' }, { name: 'roast' }, { name: 'baked' },
       { name: 'stew' }, { name: 'fried' }, { name: 'one-pot' }, { name: 'instant pot' },
       { name: 'air fryer' }, { name: 'picnic' }, { name: 'holiday' }, { name: 'kids friendly' },
@@ -59,18 +50,15 @@ const seedTags = async () => {
     ];
 
     const tagsWithTranslations = [];
-    console.log(`🌍 Starting translation process for ${tags.length} tags...`);
+    console.log(`Starting translation process for ${tags.length} tags...`);
 
-    // Sequential Processing Loop
     for (const [index, tag] of tags.entries()) {
       let retryCount = 0;
       let success = false;
       const maxRetries = 3;
 
-      // Retry logic specifically for 429 Rate Limit errors
       while (!success && retryCount < maxRetries) {
         try {
-          // Attempt translation
           const dualNames = await getDualTranslation(tag.name);
           
           tagsWithTranslations.push({
@@ -79,44 +67,36 @@ const seedTags = async () => {
             createdBy: 'System'
           });
 
-          console.log(`  [${index + 1}/${tags.length}] ✔ Processed: ${tag.name}`);
+          console.log(`[${index + 1}/${tags.length}] Processed: ${tag.name}`);
           success = true;
 
-          /**
-           * PAUSE: Wait 500ms between requests.
-           * This "throttling" prevents DeepL from seeing a burst of requests
-           * and helps stay under the "requests per minute" limit.
-           */
           await sleep(500); 
 
         } catch (error: any) {
-          // If rate Limit is hit (429)
           if (error.message?.includes('429')) {
             retryCount++;
-            const waitTime = retryCount * 5000; // Exponential backoff: 5s, 10s...
-            console.warn(`  ⚠️ Rate limit hit on "${tag.name}". Retrying in ${waitTime / 1000}s (Attempt ${retryCount})...`);
+            const waitTime = retryCount * 5000;
+            console.warn(`Rate limit hit on "${tag.name}". Retrying in ${waitTime / 1000}s (Attempt ${retryCount})...`);
             await sleep(waitTime);
           } else {
-            // Log other errors (network, auth, etc.) and skip to next tag
-            console.error(`  ❌ Error translating "${tag.name}":`, error.message);
+            console.error(`Error translating "${tag.name}":`, error.message);
             break; 
           }
         }
       }
     }
 
-    // Bulk Insert into Database
     if (tagsWithTranslations.length > 0) {
       await Tag.insertMany(tagsWithTranslations);
       console.log('---');
-      console.log(`✅ Seeding Complete: ${tagsWithTranslations.length} tags inserted.`);
+      console.log(`Seeding Complete: ${tagsWithTranslations.length} tags inserted.`);
     } else {
-      console.error('❌ No tags were translated. Database update skipped.');
+      console.error('No tags were translated. Database update skipped.');
     }
 
     process.exit(0);
   } catch (err) {
-    console.error('💥 Critical script failure:', err);
+    console.error('Critical script failure:', err);
     process.exit(1);
   }
 };

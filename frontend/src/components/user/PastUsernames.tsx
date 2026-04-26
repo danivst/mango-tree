@@ -8,7 +8,6 @@ import { useState } from "react";
 import { useThemeLanguage } from "../../context/ThemeLanguageContext";
 import { getTranslation } from "../../utils/translations";
 
-// MUI Icon Imports
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
@@ -26,29 +25,17 @@ interface PastUsernamesProps {
 
 /**
  * @component PastUsernames
- * @description Collapsible component for displaying previous usernames history.
- *
- * Features:
- * - Toggle between collapsed/expanded states using MUI Icons
- * - Shows count of previous usernames when collapsed
- * - Displays each username with its change date formatted for current language
- * - Consistent styling across all profile views (user account, admin preview, reports)
- *
- * @requires useState - Manage collapse/expand state
- * @requires useThemeLanguage - Current UI language for date formatting
- * @requires getTranslation - Localization for button text
- * @returns {JSX.Element | null} The rendered usernames history list or null if empty
+ * @description Collapsible component for displaying previous usernames.
+ * @requires useState - Manages the expanded state.
+ * @requires useThemeLanguage - Provides localized date formatting.
+ * @requires getTranslation - Resolves button text.
+ * @returns {JSX.Element | null} The rendered usernames history or null if empty.
  */
 const PastUsernames = ({ pastUsernames, className = "" }: PastUsernamesProps) => {
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  /**
-   * Formats a date string according to current UI language locale.
-   * * @param {string} dateString - ISO date string
-   * @returns {string} Formatted localized date
-   */
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(
       language === "bg" ? "bg-BG" : "en-US",

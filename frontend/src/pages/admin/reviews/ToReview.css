@@ -1,8 +1,9 @@
-/* ============================================
-   TO REVIEW ADMIN PAGE
-   ============================================ */
+/**
+ * @file ToReview.css
+ * @description Styles for the to review page
+ */
 
-/* Tags container */
+
 .tags-container {
   margin-bottom: 20px;
 }
@@ -22,7 +23,6 @@
   font-size: 14px;
 }
 
-/* Post image in preview */
 .post-preview-image {
   max-width: 100%;
   max-height: 400px;
@@ -32,14 +32,12 @@
   border-radius: 4px;
 }
 
-/* Post description */
 .post-description {
   margin-top: 8px;
   line-height: 1.6;
   white-space: pre-wrap;
 }
 
-/* Title spacing for content sections */
 .section-title-spacing {
   margin: 12px 0 4px;
 }

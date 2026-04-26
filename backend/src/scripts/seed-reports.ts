@@ -3,7 +3,7 @@
  * @description Database seeding script for moderation reports.
  * Creates mock reports targeting comments, user profiles, and posts to test 
  * the administrative dashboard and reporting flow.
- * * Run via: `npm run seed:reports` or `ts-node src/scripts/seed-reports.ts`
+ * Run via: `npm run seed:reports` or `ts-node src/scripts/seed-reports.ts`
  */
 
 import mongoose from "mongoose";
@@ -21,14 +21,14 @@ dotenv.config();
 const seedReports = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected for report seeding");
+    console.log("MongoDB connected for report seeding");
 
     const users = await User.find();
     const posts = await Post.find();
     const comments = await Comment.find();
 
     if (users.length < 10 || posts.length < 5 || comments.length < 5) {
-      console.log("❌ Not enough data to seed reports. Run previous seeds first.");
+      console.log("Not enough data to seed reports. Run previous seeds first.");
       process.exit(1);
     }
 
@@ -68,12 +68,12 @@ const seedReports = async () => {
     }
 
     const createdReports = await Report.insertMany(reports);
-    console.log(`✅ Created ${createdReports.length} reports`);
+    console.log(`Created ${createdReports.length} reports`);
 
     await mongoose.disconnect();
     process.exit(0);
   } catch (err) {
-    console.error("❌ Report seeding failed:", err);
+    console.error("Report seeding failed:", err);
     process.exit(1);
   }
 };

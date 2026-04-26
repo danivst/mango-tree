@@ -1,6 +1,6 @@
 /**
  * @file ReportPostPreview.tsx
- * @description Admin detailed view of a reported post, comment, or user. 
+ * @description Admin detailed view of a reported post, comment or user. 
  * Orchestrates data fetching and renders specific sub-views based on report type.
  */
 
@@ -13,7 +13,6 @@ import { postsAPI, usersAPI, UserProfile, Comment, Post as PostType } from "../.
 import api from "../../../services/api";
 import { useSnackbar } from "../../../utils/snackbar";
 
-// Components
 import Snackbar from "../../../components/snackbar/Snackbar";
 import Footer from "../../../components/global/Footer";
 import GoBackButton from "../../../components/buttons/back/GoBackButton";
@@ -31,7 +30,6 @@ const ReportPostPreview = () => {
   const t = (key: string) => getTranslation(language, key);
   const { snackbar, showError, closeSnackbar } = useSnackbar();
 
-  // Data State
   const [report, setReport] = useState<Report | null>(null);
   const [post, setPost] = useState<PostType | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -40,11 +38,9 @@ const ReportPostPreview = () => {
   const [userCategories, setUserCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // UI State
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedUserCategoryId, setSelectedUserCategoryId] = useState<string | null>(null);
 
-  // Translation States
   const [showTranslation, setShowTranslation] = useState(false);
   const [translationCache, setTranslationCache] = useState<any>(null);
   const [translating, setTranslating] = useState(false);
@@ -150,7 +146,6 @@ const ReportPostPreview = () => {
   return (
     <div>
       <div className="mb-24"><GoBackButton /></div>
-      
       {report.targetType === "post" && post && (
         <ReportPostView 
           post={post} language={language} t={t} showTranslation={showTranslation} translating={translating}
@@ -160,7 +155,6 @@ const ReportPostPreview = () => {
           onPrevImage={() => setCurrentImageIndex((p) => (p - 1 + post.image.length) % post.image.length)}
         />
       )}
-
       {report.targetType === "comment" && comments[0] && (
         <ReportCommentView 
           comment={comments[0]} language={language} t={t} commentShowTranslation={commentShowTranslation}
@@ -168,7 +162,6 @@ const ReportPostPreview = () => {
           onTranslateComment={handleTranslateComment} detectLanguage={detectLanguage}
         />
       )}
-
       {report.targetType === "user" && user && (
         <ReportUserProfileView 
           user={user} userPosts={userPosts} filteredPosts={filteredPosts} specialCategories={specialCategories}
@@ -176,7 +169,6 @@ const ReportPostPreview = () => {
           getCategoryDisplayName={getCategoryDisplayName} t={t}
         />
       )}
-
       <Snackbar message={snackbar.message} type={snackbar.type} open={snackbar.open} onClose={closeSnackbar} />
       <Footer />
     </div>

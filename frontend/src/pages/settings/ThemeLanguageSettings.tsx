@@ -4,15 +4,15 @@
  */
 import React from "react";
 import CheckIcon from "@mui/icons-material/Check";
-import { Theme, Language } from "../../utils/types"; // Import your central types
+import { Theme, Language } from "../../utils/types";
 import "./Settings.css";
 import "../../styles/shared.css";
 
 interface Props {
-  theme: string;                 // Changed from string
-  setTheme: (t: any) => void; // Changed from string
-  language: string;           // Changed from string
-  setLanguage: (l: any) => void; // Changed from string
+  theme: string;                
+  setTheme: (t: any) => void; 
+  language: string;       
+  setLanguage: (l: any) => void; 
   t: (key: string) => string;
 }
 
@@ -21,7 +21,6 @@ interface Props {
  * @description UI section for updating theme and language preferences.
  */
 const ThemeLanguageSettings: React.FC<Props> = ({ theme, setTheme, language, setLanguage, t }) => {
-  // We cast this array as "const" so TS knows the IDs match our Theme union
   const themes = [
     { id: "dark" as Theme, bg: "#000000", inner: "#1a1a1a" },
     { id: "purple" as Theme, bg: "#250B24", inner: "#361134" },
@@ -55,7 +54,6 @@ const ThemeLanguageSettings: React.FC<Props> = ({ theme, setTheme, language, set
           ))}
         </div>
       </div>
-
       <div className="settings-section section-spaced">
         <h2 className="settings-section-title">{t("language")}</h2>
         <div className="theme-selector grid-2">

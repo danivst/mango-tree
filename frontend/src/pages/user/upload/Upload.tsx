@@ -1,7 +1,7 @@
 /**
  * @file Upload.tsx
  * @description Post creation page allowing users to upload images and publish content.
- * Supports multiple image uploads, category selection, tag assignment, and AI content moderation.
+ * Supports multiple image uploads, category selection, tag assignment and AI content moderation.
  */
 
 import React, { useState, useEffect } from "react";
@@ -18,7 +18,6 @@ import "../../../styles/shared.css";
 import "./Upload.css";
 import Footer from "../../../components/global/Footer";
 
-// MUI Icon Imports
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -178,7 +177,6 @@ const Upload = () => {
       newErrors.files = t("selectFileError");
     }
 
-    // Use Centralized Required Validator
     const categoryError = validateRequired(selectedCategory, "category");
     if (categoryError) {
       newErrors.category = t("selectCategoryError");
@@ -292,9 +290,7 @@ const Upload = () => {
       <UserSidebar />
       <div className="page-container">
         <h1 className="page-title mb-4">{t("uploadPost")}</h1>
-
         <form onSubmit={handleSubmit}>
-          {/* File Upload */}
           <div className="form-group">
             <label className="form-label">{t("files")}</label>
             <input
@@ -341,8 +337,6 @@ const Upload = () => {
             )}
             {errors.files && <p className="error-message">{errors.files}</p>}
           </div>
-
-          {/* Category */}
           <div className="form-group">
             <label className="form-label">{t("category")}</label>
             <select
@@ -364,8 +358,6 @@ const Upload = () => {
               <p className="error-message">{errors.category}</p>
             )}
           </div>
-
-          {/* Tags */}
           <div className="form-group">
             <label className="form-label">{t("tags")}</label>
             <div className="tags-container">
@@ -384,8 +376,6 @@ const Upload = () => {
                   </span>
                 ) : null;
               })}
-
-              {/* Add Tag Plus Icon/Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
@@ -398,7 +388,6 @@ const Upload = () => {
                     <AddIcon sx={{ fontSize: 18 }} />
                   )}
                 </button>
-
                 {showTagDropdown && (
                   <div className="tag-dropdown">
                     <div className="tag-dropdown-search">
@@ -412,7 +401,6 @@ const Upload = () => {
                         autoFocus
                       />
                     </div>
-
                     {(() => {
                       const availableTags = tags.filter(
                         (tag) =>
@@ -431,7 +419,6 @@ const Upload = () => {
                           </div>
                         );
                       }
-
                       return availableTags.map((tag) => (
                         <div
                           key={tag._id}
@@ -450,8 +437,6 @@ const Upload = () => {
               </div>
             </div>
           </div>
-
-          {/* Title */}
           <div className="form-group">
             <label className="form-label">{t("title")}</label>
             <input
@@ -467,8 +452,6 @@ const Upload = () => {
             />
             {errors.title && <p className="error-message">{errors.title}</p>}
           </div>
-
-          {/* Description */}
           <div className="form-group">
             <label className="form-label">{t("description")}</label>
             <textarea
@@ -485,8 +468,6 @@ const Upload = () => {
               <p className="error-message">{errors.description}</p>
             )}
           </div>
-
-          {/* Submit Button */}
           <div className="form-group mt-8 text-center">
             <button
               type="submit"
@@ -497,7 +478,6 @@ const Upload = () => {
             </button>
           </div>
         </form>
-
         <Snackbar
           open={snackbar.open}
           message={snackbar.message}

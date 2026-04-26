@@ -1,13 +1,13 @@
-/* ============================================
-   UPLOAD PAGE
-   ============================================ */
+/**
+ * @file Upload.css
+ * @description Styles for the upload page
+ */
 
 .upload-container {
   display: flex;
   min-height: 100vh;
 }
 
-/* Browse files button */
 .upload-browse-button {
   width: 100%;
   padding: 12px;
@@ -27,7 +27,6 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
-/* Format hint text */
 .upload-format-hint {
   font-size: 14px;
   color: var(--theme-text);
@@ -36,7 +35,6 @@
   margin-bottom: 0;
 }
 
-/* File previews grid */
 .upload-previews-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -44,7 +42,6 @@
   margin-top: 12px;
 }
 
-/* Preview item */
 .preview-item {
   position: relative;
   aspect-ratio: 1/1;
@@ -59,7 +56,6 @@
   object-fit: cover;
 }
 
-/* Remove preview button */
 .preview-remove {
   position: absolute;
   top: 4px;
@@ -83,7 +79,6 @@
   background: rgba(0, 0, 0, 0.7);
 }
 
-/* Tag add button */
 .tag-add-button {
   background: transparent;
   color: var(--theme-text);
@@ -107,7 +102,6 @@
   transition: transform 0.2s ease;
 }
 
-/* Tag dropdown */
 .tag-dropdown {
   position: absolute;
   top: 40px;
@@ -122,7 +116,6 @@
   overflow-y: auto;
 }
 
-/* Tag search input */
 .tag-search-input {
   width: 100%;
   padding: 6px 10px;
@@ -156,7 +149,6 @@
   text-align: center;
 }
 
-/* Tags container */
 .tags-container {
   display: flex;
   flex-wrap: wrap;
@@ -165,23 +157,20 @@
   align-items: center;
 }
 
-/* Border error class */
 .border-error {
   border-color: #d32f2f !important;
 }
 
-/* Tag dropdown search */
 .tag-dropdown-search {
   padding: 8px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-/* Upload submit button */
 .upload-submit {
   width: 200px;
 }
 
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 768px) {
   .upload-previews-grid {
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));

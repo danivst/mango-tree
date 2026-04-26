@@ -1,8 +1,8 @@
-/* ============================================
-   COMPONENT UTILITIES
-   ============================================ */
+/**
+ * @file utilities-components.css
+ * @description Styles for the components' utilities
+ */
 
-/* Loading State */
 .loading {
   text-align: center;
   padding: 40px;
@@ -15,7 +15,6 @@
   padding: 40px;
 }
 
-/* Empty State - centered icon with text */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -39,7 +38,6 @@
   margin: 0;
 }
 
-/* Error box with specific styling (admin pages) */
 .error-box-colored {
   color: #d32f2f;
   margin-bottom: 16px;
@@ -48,7 +46,6 @@
   border-radius: 8px;
 }
 
-/* Two-Factor Auth section (used in Settings and UserProfileForm) */
 .twofa-section {
   margin-top: 24px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
@@ -74,7 +71,6 @@
   white-space: nowrap;
 }
 
-/* Icon size utilities */
 .icon-sm {
   font-size: 14px !important;
 }
@@ -93,7 +89,6 @@
   animation: spin 1s linear infinite;
 }
 
-/* Tab button (for Home page tabs) */
 .tab-button {
   padding: 10px 20px;
   border: none;
@@ -118,19 +113,16 @@
   opacity: 0.8;
 }
 
-/* Flag/emoji icon */
 .flag-icon {
   font-size: 32px;
 }
 
-/* Preview inner (theme preview) */
 .preview-inner {
   width: 60%;
   height: 60%;
   border-radius: 4px;
 }
 
-/* Post likes indicator */
 .post-likes {
   display: flex;
   align-items: center;
@@ -144,7 +136,6 @@
   font-size: 18px;
 }
 
-/* Empty State Title - non-bold */
 .empty-state-title {
   font-weight: normal;
   font-family: "Poppins", sans-serif;
@@ -154,7 +145,6 @@
   margin: 0;
 }
 
-/* Page Divider */
 .page-divider {
   border: none;
   border-top: 1px solid rgba(0, 0, 0, 0.1);

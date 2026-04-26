@@ -1,6 +1,6 @@
 /**
  * @file Settings.tsx
- * @description User settings page for account management, preferences, and security.
+ * @description User settings page for account management, preferences and security.
  * Composes specialized sub-components into a unified layout and handles initial data orchestration.
  */
 import { useState, useEffect } from "react";

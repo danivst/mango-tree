@@ -18,50 +18,12 @@ import Footer from "../../../components/global/Footer";
 import GoBackButton from "../../../components/buttons/back/GoBackButton";
 import { useSnackbar } from "../../../utils/snackbar";
 
-// MUI Icon Imports
 import RefreshIcon from "@mui/icons-material/Refresh";
 import FlagIcon from "@mui/icons-material/Flag";
 
 /**
  * @file ToReview.tsx
- * @description Admin content moderation queue - review AI-flagged posts and comments.
- * Displays content flagged by the AI moderation system for human approval or rejection.
- *
- * Features:
- * - List all flagged content (posts and comments) from AdminDataContext.flaggedContent
- * - View flagged content details with translation (EN/BG)
- * - Approve content (removes flagged status, makes it publicly visible)
- * - Reject content with reason (deletes the content)
- * - If URL provided in flag message, navigate directly to flagged item
- * - Live filtering: unread (no admin action yet) vs reviewed (already actioned)
- *
- * Workflow:
- * 1. AI flags post/comment as potentially inappropriate
- * 2. Post enters this queue (flagged: true, ai_moderation flag set)
- * 3. Admin reviews content
- * 4. Admin either:
- * - Approve: Content becomes visible (flagged=false, ai_moderation cleared)
- * - Reject: Content is deleted with reason
- *
- * Data Source:
- * - Uses AdminDataContext.flaggedContent (fetched by fetchFlaggedContent() or initialize())
- *
- * Access Control:
- * - Route protected by AdminRoute (admin only)
- *
- * Integration:
- * - Backend marks posts as flagged via AI service; flaggedContent endpoint returns those items
- * - Approve action clears flagged status and ai_moderation flag, making post visible
- *
- * @page
- * @requires useState - Flagged content list, selected content, filter state, loading, snackbar
- * @requires useEffect - Fetch flagged content on mount via AdminDataContext
- * @requires useNavigate - Navigate to flagged content's URL if available
- * @requires useThemeLanguage - Current language for content and translations
- * @requires useAdminData - Access to flaggedContent array and fetchFlaggedContent()
- * @requires postsAPI - Approve or reject flagged posts (admin endpoints)
- * @requires Snackbar - Feedback on approve/reject actions
- * @requires Footer - Footer component
+ * @description Admin moderation queue for reviewing AI-flagged posts and comments.
  */
 
 const ToReview = () => {
@@ -79,7 +41,6 @@ const ToReview = () => {
   const [disapproveReason, setDisapproveReason] = useState("");
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
 
-  // Helper to display content type with proper pluralization
   const getTypeLabel = (type: string) => {
     if (type === "comment") {
       return t("comments");
@@ -87,7 +48,6 @@ const ToReview = () => {
     return t(type);
   };
 
-  // Fetch flagged content on initial load (avoid requiring manual refresh)
   useEffect(() => {
     if (!hasFetched && !loading) {
       fetchFlaggedContent().catch(() => {
@@ -96,7 +56,6 @@ const ToReview = () => {
     }
   }, [hasFetched, loading, fetchFlaggedContent]);
 
-  // Load selected content when contentId param changes
   useEffect(() => {
     if (contentId) {
       const content = flaggedContent.find((c) => c._id === contentId);
@@ -125,7 +84,6 @@ const ToReview = () => {
     setSelectedContent(content);
     setShowDisapprove(false);
     setDisapproveReason("");
-    // Update URL with content ID
     navigate(`/admin/dashboard/review/${content._id}`, { replace: true });
   };
 
@@ -204,13 +162,9 @@ const ToReview = () => {
                     selectedContent.content.category}
                 </p>
               )}
-
               {selectedContent.type === "post" && (
                 <div className="mt-5">
-                  {/* 1. Title */}
                   <h3 className="mt-0 mb-4">{selectedContent.content.title}</h3>
-
-                  {/* 2. Images */}
                   {selectedContent.content.image &&
                     selectedContent.content.image.length > 0 && (
                       <div className="mb-5">
@@ -226,8 +180,6 @@ const ToReview = () => {
                         )}
                       </div>
                     )}
-
-                  {/* 3. Tags */}
                   {selectedContent.content.tags &&
                     selectedContent.content.tags.length > 0 && (
                       <div className="tags-container">
@@ -243,8 +195,6 @@ const ToReview = () => {
                         </div>
                       </div>
                     )}
-
-                  {/* 4. Description (content body) */}
                   <div>
                     <strong>{t("description")}:</strong>
                     <p className="post-description">
@@ -253,8 +203,6 @@ const ToReview = () => {
                   </div>
                 </div>
               )}
-
-              {/* Comments have simpler view */}
               {selectedContent.type === "comment" && (
                 <div className="mt-5">
                   <p className="whitespace-pre-wrap">
@@ -328,7 +276,6 @@ const ToReview = () => {
     );
   }
 
-  // Local EmptyState component for no data
   const EmptyState = ({
     icon,
     title,
@@ -360,13 +307,11 @@ const ToReview = () => {
           </button>
         </div>
       </div>
-
       {error && (
         <div className="error-box-colored">
           <strong>Error:</strong> {error}
         </div>
       )}
-
       {!hasFetched ? (
         <div className="loading">
           {t("noDataLoaded")}. {t("clickRefreshToLoad")}.
@@ -383,9 +328,7 @@ const ToReview = () => {
             return (
               <div key={content._id} className="card">
                 <div className="card-title">{getTypeLabel(content.type)}</div>
-                {/* Title */}
                 <h3 className="section-title-spacing">{post?.title}</h3>
-                {/* Subtitle: Username and Category */}
                 <p className="text-sm opacity-70 mb-3">
                   @{content.authorId?.username}
                   {content.content.category && (

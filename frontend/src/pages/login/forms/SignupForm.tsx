@@ -1,7 +1,7 @@
 /**
  * @file SignupForm.tsx
  * @description Registration (signup) form component.
- * Collects username, email, and password for new user accounts.
+ * Collects username, email and password for new user accounts.
  * Provides real-time validation feedback and secure password visibility toggling.
  */
 
@@ -17,9 +17,9 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
  * @property {string} email - Current email input value
  * @property {string} password - Current password input value
  * @property {boolean} showPassword - Flag to toggle password text visibility
- * @property {boolean} signingIn - State to disable buttons during registration API calls
- * @property {{ username?: string; signinEmail?: string; signinPassword?: string }} errors - Validation error messages
- * @property {(field: 'username' | 'signinEmail' | 'signinPassword', value: string) => void} onFieldChange - Input change handler
+ * @property {boolean} signingUp - State to disable buttons during registration API calls
+ * @property {{ username?: string; signupEmail?: string; signupPassword?: string }} errors - Validation error messages
+ * @property {(field: 'username' | 'signupEmail' | 'signupPassword', value: string) => void} onFieldChange - Input change handler
  * @property {() => void} onTogglePassword - Toggle password visibility visibility
  * @property {(e: React.FormEvent) => void} onSubmit - Registration submission handler
  * @property {(key: string) => string} t - Translation function for localization
@@ -29,9 +29,9 @@ interface SignupFormProps {
   email: string;
   password: string;
   showPassword: boolean;
-  signingIn: boolean;
-  errors: { username?: string; signinEmail?: string; signinPassword?: string };
-  onFieldChange: (field: 'username' | 'signinEmail' | 'signinPassword', value: string) => void;
+  signingUp: boolean;
+  errors: { username?: string; signupEmail?: string; signupPassword?: string };
+  onFieldChange: (field: 'username' | 'signupEmail' | 'signupPassword', value: string) => void;
   onTogglePassword: () => void;
   onSubmit: (e: React.FormEvent) => void;
   t: (key: string) => string;
@@ -47,7 +47,7 @@ const SignupForm: React.FC<SignupFormProps> = ({
   email,
   password,
   showPassword,
-  signingIn,
+  signingUp,
   errors,
   onFieldChange,
   onTogglePassword,
@@ -65,7 +65,6 @@ const SignupForm: React.FC<SignupFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="login-form">
-      {/* Username Field Group */}
       <div className="login-form-group">
         <label
           htmlFor="username"
@@ -85,43 +84,39 @@ const SignupForm: React.FC<SignupFormProps> = ({
           <span className="login-error-message">{errors.username}</span>
         )}
       </div>
-
-      {/* Email Field Group */}
       <div className="login-form-group">
         <label
-          htmlFor="signin-email"
-          className={`login-form-label ${errors.signinEmail ? "login-label-error" : ""}`}
+          htmlFor="signup-email"
+          className={`login-form-label ${errors.signupEmail ? "login-label-error" : ""}`}
         >
           {t("email")}
         </label>
         <input
-          id="signin-email"
+          id="signup-email"
           type="email"
-          className={`login-form-input ${errors.signinEmail ? "login-input-error" : ""}`}
+          className={`login-form-input ${errors.signupEmail ? "login-input-error" : ""}`}
           value={email}
-          onChange={(e) => onFieldChange('signinEmail', e.target.value)}
+          onChange={(e) => onFieldChange('signupEmail', e.target.value)}
           placeholder={t("enterYourEmail")}
         />
-        {errors.signinEmail && (
-          <span className="login-error-message">{errors.signinEmail}</span>
+        {errors.signupEmail && (
+          <span className="login-error-message">{errors.signupEmail}</span>
         )}
       </div>
-
-      {/* Password Field Group */}
       <div className="login-form-group">
         <label
-          htmlFor="signin-password"
-          className={`login-form-label ${errors.signinPassword ? "login-label-error" : ""}`}
+          htmlFor="signup-password"
+          className={`login-form-label ${errors.signupPassword ? "login-label-error" : ""}`}
         >
           {t("password")}
         </label>
         <div className="password-input-wrapper">
           <input
-            id="signin-password"
+            id="signup-password"
             type={showPassword ? "text" : "password"}
-            className={`login-form-input password-input ${errors.signinPassword ? "login-input-error" : ""}`}
+            className={`login-form-input password-input ${errors.signupPassword ? "login-input-error" : ""}`}
             value={password}
-            onChange={(e) => onFieldChange('signinPassword', e.target.value)}
+            onChange={(e) => onFieldChange('signupPassword', e.target.value)}
             placeholder={t("enterYourPassword")}
           />
           <button
@@ -137,19 +132,17 @@ const SignupForm: React.FC<SignupFormProps> = ({
             )}
           </button>
         </div>
-        {errors.signinPassword && (
-          <span className="login-error-message">{errors.signinPassword}</span>
+        {errors.signupPassword && (
+          <span className="login-error-message">{errors.signupPassword}</span>
         )}
       </div>
-
-      {/* Form Action Buttons */}
       <div className="login-form-actions">
         <button
           type="submit"
           className="btn-solid"
-          disabled={signingIn}
+          disabled={signingUp}
         >
-          {signingIn ? t("creatingAccount") : t("signin")}
+          {signingUp ? t("creatingAccount") : t("signup")}
         </button>
       </div>
     </form>

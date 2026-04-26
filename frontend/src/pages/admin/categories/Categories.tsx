@@ -1,7 +1,7 @@
 /**
  * @file Categories.tsx
  * @description Administrative interface for managing post categories.
- * Provides functionality to create, edit, delete, and search through content categories
+ * Provides functionality to create, edit, delete and search through content categories
  * using the centralized AdminDataContext for state management.
  */
 
@@ -22,7 +22,6 @@ import { useSnackbar } from "../../../utils/snackbar";
 import { useAdminData } from "../../../context/AdminDataContext";
 import { AdminTable, ColumnDef } from "../../../components/admin/table";
 
-// MUI Icon Imports
 import CategoryIcon from '@mui/icons-material/Category';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -32,7 +31,6 @@ const Categories = () => {
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
 
-  // Fetch categories on initial load (avoid requiring manual refresh)
   useEffect(() => {
     if (!hasFetched && !loading) {
       fetchCategories().catch(() => {
@@ -41,7 +39,6 @@ const Categories = () => {
     }
   }, [hasFetched, loading, fetchCategories]);
 
-  // States
   const [searchQuery, setSearchQuery] = useState("");
   const [sortState, setSortState] = useState<SortState>({
     column: null,
@@ -59,12 +56,10 @@ const Categories = () => {
   const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
   const [editCategoryName, setEditCategoryName] = useState("");
 
-  // Reset to first page when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  // Filter: search by category name only
   const filteredCategories = useMemo(() => {
     if (!hasFetched) return [];
     if (searchQuery.trim() === "") return categories;
@@ -72,7 +67,6 @@ const Categories = () => {
     return categories.filter((cat) => cat.name.toLowerCase().includes(query));
   }, [categories, searchQuery, hasFetched]);
 
-  // Sort
   const sortedCategories = useMemo(() => {
     return sortData(
       filteredCategories,
@@ -93,7 +87,6 @@ const Categories = () => {
     );
   }, [filteredCategories, sortState]);
 
-  // Paginate
   const paginatedCategories = useMemo(() => {
     return paginateData(sortedCategories, currentPage, itemsPerPage);
   }, [sortedCategories, currentPage]);
@@ -178,7 +171,6 @@ const Categories = () => {
     }
   };
 
-  // Columns definition
   const columns: ColumnDef<Category>[] = [
     {
       key: "name",
@@ -200,7 +192,6 @@ const Categories = () => {
     },
   ];
 
-  // Empty state using MUI Icon
   const emptyState = {
     icon: <CategoryIcon sx={{ fontSize: 40 }} />,
     title: t("noCategoriesFound"),
@@ -209,7 +200,6 @@ const Categories = () => {
   return (
     <div>
       <h1 className="page-container-title">{t("categories")}</h1>
-
       <AdminTable<Category>
         data={paginatedCategories}
         currentPage={currentPage}
@@ -251,8 +241,6 @@ const Categories = () => {
           </div>
         )}
       />
-
-      {/* Delete Category Modal */}
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal modal-danger">
@@ -278,8 +266,6 @@ const Categories = () => {
           </div>
         </div>
       )}
-
-      {/* Add Category Modal */}
       {showAddCategory && (
         <div className="modal-overlay">
           <div className="modal">
@@ -319,8 +305,6 @@ const Categories = () => {
           </div>
         </div>
       )}
-
-      {/* Edit Category Modal */}
       {showEditModal && (
         <div className="modal-overlay">
           <div className="modal">
@@ -361,7 +345,6 @@ const Categories = () => {
           </div>
         </div>
       )}
-
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

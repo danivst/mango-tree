@@ -9,14 +9,15 @@ import React from 'react';
 /**
  * @interface LoginTabsProps
  * @description Props for the LoginTabs component.
- * * @property {'login' | 'signin'} activeTab - The currently selected authentication mode.
- * @property {(tab: 'login' | 'signin') => void} onTabChange - Callback to update the active tab state in the parent.
+ * 
+ * @property {'login' | 'signup'} activeTab - The currently selected authentication mode.
+ * @property {(tab: 'login' | 'signup') => void} onTabChange - Callback to update the active tab state in the parent.
  * @property {(path: string, options?: { replace?: boolean }) => void} navigate - Navigation function to update the route.
  * @property {(key: string) => string} t - Translation function for localized button labels.
  */
 interface LoginTabsProps {
-  activeTab: 'login' | 'signin';
-  onTabChange: (tab: 'login' | 'signin') => void;
+  activeTab: 'login' | 'signup';
+  onTabChange: (tab: 'login' | 'signup') => void;
   navigate: (path: string, options?: { replace?: boolean }) => void;
   t: (key: string) => string;
 }
@@ -25,7 +26,8 @@ interface LoginTabsProps {
  * @component LoginTabs
  * @description Renders a tabbed interface to switch between login and registration views.
  * Each tab click updates the internal state and performs a route replacement to maintain a clean history.
- * * @param {LoginTabsProps} props - Component props.
+ * 
+ * @param {LoginTabsProps} props - Component props.
  * @returns {JSX.Element} The rendered tab buttons container.
  */
 const LoginTabs: React.FC<LoginTabsProps> = ({
@@ -37,17 +39,17 @@ const LoginTabs: React.FC<LoginTabsProps> = ({
   /**
    * Internal handler for tab clicks.
    * Updates the parent state and synchronizes the browser URL path.
-   * * @param {'login' | 'signin'} tab - The target tab to switch to.
+   * 
+   * @param {'login' | 'signup'} tab - The target tab to switch to.
    */
-  const handleTabClick = (tab: 'login' | 'signin') => {
+  const handleTabClick = (tab: 'login' | 'signup') => {
     onTabChange(tab);
-    const path = tab === 'login' ? '/login' : '/signin';
+    const path = tab === 'login' ? '/login' : '/signup';
     navigate(path, { replace: true });
   };
 
   return (
     <div className="tabs-container">
-      {/* Login Tab Button */}
       <button
         type="button"
         className={`login-tab-button ${activeTab === "login" ? "login-tab-active" : ""}`}
@@ -57,16 +59,14 @@ const LoginTabs: React.FC<LoginTabsProps> = ({
       >
         {t("login")}
       </button>
-
-      {/* Signin (Register) Tab Button */}
       <button
         type="button"
-        className={`login-tab-button ${activeTab === "signin" ? "login-tab-active" : ""}`}
-        onClick={() => handleTabClick("signin")}
+        className={`login-tab-button ${activeTab === "signup" ? "login-tab-active" : ""}`}
+        onClick={() => handleTabClick("signup")}
         role="tab"
-        aria-selected={activeTab === "signin"}
+        aria-selected={activeTab === "signup"}
       >
-        {t("signin")}
+        {t("signup")}
       </button>
     </div>
   );

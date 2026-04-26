@@ -57,11 +57,9 @@ export const getCategoryDisplayName = (
   t: (key: string) => string
 ): string => {
   const translated = t(categoryName.toLowerCase());
-  // If translation exists and is different from the key, use it
   if (translated && translated !== categoryName.toLowerCase()) {
     return translated;
   }
-  // Fallback: capitalize the original name
   return categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
 };
 
@@ -160,7 +158,7 @@ export const generateSlug = (text: string): string => {
   return text
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '') // Remove non-alphanumeric (except spaces/hyphens)
-    .replace(/[\s_-]+/g, '-') // Replace spaces/underscores/hyphens with single hyphen
-    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 };

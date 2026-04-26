@@ -9,9 +9,8 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 /**
  * @interface RefreshContextType
  * @description Context API interface for global refresh management.
- * Provides a numeric trigger and a function to increment it, allowing components
- * to react to global refresh requests.
- * * @property {number} refreshTrigger - A counter that increments each time a refresh is requested.
+ *
+ * @property {number} refreshTrigger - A counter that increments each time a refresh is requested.
  * @property {() => void} triggerRefresh - Function to increment the counter and notify listeners.
  */
 interface RefreshContextType {
@@ -24,11 +23,8 @@ const RefreshContext = createContext<RefreshContextType | null>(null);
 /**
  * @component RefreshProvider
  * @description Provider component for the RefreshContext.
- * Manages the `refreshTrigger` state and exposes it to child components.
- * * Usage:
- * Wrap the root or specific layout sections with <RefreshProvider> to enable
- * cross-component refresh signaling.
- * * @param {Object} props - Component properties.
+ *
+ * @param {Object} props - Component properties.
  * @param {ReactNode} props.children - Child components to be wrapped by the provider.
  * @returns {JSX.Element} The context provider component.
  */
@@ -53,20 +49,19 @@ export const RefreshProvider = ({ children }: { children: ReactNode }) => {
 
 /**
  * Custom hook for consuming RefreshContext.
- * Ensures the hook is used within a RefreshProvider, throwing an error otherwise.
- * * @function useRefresh
+ *
+ * @function useRefresh
  * @returns {RefreshContextType} The current refresh state and trigger function.
  * @throws {Error} If used outside of a RefreshProvider.
- * * @example
+ *
+ * @example
  * ```typescript
  * const { refreshTrigger, triggerRefresh } = useRefresh();
- * * // Trigger a refresh
  * const handleButtonClick = () => triggerRefresh();
- * * // Listen for a refresh
  * useEffect(() => {
- * if (refreshTrigger > 0) {
- * fetchData();
- * }
+ *   if (refreshTrigger > 0) {
+ *     fetchData();
+ *   }
  * }, [refreshTrigger]);
  * ```
  */

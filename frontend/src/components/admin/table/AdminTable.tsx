@@ -1,11 +1,10 @@
 /**
  * @file AdminTable.tsx
  * @description A highly reusable, generic data table component designed for administrative interfaces.
- * Updated to use Material UI Icons for sorting and empty states.
  */
 
 import React, { useState, useRef, useEffect } from "react";
-// Import MUI Icons
+
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import InboxIcon from '@mui/icons-material/Inbox';
@@ -216,13 +215,11 @@ export default function AdminTable<T>({
         </div>
         {filterControls}
       </div>
-
       {error && (
         <div className="error-box-colored">
           <strong>Error:</strong> {error}
         </div>
       )}
-
       {loading ? (
         <div className="loading">{t("loading")}</div>
       ) : !hasFetched ? (
@@ -281,7 +278,6 @@ export default function AdminTable<T>({
               ))}
             </tbody>
           </table>
-
           {totalPages > 1 && (
             <div className="pagination">
               <button

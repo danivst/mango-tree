@@ -21,11 +21,8 @@ const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
  * Email payload interface
  */
 export interface EmailPayload {
-  /** Recipient email address */
   to: string;
-  /** Email subject line */
   subject: string;
-  /** HTML body content */
   html: string;
 }
 

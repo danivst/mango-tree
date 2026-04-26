@@ -1,7 +1,7 @@
 /**
  * @file Account.tsx
  * @description User profile management page for viewing and editing personal account information.
- * Displays user profile details, personalized post feed, and provides bio editing functionality.
+ * Displays user profile details, personalized post feed and provides bio editing functionality.
  * Serves as the primary hub for authenticated users to manage their presence on the platform.
  */
 
@@ -22,7 +22,6 @@ import "../../../styles/shared.css";
 import "./Account.css";
 import Footer from "../../../components/global/Footer";
 
-// MUI Icon Imports
 import TranslateIcon from "@mui/icons-material/Translate";
 import LanguageIcon from "@mui/icons-material/Language";
 import EditIcon from "@mui/icons-material/Edit";
@@ -50,20 +49,12 @@ interface Category {
 
 /**
  * @component Account
- * @description Renders the personal account dashboard.
- * Handles complex logic for profile image previews, bio translation toggles, and
- * category-based post filtering.
- * * Features:
- * - View personal profile (username, email, role)
- * - Manage personal posts with category filtering
- * - Interactive bio editor with translation support
- * - Navigate to followers/following lists
- *
+ * @description Renders the authenticated user's account dashboard.
  * @page
- * @requires useSnackbar - Standardized toast notification hook
- * @requires useThemeLanguage - Current UI language and theme context
- * @requires usersAPI - Profile update and retrieval services
- * @returns {JSX.Element} The rendered Account management page
+ * @requires useSnackbar - Shows toast notifications.
+ * @requires useThemeLanguage - Provides translations and theme state.
+ * @requires usersAPI - Fetches and updates the user's profile.
+ * @returns {JSX.Element} The rendered account page.
  */
 const Account = () => {
   const navigate = useNavigate();
@@ -299,7 +290,6 @@ const Account = () => {
               </button>
             )}
           </div>
-
           <div className="flex-1">
             <div className="d-flex justify-between items-center gap-3">
               <h1 className="profile-username mb-0">@{user.username}</h1>
@@ -312,7 +302,6 @@ const Account = () => {
             <p className="profile-meta">
               {t("memberSince")}: {formatDate(user.createdAt)}
             </p>
-
             <div className="d-flex gap-12 profile-stats">
               <div className="text-center">
                 <div className="text-2xl font-medium">{posts.length}</div>
@@ -339,7 +328,6 @@ const Account = () => {
             </div>
           </div>
         </div>
-
         <div className="mb-6">
           <div className="d-flex justify-between items-center gap-3 mb-3">
             <h3 className="text-lg font-bold">{t("bio")}</h3>
@@ -385,13 +373,10 @@ const Account = () => {
             )}
           </div>
         </div>
-
         {user?.pastUsernames && user.pastUsernames.length > 0 && (
           <PastUsernames pastUsernames={user.pastUsernames} className="mb-6" />
         )}
-
         <hr className="page-divider" />
-
         <div className="category-tabs">
           <button
             onClick={() => setSelectedCategoryId(null)}
@@ -409,7 +394,6 @@ const Account = () => {
             </button>
           ))}
         </div>
-
         {filteredPosts.length === 0 ? (
           <div className="empty-state">
             <ArticleIcon sx={{ fontSize: 40, opacity: 0.5 }} />
@@ -424,7 +408,6 @@ const Account = () => {
             ))}
           </div>
         )}
-
         {showBioModal && (
           <div className="modal-overlay" onClick={handleCloseBioModal}>
             <div
@@ -459,7 +442,6 @@ const Account = () => {
             </div>
           </div>
         )}
-
         <Snackbar
           message={snackbar.message}
           type={snackbar.type}

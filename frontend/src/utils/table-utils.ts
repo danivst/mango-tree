@@ -51,12 +51,10 @@ export const sortData = <T>(
     const aVal = getValue(a, column);
     const bVal = getValue(b, column);
 
-    // Handle null/undefined values
     if (aVal == null && bVal == null) return 0;
     if (aVal == null) return direction === 'asc' ? -1 : 1;
     if (bVal == null) return direction === 'asc' ? 1 : -1;
 
-    // Compare values
     if (typeof aVal === 'string' && typeof bVal === 'string') {
       const comparison = aVal.toLowerCase().localeCompare(bVal.toLowerCase());
       return direction === 'asc' ? comparison : -comparison;
@@ -66,19 +64,16 @@ export const sortData = <T>(
       return direction === 'asc' ? aVal - bVal : bVal - aVal;
     }
 
-    // Date comparison
     if (aVal instanceof Date && bVal instanceof Date) {
       return direction === 'asc' ? aVal.getTime() - bVal.getTime() : bVal.getTime() - aVal.getTime();
     }
 
-    // String date comparison (ISO strings)
     const aDate = new Date(aVal);
     const bDate = new Date(bVal);
     if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
       return direction === 'asc' ? aDate.getTime() - bDate.getTime() : bDate.getTime() - aDate.getTime();
     }
 
-    // Fallback to string comparison
     const aStr = String(aVal).toLowerCase();
     const bStr = String(bVal).toLowerCase();
     const comparison = aStr.localeCompare(bStr);

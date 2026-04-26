@@ -3,7 +3,7 @@
  * @description Database seeding script for generating random user comments.
  * Associates random users with random posts and assigns a text from a predefined pool.
  * Each post receives a random number of comments (between 1 and 10).
- * * Run via: `npm run seed:comments` or `ts-node src/scripts/seed-comments.ts`
+ * Run via: `npm run seed:comments` or `ts-node src/scripts/seed-comments.ts`
  */
 
 import mongoose from "mongoose";
@@ -72,12 +72,12 @@ const seedComments = async () => {
     }
 
     const createdComments = await Comment.insertMany(allComments);
-    console.log(`✅ Created ${createdComments.length} comments`);
+    console.log(`Created ${createdComments.length} comments`);
 
     await mongoose.disconnect();
     process.exit(0);
   } catch (err) {
-    console.error("❌ Comment seeding failed:", err);
+    console.error("Comment seeding failed:", err);
     process.exit(1);
   }
 };

@@ -23,13 +23,12 @@ dotenv.config();
 const createAdmin = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected");
+    console.log("MongoDB connected");
 
     const adminEmail = "admin@mangotreeofficial.com";
     const adminPassword = "Admin123!@#";
     const adminUsername = "admin";
 
-    // check if it exists
     const existingAdmin = await User.findOne({ email: adminEmail });
 
     if (existingAdmin) {
@@ -39,7 +38,7 @@ const createAdmin = async () => {
       return;
     }
 
-    // create admin
+    // Create admin
     const passwordHash = await bcrypt.hash(adminPassword, 10);
 
     await User.create({

@@ -1,21 +1,19 @@
-/* ============================================
-   FOLLOWERS PAGE
-   ============================================ */
+/**
+ * @file Followers.css
+ * @description Styles for the followers page
+ */
 
-/* Page layout container */
 .followers-container {
   display: flex;
   min-height: 100vh;
 }
 
-/* User card layout */
 .follower-card {
   display: flex;
   gap: 16px;
   align-items: flex-start;
 }
 
-/* User info within card */
 .follower-card .user-info {
   flex: 1;
   min-width: 0;
@@ -36,7 +34,6 @@
   color: var(--theme-text);
 }
 
-/* Action button layout */
 .action-button {
   display: flex;
   align-items: center;

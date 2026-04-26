@@ -1,7 +1,7 @@
 /**
  * @file Tags.tsx
  * @description Administrative interface for managing content tags.
- * Provides a comprehensive dashboard for creating, editing, deleting, and searching 
+ * Provides a comprehensive dashboard for creating, editing, deleting and searching 
  * through system tags. Utilizes the centralized AdminDataContext for state synchronization 
  * and AdminTable for standardized data presentation.
  */
@@ -27,7 +27,6 @@ import {
   ColumnDef,
 } from "../../../components/admin/table";
 
-// MUI Icon Imports
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -37,7 +36,6 @@ const Tags = () => {
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
 
-  // Fetch tags on initial load (avoid requiring manual refresh)
   useEffect(() => {
     if (!hasFetched && !loading) {
       fetchTags().catch(() => {
@@ -46,7 +44,6 @@ const Tags = () => {
     }
   }, [hasFetched, loading, fetchTags]);
 
-  // States
   const [searchQuery, setSearchQuery] = useState("");
   const [sortState, setSortState] = useState<SortState>({
     column: null,
@@ -64,16 +61,10 @@ const Tags = () => {
   const [deleteTagId, setDeleteTagId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  /**
-   * Effect: Reset pagination to the first page whenever the search query changes.
-   */
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  /**
-   * Filters the tags list based on the search query against tag names.
-   */
   const filteredTags = useMemo(() => {
     if (!hasFetched) return [];
     if (searchQuery.trim() === "") return tags;
@@ -81,9 +72,6 @@ const Tags = () => {
     return tags.filter((tag) => tag.name.toLowerCase().includes(query));
   }, [tags, searchQuery, hasFetched]);
 
-  /**
-   * Sorts the filtered tags based on the current sort state.
-   */
   const sortedTags = useMemo(() => {
     return sortData(
       filteredTags,
@@ -102,9 +90,6 @@ const Tags = () => {
     );
   }, [filteredTags, sortState]);
 
-  /**
-   * Slices the sorted tags for the current page view.
-   */
   const paginatedTags = useMemo(() => {
     return paginateData(sortedTags, currentPage, itemsPerPage);
   }, [sortedTags, currentPage]);
@@ -211,9 +196,6 @@ const Tags = () => {
     }
   };
 
-  /**
-   * AdminTable Column Definitions.
-   */
   const columns: ColumnDef<Tag>[] = [
     {
       key: "name",
@@ -246,7 +228,6 @@ const Tags = () => {
   return (
     <div>
       <h1 className="page-container-title">{t("tags")}</h1>
-
       <AdminTable<Tag>
         data={paginatedTags}
         currentPage={currentPage}
@@ -285,8 +266,6 @@ const Tags = () => {
           </div>
         )}
       />
-
-      {/* Delete Tag Modal */}
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal modal-danger">
@@ -309,8 +288,6 @@ const Tags = () => {
           </div>
         </div>
       )}
-
-      {/* Add Tag Modal */}
       {showAddTag && (
         <div className="modal-overlay">
           <div className="modal">
@@ -350,8 +327,6 @@ const Tags = () => {
           </div>
         </div>
       )}
-
-      {/* Edit Tag Modal */}
       {showEditModal && (
         <div className="modal-overlay">
           <div className="modal">
@@ -392,7 +367,6 @@ const Tags = () => {
           </div>
         </div>
       )}
-
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

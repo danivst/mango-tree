@@ -1,7 +1,7 @@
 /**
  * @file 2fa-controller.ts
  * @description Handles Two-Factor Authentication (2FA) endpoints.
- * Supports enabling, verifying, disabling, and checking 2FA status.
+ * Supports enabling, verifying, disabling and checking 2FA status.
  */
 
 import { Request, Response } from "express";
@@ -21,7 +21,7 @@ import { setAuthCookies } from "../utils/auth-cookies";
 
 /**
  * Initiates the 2FA enablement process.
- * Generates a temporary 6-digit code, stores it with a 10-minute expiry,
+ * Generates a temporary 6-digit code, stores it with a 10-minute expiry
  * and sends it via email in the user's preferred language.
  *
  * @param req - AuthRequest containing authenticated user's ID
@@ -37,7 +37,7 @@ import { setAuthCookies } from "../utils/auth-cookies";
  * @response
  * ```json
  * {
- * "message": "verification code sent to your email. please enter it to enable 2fa.",
+ * "message": "Verification code sent to your email. Please enter it to enable 2FA.",
  * "email": "user@example.com"
  * }
  * ```
@@ -47,35 +47,28 @@ export const enable2FA = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    // Extract user id from the authenticated request
     const userId = req.user?.userId;
 
     if (!userId) {
-      return res.status(401).json({ message: "unauthorized." });
+      return res.status(401).json({ message: "Unauthorized." });
     }
 
-    // Fetch user and check if 2fa is already active
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "user not found." });
+      return res.status(404).json({ message: "User not found." });
     }
 
     if (user.twoFactorEnabled) {
-      return res.status(400).json({ message: "2fa is already enabled." });
+      return res.status(400).json({ message: "2FA is already enabled." });
     }
 
-    // Generate a secure 6-digit numeric string
     const code = crypto.randomInt(100000, 999999).toString();
-
-    // Set expiration window (10 minutes)
     const codeExpiry = new Date(Date.now() + 10 * 60 * 1000);
-
-    // Persist the temporary code and expiry to the user document
     user.twoFactorCode = code;
     user.twoFactorCodeExpiry = codeExpiry;
     await user.save();
 
-    // Localize email content based on user's preferred language
+
     const userLang = user.language || "en";
 
     const [titleTrans, introTrans, securityNoteTrans, signatureTrans] =
@@ -84,7 +77,6 @@ export const enable2FA = async (
         getDualTranslation(
           "To enable two-factor authentication on your account, please use the following 6-digit verification code:",
         ),
-        getDualTranslation("Your verification code:"),
         getDualTranslation(
           "This code will expire in 10 minutes. If you did not request this, please ignore this email.",
         ),
@@ -96,7 +88,6 @@ export const enable2FA = async (
     const securityNote = getLocalizedText(userLang, securityNoteTrans);
     const signature = getLocalizedText(userLang, signatureTrans);
 
-    // Construct email html using the specialized 2fa template
     const emailHtml = get2FAEmailTemplate({
       title,
       intro,
@@ -105,33 +96,32 @@ export const enable2FA = async (
       signature,
     });
 
-    // Attempt to send the email; if it fails, clear the code to prevent stale data
     try {
       await sendEmail(user.email, title, emailHtml);
     } catch (error: any) {
-      logger.error(error, "failed to send 2fa enable email");
+      logger.error(error, "Failed to send 2FA enable email");
       user.twoFactorCode = undefined;
       user.twoFactorCodeExpiry = undefined;
       await user.save();
       return res.status(500).json({
-        message: "failed to send verification email. please try again.",
+        message: "Failed to send verification email. Please try again.",
       });
     }
 
     return res.json({
       message:
-        "verification code sent to your email. please enter it to enable 2fa.",
+        "Verification code sent to your email. Please enter it to enable 2FA.",
       email: user.email,
     });
   } catch (error: any) {
-    logger.error(error, "enable 2fa error");
-    return res.status(500).json({ message: "internal server error." });
+    logger.error(error, "enable 2FA error");
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 
 /**
  * Verifies a 2FA code and enables the feature.
- * If successful, enables 2FA for the user, logs the activity, and issues a full JWT session.
+ * If successful, enables 2FA for the user, logs the activity and issues a full JWT session.
  *
  * @param req - Request with body { userId, code }
  * @param res - Express response object
@@ -146,7 +136,7 @@ export const enable2FA = async (
  * @response
  * ```json
  * {
- * "message": "successfully logged in!",
+ * "message": "Successfully logged in!",
  * "user": { "id": "...", "username": "..." },
  * "redirectTo": "/home"
  * }
@@ -157,69 +147,69 @@ export const verify2FA = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    const { userId, code } = req.body;
+    const { userId, code, rememberMe } = req.body as {
+      userId?: string;
+      code?: string;
+      rememberMe?: boolean;
+    };
 
-    // Validate incoming payload
     if (!userId) {
-      return res.status(400).json({ message: "user id is required." });
+      return res.status(400).json({ message: "User id is required." });
     }
 
     if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
       return res
         .status(400)
-        .json({ message: "invalid verification code. must be 6 digits." });
+        .json({ message: "Invalid verification code. Must be 6 digits." });
     }
 
-    // Find user and verify a code was actually requested/stored
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "user not found." });
+      return res.status(404).json({ message: "User not found." });
     }
 
     if (!user.twoFactorCode || !user.twoFactorCodeExpiry) {
       return res
         .status(400)
-        .json({ message: "no verification code found. please log in again." });
+        .json({ message: "No verification code found. Please log in again." });
     }
 
-    // Check if the code is still within its validity window
     if (new Date() > new Date(user.twoFactorCodeExpiry)) {
       user.twoFactorCode = undefined;
       user.twoFactorCodeExpiry = undefined;
       await user.save();
       return res.status(400).json({
-        message: "verification code has expired. please log in again.",
+        message: "Verification code has expired. Please log in again.",
       });
     }
 
-    // Compare provided code against stored code
     if (user.twoFactorCode !== code) {
-      return res.status(400).json({ message: "incorrect verification code." });
+      return res.status(400).json({ message: "Incorrect verification code." });
     }
 
-    // Activation: enable 2fa on the account and clear the used code
     user.twoFactorEnabled = true;
     user.twoFactorCode = undefined;
     user.twoFactorCodeExpiry = undefined;
     await user.save();
 
-    // Log 2FA enable
     await logActivity(req, "2FA_ENABLE", {
       targetId: userId,
       targetType: "user",
       description: "Enabled two-factor authentication",
     });
 
-    // Issue authentication tokens (JWT & Refresh) for the new session
+    const tokenExpiresIn = rememberMe ? "7d" : "24h";
+    const cookieMaxAgeMs = (rememberMe ? 7 : 1) * 24 * 60 * 60 * 1000;
+
     const token = jwt.sign(
       { userId: user._id, username: user.username, role: user.role },
       JWT_SECRET,
-      { expiresIn: "24h" },
+      { expiresIn: tokenExpiresIn },
     );
-    setAuthCookies(res, token);
+    setAuthCookies(res, token, cookieMaxAgeMs);
 
     return res.json({
-      message: "successfully logged in!",
+      message: "Successfully logged in!",
       user: {
         id: user._id,
         username: user.username,
@@ -231,8 +221,8 @@ export const verify2FA = async (
         user.role === RoleTypeValue.ADMIN ? "/admin/dashboard" : "/home",
     });
   } catch (error: any) {
-    logger.error(error, "verify 2fa error");
-    return res.status(500).json({ message: "internal server error." });
+    logger.error(error, "verify 2FA error");
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -253,7 +243,7 @@ export const verify2FA = async (
  * @response
  * ```json
  * {
- * "message": "two-factor authentication has been disabled successfully.",
+ * "message": "2FA has been disabled successfully.",
  * "twoFactorEnabled": false
  * }
  * ```
@@ -264,39 +254,57 @@ export const disable2FA = async (
 ): Promise<Response> => {
   try {
     const userId = req.user?.userId;
+    const { code } = req.body;
 
-    if (!userId) {
-      return res.status(401).json({ message: "unauthorized." });
-    }
+    if (!userId) return res.status(401).json({ message: "Unauthorized." });
 
-    // Fetch user and verify 2fa is currently enabled
     const user = await User.findById(userId);
     if (!user || !user.twoFactorEnabled) {
-      return res
-        .status(400)
-        .json({ message: "2fa is not enabled or user not found." });
+      return res.status(400).json({ message: "2FA is not enabled." });
     }
 
-    // Toggle 2fa off and clear any remaining code data
+    if (!code) {
+      const newCode = crypto.randomInt(100000, 999999).toString();
+      user.twoFactorCode = newCode;
+      user.twoFactorCodeExpiry = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+
+      const userLang = user.language || "en";
+      const [titleTrans, introTrans, securityNoteTrans, signatureTrans] = await Promise.all([
+        getDualTranslation("Disable MangoTree 2FA"),
+        getDualTranslation("To disable 2FA, please use the following verification code:"),
+        getDualTranslation("Warning: This will reduce your account security."),
+        getDualTranslation("Sincerely, the MangoTree team"),
+      ]);
+
+      const title = getLocalizedText(userLang, titleTrans);
+      const emailHtml = get2FAEmailTemplate({
+        title,
+        intro: getLocalizedText(userLang, introTrans),
+        code: newCode,
+        securityNote: getLocalizedText(userLang, securityNoteTrans),
+        signature: getLocalizedText(userLang, signatureTrans),
+      });
+
+      await sendEmail(user.email, title, emailHtml);
+      return res.json({ message: "Verification code sent to your email to confirm deactivation." });
+    }
+
+    if (user.twoFactorCode !== code || !user.twoFactorCodeExpiry || new Date() > new Date(user.twoFactorCodeExpiry)) {
+      return res.status(400).json({ message: "Invalid or expired code." });
+    }
+
     user.twoFactorEnabled = false;
     user.twoFactorCode = undefined;
     user.twoFactorCodeExpiry = undefined;
     await user.save();
 
-    // Log 2FA disable
-    await logActivity(req, "2FA_DISABLE", {
-      targetId: userId,
-      targetType: "user",
-      description: "Disabled two-factor authentication",
-    });
+    await logActivity(req, "2FA_DISABLE", { targetId: userId, targetType: "user", description: "Disabled 2FA via code verification" });
 
-    return res.json({
-      message: "two-factor authentication has been disabled successfully.",
-      twoFactorEnabled: false,
-    });
+    return res.json({ message: "2FA has been disabled successfully.", twoFactorEnabled: false });
   } catch (error: any) {
-    logger.error(error, "disable 2fa error");
-    return res.status(500).json({ message: "internal server error." });
+    logger.error(error, "disable 2FA error");
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -334,7 +342,7 @@ export const get2FAStatus = async (
       twoFactorEnabled: user.twoFactorEnabled || false,
     });
   } catch (error: any) {
-    logger.error(error, "get 2fa status error");
-    return res.status(500).json({ message: "internal server error." });
+    logger.error(error, "get 2FA status error");
+    return res.status(500).json({ message: "Internal server error." });
   }
 };

@@ -9,7 +9,8 @@ import React from 'react';
 /**
  * @interface LoginHeaderProps
  * @description Props for the LoginHeader component.
- * * @property {(path: string) => void} onNavigate - Callback function to handle routing (typically via useNavigate from react-router-dom).
+ *
+ * @property {(path: string) => void} onNavigate - Callback function to handle routing (typically via useNavigate from react-router-dom).
  */
 interface LoginHeaderProps {
   onNavigate: (path: string) => void;
@@ -19,7 +20,8 @@ interface LoginHeaderProps {
  * @component LoginHeader
  * @description Renders the top branding section of the authentication pages.
  * The entire header acts as a navigation button for a seamless return to the root path.
- * * @param {LoginHeaderProps} props - Component props.
+ *
+ * @param {LoginHeaderProps} props - Component props.
  * @returns {JSX.Element} The rendered login header section.
  */
 const LoginHeader: React.FC<LoginHeaderProps> = ({ onNavigate }) => {

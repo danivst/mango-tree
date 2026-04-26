@@ -63,10 +63,8 @@ const PasswordSettings: React.FC<any> = ({ t, showError, showSuccess }) => {
           {t("changePassword")}
         </button>
       </div>
-
       {showPasswordForm && (
         <form className="password-change-form" onSubmit={handleChangePassword}>
-          {/* Current Password */}
           <div className="form-group">
             <label className="form-label">{t("currentPassword")}</label>
             <div className="password-input-wrapper">
@@ -82,8 +80,6 @@ const PasswordSettings: React.FC<any> = ({ t, showError, showSuccess }) => {
               </button>
             </div>
           </div>
-
-          {/* New Password */}
           <div className="form-group">
             <label className="form-label">{t("newPassword")}</label>
             <div className="password-input-wrapper">
@@ -99,8 +95,6 @@ const PasswordSettings: React.FC<any> = ({ t, showError, showSuccess }) => {
               </button>
             </div>
           </div>
-
-          {/* Confirm Password */}
           <div className="form-group">
             <label className="form-label">{t("confirmPassword")}</label>
             <div className="password-input-wrapper">

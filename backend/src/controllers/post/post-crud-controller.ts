@@ -2,7 +2,7 @@
  * @file post-crud-controller.ts
  * @description Manages core Post lifecycle operations (CRUD).
  * Includes automated AI content moderation, multi-lingual translations (EN/BG),
- * tag processing, and complex notification logic for approvals and deletions.
+ * tag processing and complex notification logic for approvals and deletions.
  */
 
 import { Request, Response } from "express";
@@ -21,7 +21,7 @@ import logger from "../../utils/logger";
 /**
  * Creates a new post.
  * Processes title, content, images, categories, and tags. Includes AI moderation,
- * dual-language translation, and creates appropriate notifications for the author.
+ * dual-language translation and creates appropriate notifications for the author.
  *
  * @param req - AuthRequest with body { title, content, image?, category, tags? }
  * @param res - Express response object
@@ -122,7 +122,6 @@ export const createPost = async (
       likes: [],
     });
 
-    // Log activity: Post Creation
     await logActivity(req, "POST_CREATE", {
       targetId: post._id.toString(),
       targetType: "post",
@@ -277,7 +276,6 @@ export const updatePost = async (
       .populate("category", "name")
       .populate("tags");
 
-    // Log activity: Post Update
     await logActivity(req, "POST_UPDATE", {
       targetId: post.id.toString(),
       targetType: "post",
@@ -314,7 +312,7 @@ export const updatePost = async (
 
 /**
  * Retrieves all visible posts.
- * Fetches non-flagged content, populates author info, and aggregates comment counts.
+ * Fetches non-flagged content, populates author info and aggregates comment counts.
  *
  * @param req - Express request object
  * @param res - Express response object
@@ -441,7 +439,6 @@ export const deletePost = async (
     const postTitle = post.title;
     await Post.findByIdAndDelete(req.params.id);
 
-    // Log activity: Post Deletion
     await logActivity(req, "POST_DELETE", {
       targetId: req.params.id.toString(),
       targetType: "post",

@@ -35,7 +35,6 @@ export const getTags = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    // Sort by English name by default
     const tags = await Tag.find().sort({ "name.en": 1 });
     return res.json(tags);
   } catch (err: any) {
@@ -73,17 +72,14 @@ export const createTag = async (
 
     const { name } = req.body as { name: string };
 
-    // Translate the tag name before checking existence/creating
     const dualNames = await getDualTranslation(name);
 
-    // Check if tag exists (checking both languages to be safe)
     const exists = await Tag.findOne({
       $or: [{ "name.en": dualNames.en }, { "name.bg": dualNames.bg }],
     });
 
     if (exists) return res.status(400).json({ message: "Tag already exists." });
 
-    // Get user info for createdBy
     const userModel = await (await import("../models/user-model")).default;
     const user = await userModel.findById(req.user!.userId);
     const createdBy = user?.username || "System";
@@ -94,7 +90,6 @@ export const createTag = async (
       createdBy,
     });
 
-    // Log tag creation
     await logActivity(req, "TAG_CREATE", {
       targetId: tag._id.toString(),
       targetType: "tag",
@@ -115,7 +110,7 @@ export const createTag = async (
 
 /**
  * Updates a tag.
- * Re-translates the tag name and updates all references. restricted to Admins.
+ * Re-translates the tag name and updates all references. Restricted to Admins.
  *
  * @param req - AuthRequest with params { id } and body { name }
  * @param res - Express response object
@@ -144,7 +139,6 @@ export const updateTag = async (
     const { id } = req.params;
     const { name } = req.body as { name: string };
 
-    // Get new translations for the updated name
     const dualNames = await getDualTranslation(name);
 
     const tag = await Tag.findByIdAndUpdate(
@@ -158,7 +152,6 @@ export const updateTag = async (
 
     if (!tag) return res.status(404).json({ message: "Tag not found." });
 
-    // Log tag update
     await logActivity(req, "TAG_UPDATE", {
       targetId: tag.id.toString(),
       targetType: "tag",
@@ -202,7 +195,6 @@ export const deleteTag = async (
     const tag = await Tag.findByIdAndDelete(id);
     if (!tag) return res.status(404).json({ message: "Tag not found." });
 
-    // Log tag deletion
     await logActivity(req, "TAG_DELETE", {
       targetId: tag.id.toString(),
       targetType: "tag",

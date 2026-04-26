@@ -1,7 +1,7 @@
 /**
  * @file LoginForm.tsx
  * @description Login form component for username/password authentication.
- * Handles form validation display, loading states, and user interaction for login credentials.
+ * Handles form validation display, loading states and user interaction for login credentials.
  */
 
 import React from 'react';
@@ -70,7 +70,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="login-form">
-      {/* Username Field Group */}
       <div className="login-form-group">
         <label
           htmlFor="username"
@@ -90,8 +89,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
           <span className="login-error-message">{errors.username}</span>
         )}
       </div>
-
-      {/* Password Field Group */}
       <div className="login-form-group">
         <label
           htmlFor="password"
@@ -125,8 +122,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
           <span className="login-error-message">{errors.password}</span>
         )}
       </div>
-
-      {/* Persistence Options */}
       <div className="remember-me-group">
         <label htmlFor="remember-me" className="remember-me-label">
           {t("rememberMe")}
@@ -139,8 +134,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
           onChange={(e) => onRememberMeChange(e.target.checked)}
         />
       </div>
-
-      {/* Form Action Buttons */}
       <div className="login-form-actions">
         <button
           type="button"

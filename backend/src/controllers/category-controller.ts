@@ -37,7 +37,6 @@ export const getCategories = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    // Sorting by English name for consistency
     const categories = await Category.find().sort({ "translations.en": 1 });
     return res.json(categories);
   } catch (err: any) {
@@ -82,10 +81,8 @@ export const createCategory = async (
       return res.status(400).json({ message: "Category name is required." });
     }
 
-    // Automatically generate translations for the new category
     const translations = await getDualTranslation(name);
 
-    // Check if category already exists in either language
     const exists = await Category.findOne({
       $or: [
         { "translations.en": translations.en },
@@ -97,18 +94,16 @@ export const createCategory = async (
       return res.status(400).json({ message: "Category already exists." });
     }
 
-    // Get user info for createdBy
     const userModel = (await import("../models/user-model")).default;
     const user = await userModel.findById(req.user!.userId);
     const createdBy = user?.username || "System";
 
     const category = await Category.create({
-      name: translations.en, // Standardizing primary name to English
+      name: translations.en, 
       translations,
       createdBy,
     });
 
-    // Log category creation
     await logActivity(req, "CATEGORY_CREATE", {
       targetId: category._id.toString(),
       targetType: "category",
@@ -162,7 +157,6 @@ export const updateCategory = async (
       return res.status(400).json({ message: "Category name is required." });
     }
 
-    // Re-generate translations for the updated name
     const translations = await getDualTranslation(name);
 
     const category = await Category.findByIdAndUpdate(
@@ -178,7 +172,6 @@ export const updateCategory = async (
       return res.status(404).json({ message: "Category not found." });
     }
 
-    // Log category update
     await logActivity(req, "CATEGORY_UPDATE", {
       targetId: category.id.toString(),
       targetType: "category",
@@ -225,7 +218,6 @@ export const deleteCategory = async (
       return res.status(404).json({ message: "Category not found." });
     }
 
-    // Log category deletion
     await logActivity(req, "CATEGORY_DELETE", {
       targetId: category.id.toString(),
       targetType: "category",

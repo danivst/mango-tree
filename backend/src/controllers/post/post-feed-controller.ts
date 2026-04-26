@@ -1,7 +1,7 @@
 /**
  * @file post-feed-controller.ts
  * @description Manages post discovery and feed generation. 
- * Handles personalized home feeds, followed user content, full-text search with regex fallback, 
+ * Handles personalized home feeds, followed user content, full-text search with regex fallback 
  * and a weighted recommendation engine for suggested content.
  */
 
@@ -190,7 +190,7 @@ export const searchPosts = async (
     ).lean();
     const textMatchedIds = textMatchedPosts.map(p => p._id);
 
-    // Combined query using $in instead of $text inside $or
+    // Combined query using $in for both text and tag matches, with visibility and approval filters
     const finalQuery = {
       $or: [
         { _id: { $in: textMatchedIds } },
@@ -341,7 +341,7 @@ export const getFollowedPosts = async (
 
 /**
  * Retrieves weighted content suggestions.
- * Algorithm considers liked categories, tag overlap, and global popularity.
+ * Algorithm considers liked categories, tag overlap and global popularity.
  *
  * @param req - AuthRequest with query { limit, skip }
  * @param res - Express response object
@@ -417,7 +417,6 @@ export const getSuggestedPosts = async (
       let score = 0;
       const postCategory = post.category?._id?.toString() || post.category?.toString();
       
-      // Post tags are objects after population, use _id
       const postTagIds = Array.isArray(post.tags)
         ? post.tags.map((t: any) => t._id?.toString() || t.toString())
         : [];

@@ -2,7 +2,7 @@
  * @file Home.tsx
  * @description Main feed page for authenticated users.
  * Orchestrates dual-mode content delivery ("Followed" vs "Suggested"),
- * real-time feed searching with debouncing, and infinite pagination.
+ * real-time feed searching with debouncing and infinite pagination.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -19,52 +19,32 @@ import Snackbar from "../../../components/snackbar/Snackbar";
 import Footer from "../../../components/global/Footer";
 import { useSnackbar } from "../../../utils/snackbar";
 
-// MUI Icon Imports
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 
 /**
  * @component Home
- * @description Main feed page showing posts from followed users and suggested posts.
- * Dual-mode feed: "Followed" (from users you follow) and "Suggested" (popular/recommended).
- * Supports infinite scroll, search within feed, and real-time post translation.
- *
- * Features:
- * - Tab switching between Followed and Suggested feeds
- * - Infinite scroll pagination (20 posts per page)
- * - Search posts within current feed
- * - Post translation toggle (via PostCard component)
- * - Empty state handling
- * - Error handling with snackbar
- * - Auto-refresh on route changes
- *
- * Route: /home and /home/suggested
- * Access: Authenticated users only
- * URL Params: ?search=... for initial search query
- *
+ * @description Main feed page for followed and suggested posts.
  * @page
- * @requires useNavigate - Programmatic navigation
- * @requires useThemeLanguage - Language detection for translation
- * @requires postsAPI - Feed fetching, search, translation
- * @requires PostCard - Post preview component
- * @requires UserSidebar - Navigation sidebar
- * @returns {JSX.Element} The rendered Home feed component
+ * @requires useNavigate - Handles route changes between feed views.
+ * @requires useThemeLanguage - Provides translations.
+ * @requires postsAPI - Fetches feed data and translations.
+ * @requires PostCard - Renders post previews.
+ * @requires UserSidebar - Renders the user navigation sidebar.
+ * @returns {JSX.Element} The rendered home feed.
  */
 const Home = () => {
   const { language } = useThemeLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Memoize translations function
   const t = useCallback(
     (key: string) => getTranslation(language, key),
     [language],
   );
 
-  // Get current user ID from auth hook
   const currentUserId = user?._id;
 
-  // Feed state
   const [feedPosts, setFeedPosts] = useState<Post[]>([]);
   const [feedHasMore, setFeedHasMore] = useState(true);
   const [feedLoading, setFeedLoading] = useState(false);
@@ -77,7 +57,6 @@ const Home = () => {
     activeSection,
   );
 
-  // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Post[]>([]);
@@ -86,10 +65,8 @@ const Home = () => {
   const [searchPage, setSearchPage] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Snackbar
   const { snackbar, showError, closeSnackbar } = useSnackbar();
 
-  // Debounce search input (500ms for better performance)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
@@ -97,10 +74,8 @@ const Home = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Handle search query changes
   useEffect(() => {
     if (debouncedSearchQuery.trim() === "") {
-      // Clear search results when query is empty
       setSearchResults([]);
       setSearchHasMore(false);
       setSearchPage(0);
@@ -134,7 +109,6 @@ const Home = () => {
     fetchSearchResults();
   }, [debouncedSearchQuery, t, showError]);
 
-  // Load followed posts
   const loadFollowedPosts = useCallback(async () => {
     try {
       setFeedLoading(true);
@@ -154,7 +128,6 @@ const Home = () => {
     }
   }, []);
 
-  // Load suggested posts
   const loadSuggestedPosts = useCallback(async () => {
     try {
       setFeedLoading(true);
@@ -172,7 +145,6 @@ const Home = () => {
     }
   }, []);
 
-  // Load initial feed
   const loadInitialFeed = useCallback(async () => {
     setFeedLoading(true);
     try {
@@ -207,7 +179,6 @@ const Home = () => {
     }
   }, [t, showError]);
 
-  // Load more feed posts
   const loadMoreFeed = useCallback(async () => {
     if (feedLoading || !feedHasMore || isSearching) return;
 
@@ -259,7 +230,6 @@ const Home = () => {
     showError,
   ]);
 
-  // Load more search results
   const loadMoreSearch = useCallback(async () => {
     if (searchLoading || !searchHasMore || !isSearching) return;
 
@@ -300,7 +270,6 @@ const Home = () => {
     showError,
   ]);
 
-  // Switch section handler
   const handleSectionSwitch = useCallback(
     (section: "followed" | "suggested") => {
       if (section === activeSection) return;
@@ -327,14 +296,12 @@ const Home = () => {
     }
   }, [currentUserId, isSearching, loadInitialFeed]);
 
-  // Loading spinner sub-component
   const LoadingSpinner = () => (
     <div className="loading-spinner">
       <RefreshIcon className="spin" sx={{ fontSize: 32 }} />
     </div>
   );
 
-  // No results sub-component
   const NoResults = ({ message }: { message: string }) => (
     <div className="no-results">
       <SearchOffIcon sx={{ fontSize: 48, opacity: 0.5 }} />
@@ -342,7 +309,6 @@ const Home = () => {
     </div>
   );
 
-  // Search Mode View
   if (isSearching) {
     return (
       <div className="home-container">
@@ -361,7 +327,6 @@ const Home = () => {
               />
             </div>
           </div>
-
           {searchLoading && searchResults.length === 0 ? (
             <LoadingSpinner />
           ) : searchResults.length === 0 ? (
@@ -391,7 +356,6 @@ const Home = () => {
               )}
             </>
           )}
-
           <Snackbar
             message={snackbar.message}
             type={snackbar.type}
@@ -404,7 +368,6 @@ const Home = () => {
     );
   }
 
-  // Personalized Feed View
   return (
     <div className="home-container">
       <UserSidebar />
@@ -421,7 +384,6 @@ const Home = () => {
             />
           </div>
         </div>
-
         {hasFollowedPosts && (
           <div className="feed-tabs">
             <button
@@ -438,7 +400,6 @@ const Home = () => {
             </button>
           </div>
         )}
-
         {feedLoading && feedPosts.length === 0 ? (
           <LoadingSpinner />
         ) : feedPosts.length === 0 && !feedLoading ? (
@@ -455,13 +416,11 @@ const Home = () => {
                 <p className="welcome-text">{t("welcomeMessage")}</p>
               </div>
             )}
-
             <div className="cards-grid">
               {feedPosts.map((post) => (
                 <PostCard key={post._id} post={post} />
               ))}
             </div>
-
             {feedLoading && feedPosts.length > 0 && <LoadingSpinner />}
             {!feedLoading && feedHasMore && (
               <button
@@ -477,7 +436,6 @@ const Home = () => {
             )}
           </>
         )}
-
         <Snackbar
           message={snackbar.message}
           type={snackbar.type}

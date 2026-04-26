@@ -23,9 +23,6 @@ import { auth } from "../utils/auth";
 const router: Router = express.Router();
 
 /**
- * Comment creation and retrieval routes.
- */
-/**
  * @route POST /
  * @description Create a new comment or reply
  * @body {postId, text, parentCommentId? (for replies)}
@@ -50,10 +47,6 @@ router.get("/post/:postId", auth, getCommentsByPost);
 router.get("/:id", auth, getComment);
 
 /**
- * Comment management routes (edit/delete).
- * Typically restricted to comment author or admin.
- */
-/**
  * @route PUT /:id
  * @description Update a comment's text
  * @param {string} id - Comment ID
@@ -70,9 +63,6 @@ router.put("/:id", auth, updateComment);
  */
 router.delete("/:id", auth, deleteComment);
 
-/**
- * Social interaction and utility routes.
- */
 /**
  * @route POST /:id/like
  * @description Like a comment

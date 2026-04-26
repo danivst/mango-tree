@@ -1,18 +1,6 @@
 /**
  * @file SetupPassword.tsx
- * @description Page for setting a new password after account creation or invitation.
- * Users arrive via email link with a temporary token. They must set a permanent password.
- *
- * Features:
- * - Token validation from URL query param
- * - Password complexity requirements (8+ chars, uppercase, lowercase, number, special)
- * - Password confirmation field
- * - Show/hide password toggles using MUI Icons
- * - Real-time validation with error messages
- * - Success redirects to login page
- *
- * Route: /setup-password?token=...
- * Access: Public (but requires valid token)
+ * @description Page for setting a new password from an email token.
  */
 
 import { useState, useEffect } from 'react';
@@ -26,19 +14,17 @@ import { validatePassword, validatePasswordMatch } from '../../../../utils/valid
 import '../../Login.css';
 import './SetupPassword.css';
 
-// MUI Icon Imports
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 /**
  * @component SetupPassword
- * @description Renders the password setup interface. 
- * Validates the security token on mount and enforces strong password policies.
- * * @requires useSearchParams - Access token from URL
- * @requires useNavigate - Redirect after success
- * @requires useThemeLanguage - Translations
- * @requires api - POST /auth/setup-password
- * @returns {JSX.Element} The rendered password setup page
+ * @description Renders the password setup interface and validates the token on load.
+ * @requires useSearchParams - Reads the token from the URL.
+ * @requires useNavigate - Redirects after success.
+ * @requires useThemeLanguage - Provides translations.
+ * @requires api - Submits the password setup request.
+ * @returns {JSX.Element} The rendered password setup page.
  */
 const SetupPassword = () => {
   const [searchParams] = useSearchParams();
@@ -54,10 +40,6 @@ const SetupPassword = () => {
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
 
-  /**
-   * Effect: Validate token presence on mount.
-   * If token is missing, alerts the user and redirects to login.
-   */
   useEffect(() => {
     if (!token) {
       showError(t('invalidOrMissingToken'));
@@ -87,7 +69,6 @@ const SetupPassword = () => {
     setLoading(true);
     setErrors({});
 
-    // Use Centralized Password Validator
     const passwordError = validatePassword(password);
     if (passwordError) {
       setErrors({ password: t(passwordError) });
@@ -95,7 +76,6 @@ const SetupPassword = () => {
       return;
     }
 
-    // Use Centralized Match Validator
     const matchError = validatePasswordMatch(password, confirmPassword);
     if (matchError) {
       setErrors({ confirmPassword: t(matchError) });
@@ -131,11 +111,8 @@ const SetupPassword = () => {
           <img src="/mangotree-logo.png" alt="MangoTree" className="logo-placeholder" />
           <h1 className="login-title">MangoTree</h1>
         </div>
-
         <form onSubmit={handleSubmit} className="login-form">
           <h2 className="modal-title setup-password-title">Set Your Password</h2>
-          
-          {/* New Password Field */}
           <div className="form-group">
             <label htmlFor="password" className={`form-label ${errors.password ? 'label-error' : ''}`}>
               Password
@@ -169,8 +146,6 @@ const SetupPassword = () => {
             </div>
             {errors.password && <span className="error-message">{errors.password}</span>}
           </div>
-
-          {/* Confirm Password Field */}
           <div className="form-group">
             <label htmlFor="confirmPassword" className={`form-label ${errors.confirmPassword ? 'label-error' : ''}`}>
               Confirm Password
@@ -204,8 +179,6 @@ const SetupPassword = () => {
             </div>
             {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
           </div>
-
-          {/* Form Actions */}
           <div className="form-actions">
             <button
               type="button"
@@ -224,7 +197,6 @@ const SetupPassword = () => {
           </div>
         </form>
       </div>
-
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

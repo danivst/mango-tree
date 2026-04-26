@@ -2,7 +2,7 @@
  * @file UserProfile.tsx
  * @description Public user profile page showing another user's profile and posts.
  * Displays user info (username, bio, join date, stats) and their published posts.
- * Provides interactive features such as following/unfollowing, reporting users,
+ * Provides interactive features such as following/unfollowing, reporting users
  * and category-based post filtering.
  */
 
@@ -29,7 +29,6 @@ import ShareButton from "../../../components/buttons/share/ShareButton";
 import PastUsernames from "../../../components/user/PastUsernames";
 import Footer from "../../../components/global/Footer";
 
-// MUI Icon Imports
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ErrorIcon from "@mui/icons-material/Error";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -41,19 +40,12 @@ import ArticleIcon from "@mui/icons-material/Article";
 
 /**
  * @component UserProfile
- * @description Renders the profile view of a specific user based on the route parameter.
- * Handles data fetching for user metadata and authored posts, while managing
- * social interaction states like following and reporting.
- * * Features:
- * - Publicly accessible profile data
- * - Follow/Unfollow logic with optimistic UI updates
- * - Post visibility filtered by approval status (for external viewers)
- * - Category-specific post browsing
- * * @page
- * @requires useParams - Extracts the user ID from the URL
- * @requires useSnackbar - Standardized toast notifications
- * @requires useThemeLanguage - UI translation and theme context
- * @returns {JSX.Element} The rendered public user profile page
+ * @description Renders a public user profile and that user's posts.
+ * @page
+ * @requires useParams - Extracts the user ID from the URL.
+ * @requires useSnackbar - Shows toast notifications.
+ * @requires useThemeLanguage - Provides translations and theme state.
+ * @returns {JSX.Element} The rendered public user profile page.
  */
 const UserProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -64,10 +56,6 @@ const UserProfile = () => {
 
   const currentUserId = currentUser?._id;
 
-  /**
-   * Sub-component: LoadingSpinner
-   * Standardized spinner for data loading states.
-   */
   const LoadingSpinner = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => (
     <div className={`loading-spinner loading-spinner-${size}`}>
       <RefreshIcon
@@ -365,7 +353,6 @@ const UserProfile = () => {
           <div className="mb-6">
             <GoBackButton />
           </div>
-
           <div className="profile-header">
             <div className="profile-pic-container">
               {user.profileImage ? (
@@ -382,7 +369,6 @@ const UserProfile = () => {
                 </div>
               )}
             </div>
-
             <div className="profile-info">
               <div className="profile-actions">
                 <h1 className="username-heading">@{user.username}</h1>
@@ -423,7 +409,6 @@ const UserProfile = () => {
               <p className="member-since">
                 {t("memberSince")}: {formatDate(user.createdAt)}
               </p>
-
               <div className="profile-stats">
                 <div className="stat-item">
                   <div className="stat-value">
@@ -446,7 +431,6 @@ const UserProfile = () => {
               </div>
             </div>
           </div>
-
           {user.bio && (
             <div className="mb-6">
               <div className="bio-section-header">
@@ -477,16 +461,13 @@ const UserProfile = () => {
               </p>
             </div>
           )}
-
           {user.pastUsernames && user.pastUsernames.length > 0 && (
             <PastUsernames
               pastUsernames={user.pastUsernames}
               className="mb-6"
             />
           )}
-
           <hr className="page-divider" />
-
           {specialCategories.length > 0 && (
             <div className="category-tabs">
               <button
@@ -506,7 +487,6 @@ const UserProfile = () => {
               ))}
             </div>
           )}
-
           {filteredPosts.length === 0 ? (
             <EmptyState
               icon={<ArticleIcon sx={{ fontSize: 48, opacity: 0.5 }} />}
@@ -522,7 +502,6 @@ const UserProfile = () => {
             </div>
           )}
         </div>
-
         <ConfirmationModal
           isOpen={showReportModal}
           type="warning"
@@ -537,7 +516,6 @@ const UserProfile = () => {
           onCancel={() => setShowReportModal(false)}
           isLoading={reportSubmitting}
         />
-
         <Snackbar
           message={snackbar.message}
           type={snackbar.type}

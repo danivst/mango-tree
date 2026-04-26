@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react";
 
 export let BASE_API_URL: string;
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   BASE_API_URL = env.BASE_API_URL;

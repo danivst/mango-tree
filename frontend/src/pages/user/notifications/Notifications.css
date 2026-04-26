@@ -1,6 +1,7 @@
-/* ============================================
-   NOTIFICATIONS PAGE
-   ============================================ */
+/**
+ * @file Notifications.css
+ * @description Styles for the notifications page
+ */
 
 .notifications-container {
   display: flex;
@@ -131,9 +132,6 @@
   }
 }
 
-/* Confirm dialog modal overrides */
-
-/* Delete notification button - matches comment delete style */
 .notification-delete-btn {
   display: flex;
   align-items: center;

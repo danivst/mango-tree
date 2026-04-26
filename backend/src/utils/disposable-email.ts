@@ -1,7 +1,8 @@
 /**
  * A comprehensive set of known disposable (temporary) email provider domains.
  * This list is used to identify and filter out short-lived accounts during registration.
- * * @constant {Set<string>}
+ * 
+ * @constant {Set<string>}
  */
 const disposableDomains = new Set([
   "mailinator.com",
@@ -26,9 +27,11 @@ const disposableDomains = new Set([
 
 /**
  * Validates whether a given email address belongs to a known disposable email provider.
- * * @param {string} email - The full email address to check (e.g., "user@example.com").
+ *  
+ * @param {string} email - The full email address to check (e.g., "user@example.com").
  * @returns {boolean} - Returns true if the domain is found in the disposable list, otherwise false.
- * * @example
+ * 
+ * @example
  * isDisposableEmail("test@mailinator.com"); // returns true
  * isDisposableEmail("user@gmail.com");     // returns false
  */

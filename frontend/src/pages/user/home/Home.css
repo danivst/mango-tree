@@ -1,13 +1,13 @@
-/* ============================================
-   HOME PAGE
-   ============================================ */
+/**
+ * @file Home.css
+ * @description Styles for the home page
+ */
 
 .home-container {
   display: flex;
   min-height: 100vh;
 }
 
-/* Feed Tabs */
 .feed-tabs {
   display: flex;
   gap: 16px;
@@ -39,7 +39,6 @@
   opacity: 0.8;
 }
 
-/* Welcome Section */
 .welcome-section {
   margin-bottom: 24px;
 }
@@ -59,7 +58,6 @@
   margin: 0;
 }
 
-/* Loading Spinner */
 .loading-spinner {
   text-align: center;
   padding: 20px;
@@ -71,7 +69,6 @@
   color: var(--theme-text);
 }
 
-/* Search results count */
 .search-results-count {
   font-size: 14px;
   color: var(--theme-text);
@@ -131,7 +128,6 @@
   }
 }
 
-/* Very small phones: stack feed tabs vertically */
 @media (max-width: 480px) {
   .feed-tabs {
     overflow-x: hidden;
@@ -148,9 +144,6 @@
   }
 }
 
-/* Infinite scroll sentinel (removed, using button instead) */
-
-/* Load More Button */
 .load-more-button {
   display: block;
   margin: 24px auto;
@@ -180,7 +173,6 @@
   cursor: not-allowed;
 }
 
-/* No more posts message */
 .no-more-posts {
   text-align: center;
   padding: 16px;

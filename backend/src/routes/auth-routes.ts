@@ -1,7 +1,7 @@
 /**
  * @file auth-routes.ts
  * @description Authentication and authorization API routes.
- * Handles user registration, login, 2FA verification, and password management.
+ * Handles user registration, login, 2FA verification and password management.
  *
  * Base path: /api/auth
  */
@@ -15,9 +15,6 @@ import { verify2FA } from "../controllers/2fa-controller";
 
 const router: Router = express.Router();
 
-/**
- * Public authentication routes (no authentication required).
- */
 /**
  * @route POST /register
  * @description Register a new user account
@@ -43,9 +40,6 @@ router.post("/login", authController.loginUser);
 router.post("/2fa/verify", verify2FA);
 
 /**
- * Admin registration routes (require admin authentication).
- */
-/**
  * @route POST /register-admin
  * @description Create a new admin account (admin only)
  * @body {email}
@@ -58,9 +52,6 @@ router.post(
   authController.registerAdmin,
 );
 
-/**
- * Password management routes (require authentication).
- */
 /**
  * @route POST /change-password
  * @description Change password for authenticated user

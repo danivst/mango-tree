@@ -27,11 +27,9 @@ import {
 } from "../../../components/admin/table";
 
 const BannedUsers = () => {
-  // Access centralized admin data and state from context
   const { bannedUsers, bannedUsersState, fetchBannedUsers } = useAdminData();
   const { loading, error, hasFetched } = bannedUsersState;
 
-  // Fetch banned users on initial load (avoid requiring manual refresh)
   useEffect(() => {
     if (!hasFetched && !loading) {
       fetchBannedUsers().catch(() => {
@@ -40,18 +38,15 @@ const BannedUsers = () => {
     }
   }, [hasFetched, loading, fetchBannedUsers]);
 
-  // Local UI state for filtering and searching
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   
-  // State to track which user's ban reason is expanded in the table
   const [expandedReasonId, setExpandedReasonId] = useState<string | null>(null);
   
   const { language } = useThemeLanguage();
   const t = (key: string) => getTranslation(language, key);
 
-  // Table state for sorting and pagination
   const [sortState, setSortState] = useState<SortState>({
     column: null,
     direction: null,
@@ -59,7 +54,6 @@ const BannedUsers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Feedback and Modal state management
   const { snackbar, showSuccess, showError, closeSnackbar } = useSnackbar();
   const [unbanUserId, setUnbanUserId] = useState<string | null>(null);
   const [showUnbanConfirm, setShowUnbanConfirm] = useState(false);
@@ -76,18 +70,11 @@ const BannedUsers = () => {
   >(null);
   const [deleteReason, setDeleteReason] = useState("");
 
-  /**
-   * Effect: Reset to the first page and collapse expanded reasons 
-   * whenever search criteria or date filters change.
-   */
   useEffect(() => {
     setCurrentPage(1);
     setExpandedReasonId(null);
   }, [searchQuery, dateFrom, dateTo]);
 
-  /**
-   * Memoized logic to filter the banned users list.
-   */
   const filteredData = useMemo(() => {
     let filtered = bannedUsers;
 
@@ -121,9 +108,6 @@ const BannedUsers = () => {
     return filtered;
   }, [searchQuery, dateFrom, dateTo, bannedUsers]);
 
-  /**
-   * Memoized logic to sort the filtered dataset.
-   */
   const sortedData = useMemo(() => {
     return sortData(
       filteredData,
@@ -234,9 +218,6 @@ const BannedUsers = () => {
     return bannedUsers.find((user) => user._id === deleteUserId);
   }, [deleteUserId, bannedUsers]);
 
-  /**
-   * Column definitions for the AdminTable.
-   */
   const columns: ColumnDef<any>[] = [
     {
       key: "username",
@@ -305,7 +286,6 @@ const BannedUsers = () => {
   return (
     <div>
       <h1 className="page-container-title">{t("bannedUsers")}</h1>
-
       <AdminTable<any>
         data={paginatedData}
         currentPage={currentPage}
@@ -365,8 +345,6 @@ const BannedUsers = () => {
           </div>
         )}
       />
-
-      {/* Unban Confirmation Modal */}
       {showUnbanConfirm && userToUnban && (
         <div className="modal-overlay">
           <div className="modal modal-danger">
@@ -391,8 +369,6 @@ const BannedUsers = () => {
           </div>
         </div>
       )}
-
-      {/* Delete User Modal - Multi-step Flow */}
       {deleteStep && userToDelete && (
         <div className="modal-overlay">
           <div className="modal modal-danger">
@@ -419,7 +395,6 @@ const BannedUsers = () => {
                 </div>
               </>
             )}
-
             {deleteStep === "reason" && (
               <>
                 <h2 className="modal-title">{t("adminReasonForDeletion")}</h2>
@@ -457,7 +432,6 @@ const BannedUsers = () => {
                 </form>
               </>
             )}
-
             {deleteStep === "confirm" && (
               <>
                 <h2 className="modal-title">{t("adminConfirmDeletion")}</h2>
@@ -485,7 +459,6 @@ const BannedUsers = () => {
           </div>
         </div>
       )}
-
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

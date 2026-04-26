@@ -1,14 +1,13 @@
-/* ============================================
-   POST PAGE STYLES
-   ============================================ */
+/**
+ * @file Post.css
+ * @description Styles for the post page
+ */
 
-/* Post page container */
 .post-container {
   display: flex;
   min-height: 100vh;
 }
 
-/* Comment Item Styles */
 .comment-item {
   background: var(--theme-bg);
   border-radius: 12px;
@@ -23,7 +22,7 @@
 
 @keyframes highlight-comment {
   0% {
-    background-color: rgba(255, 215, 0, 0.6); /* Gold highlight */
+    background-color: rgba(255, 215, 0, 0.6);
   }
   100% {
     background-color: var(--theme-bg);
@@ -89,7 +88,6 @@
   margin-left: auto;
 }
 
-/* Like button variant - static base, dynamic colors via inline */
 .btn-like {
   font-size: 12px;
   border: 1px solid rgba(0,0,0,0.1);
@@ -101,7 +99,6 @@
   background: rgba(224, 36, 94, 0.1);
 }
 
-/* Reply button variant */
 .btn-reply {
   font-size: 12px;
   border: 1px solid rgba(0,0,0,0.1);
@@ -109,7 +106,6 @@
   background: transparent;
 }
 
-/* Toggle replies button */
 .btn-toggle {
   font-size: 12px;
   border: 1px solid rgba(0,0,0,0.1);
@@ -117,7 +113,6 @@
   background: transparent;
 }
 
-/* Report button variant */
 .btn-report {
   font-size: 12px;
   border: 1px solid #ff9800;
@@ -127,7 +122,6 @@
   justify-content: center;
 }
 
-/* Delete button variant */
 .btn-delete {
   font-size: 12px;
   border: 1px solid #a50104;
@@ -204,7 +198,6 @@
   margin-top: 12px;
 }
 
-/* Main Post Styles */
 .page-section {
   margin-bottom: 24px;
 }
@@ -445,12 +438,10 @@
   gap: 16px;
 }
 
-/* Nested comment adjustments */
 .comment-item.nested {
   margin-left: 20px;
 }
 
-/* Button variants for comment actions */
 .btn-comment-action {
   display: flex;
   align-items: center;
@@ -491,7 +482,6 @@
   background: rgba(165, 1, 4, 0.1);
 }
 
-/* Category badge on post */
 .category-badge {
   font-size: 13px;
   font-weight: 700;
@@ -501,7 +491,6 @@
   border: 2px solid;
 }
 
-/* Translate button on post */
 .post-translate-btn {
   display: flex;
   align-items: center;
@@ -518,7 +507,6 @@
   font-family: 'Poppins', sans-serif;
 }
 
-/* Sticky top for edit bar */
 .sticky-top {
     position: sticky;
     top: 0;
@@ -526,7 +514,6 @@
     z-index: 100;
 }
 
-/* Tag dropdown and search integration */
 .tag-dropdown {
     position: absolute;
     top: 100%;
@@ -598,11 +585,10 @@
     display: none;
 }
 
-/* Ensure the label has its own line and spacing */
 .edit-mode-category {
     display: flex;
-    flex-direction: column; /* Stack label on top of selector */
-    gap: 8px;               /* Space between label and dropdown */
+    flex-direction: column; 
+    gap: 8px;               
     margin-bottom: 1.5rem;
 }
 

@@ -49,7 +49,6 @@ const DeleteAccount: React.FC<any> = ({ user, isAdmin, t, showError }) => {
           </button>
         )}
       </div>
-
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal modal-danger">

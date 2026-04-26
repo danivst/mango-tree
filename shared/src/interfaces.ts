@@ -1,7 +1,6 @@
 /**
  * @file interfaces.ts
  * @description Shared interfaces used across frontend and backend.
- * These interfaces are simplified for cross-platform compatibility.
  */
 
 import {
@@ -17,13 +16,9 @@ import {
   TagTranslations,
 } from "./types";
 
-// ============================================================================
-// User Interfaces
-// ============================================================================
-
 /**
- * Backend Mongoose document interface for User model.
- * Note: This is simplified for shared usage - backend should extend with Mongoose.Document
+ * @interface IUser
+ * @description Shared user document shape.
  */
 export interface IUser {
   _id: string;
@@ -58,8 +53,8 @@ export interface IUser {
 }
 
 /**
- * Represents a user account in the MangoTree application.
- * This is the public-facing user data returned by most API endpoints.
+ * @interface User
+ * @description Public-facing user data returned by most API endpoints.
  */
 export interface User {
   _id: string;
@@ -81,8 +76,8 @@ export interface User {
 }
 
 /**
- * Detailed profile information for the authenticated user.
- * Extends basic User with social connections and preferences.
+ * @interface UserProfile
+ * @description Authenticated user profile data with preferences and social connections.
  */
 export interface UserProfile {
   _id: string;
@@ -109,13 +104,9 @@ export interface UserProfile {
   }[];
 }
 
-// ============================================================================
-// Notification Interfaces
-// ============================================================================
-
 /**
- * Backend Mongoose document interface for Notification model.
- * Note: This is simplified for shared usage - backend should extend with Mongoose.Document
+ * @interface INotification
+ * @description Shared notification document shape.
  */
 export interface INotification {
   _id: string;
@@ -134,7 +125,8 @@ export interface INotification {
 }
 
 /**
- * An in-app notification sent to a user.
+ * @interface Notification
+ * @description In-app notification data returned to the client.
  */
 export interface Notification {
   _id: string;
@@ -150,13 +142,9 @@ export interface Notification {
   updatedAt?: string;
 }
 
-// ============================================================================
-// Content Types (Post, Comment, Category, Tag)
-// ============================================================================
-
 /**
- * Backend Mongoose document interface for Post model.
- * Note: This is simplified for shared usage - backend should extend with Mongoose.Document
+ * @interface IPost
+ * @description Shared post document shape.
  */
 export interface IPost {
   _id: string;
@@ -184,8 +172,8 @@ export interface IPost {
 }
 
 /**
- * A user's post in the MangoTree application.
- * Includes content, media, categorization, and engagement metrics.
+ * @interface Post
+ * @description Post data returned to clients.
  */
 export interface Post {
   _id: string;
@@ -232,7 +220,8 @@ export interface Post {
 }
 
 /**
- * A comment on a post, with optional nested replies.
+ * @interface Comment
+ * @description Comment data with optional nested replies.
  */
 export interface Comment {
   _id: string;
@@ -256,7 +245,8 @@ export interface Comment {
 }
 
 /**
- * Content category for organizing posts.
+ * @interface Category
+ * @description Content category data.
  */
 export interface Category {
   _id: string;
@@ -268,7 +258,8 @@ export interface Category {
 }
 
 /**
- * Tag that can be associated with posts for categorization.
+ * @interface Tag
+ * @description Tag data that can be associated with posts.
  */
 export interface Tag {
   _id: string;
@@ -280,12 +271,10 @@ export interface Tag {
   updatedAt?: string;
 }
 
-// ============================================================================
-// Moderation & Reporting Types
-// ============================================================================
-
 /**
- * A content report submitted by a user.
+/**
+ * @interface Report
+ * @description Content report submitted by a user.
  */
 export interface Report {
   _id: string;
@@ -305,8 +294,8 @@ export interface Report {
 }
 
 /**
- * Represents a user who has been banned from the platform.
- * Stored in separate collection to preserve historical records.
+ * @interface BannedUser
+ * @description Banned user record preserved for moderation history.
  */
 export interface BannedUser {
   _id: string;
@@ -318,8 +307,8 @@ export interface BannedUser {
 }
 
 /**
- * Content flagged for admin review (AI moderation queue).
- * Not a backend model; constructed for admin UI.
+ * @interface FlaggedContent
+ * @description Content flagged for admin review.
  */
 export interface FlaggedContent {
   _id: string;
@@ -332,13 +321,10 @@ export interface FlaggedContent {
   createdAt: string;
 }
 
-// ============================================================================
-// Authentication Types
-// ============================================================================
-
 /**
- * Payload structure for JWT tokens.
- * Contains user identity and role information for authentication.
+/**
+ * @interface JwtPayload
+ * @description JWT payload data.
  */
 export interface JwtPayload {
   userId: string;
@@ -347,8 +333,8 @@ export interface JwtPayload {
 }
 
 /**
- * Response structure for successful login/registration.
- * With HttpOnly cookies, tokens are no longer returned in the response.
+ * @interface LoginResponse
+ * @description Response returned after successful login or registration.
  */
 export interface LoginResponse {
   message?: string;
@@ -367,7 +353,8 @@ export interface LoginResponse {
 }
 
 /**
- * Generic error response from API.
+ * @interface ErrorResponse
+ * @description Generic API error response.
  */
 export interface ErrorResponse {
   message: string;

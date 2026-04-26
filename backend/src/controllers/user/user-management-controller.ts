@@ -2,7 +2,7 @@
  * @file user-management-controller.ts
  * @description Administrative and self-service user management. 
  * Handles user/admin retrieval, account termination logic, automated 
- * bilingual email notifications, and deep database cleanup for deleted users.
+ * bilingual email notifications and deep database cleanup for deleted users.
  */
 
 import { Response } from "express";
@@ -23,7 +23,12 @@ import LanguageTypeValue from "../../enums/language-type";
 
 /**
  * Retrieves all regular users.
- * Excludes admins, banned accounts, and the requester.
+ * Excludes admins, banned accounts, and the requester from the list.
+ *  
+ * @param req - AuthRequest
+ * @param res - Express response object
+ * @returns Response with array of sanitized user objects
+ * @throws {Error} Database error
  */
 export const getAllUsers = async (
   req: AuthRequest,
@@ -49,7 +54,12 @@ export const getAllUsers = async (
 
 /**
  * Retrieves all administrator accounts.
- * Restricted to current admins.
+ * Restricted to current admins only.
+ *  
+ * @param req - AuthRequest
+ * @param res - Express response object
+ * @returns Response with array of sanitized admin objects
+ * @throws {Error} 403 if requester is not an admin
  */
 export const getAllAdmins = async (
   req: AuthRequest,
@@ -74,7 +84,12 @@ export const getAllAdmins = async (
 };
 
 /**
- * Retrieves regular users for search.
+ * Retrieves regular users for search or discovery.
+ * Filters out banned users and the current requester.
+ * 
+ * @param req - AuthRequest
+ * @param res - Express response object
+ * @returns Response with list of active regular users
  */
 export const getRegularUsers = async (
   req: AuthRequest,
@@ -99,9 +114,20 @@ export const getRegularUsers = async (
 };
 
 /**
- * Deletes a user account.
- * Permanently removes user data, cleans up likes, notifications, 
- * related reports (user & content), and follower relationships.
+ * Deletes a user account and purges associated data.
+ * Performs a cascading delete across posts, comments, likes, reports
+ * and social relationships. Sends a final notification email in the user's preferred language.
+ * 
+ * @param req - AuthRequest with params { id } and optional body { reason }
+ * @param res - Express response object
+ * @returns Response confirming deletion
+ * @throws {Error} 403 if unauthorized, 404 if user not found
+ *
+ * @example
+ * ```typescript
+ * DELETE /api/users/management/60d5ec...
+ * Body: { "reason": "Violation of community guidelines" }
+ * ```
  */
 export const deleteUser = async (
   req: AuthRequest,
@@ -111,7 +137,7 @@ export const deleteUser = async (
     const { id } = req.params;
     const { reason } = req.body || {};
 
-    // Authorization & Existence Check
+    // Authorization and existence check
     if (req.user!.userId !== id && req.user!.role !== RoleTypeValue.ADMIN) {
       return res.status(403).json({ message: "Not authorized" });
     }
@@ -119,7 +145,7 @@ export const deleteUser = async (
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Admin Reason Notification
+    // Admin reason notification
     if (req.user!.role === RoleTypeValue.ADMIN && reason) {
       const translatedReason = await getDualTranslation(reason);
 
@@ -137,9 +163,9 @@ export const deleteUser = async (
       });
     }
 
-    // Email Preparation & Sending
+    // Email preparation and sending
     const isSelfDeletion = req.user!.userId === id;
-    const userLang = user.language || LanguageTypeValue.EN; // Default to English if not set
+    const userLang = user.language || LanguageTypeValue.EN;
 
     const titleKey = isSelfDeletion ? "Account Deleted" : "Account Deleted by Administrator";
     const bodyKey = isSelfDeletion
@@ -166,7 +192,6 @@ export const deleteUser = async (
       logger.error(emailError, "Failed to send deletion email:");
     }
 
-    // Model Imports & Data Cleanup
     const PostModel = (await import("../../models/post-model")).default;
     const CommentModel = (await import("../../models/comment-model")).default;
     const ReportModel = (await import("../../models/report-model")).default;
@@ -180,29 +205,29 @@ export const deleteUser = async (
     // Bulk delete reports associated with the user or their content
     await ReportModel.deleteMany({
       $or: [
-        { reportedBy: id },                        // Reports user made
-        { targetId: id, targetType: "user" },       // Reports against user
+        { reportedBy: id },                               // Reports user made
+        { targetId: id, targetType: "user" },               // Reports against user
         { targetId: { $in: userPostIds }, targetType: "post" },    // Reports against user's posts
         { targetId: { $in: userCommentIds }, targetType: "comment" } // Reports against user's comments
       ],
     });
 
-    // Purge User Content & Interactions
+    // Purge user content and interactions
     await PostModel.deleteMany({ authorId: id });
     await CommentModel.deleteMany({ userId: id });
     await NotificationModel.deleteMany({ userId: id });
     await PostModel.updateMany({ likes: id }, { $pull: { likes: id } });
     await CommentModel.updateMany({ likes: id }, { $pull: { likes: id } });
 
-    // Clean up follow relationships (optimized)
+    // Clean up follow relationships
     try {
-      if (user.following?.length > 0) {
+      if (user.following && user.following.length > 0) {
         await User.updateMany(
           { _id: { $in: user.following } },
           { $pull: { followers: user._id } }
         );
       }
-      if (user.followers?.length > 0) {
+      if (user.followers && user.followers.length > 0) {
         await User.updateMany(
           { _id: { $in: user.followers } },
           { $pull: { following: user._id } }
@@ -212,7 +237,7 @@ export const deleteUser = async (
       logger.error(cleanupErr, "Error cleaning up follow relationships:");
     }
 
-    // Final Account Purge
+    // Final account purge
     await BannedUserModel.deleteOne({ original_user_id: id });
     await User.findByIdAndDelete(id);
 

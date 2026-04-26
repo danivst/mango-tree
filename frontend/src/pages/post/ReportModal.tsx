@@ -7,7 +7,6 @@
 
 import React from 'react';
 
-// MUI Icon Import
 import RefreshIcon from '@mui/icons-material/Refresh';
 
 /**

@@ -24,7 +24,6 @@ import Snackbar from "../../../components/snackbar/Snackbar";
 import { useSnackbar } from "../../../utils/snackbar";
 import { AdminTable, ColumnDef } from "../../../components/admin/table";
 
-// MUI Icon Imports
 import AddIcon from "@mui/icons-material/Add";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 
@@ -80,7 +79,6 @@ const Admins = () => {
     setCurrentPage(1);
   };
 
-  // Filter
   const filteredAdmins = useMemo(() => {
     if (searchQuery.trim() === "") return admins;
     const query = searchQuery.toLowerCase();
@@ -89,7 +87,6 @@ const Admins = () => {
     );
   }, [admins, searchQuery]);
 
-  // Sort
   const sortedAdmins = useMemo(() => {
     return sortData(
       filteredAdmins,
@@ -110,7 +107,6 @@ const Admins = () => {
     );
   }, [filteredAdmins, sortState]);
 
-  // Paginate
   const paginatedData = useMemo(() => {
     return paginateData(sortedAdmins, currentPage, itemsPerPage);
   }, [sortedAdmins, currentPage]);
@@ -156,7 +152,6 @@ const Admins = () => {
     );
   };
 
-  // Columns definition
   const columns: ColumnDef<any>[] = [
     {
       key: "username",
@@ -181,7 +176,6 @@ const Admins = () => {
     },
   ];
 
-  // Empty state using MUI Icon
   const emptyState = {
     icon: <PersonOffIcon sx={{ fontSize: 40 }} />,
     title: searchQuery.trim() !== "" ? t("noSearchResults") : t("noUsersFound"),
@@ -190,7 +184,6 @@ const Admins = () => {
   return (
     <div>
       <h1 className="page-container-title">{t("admins")}</h1>
-
       <AdminTable<any>
         data={paginatedData}
         currentPage={currentPage}
@@ -213,8 +206,6 @@ const Admins = () => {
           </button>
         }
       />
-
-      {/* Add Admin Modal */}
       {showAddAdmin && (
         <div className="modal-overlay">
           <div className="modal">
@@ -251,7 +242,6 @@ const Admins = () => {
           </div>
         </div>
       )}
-
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}

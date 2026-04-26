@@ -1,13 +1,13 @@
-/* ============================================
-   ACCOUNT PAGE
-   ============================================ */
+/**
+ * @file Account.css
+ * @description Styles for the account page
+ */
 
 .account-container {
   display: flex;
   min-height: 100vh;
 }
 
-/* Profile header section - matches UserProfile layout */
 .profile-header {
   display: flex;
   align-items: center;
@@ -15,7 +15,6 @@
   margin-bottom: 24px;
 }
 
-/* Profile picture container */
 .profile-pic-container {
   width: 120px;
   height: 120px;
@@ -50,7 +49,6 @@
   box-sizing: border-box;
 }
 
-/* Profile username and meta */
 .profile-username {
   font-size: 28px;
   font-weight: 700;
@@ -65,14 +63,12 @@
   color: var(--theme-text);
 }
 
-/* Stats label */
 .stat-label {
   font-size: 14px;
   color: var(--theme-text);
   opacity: 0.8;
 }
 
-/* Buttons */
 .translate-btn,
 .edit-bio-btn {
   display: flex;
@@ -107,7 +103,6 @@
   cursor: not-allowed;
 }
 
-/* Bio content */
 .bio-content {
   background: var(--theme-bg);
   padding: 16px;
@@ -121,9 +116,6 @@
   opacity: 0.5;
 }
 
-/* Category tabs */
-
-/* Past Usernames section */
 .profile-section-title {
   margin: 0 0 12px 0;
   font-size: 18px;
@@ -167,7 +159,6 @@
   opacity: 0.9;
 }
 
-/* Bio textarea */
 .bio-textarea {
   width: 100%;
   padding: 12px;
@@ -182,7 +173,6 @@
   font-family: "Poppins", sans-serif;
 }
 
-/* Edit bio modal */
 .edit-bio-modal {
   background: var(--theme-bg);
   padding: 24px;
@@ -194,7 +184,6 @@
 
 /* Mobile responsive styles */
 @media (max-width: 767px) {
-  /* Category tabs: wrap and center */
   .category-tabs {
     flex-wrap: wrap;
     justify-content: center;
@@ -206,20 +195,17 @@
     min-width: 120px;
   }
 
-  /* Profile stats: stack vertically */
   .profile-stats {
     flex-direction: column;
     align-items: center;
     gap: 16px;
   }
 
-  /* Edit bio button: make smaller */
   .edit-bio-btn {
     padding: 4px 8px;
     font-size: 11px;
   }
 
-  /* Translate button: make smaller to match */
   .translate-btn {
     padding: 4px 8px;
     font-size: 11px;
