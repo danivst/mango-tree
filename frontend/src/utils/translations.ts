@@ -895,8 +895,8 @@ export const translations: Record<Language, Record<string, string>> = {
     activityReportSubmit:
       "Докладвано {targetType} {targetId}. Причина: {reason}",
     activityReportResolve: "Докладът беше разрешен от администратор",
-    activityContentApprove: "Одобрен {type} {id}",
-    activityContentReject: "Отхвърлен {type} {id}. Причина: {reason}",
+    activityContentApprove: "Одобрен(а) {type} {id}",
+    activityContentReject: "Отхвърлен(а) {type} {id}. Причина: {reason}",
     activityBanUser: "Блокиран потребител {username}. Причина: {reason}",
     activityUnbanUser: "Разблокиран потребител {username}",
     activity2faEnable: "Включена двуфакторна автентикация",

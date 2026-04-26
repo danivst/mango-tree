@@ -18,6 +18,9 @@ import { getLocalizedText } from "../utils/get-translation";
 import { logActivity } from "../utils/activity-logger";
 import logger from "../utils/logger";
 import { setAuthCookies } from "../utils/auth-cookies";
+import { getLocationFromIP } from "../utils/geolocation";
+import Notification from "../models/notification-model";
+import NotificationType from "../enums/notification-type";
 
 /**
  * Initiates the 2FA enablement process.
@@ -187,16 +190,70 @@ export const verify2FA = async (
       return res.status(400).json({ message: "Incorrect verification code." });
     }
 
+    const wasTwoFactorAlreadyEnabled = !!user.twoFactorEnabled;
     user.twoFactorEnabled = true;
     user.twoFactorCode = undefined;
     user.twoFactorCodeExpiry = undefined;
     await user.save();
 
-    await logActivity(req, "2FA_ENABLE", {
-      targetId: userId,
-      targetType: "user",
-      description: "Enabled two-factor authentication",
-    });
+    if (wasTwoFactorAlreadyEnabled) {
+      await logActivity(req, "LOGIN", { userId: user._id.toString() });
+
+      try {
+        const userLang = user.language || "en";
+        const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
+        const location = await getLocationFromIP(ipAddress, userLang);
+        const now = new Date();
+        const loginTime = now.toLocaleString(
+          userLang === "bg" ? "bg-BG" : "en-US",
+          {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          },
+        );
+        const loginDateBg = now.toLocaleDateString("bg-BG", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+        const loginClockBg = now.toLocaleTimeString("bg-BG", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+
+        const messageEn = `New login detected at ${loginTime} from ${location}. If this wasn't you, please secure your account immediately.`;
+        const messageBg = `Открито ново влизане на ${loginDateBg} в ${loginClockBg} от ${location}. Ако това не сте вие, моля незабавно защитете акаунта си.`;
+
+        await Notification.create({
+          userId: user._id,
+          type: NotificationType.NEW_LOGIN,
+          message: getLocalizedText(userLang, {
+            en: messageEn,
+            bg: messageBg,
+          }),
+          translations: {
+            message: {
+              en: messageEn,
+              bg: messageBg,
+            },
+          },
+          link: "/settings",
+        });
+      } catch (notifErr) {
+        logger.error(notifErr, "Failed to create login notification");
+      }
+    } else {
+      await logActivity(req, "2FA_ENABLE", {
+        targetId: userId,
+        targetType: "user",
+        description: "Enabled two-factor authentication",
+      });
+    }
 
     const tokenExpiresIn = rememberMe ? "7d" : "24h";
     const cookieMaxAgeMs = (rememberMe ? 7 : 1) * 24 * 60 * 60 * 1000;

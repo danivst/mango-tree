@@ -171,7 +171,7 @@ export const registerUser = async (
     targetType: "user",
     description: `Created account with username: ${user.username} and email: ${user.email}`,
   });
-  
+
   const userLang = user.language || "en";
 
   const [titleTrans, greetingTrans, bodyTrans, signatureTrans] =
@@ -364,21 +364,29 @@ export const loginUser = async (
 
     const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
     const location = await getLocationFromIP(ipAddress, userLang);
-    const loginTime = new Date().toLocaleString(
-      userLang === "bg" ? "bg-BG" : "en-US",
-      {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      },
-    );
+    const now = new Date();
+    const loginTime = now.toLocaleString(userLang === "bg" ? "bg-BG" : "en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    const loginDateBg = now.toLocaleDateString("bg-BG", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+    const loginClockBg = now.toLocaleTimeString("bg-BG", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
 
     const messageEn = `New login detected at ${loginTime} from ${location}. If this wasn't you, please secure your account immediately.`;
-    const messageBg = `Открито ново влизане на ${loginTime} от ${location}. Ако това не сте вие, моля незабавно защитете акаунта си.`;
-
+    const messageBg = `Открито ново влизане на ${loginDateBg} в ${loginClockBg} от ${location}. Ако това не сте вие, моля незабавно защитете акаунта си.`;
+    
     await Notification.create({
       userId: user._id,
       type: NotificationType.NEW_LOGIN,
