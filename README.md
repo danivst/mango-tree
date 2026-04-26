@@ -2,8 +2,6 @@
 
 **Interactive Web Platform for Sharing Culinary Experiences and Building an Online Community**
 
-
-
 ---
 
 ## Project Overview
