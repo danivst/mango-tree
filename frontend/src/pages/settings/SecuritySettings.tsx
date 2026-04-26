@@ -72,7 +72,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({
       setShowEnable2FAModal(false);
       showSuccess(t("twoFAEnabledSuccess"));
     } catch {
-      showError(t("actionFailed"));
+      showError(t("invalid2FACode"));
     } finally {
       setIsProcessing(false);
     }
@@ -94,7 +94,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({
       setShowDisable2FAModal(false);
       showSuccess(t("twoFADisabledSuccess"));
     } catch {
-      showError(t("invalidVerificationCode"));
+      showError(t("invalid2FACode"));
     } finally {
       setIsProcessing(false);
     }
