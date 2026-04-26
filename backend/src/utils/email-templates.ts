@@ -33,7 +33,7 @@ import {
 export const get2FAEmailTemplate = (params: Get2FAEmailTemplateParams): string => `
   <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
     <h2 style="color: #E77728; margin: 0 0 24px 0; font-size: 28px; text-align: center;">${params.title}</h2>
-    <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">Hello ${params.intro}</p>
+    <p style="font-size: 16px; line-height: 1.6; color: #333; margin: 0 0 20px 0;">${params.intro}</p>
     <div style="text-align: center; margin: 40px 0;">
       <div style="display: inline-block; background: #f5f5f5; padding: 20px 40px; border-radius: 8px; border: 2px dashed #E77728;">
         <h1 style="color: #E77728; margin: 0; font-size: 48px; letter-spacing: 12px; font-weight: bold;">${params.code}</h1>

@@ -175,13 +175,13 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({
         handleVerifyEnable, 
         () => setShowEnable2FAModal(false), 
         t("enable2FA"), 
-        t("twoFactorEnableInstruction")
+        t("twoFACodePlaceholder")
       )}
       {showDisable2FAModal && renderCodeInput(
         handleVerifyDisable, 
         () => setShowDisable2FAModal(false), 
         t("disable2FA"), 
-        t("twoFactorDisableInstruction")
+        t("twoFACodePlaceholder")
       )}
     </div>
   );

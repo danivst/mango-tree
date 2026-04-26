@@ -271,8 +271,8 @@ export const disable2FA = async (
 
       const userLang = user.language || "en";
       const [titleTrans, introTrans, securityNoteTrans, signatureTrans] = await Promise.all([
-        getDualTranslation("Disable MangoTree 2FA"),
-        getDualTranslation("To disable 2FA, please use the following verification code:"),
+        getDualTranslation("MangoTree Disable Two-Factor Authentication"),
+        getDualTranslation("To disable two-factor authentication, please use the following verification code:"),
         getDualTranslation("Warning: This will reduce your account security."),
         getDualTranslation("Sincerely, the MangoTree team"),
       ]);
