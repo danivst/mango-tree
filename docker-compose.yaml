@@ -1,35 +1,35 @@
 services:
   npm:
     image: 'jc21/nginx-proxy-manager:latest'
-    container_name: npm
     restart: unless-stopped
     ports:
-      - '80:80'   
-      - '81:81'   
-      - '443:443' 
+      - '80:80'
+      - '81:81'
+      - '443:443'
     volumes:
       - ./npm/data:/data
       - ./npm/letsencrypt:/etc/letsencrypt
+    networks:
+      - app-tier
 
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    env_file:
-      - .env
-    ports:
-      - "3000:3000" 
-    volumes:
-      - ./backend:/app/backend
-      - /app/backend/node_modules
-      - /app/backend/dist
-      - ./shared:/app/shared
+    expose:
+      - "3000"
+    networks:
+      - app-tier
 
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
-      args:
-        - VITE_BASE_API_URL=${VITE_BASE_API_URL}
-    ports:
-      - "5173:80"
+    expose:
+      - "80"
+    networks:
+      - app-tier
+
+networks:
+  app-tier:
+    driver: bridge
