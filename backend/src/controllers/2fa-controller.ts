@@ -203,7 +203,7 @@ export const verify2FA = async (
         const rawUserLang = String(user.language || "en").trim().toLowerCase();
         const userLang = rawUserLang.startsWith("bg") ? "bg" : "en";
         const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
-        const location = await getLocationFromIP(ipAddress, userLang);
+        const location = await getLocationFromIP(ipAddress);
         const now = new Date();
         const loginTime = now.toLocaleString(
           userLang === "bg" ? "bg-BG" : "en-US",

@@ -396,6 +396,7 @@ const Login = () => {
         username.trim(),
         signupEmail.trim(),
         signupPassword,
+        language,
       );
       showSuccess(t("successfullyCreatedAccount"));
 

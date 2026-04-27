@@ -99,16 +99,16 @@ The ultimate goal is a functioning website that promotes the cultural value of c
 
 ### 2. Setting environmental variables
 
-   This project needs a **.env** file that contains configuration regarding the services. **Please note: Without having them configured, the project will not build, nor run.**
+   This project needs a `.env` file that contains configuration regarding the services. **Please note: Without having them configured, the project will not build, nor run.**
 
-   To create this file, copy the existing **.env.example** file:
+   To create this file, copy the existing `.env.example` file:
    ```bash
    cp .env.example
    ```
 
-   Rename it to just .env and configure the values with your own.
+   Rename it to just `.env` and configure the values with your own.
 
-   **Please note: When launching the project locally, you need to creare .env files in both frontend and backend directory. You can just make a copy of the existing .env file you just created and paste it directly in both directories. If you are launching using Docker, DO NOT create other .env files.**
+   **Please note: When launching the project locally, you need to creare `.env` files in both `frontend` and `backend` directory. You can just make a copy of the existing `.env` file you just created and paste it directly in both directories. If you are launching using Docker, DO NOT create other `.env` files.**
 
 ### 3. Development
 
@@ -117,7 +117,7 @@ The ultimate goal is a functioning website that promotes the cultural value of c
    You must start both the backend and the frontend. First, open three terminal windows and then complete this commands in the provided order.
    **Please note: If you do not follow the provided order of commands, the project is prone to build errors.**
 
-   Navigate to the shared folder:
+   Navigate to the `shared` folder:
    ```bash
    cd shared
    ```
@@ -134,7 +134,7 @@ The ultimate goal is a functioning website that promotes the cultural value of c
 
    **Please note: This directory contains shared types and interfaces used by both client and server and is NOT intended to be launched on its own. It only needs the required packages installed.**
 
-   Navigate to the backend folder: 
+   Navigate to the `backend` folder: 
    ```bash
    cd ../backend
    ```
@@ -154,9 +154,9 @@ The ultimate goal is a functioning website that promotes the cultural value of c
    npm run dev
    ```
 
-   If successful, in the terminal there should be logs, indicating that the server is running on the port you set to the variable PORT in the **.env** file (which by default is set to **3000**).
+   If successful, in the terminal there should be logs, indicating that the server is running on the port you set to the variable `PORT` in the `.env` file (which by default is set to **3000**).
 
-   The next step is to navigate back to the frontend folder:
+   The next step is to navigate back to the `frontend` folder:
    ```bash
    cd ../frontend
    ```
@@ -177,7 +177,7 @@ The ultimate goal is a functioning website that promotes the cultural value of c
    ```
 
    If successful, in the terminal should appear a link to **localhost:5173**.
-   **Please note: If port 5173 is not free to use, the frontend will be launched using a free port. This requires manual configuration in **backend/.env** in order to allow communication between the client and the server, so CORS allows the requests to pass, like so:**
+   **Please note: If port 5173 is not free to use, the frontend will be launched using a free port. This requires manual configuration in `backend/.env` in order to allow communication between the client and the server, so CORS allows the requests to pass, like so:**
    ```backend/.env
    CLIENT_URL={your_frontend_url}
    ```
@@ -210,7 +210,7 @@ The ultimate goal is a functioning website that promotes the cultural value of c
 
 ### 4. Running tests
 
-   To run the two testing files for users and notifications, navigate to the backend directory with: 
+   To run the two testing files for users and notifications, navigate to the `backend` directory with: 
    ```bash
    cd backend
    ```
@@ -223,7 +223,7 @@ The ultimate goal is a functioning website that promotes the cultural value of c
 
 ### 5. Database seeding
 
-   If you want to test the logic and see how it looks, instead of manually creating posts and accounts you can execute the seeding files in the **backend/src/scripts** folder. For this, you have to navigate to the backend folder:
+   If you want to test the logic and see how it looks, instead of manually creating posts and accounts you can execute the seeding files in the `backend/src/scripts` folder. For this, you have to navigate to the `backend` folder:
    ```bash
    cd backend
    ```

@@ -222,11 +222,13 @@ export const authAPI = {
     username: string,
     email: string,
     password: string,
+    language?: Language,
   ): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>("/auth/register", {
       username,
       email,
       password,
+      language,
     });
     return response.data;
   },

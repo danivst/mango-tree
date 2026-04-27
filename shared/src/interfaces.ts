@@ -265,7 +265,6 @@ export interface Tag {
   _id: string;
   name: string;
   translations?: TagTranslations;
-  type?: "meal_time" | "cuisine" | "difficulty" | "meal_type";
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;

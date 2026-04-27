@@ -28,6 +28,7 @@ import { logActivity } from "../../utils/activity-logger";
 import logger from "../../utils/logger";
 import { isDisposableEmail } from "../../utils/disposable-email";
 import { clearAuthCookies, setAuthCookies } from "../../utils/auth-cookies";
+import LanguageTypeValue from "../../enums/language-type";
 
 /**
  * Regular expression for basic email validation.
@@ -48,6 +49,7 @@ const validateRegisterBody = (body: unknown): RegisterValidationError | null => 
   const username = b.username;
   const email = b.email;
   const password = b.password;
+  const language = b.language;
 
   if (typeof username !== "string" || username.trim().length < 3) {
     return { message: "Username must be at least 3 characters long.", field: "username" };
@@ -71,6 +73,14 @@ const validateRegisterBody = (body: unknown): RegisterValidationError | null => 
   }
   if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
     return { message: "Password must contain at least one special character.", field: "password" };
+  }
+
+  if (
+    typeof language !== "undefined" &&
+    (typeof language !== "string" ||
+      !Object.values(LanguageTypeValue).includes(language as (typeof LanguageTypeValue)[keyof typeof LanguageTypeValue]))
+  ) {
+    return { message: "Invalid language.", field: "language" };
   }
 
   return null;
@@ -108,7 +118,17 @@ export const registerUser = async (
     return res.status(400).json(validationError);
   }
 
-  const { username, email, password } = req.body;
+  const {
+    username,
+    email,
+    password,
+    language = LanguageTypeValue.EN,
+  } = req.body as {
+    username: string;
+    email: string;
+    password: string;
+    language?: string;
+  };
 
   if (isDisposableEmail(email)) {
     return res.status(400).json({
@@ -154,6 +174,7 @@ export const registerUser = async (
     email,
     passwordHash,
     role: RoleTypeValue.USER,
+    language,
     translations: {
       bio: { bg: "", en: "" },
     },
@@ -364,7 +385,7 @@ export const loginUser = async (
     const userLang = rawUserLang.startsWith("bg") ? "bg" : "en";
 
     const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
-    const location = await getLocationFromIP(ipAddress, userLang);
+    const location = await getLocationFromIP(ipAddress);
     const now = new Date();
     const loginTime = now.toLocaleString(userLang === "bg" ? "bg-BG" : "en-US", {
       year: "numeric",
