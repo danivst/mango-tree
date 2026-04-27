@@ -34,8 +34,6 @@ export const translations: Record<Language, Record<string, string>> = {
     yes: "Yes",
     preview: "Preview",
     ok: "OK",
-    retry: "Retry",
-
     // Auth
     login: "Log in",
     signup: "Sign up",
@@ -56,7 +54,7 @@ export const translations: Record<Language, Record<string, string>> = {
     couldntCreateAccount: "Couldn't create account",
     emailSent: "Email sent",
     serverError: "Server error",
-    invalidOrExpiredToken: "Invalid or expired token",
+    passwordRequired: "Password is required",
     currentPassword: "Current Password",
     newPassword: "New Password",
     confirmPassword: "Confirm Password",
@@ -66,22 +64,24 @@ export const translations: Record<Language, Record<string, string>> = {
     enterYourPassword: "Enter your password",
     accountBannedMessage:
       "Your account is banned. Reason: {reason}. Please check your email inbox for more information about your account status and possible next steps.",
+    accountSuspended: "Account Suspended",
+    contactSupport: "Please contact support for more information.",
 
     // Validation
     passwordMinLength:
       "Password must be at least 8 characters long and must contain at least one uppercase letter, one lowercase letter, one number and one special character",
     usernameExists: "Username already exists",
+    usernameRequired: "Username is required",
     usernameMinLength: "Username must be at least 3 characters long",
     emailMustContain: "Email must contain @ symbol",
+    emailRequired: "Email is required",
+    emailInvalid: "Invalid email format",
     emailNotFound: "No account with this email exists",
     emailExists: "Email already in use",
     incorrectPassword: "Incorrect password",
     invalidPassword:
       "Password must be at least 8 characters long and must contain at least one uppercase letter, one lowercase letter, one number and one special character",
     passwordsDoNotMatch: "Passwords do not match",
-    emailCannotBeEdited: "Email cannot be edited",
-    passwordCannotBeEdited:
-      "Password cannot be edited directly. Use change password button.",
     unableToLoadResetForm:
       "Unable to load password reset form. Please request a new password reset.",
 
@@ -119,8 +119,6 @@ export const translations: Record<Language, Record<string, string>> = {
     reportUsername: "Report username",
     confirmReportUser: "Are you sure you want to report {username}?",
     viewProfile: "View Profile",
-    userProfile: "User Profile",
-
     // Categories & Tags
     category: "Category",
     tag: "Tag",
@@ -139,12 +137,9 @@ export const translations: Record<Language, Record<string, string>> = {
     enterTagName: "Enter tag name (1-20 characters)",
     characters: "characters",
     categoryNameRequired: "Category name is required",
-    categoryNameEmpty: "Category name cannot be empty",
-    categoryNameTooLong: "Category name cannot be longer than 50 characters",
     categoryCreated: "Category created successfully",
     categoryDeleted: "Category deleted successfully",
     categoryUpdated: "Category updated successfully",
-    categoryDeleteFailed: "Failed to delete category",
     categoryUpdateFailed: "Failed to update category",
     deleteCategoryError: "Failed to delete category",
     deleteCategoryWarning:
@@ -171,10 +166,13 @@ export const translations: Record<Language, Record<string, string>> = {
     failedToLoadBannedUsers: "Failed to load banned users",
     failedToLoadUsers: "Failed to load users",
     failedToLoadCategories: "Failed to load categories",
+    failedLoadCategories: "Failed to load categories",
     failedToLoadReports: "Failed to load reports",
     failedToLoadFlaggedContent: "Failed to load flagged content",
     failedToLoadUserInfo: "Failed to load user info",
     failedToLoadUserProfile: "Failed to load user profile",
+    failedLoadCurrentUser: "Failed to load current user",
+    failedLoadPosts: "Failed to load posts",
 
     // Admin
     addAdmin: "Add Admin",
@@ -210,13 +208,6 @@ export const translations: Record<Language, Record<string, string>> = {
     reasonForBanPlaceholder: "Enter the reason for banning the user",
     confirmBanText:
       "Are you sure you want to ban {username}? This will ban the user The action is reversible",
-    adminUsernameEditDisabled:
-      "Your role does not permit you to edit your username. Please reach out to a supervisor",
-    adminDeleteAccountDisabled:
-      "Your role does not permit you to delete your account. Please reach out to a supervisor",
-    adminSettings: "Admin Settings",
-    adminSettingsDescription:
-      "This page will contain various administrative settings such as global configurations moderation tools etc",
     userBannedSuccessfully: "User {username} banned successfully",
     userUnbannedSuccessfully: "User {username} unbanned successfully",
     noDataLoaded: "No data loaded",
@@ -235,8 +226,6 @@ export const translations: Record<Language, Record<string, string>> = {
     action: "Action",
     target: "Target",
     ipAddress: "IP Address",
-    searchLogs: "Search logs...",
-    filterByAction: "Filter by action",
     allActions: "All",
     startDate: "Start Date",
     endDate: "End Date",
@@ -283,13 +272,7 @@ export const translations: Record<Language, Record<string, string>> = {
     activityReportItemDelete: "Deleted reported {targetType} {targetId}",
     activityAccountCreate: "Created account",
     activityAccountDelete: "Deleted account",
-
     // Security Notifications
-    newLoginTitle: "New login detected",
-    newLoginMessage: "New login at {time} from {location}",
-    newLoginWarning:
-      "If this wasn't you, please secure your account immediately.",
-
     // Reports
     report: "Report",
     reasonForReport: "Reason for report",
@@ -300,17 +283,12 @@ export const translations: Record<Language, Record<string, string>> = {
     enterReportReason: "Please describe why you are reporting this post",
     enterReportReasonComment:
       "Please describe why you are reporting this comment",
-    enterReportReasonUser: "Please describe why you are reporting this user",
-    cannotReportOwnPost: "You cannot report your own post",
-    cannotReportOwnComment: "You cannot report your own comment",
-    cannotReportSelf: "You cannot report yourself",
     reportDetails: "Report Details",
     submittedBy: "Submitted by",
     referenceToItem: "Reference to item",
     deleteItem: "Delete Item",
     reasonForDeleting: "Reason for deleting",
     enterReasonForDeletion: "Enter reason for deletion",
-    contentType: "Content Type",
     content: "Content",
     reasonDescription: "Reason Description",
     noReports: "No reports submitted",
@@ -323,6 +301,7 @@ export const translations: Record<Language, Record<string, string>> = {
     failedToDeleteUser: "Failed to delete user",
     failedToTranslateContent: "Failed to translate content",
     failedToTranslateComment: "Failed to translate comment",
+    anonymous: "Anonymous",
     contentDetails: "Content Details",
     type: "Type",
     author: "Author",
@@ -333,7 +312,6 @@ export const translations: Record<Language, Record<string, string>> = {
     writeComment: "Write a comment",
     postComment: "Post Comment",
     commentAdded: "Comment added successfully",
-    commentCannotBeEmpty: "Comment cannot be empty",
     mustBeLoggedInToComment: "Please log in to leave a comment",
     confirmDeleteComment: "Are you sure you want to delete this comment",
 
@@ -393,7 +371,6 @@ export const translations: Record<Language, Record<string, string>> = {
     // Follow System
     follow: "Follow",
     unfollow: "Unfollow",
-    followStatusUpdated: "Follow status updated",
     unfollowed: "Unfollowed successfully",
     followed: "Followed successfully",
     successfullyFollowedUser: "Successfully followed user",
@@ -405,9 +382,6 @@ export const translations: Record<Language, Record<string, string>> = {
       "Are you sure you wish to proceed? Deleting your account is permanent. Your posts and comments will also be terminated.",
     reasonForDeletion: "Reason for deletion",
     reasonForDeletionPlaceholder: "Enter the reason for account termination",
-    confirmDeletion: "Confirm Deletion",
-    confirmDeletionText:
-      "Do you wish to proceed and permanently delete {username}'s account?",
     terminateAccount: "Terminate Account",
     // Admin-specific deletion (more severe warning)
     adminDeleteAccountWarning:
@@ -420,9 +394,6 @@ export const translations: Record<Language, Record<string, string>> = {
       "Are you sure you want to permanently delete {username}'s account? All their content will be lost.",
     accountDeletedSuccess: "Account deleted successfully",
     accountDeletedSuccessfully: "Account deleted successfully",
-    accountDeletedTitle: "Account Deleted",
-    accountDeletedBody:
-      "Your account has been permanently deleted from MangoTree. This action was taken by an administrator.",
     removeFollower: "Remove Follower",
     confirmRemoveFollower: "Remove Follower",
     confirmRemoveFollowerMessage:
@@ -448,29 +419,16 @@ export const translations: Record<Language, Record<string, string>> = {
     enterDescriptionError: "Please enter a description",
     filesSkippedError:
       "Some files were skipped Only JPEG, PNG, and WebP formats are supported",
-    uploadSuccess:
-      "Success Your post is pending for verification You will be notified once it has been approved/disapproved",
     somethingWentWrong: "Something went wrong",
+    failedToUploadImage: "Failed to upload image",
 
     // Moderation Errors
-    postRejectedPrefix: "Post rejected. Reason: {reason}",
     postNotCooking: "Post rejected. Reason: Post is not cooking-related.",
-    postInappropriate: "Post rejected. Reason: Content is inappropriate.",
-    postAIServerError:
-      "Post rejected. Reason: AI server error. Please try again later.",
     postPendingAdminReview:
       "Your post has been submitted and is pending admin review due to AI service limitations.",
     postPublishedSuccess: "Post published successfully!",
-    contentFlaggedDuringUpdate: "Content flagged during update",
-    postRejected: "Post rejected.",
-
     // Comment Moderation Errors
-    commentRejectedPrefix: "Comment rejected. Reason: {reason}",
     commentInappropriate: "Comment rejected. Reason: Comment is inappropriate.",
-    commentAIServerError:
-      "Comment rejected. Reason: AI server error. Please try again later.",
-    commentRejected: "Comment rejected.",
-
     // Account Settings
     changePassword: "Change Password",
     appTheme: "App Theme",
@@ -479,14 +437,9 @@ export const translations: Record<Language, Record<string, string>> = {
     onlyJPGE: "Only JPEG, PNG, and WebP formats are supported",
     invalidResetLink: "Invalid reset link Please request a new password reset",
     passwordResetSuccess: "Password reset successful",
-    fillAllPasswordFields: "Please fill in all password fields",
     passwordChangedSuccess: "Password changed successfully",
-    settingsSavedSuccess: "Settings saved successfully",
-    emailUpdatedSuccess:
-      "Email updated successfully Please re-verify if required",
     invalidOrMissingToken: "Invalid or missing token",
     passwordSetSuccess: "Password set successfully Redirecting to login",
-    passwordResetEmailSent: "Password reset email sent",
     emailMustContainAt: "Email must contain @ symbol",
     unableToEditUsername: "Unable to edit username",
     usernameUpdated: "Username updated successfully",
@@ -536,9 +489,6 @@ export const translations: Record<Language, Record<string, string>> = {
     view: "View",
 
     // User Roles
-    adminRole: "Admin",
-    userRole: "User",
-
     // Home Page
     searchResults: "Search Results",
     searchFailed: "Search failed",
@@ -590,8 +540,6 @@ export const translations: Record<Language, Record<string, string>> = {
     feature3Title: "Connect & Engage",
     feature3Desc:
       "Follow users, comment on posts and build meaningful connections.",
-    landingFooter: "Already have an account? Log in to continue.",
-
     // 2FA (Two-Factor Authentication)
     twoFactorAuth: "Two-Factor Authentication",
     twoFactorDescription:
@@ -602,7 +550,6 @@ export const translations: Record<Language, Record<string, string>> = {
     disable2FA: "Disable 2FA",
     twoFAEnabled: "2FA is currently enabled",
     twoFADisabled: "2FA is currently disabled",
-    send2FACode: "Send verification code",
     verifying2FA: "Verifying...",
     twoFACodeSent: "Verification code sent to your email",
     twoFACodeVerified: "2FA verified successfully",
@@ -613,7 +560,7 @@ export const translations: Record<Language, Record<string, string>> = {
     twoFACodeLabel: "6-digit code",
     twoFACodePlaceholder: "Enter 6-digit code",
     invalid2FACode: "Invalid or expired code",
-    incorrect2FACode: "Incorrect verification code",
+    verifying: "Verifying...",
 
     // Copyright
     copyright: "© 2026 MangoTree. All rights reserved.",
@@ -637,8 +584,6 @@ export const translations: Record<Language, Record<string, string>> = {
     yes: "Да",
     preview: "Преглед",
     ok: "OK",
-    retry: "Опитай отново",
-
     // System
     close: "Затвори",
     continue: "Продължи",
@@ -678,7 +623,6 @@ export const translations: Record<Language, Record<string, string>> = {
     couldntCreateAccount: "Не беше възможно да се създаде профил",
     emailSent: "Имейлът е изпратен",
     serverError: "Грешка на сървъра",
-    invalidOrExpiredToken: "Невалиден или изтекъл токен",
     currentPassword: "Текуща парола",
     newPassword: "Нова парола",
     confirmPassword: "Потвърдете парола",
@@ -690,8 +634,11 @@ export const translations: Record<Language, Record<string, string>> = {
       "Вашият акаунт е блокиран. Причина: {reason}. Моля, проверете имейла си за повече информация за статуса на акаунта и възможните следващи стъпки.",
 
     // Validation
+    usernameRequired: "??????????????? ??? ? ????????????",
     usernameExists: "Потребителското име вече съществува",
     usernameMinLength: "Потребителското име трябва да е поне 3 символа",
+    emailRequired: "??????? ? ????????????",
+    emailInvalid: "????????? ????? ?????",
     emailMustContain: "Имейлът трябва да съдържа @ символ",
     emailNotFound: "Не съществува акаунт с този имейл",
     emailExists: "Имейлът вече се използва",
@@ -701,9 +648,6 @@ export const translations: Record<Language, Record<string, string>> = {
     passwordMinLength:
       "Паролата трябва да е поне 8 символа и да съдържа поне една главна буква, една малка буква, едно число и един специален символ",
     passwordsDoNotMatch: "Паролите не съвпадат",
-    emailCannotBeEdited: "Имейлът не може да бъде редактиран",
-    passwordCannotBeEdited:
-      "Паролата не може да бъде променена директно. Използвайте бутона за промяна на парола.",
     unableToLoadResetForm:
       "Неуспешно зареждане на формата за промяна на парола. Моля, поискайте нова промяна на паролата.",
 
@@ -742,8 +686,6 @@ export const translations: Record<Language, Record<string, string>> = {
     reportUsername: "Докладване на потребител",
     confirmReportUser: "Сигурни ли сте, че искате да докладвате {username}?",
     viewProfile: "Виж профил",
-    userProfile: "Профил на потребител",
-
     // Categories & Tags
     category: "Категория",
     tag: "Таг",
@@ -762,13 +704,9 @@ export const translations: Record<Language, Record<string, string>> = {
     enterTagName: "Въведете име на таг (1-20 символа)",
     characters: "символа",
     categoryNameRequired: "Името на категорията е задължително",
-    categoryNameEmpty: "Името на категорията не може да е празно",
-    categoryNameTooLong:
-      "Името на категорията не може да е по-дълго от 50 символа",
     categoryCreated: "Категорията е създадена успешно",
     categoryDeleted: "Категорията е изтрита успешно",
     categoryUpdated: "Категорията е обновена успешно",
-    categoryDeleteFailed: "Неуспешно изтриване на категория",
     categoryUpdateFailed: "Неуспешно обновяване на категория",
     deleteCategoryError: "Неуспешно изтриване на категория",
     deleteCategoryWarning:
@@ -834,14 +772,6 @@ export const translations: Record<Language, Record<string, string>> = {
     reasonForBanPlaceholder: "Въведете причината за блокиране",
     confirmBanText:
       "Сигурни ли сте, че искате да блокирате {username}? Това ще блокира потребителя. Действието може да бъде върнато",
-    adminUsernameEditDisabled:
-      "Вашата роля не ви позволява да редактирате потребителското си име.",
-    adminDeleteAccountDisabled:
-      "Вашата роля не ви позволява да изтриете акаунта си.",
-    adminSettings: "Администраторски настройки",
-    adminSettingsPlaceholder: "Настройки на администратора",
-    adminSettingsDescription:
-      "Тази страница съдържа административни и модераторски настройки",
     userBannedSuccessfully: "Потребителят {username} е блокиран успешно",
     userUnbannedSuccessfully: "Потребителят {username} е отблокиран успешно",
     noDataLoaded: "Няма заредени данни",
@@ -862,8 +792,6 @@ export const translations: Record<Language, Record<string, string>> = {
     action: "Действие",
     target: "Цел",
     ipAddress: "IP адрес",
-    searchLogs: "Търсене в журнала...",
-    filterByAction: "Филтриране по действие",
     allActions: "Всички",
     startDate: "Начална дата",
     endDate: "Крайна дата",
@@ -909,14 +837,7 @@ export const translations: Record<Language, Record<string, string>> = {
     activityTagDelete: 'Изтрит таг "{name}"',
     activityReportStatusUpdate: "Обновен статус на доклад {id} на {status}",
     activityReportItemDelete: "Изтрит докобан {targetType} {targetId}",
-    activityAccountCreation: "Потребителски акаунт създаден",
-    activityAccountDeletion: "Потребителски акаунт изтрит",
-
     // Security Notifications
-    newLoginTitle: "Открито ново влизане",
-    newLoginMessage: "Ново влизане в {time} от {location}",
-    newLoginWarning: "Ако това не сте вие, моля незабавно защитете акаунта си.",
-
     // Reports
     report: "Доклад",
     reasonForReport: "Причина за доклад",
@@ -926,17 +847,12 @@ export const translations: Record<Language, Record<string, string>> = {
     reportUser: "Докладвай потребител",
     enterReportReason: "Моля, опишете защо докладвате тази публикация",
     enterReportReasonComment: "Моля, опишете защо докладвате този коментар",
-    enterReportReasonUser: "Моля, опишете защо докладвате този потребител",
-    cannotReportOwnPost: "Не можете да докладвате собствена публикация",
-    cannotReportOwnComment: "Не можете да докладвате собствен коментар",
-    cannotReportSelf: "Не можете да се докладвате себе си",
     reportDetails: "Подробности за доклада",
     submittedBy: "Подадено от",
     referenceToItem: "Препратка към елемента",
     deleteItem: "Изтрий елемент",
     reasonForDeleting: "Причина за изтриване",
     enterReasonForDeletion: "Въведете причина за изтриване...",
-    contentType: "Тип съдържание",
     content: "Съдържание",
     reasonDescription: "Описание на причината",
     noReports: "Няма подадени доклади",
@@ -959,7 +875,6 @@ export const translations: Record<Language, Record<string, string>> = {
     writeComment: "Напишете коментар",
     postComment: "Публикувайте коментар",
     commentAdded: "Коментарът беше добавен успешно",
-    commentCannotBeEmpty: "Коментарът не може да бъде празен",
     mustBeLoggedInToComment:
       "Моля, влезте в системата, за да оставите коментар",
     confirmDeleteComment:
@@ -1021,7 +936,6 @@ export const translations: Record<Language, Record<string, string>> = {
     // Follow System
     follow: "Следвай",
     unfollow: "Отпоследвай",
-    followStatusUpdated: "Статусът на следване е актуализиран",
     unfollowed: "Успешно отпоследвахте",
     followed: "Успешно последвахте",
     successfullyFollowedUser: "Успешно последвахте потребителя",
@@ -1037,14 +951,11 @@ export const translations: Record<Language, Record<string, string>> = {
     // Account Actions
     deleteAccount: "Изтрий акаунт",
     reasonForDeletion: "Причина за изтриване",
-    confirmDeletion: "Потвърди изтриване",
     terminateAccount: "Прекрати акаунт",
     deleteAccountWarning:
       "Сигурни ли сте, че искате да продължите? Изтриването на акаунта е перманентно. Вашите публикации и коментари също ще бъдат изтрити?",
     reasonForDeletionPlaceholder:
       "Въведете причината за прекратяване на акаунта",
-    confirmDeletionText:
-      "Желаете ли да продължите и да изтриете акаунта на {username} завинаги",
     // Admin-specific deletion (more severe warning)
     adminDeleteAccountWarning:
       "Сигурни ли сте, че искате да прекратите акаунта на този потребител? Това действие е перманентно и не може да бъде отменено. Всички публикации и коментари на потребителя ще бъдат изтрити завинаги.",
@@ -1054,9 +965,6 @@ export const translations: Record<Language, Record<string, string>> = {
     adminConfirmDeletion: "Потвърди прекратяване на акаунт",
     adminConfirmDeletionText:
       "Сигурни ли сте, че искате да изтриете завинаги акаунта на {username}? Цялото им съдържание ще бъде загубено.",
-    accountDeletedTitle: "Акаунтът е изтрит",
-    accountDeletedBody:
-      "Вашият акаунт беше перманентно изтрит от MangoTree. Това действие беше направено от администратор.",
     accountDeletedSuccessfully: "Акаунтът е изтрит успешно",
     suspensionMessage:
       "Вашият акаунт е временно блокиран. Причина: {reason}. Блокировката ще бъде отменена на {unbanDate}. Моля, проверете имейла си за повече информация.",
@@ -1078,32 +986,17 @@ export const translations: Record<Language, Record<string, string>> = {
     enterDescriptionError: "Моля, въведете описание",
     filesSkippedError:
       "Някои файлове бяха пропуснати. Поддържат се само JPEG, PNG и WebP формати",
-    uploadSuccess:
-      "Успех! Вашата публикация изчаква проверка. Ще бъдете уведомени, когато бъде одобрена/отхвърлена",
     somethingWentWrong: "Нещо се обърка",
 
     // Moderation Errors
-    postRejectedPrefix: "Публикацията е отхвърлена. Причина: {reason}",
     postNotCooking:
       "Публикацията е отхвърлена. Причина: Публикацията не е свързана с готвене.",
-    postInappropriate:
-      "Публикацията е отхвърлена. Причина: Съдържанието е неуместно.",
-    postAIServerError:
-      "Публикацията е отхвърлена. Причина: Грешка в AI сървъра. Моля, опитайте по-късно.",
     postPendingAdminReview:
       "Публикацията ви беше изпратена и чака одобрение от администратор поради ограничения в AI услугата.",
     postPublishedSuccess: "Публикацията беше публикувана успешно!",
-    contentFlaggedDuringUpdate: "Съдържанието беше отбелязано при актуализация",
-    postRejected: "Публикацията е отхвърлена.",
-
     // Comment Moderation Errors
-    commentRejectedPrefix: "Коментарът е отхвърлен. Причина: {reason}",
     commentInappropriate:
       "Коментарът е отхвърлен. Причина: Коментарът е неуместен.",
-    commentAIServerError:
-      "Коментарът е отхвърлен. Причина: Грешка в AI сървъра. Моля, опитайте по-късно.",
-    commentRejected: "Коментарът е отхвърлен.",
-
     // Account Settings
     changePassword: "Промени парола",
     appTheme: "Тема на приложението",
@@ -1113,14 +1006,9 @@ export const translations: Record<Language, Record<string, string>> = {
     invalidResetLink:
       "Невалиден линк за нулиране на парола. Моля, изпратете нова заявка за нулиране на парола",
     passwordResetSuccess: "Паролата е нулирана успешно",
-    fillAllPasswordFields: "Моля, попълнете всички полета за парола",
     passwordChangedSuccess: "Паролата е променена успешно",
-    settingsSavedSuccess: "Настройките са запазени успешно",
-    emailUpdatedSuccess:
-      "Имейлът е обновен успешно. Моля, проверете отново ако е необходимо",
     invalidOrMissingToken: "Невалиден или липсващ токен",
     passwordSetSuccess: "Паролата е зададена успешно. Пренасочване към входа",
-    passwordResetEmailSent: "Имейлът за нулиране на парола е изпратен",
     emailMustContainAt: "Имейлът трябва да съдържа @ символ",
 
     // Users
@@ -1166,9 +1054,6 @@ export const translations: Record<Language, Record<string, string>> = {
     view: "Виж",
 
     // User Roles
-    adminRole: "Администратор",
-    userRole: "Потребител",
-
     // Home Page
     searchResults: "Резултати от търсене",
     searchFailed: "Търсенето не беше успешно",
@@ -1193,13 +1078,7 @@ export const translations: Record<Language, Record<string, string>> = {
     verify: "Потвърди",
 
     // Generic errors
-    failedLoadTags: "Неуспешно зареждане на тагове",
-    failedCreateTag: "Неуспешно създаване на таг",
-    failedDeleteTag: "Неуспешно изтриване на таг",
-    failedUpdateTag: "Неуспешно обновяване на таг",
     failedLoadUsers: "Неуспешно зареждане на потребители",
-    failedDeleteUser: "Неуспешно изтриване на потребител",
-    failedCreateAdmin: "Неуспешно създаване на администратор",
 
     // Landing Page
     landingWelcome: "Добре дошли в MangoTree",
@@ -1212,8 +1091,6 @@ export const translations: Record<Language, Record<string, string>> = {
     feature2Desc: "Разглеждайте персонализирани новини и изследвайте съдържание, подбрано специално за вас.",
     feature3Title: "Свързвайте се и общувайте",
     feature3Desc: "Последвайте потребители, коментирайте публикации и изграждайте смислени връзки.",
-    landingFooter: "Вече имате профил? Влезте, за да продължите.",
-
     // 2FA (Two-Factor Authentication)
     twoFactorAuth: "Двуфакторна автентикация",
     twoFactorDescription:
@@ -1224,7 +1101,6 @@ export const translations: Record<Language, Record<string, string>> = {
     disable2FA: "Деактивирай 2FA",
     twoFAEnabled: "2FA е активирана",
     twoFADisabled: "2FA е деактивирана",
-    send2FACode: "Изпрати код за потвърждение",
     verifying2FA: "Потвърждаване...",
     twoFACodeSent: "Код за потвърждение изпратен на имейла",
     twoFACodeVerified: "2FA потвърдена успешно",
@@ -1235,8 +1111,17 @@ export const translations: Record<Language, Record<string, string>> = {
     twoFACodeLabel: "6-цифрен код",
     twoFACodePlaceholder: "Въведете 6-цифрен код",
     invalid2FACode: "Невалиден или изтекъл код",
-    incorrect2FACode: "Неверен код за потвърждение",
-
+    activityAccountCreate: "????????????? ?????? ????????",
+    activityAccountDelete: "????????????? ?????? ??????",
+    accountSuspended: "???????? ? ???????? ?????",
+    anonymous: "????????",
+    contactSupport: "????, ???????? ?? ? ??????????? ?? ?????? ??????????.",
+    failedLoadCategories: "????????? ????????? ?? ?????????",
+    failedLoadCurrentUser: "????????? ????????? ?? ??????? ??????????",
+    failedLoadPosts: "????????? ????????? ?? ??????????",
+    failedToUploadImage: "????????? ??????? ?? ???????????",
+    passwordRequired: "???????? ? ????????????",
+    verifying: "?????????????...",
     // Copyright
     copyright: "© 2026 MangoTree. Всички права запазени.",
   },
