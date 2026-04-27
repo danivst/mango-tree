@@ -190,7 +190,7 @@ export const registerUser = async (
     userId: user._id.toString(),
     targetId: user._id.toString(),
     targetType: "user",
-    description: `Created account ${user.username}`,
+    description: `User ${user.username} (${user._id}) created an account`,
   });
 
   const userLang = user.language || "en";
