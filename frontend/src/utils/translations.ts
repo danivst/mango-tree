@@ -840,7 +840,7 @@ export const translations: Record<Language, Record<string, string>> = {
     activityTagDelete: 'Изтрит таг "{name}"',
     activityReportStatusUpdate: "Обновен статус на доклад {id} на {status}",
     activityReportItemDelete: "Изтрит докобан {targetType} {targetId}",
-    activityAccountCreate: "Създаден акаунт {username}",
+    activityAccountCreate: "Потребител {username} създаде акаунт",
     activityAccountDelete: "Изтрит акаунт {username}",
     activityAccountDeleteAdmin: "Админ {adminId} изтри потребител {username}",
     activityAccountDeleteSelf: "Потребител {username} изтри своя акаунт",

@@ -53,6 +53,17 @@ const ActivityLog = () => {
     direction: "desc",
   });
 
+  const extractUsername = (description: string): string => {
+    if (!description) return "";
+    const userMatch = description.match(/[Uu]ser ([^\s]+)/);
+    if (userMatch) return userMatch[1].replace(/[()]/g, ""); 
+
+    const accountMatch = description.match(/account ([^\s]+)/i);
+    if (accountMatch) return accountMatch[1];
+
+    return "";
+  };
+
   /**
    * Fetches activity logs from the admin API with current filter and pagination state.
    * Updates local logs state and total pages for pagination.
@@ -115,24 +126,8 @@ const ActivityLog = () => {
         let valB: any = b[sortState.column as keyof ActivityLogEntry];
         
         if (sortState.column === "username") {
-          if (a.userId?.username) {
-            valA = a.userId.username;
-          } else if (a.actionType === "ACCOUNT_DELETE" || a.actionType === "ACCOUNT_CREATE") {
-            const match = a.description.match(/[Uu]ser ([^\s]+) \(/);
-            valA = match ? match[1] : "";
-          } else {
-            valA = "";
-          }
-
-          if (b.userId?.username) {
-            valB = b.userId.username;
-          } else if (b.actionType === "ACCOUNT_DELETE" || b.actionType === "ACCOUNT_CREATE") {
-            const match = b.description.match(/[Uu]ser ([^\s]+) \(/);
-            valB = match ? match[1] : "";
-          } else {
-            valB = "";
-          }
-
+          valA = a.userId?.username || extractUsername(a.description);
+          valB = b.userId?.username || extractUsername(b.description);
           valA = valA.toLowerCase();
           valB = valB.toLowerCase();
         }
@@ -345,23 +340,17 @@ const renderTarget = (entry: ActivityLogEntry) => {
           }
           break;
         case "ACCOUNT_CREATE":
-          const accCreateMatch = description.match(/[Uu]ser ([^\s]+) \(/);
-          if (accCreateMatch) {
-            params.username = accCreateMatch[1];
-          }
+          params.username = extractUsername(description);
           break;
         case "ACCOUNT_DELETE":
-          const adminDelMatch = description.match(/Admin ([^\s]+) deleted user ([^\s]+) \(/);
+          const adminDelMatch = description.match(/Admin ([^\s]+) deleted user ([^\s]+)/);
           if (adminDelMatch) {
             params.adminId = adminDelMatch[1];
-            params.username = adminDelMatch[2];
+            params.username = adminDelMatch[2].replace(/[()]/g, "");
             key = "activityAccountDeleteAdmin";
           } else {
-            const selfDelMatch = description.match(/[Uu]ser ([^\s]+) \(/);
-            if (selfDelMatch) {
-              params.username = selfDelMatch[1];
-              key = "activityAccountDeleteSelf";
-            }
+            params.username = extractUsername(description);
+            key = "activityAccountDeleteSelf";
           }
           break;
       }
@@ -418,16 +407,7 @@ const renderTarget = (entry: ActivityLogEntry) => {
       label: t("user"),
       sortable: true,
       minWidth: "150px",
-      render: (log) => {
-        if (log.userId?.username) return log.userId.username;
-        
-        if (log.actionType === "ACCOUNT_DELETE" || log.actionType === "ACCOUNT_CREATE") {
-          const match = log.description.match(/[Uu]ser ([^\s]+) \(/);
-          if (match) return match[1];
-        }
-        
-        return "—";
-      },
+      render: (log) => log.userId?.username || extractUsername(log.description) || "—",
     },
     {
       key: "actionType",
