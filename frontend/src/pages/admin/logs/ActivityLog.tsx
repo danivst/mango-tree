@@ -202,10 +202,6 @@ const renderTarget = (entry: ActivityLogEntry) => {
     description: string,
     targetType?: string,
   ): string => {
-    if (actionType === "ACCOUNT_CREATE" || actionType === "ACCOUNT_DELETE") {
-      return description;
-    }
-
     const keyMap: Record<string, string> = {
       LOGIN: "activityLogin",
       LOGOUT: "activityLogout",
@@ -346,6 +342,26 @@ const renderTarget = (entry: ActivityLogEntry) => {
           if (deleteMatch) {
             params.targetType = deleteMatch[1];
             params.targetId = deleteMatch[2];
+          }
+          break;
+        case "ACCOUNT_CREATE":
+          const accCreateMatch = description.match(/[Uu]ser ([^\s]+) \(/);
+          if (accCreateMatch) {
+            params.username = accCreateMatch[1];
+          }
+          break;
+        case "ACCOUNT_DELETE":
+          const adminDelMatch = description.match(/Admin ([^\s]+) deleted user ([^\s]+) \(/);
+          if (adminDelMatch) {
+            params.adminId = adminDelMatch[1];
+            params.username = adminDelMatch[2];
+            key = "activityAccountDeleteAdmin";
+          } else {
+            const selfDelMatch = description.match(/[Uu]ser ([^\s]+) \(/);
+            if (selfDelMatch) {
+              params.username = selfDelMatch[1];
+              key = "activityAccountDeleteSelf";
+            }
           }
           break;
       }

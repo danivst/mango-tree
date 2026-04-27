@@ -270,8 +270,11 @@ export const translations: Record<Language, Record<string, string>> = {
     activityTagDelete: 'Deleted tag "{name}"',
     activityReportStatusUpdate: "Updated report {id} status to {status}",
     activityReportItemDelete: "Deleted reported {targetType} {targetId}",
-    activityAccountCreate: "Created account",
-    activityAccountDelete: "Deleted account",
+    activityAccountCreate: "User {username} created an account",
+    activityAccountDelete: "Account {username} was deleted", 
+    activityAccountDeleteAdmin: "Admin {adminId} deleted user {username}",
+    activityAccountDeleteSelf: "User {username} deleted their own account",
+
     // Security Notifications
     // Reports
     report: "Report",
@@ -474,7 +477,7 @@ export const translations: Record<Language, Record<string, string>> = {
     like: "Like",
     unlike: "Unlike",
     likes: "Likes",
-    likeCount: "like", // singular count (e.g., "1 like")
+    likeCount: "like",
     role: "Role",
     created: "Created",
     actions: "Actions",
@@ -634,11 +637,11 @@ export const translations: Record<Language, Record<string, string>> = {
       "Вашият акаунт е блокиран. Причина: {reason}. Моля, проверете имейла си за повече информация за статуса на акаунта и възможните следващи стъпки.",
 
     // Validation
-    usernameRequired: "??????????????? ??? ? ????????????",
+    usernameRequired: "Потребителското име е задължително",
     usernameExists: "Потребителското име вече съществува",
     usernameMinLength: "Потребителското име трябва да е поне 3 символа",
-    emailRequired: "??????? ? ????????????",
-    emailInvalid: "????????? ????? ?????",
+    emailRequired: "Имейлът е задължителен",
+    emailInvalid: "Невалиден имейл формат",
     emailMustContain: "Имейлът трябва да съдържа @ символ",
     emailNotFound: "Не съществува акаунт с този имейл",
     emailExists: "Имейлът вече се използва",
@@ -837,6 +840,11 @@ export const translations: Record<Language, Record<string, string>> = {
     activityTagDelete: 'Изтрит таг "{name}"',
     activityReportStatusUpdate: "Обновен статус на доклад {id} на {status}",
     activityReportItemDelete: "Изтрит докобан {targetType} {targetId}",
+    activityAccountCreate: "Създаден акаунт {username}",
+    activityAccountDelete: "Изтрит акаунт {username}",
+    activityAccountDeleteAdmin: "Админ {adminId} изтри потребител {username}",
+    activityAccountDeleteSelf: "Потребител {username} изтри своя акаунт",
+
     // Security Notifications
     // Reports
     report: "Доклад",
@@ -1111,17 +1119,15 @@ export const translations: Record<Language, Record<string, string>> = {
     twoFACodeLabel: "6-цифрен код",
     twoFACodePlaceholder: "Въведете 6-цифрен код",
     invalid2FACode: "Невалиден или изтекъл код",
-    activityAccountCreate: "????????????? ?????? ????????",
-    activityAccountDelete: "????????????? ?????? ??????",
-    accountSuspended: "???????? ? ???????? ?????",
-    anonymous: "????????",
-    contactSupport: "????, ???????? ?? ? ??????????? ?? ?????? ??????????.",
-    failedLoadCategories: "????????? ????????? ?? ?????????",
-    failedLoadCurrentUser: "????????? ????????? ?? ??????? ??????????",
-    failedLoadPosts: "????????? ????????? ?? ??????????",
-    failedToUploadImage: "????????? ??????? ?? ???????????",
-    passwordRequired: "???????? ? ????????????",
-    verifying: "?????????????...",
+    accountSuspended: "Акаунтът е suspendиран",
+    anonymous: "Анонимен",
+    contactSupport: "Ако имате въпроси, моля, свържете се с нашия екип за поддръжка.",
+    failedLoadCategories: "Неуспешно зареждане на категории",
+    failedLoadCurrentUser: "Неуспешно зареждане на текущия потребител",
+    failedLoadPosts: "Неуспешно зареждане на публикации",
+    failedToUploadImage: "Неуспешно качване на изображение",
+    passwordRequired: "Паролата е задължителна",
+    verifying: "Потвърждаване...",
     // Copyright
     copyright: "© 2026 MangoTree. Всички права запазени.",
   },
