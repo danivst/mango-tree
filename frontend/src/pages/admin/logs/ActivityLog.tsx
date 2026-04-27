@@ -115,8 +115,26 @@ const ActivityLog = () => {
         let valB: any = b[sortState.column as keyof ActivityLogEntry];
         
         if (sortState.column === "username") {
-          valA = a.userId?.username || "";
-          valB = b.userId?.username || "";
+          if (a.userId?.username) {
+            valA = a.userId.username;
+          } else if (a.actionType === "ACCOUNT_DELETE" || a.actionType === "ACCOUNT_CREATE") {
+            const match = a.description.match(/[Uu]ser ([^\s]+) \(/);
+            valA = match ? match[1] : "";
+          } else {
+            valA = "";
+          }
+
+          if (b.userId?.username) {
+            valB = b.userId.username;
+          } else if (b.actionType === "ACCOUNT_DELETE" || b.actionType === "ACCOUNT_CREATE") {
+            const match = b.description.match(/[Uu]ser ([^\s]+) \(/);
+            valB = match ? match[1] : "";
+          } else {
+            valB = "";
+          }
+
+          valA = valA.toLowerCase();
+          valB = valB.toLowerCase();
         }
         
         if (typeof valA === "string" && sortState.column === "createdAt") {
@@ -184,6 +202,10 @@ const renderTarget = (entry: ActivityLogEntry) => {
     description: string,
     targetType?: string,
   ): string => {
+    if (actionType === "ACCOUNT_CREATE" || actionType === "ACCOUNT_DELETE") {
+      return description;
+    }
+
     const keyMap: Record<string, string> = {
       LOGIN: "activityLogin",
       LOGOUT: "activityLogout",
@@ -380,7 +402,16 @@ const renderTarget = (entry: ActivityLogEntry) => {
       label: t("user"),
       sortable: true,
       minWidth: "150px",
-      render: (log) => log.userId?.username || "—",
+      render: (log) => {
+        if (log.userId?.username) return log.userId.username;
+        
+        if (log.actionType === "ACCOUNT_DELETE" || log.actionType === "ACCOUNT_CREATE") {
+          const match = log.description.match(/[Uu]ser ([^\s]+) \(/);
+          if (match) return match[1];
+        }
+        
+        return "—";
+      },
     },
     {
       key: "actionType",
